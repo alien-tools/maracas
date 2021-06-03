@@ -6,8 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.swat.maracas.rest.data.BreakingChangeInstance;
 
 import io.usethesource.vallang.ISet;
 import io.usethesource.vallang.ISourceLocation;
@@ -43,7 +46,7 @@ public class GithubController {
 	
 	// Considering the computation time, this should probably be a POST job/GET result duo
 	@GetMapping("/pr/{user}/{repository}/{pr}")
-	String analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
+	List<BreakingChangeInstance> analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
 		try {
 			// Retrieve PR metadata from GH
 			GitHub gh = GitHubBuilder.fromPropertyFile().build();
@@ -73,25 +76,20 @@ public class GithubController {
 				IValue delta = maracas.computeDelta(j1, j2); 
 				ISet changed = maracas.getChangedEntities(delta);
 				
-				StringBuilder sb = new StringBuilder();
-				sb.append("{");
-				sb.append("\"breakingChanges\":[");
-				changed.forEach(e -> {
-					ITuple tuple = (ITuple) e;
-					String bc = tuple.get(0).toString();
-					ISourceLocation decl = (ISourceLocation) tuple.get(1);
-					
-					sb.append("{\"decl\": " + decl.toString() + ", \"bc\": " + bc + "},");
-				});
-				sb.append("]}");
-
-				return sb.toString();
+				return changed.stream()
+						.map(e -> {
+							ITuple t = (ITuple) e;
+							String decl = ((ISourceLocation) t.get(1)).toString();
+							String name = t.get(0).toString();
+							return new BreakingChangeInstance(decl, name);
+						})
+						.collect(Collectors.toList());
 			}
 		} catch (IOException | GitAPIException | MavenInvocationException e) {
 			logger.error(e);
 		}
 
-		return "";
+		return Collections.emptyList();
 	}
 
 	private Optional<Path> cloneAndBuild(String url, String ref, Path path) throws MavenInvocationException, GitAPIException, IOException {
