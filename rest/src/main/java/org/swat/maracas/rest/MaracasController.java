@@ -80,14 +80,16 @@ public class MaracasController {
 			String baseSha = base.getSha();
 			String headUrl = head.getRepository().getHttpTransportUrl();
 			String baseUrl = base.getRepository().getHttpTransportUrl();
+			String headRef = head.getRef();
+			String baseRef = base.getRef();
 			
 			// Clone & build the BASE branch
 			Path basePath = Paths.get(CLONE_PATH).resolve(baseSha);
-			Optional<Path> v1 = cloneAndBuild(baseUrl, basePath);
+			Optional<Path> v1 = cloneAndBuild(baseUrl, baseRef, basePath);
 
 			// Clone & build the HEAD branch
 			Path headPath = Paths.get(CLONE_PATH).resolve(headSha);
-			Optional<Path> v2 = cloneAndBuild(headUrl, headPath);
+			Optional<Path> v2 = cloneAndBuild(headUrl, headRef, headPath);
 			
 			if (v1.isPresent() && v2.isPresent()) {
 				Path j1 = v1.get();
@@ -127,11 +129,15 @@ public class MaracasController {
 		return "";
 	}
 
-	private Optional<Path> cloneAndBuild(String url, Path path) throws MavenInvocationException, GitAPIException, IOException {
+	private Optional<Path> cloneAndBuild(String url, String ref, Path path) throws MavenInvocationException, GitAPIException, IOException {
+		// FIXME
+		String fullRef = "refs/heads/" + ref;
 		if (!path.toFile().exists()) {
-			logger.info("Cloning {}", url);
+			logger.info("Cloning {} [{}]", url, ref);
 			Git.cloneRepository()
 				.setURI(url)
+				.setBranchesToClone(Collections.singletonList(fullRef))
+				.setBranch(fullRef)
 				.setDirectory(path.toFile())
 				.call();
 		}
