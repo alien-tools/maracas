@@ -51,9 +51,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
+import io.usethesource.vallang.IRelation;
 import io.usethesource.vallang.ISet;
 import io.usethesource.vallang.ISourceLocation;
 import io.usethesource.vallang.IString;
+import io.usethesource.vallang.ITuple;
 import io.usethesource.vallang.IValue;
 import io.usethesource.vallang.IValueFactory;
 
@@ -68,7 +70,7 @@ public class MaracasController {
 	@GetMapping("/github/detections/{user}/{repository}/{pr}")
 	String delta(@PathVariable("user") String user, @PathVariable("repository") String repository, @PathVariable("pr") Integer prId) {
 		try {
-			// Get metadata from GH
+			// Retrieve PR metadata from GH
 			GitHub gh = GitHubBuilder.fromPropertyFile().build();
 			GHRepository repo = gh.getRepository(user + "/" + repository);
 			GHPullRequest pullRequest = repo.getPullRequest(prId);
@@ -97,12 +99,21 @@ public class MaracasController {
 						ImmutableMap.of("oldCP", vf.list(), "newCP", vf.list()),
 						vf.sourceLocation(j1.toString()), vf.sourceLocation(j2.toString()), vf.string("v1"), vf.string("v2"));
 				
-				IString json = (IString) eval.call("toJSON", delta);
+				ISet changed = (ISet) eval.call("getChangedEntities", delta);
 				
-				Files.delete(j1);
-				Files.delete(j2);
-				
-				return json.toString();
+				StringBuilder sb = new StringBuilder();
+				sb.append("{");
+				sb.append("\"breakingChanges\":[");
+				changed.forEach(e -> {
+					ITuple tuple = (ITuple) e;
+					String bc = tuple.get(0).toString();
+					ISourceLocation decl = (ISourceLocation) tuple.get(1);
+					
+					sb.append("{\"decl\": " + decl.toString() + ", \"bc\": " + bc + "},");
+				});
+				sb.append("]}");
+
+				return sb.toString();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -125,10 +136,10 @@ public class MaracasController {
 				.call();
 		}
 		
-		Path pom = path.resolve("pom.xml");
 		Path target = path.resolve("target");
-		
 		if (!target.toFile().exists()) {
+			Path pom = path.resolve("pom.xml");
+
 			logger.info("Building {}", pom);
 			Properties properties = new Properties();
 			properties.setProperty("skipTests", "true");
