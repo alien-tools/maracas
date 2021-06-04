@@ -48,7 +48,7 @@ public class GithubController {
 	PullRequestResponse analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
 		try {
 			// Retrieve PR metadata from GH
-			GitHub gh = GitHubBuilder.fromPropertyFile("./.github").build();
+			GitHub gh = GitHubBuilder.fromPropertyFile("src/main/resources/.github").build();
 			GHRepository repo = gh.getRepository(user + "/" + repository);
 			GHPullRequest pullRequest = repo.getPullRequest(pr);
 			GHCommitPointer head = pullRequest.getHead();
