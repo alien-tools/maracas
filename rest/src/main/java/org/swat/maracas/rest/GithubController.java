@@ -42,7 +42,7 @@ import io.usethesource.vallang.IValue;
 public class GithubController {
 	private MaracasHelper maracas = MaracasHelper.getInstance();
 	private static final String CLONE_PATH = "./clones";
-	private static final Logger logger = LogManager.getLogger("github-rest");
+	private static final Logger logger = LogManager.getLogger(GithubController.class);
 	
 	// Considering the computation time, this should probably be a POST job/GET result duo
 	@GetMapping("/pr/{user}/{repository}/{pr}")
