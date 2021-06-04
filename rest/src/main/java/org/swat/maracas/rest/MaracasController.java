@@ -39,12 +39,12 @@ public class MaracasController {
 			jar1.transferTo(j1);
 			jar2.transferTo(j2);
 			
-			IValue delta = maracas.computeDelta(j1, j2);
+			//IValue delta = maracas.computeDelta(j1, j2);
 			
 			Files.delete(j1);
 			Files.delete(j2);
 			
-			return delta.toString();
+			return "";
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "err";

@@ -31,11 +31,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.swat.maracas.rest.data.BreakingChangeInstance;
+import org.swat.maracas.rest.data.PullRequestResponse;
 
-import io.usethesource.vallang.ISet;
-import io.usethesource.vallang.ISourceLocation;
-import io.usethesource.vallang.ITuple;
-import io.usethesource.vallang.IValue;
+import io.usethesource.vallang.IConstructor;
+import io.usethesource.vallang.IList;
 
 @RestController
 @RequestMapping("/github")
@@ -46,7 +45,7 @@ public class GithubController {
 	
 	// Considering the computation time, this should probably be a POST job/GET result duo
 	@GetMapping("/pr/{user}/{repository}/{pr}")
-	List<BreakingChangeInstance> analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
+	PullRequestResponse analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
 		try {
 			// Retrieve PR metadata from GH
 			GitHub gh = GitHubBuilder.fromPropertyFile().build();
@@ -73,23 +72,20 @@ public class GithubController {
 				Path j1 = v1.get();
 				Path j2 = v2.get();
 				
-				IValue delta = maracas.computeDelta(j1, j2); 
-				ISet changed = maracas.getChangedEntities(delta);
-				
-				return changed.stream()
-						.map(e -> {
-							ITuple t = (ITuple) e;
-							String decl = ((ISourceLocation) t.get(1)).toString();
-							String name = t.get(0).toString();
-							return new BreakingChangeInstance(decl, name);
-						})
+				IList delta = maracas.computeDelta(j1, j2, basePath);
+
+				List<BreakingChangeInstance> bcs =
+					delta.stream()
+						.map(e -> BreakingChangeInstance.fromRascal((IConstructor) e))
 						.collect(Collectors.toList());
+
+				return new PullRequestResponse(headRef, baseRef, 0, bcs);
 			}
 		} catch (IOException | GitAPIException | MavenInvocationException e) {
 			logger.error(e);
 		}
 
-		return Collections.emptyList();
+		return null;
 	}
 
 	private Optional<Path> cloneAndBuild(String url, String ref, Path path) throws MavenInvocationException, GitAPIException, IOException {

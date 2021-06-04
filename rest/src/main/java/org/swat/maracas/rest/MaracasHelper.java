@@ -6,7 +6,6 @@ import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.rascalmpl.interpreter.ConsoleRascalMonitor;
 import org.rascalmpl.interpreter.Evaluator;
 import org.rascalmpl.interpreter.NullRascalMonitor;
 import org.rascalmpl.interpreter.env.GlobalEnvironment;
@@ -16,8 +15,7 @@ import org.rascalmpl.uri.URIUtil;
 import org.rascalmpl.util.ConcurrentSoftReferenceObjectPool;
 import org.rascalmpl.values.ValueFactoryFactory;
 
-import com.google.common.collect.ImmutableMap;
-
+import io.usethesource.vallang.IList;
 import io.usethesource.vallang.ISet;
 import io.usethesource.vallang.ISourceLocation;
 import io.usethesource.vallang.IValue;
@@ -36,13 +34,12 @@ public class MaracasHelper {
 	    return instance;
 	}
 
-	public IValue computeDelta(Path oldJar, Path newJar) {
+	public IList computeDelta(Path oldJar, Path newJar, Path sources) {
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run((eval) -> {
-			return eval.call("compareJars", "org::maracas::delta::JApiCmp",
-				ImmutableMap.of("oldCP", vf.list(), "newCP", vf.list()),
+			return (IList) eval.call("bcInstances",
 				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
-				vf.string("v1"), vf.string("v2"));
+				vf.sourceLocation(sources.toAbsolutePath().toString()));
 		});
 	}
 
@@ -72,13 +69,13 @@ public class MaracasHelper {
 		ISourceLocation path = URIUtil.correctLocation("lib", "maracas", "");
 		eval.addRascalSearchPath(path);
 
-		eval.doImport(new ConsoleRascalMonitor(), "org::maracas::delta::JApiCmp");
-		eval.doImport(new ConsoleRascalMonitor(), "org::maracas::delta::JApiCmpDetector");
-		eval.doImport(new ConsoleRascalMonitor(), "org::maracas::measure::delta::Evolution");
-		eval.doImport(new ConsoleRascalMonitor(), "org::maracas::measure::delta::Impact");
-		eval.doImport(new ConsoleRascalMonitor(), "org::maracas::m3::Core");
-		eval.doImport(new ConsoleRascalMonitor(), "lang::java::m3::Core");
-		eval.doImport(new ConsoleRascalMonitor(), "lang::json::IO");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::delta::JApiCmp");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::delta::JApiCmpDetector");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::measure::delta::Evolution");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::measure::delta::Impact");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::m3::Core");
+		eval.doImport(new NullRascalMonitor(), "lang::java::m3::Core");
+		eval.doImport(new NullRascalMonitor(), "org::maracas::delta::rest::Rest");
 
 		return eval;
 	}
