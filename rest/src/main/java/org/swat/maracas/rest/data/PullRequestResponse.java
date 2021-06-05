@@ -4,19 +4,25 @@ import java.util.List;
 
 public class PullRequestResponse {
 	private final PullRequestMeta meta;
+	private final ExecutionStatistics statistics;
 	private final List<BreakingChangeInstance> breakingChanges;
 
-	public PullRequestResponse(PullRequestMeta meta, List<BreakingChangeInstance> breakingChanges) {
+	public PullRequestResponse(PullRequestMeta meta, ExecutionStatistics statistics, List<BreakingChangeInstance> breakingChanges) {
 		this.meta = meta;
+		this.statistics = statistics;
 		this.breakingChanges = breakingChanges;
 	}
 
-	public PullRequestResponse(String head, String base, int mavenClients, List<BreakingChangeInstance> breakingChanges) {
-		this(new PullRequestMeta(head, base, mavenClients), breakingChanges);
+	public PullRequestResponse(String head, String base, int mavenClients, ExecutionStatistics statistics, List<BreakingChangeInstance> breakingChanges) {
+		this(new PullRequestMeta(head, base, mavenClients), statistics, breakingChanges);
 	}
 
 	public PullRequestMeta getMeta() {
 		return meta;
+	}
+
+	public ExecutionStatistics getStatistics() {
+		return statistics;
 	}
 
 	public List<BreakingChangeInstance> getBreakingChanges() {

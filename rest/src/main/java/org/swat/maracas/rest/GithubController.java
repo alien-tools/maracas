@@ -42,7 +42,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.swat.maracas.rest.data.BreakingChangeInstance;
+import org.swat.maracas.rest.data.ExecutionStatistics;
 import org.swat.maracas.rest.data.PullRequestResponse;
+
+import com.google.common.base.Stopwatch;
 
 import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IList;
@@ -89,21 +92,34 @@ public class GithubController {
 			Path headPath = Paths.get(CLONE_PATH).resolve(headSha);
 
 			// Clone both branches
+			Stopwatch stopwatch = Stopwatch.createStarted();
 			clone(baseUrl, baseRef, basePath);
 			clone(headUrl, headRef, headPath);
+			long cloneTime = stopwatch.elapsed().toMillis();
+			stopwatch.reset();
 
 			// Build both branches and retrieve the JARs
+			stopwatch.start();
 			Path j1 = build(basePath);
 			Path j2 = build(headPath);
-			
+			long buildTime = stopwatch.elapsed().toMillis();
+			stopwatch.reset();
+
+			// Build delta model
+			stopwatch.start();
 			IList delta = maracas.computeDelta(j1, j2, basePath);
+			long deltaTime = stopwatch.elapsed().toMillis();
+			stopwatch.reset();
 
 			List<BreakingChangeInstance> bcs =
 				delta.stream()
 					.map(e -> BreakingChangeInstance.fromRascal((IConstructor) e))
 					.collect(Collectors.toList());
 
-			return new PullRequestResponse(headRef, baseRef, 0, bcs);
+			return new PullRequestResponse(
+				headRef, baseRef, 0,
+				new ExecutionStatistics(cloneTime, buildTime, deltaTime),
+				bcs);
 		} catch (GHFileNotFoundException e) {
 			logger.error(e);
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "The repository or PR does not exist", e);
