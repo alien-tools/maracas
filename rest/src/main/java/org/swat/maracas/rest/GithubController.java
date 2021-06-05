@@ -2,6 +2,7 @@ package org.swat.maracas.rest;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +27,9 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,13 +46,19 @@ public class GithubController {
 	private MaracasHelper maracas = MaracasHelper.getInstance();
 	private static final String CLONE_PATH = "./clones";
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
-	
+
+	@Autowired
+    ResourceLoader resourceLoader;
+
 	// Considering the computation time, this should probably be a POST job/GET result duo
 	@GetMapping("/pr/{user}/{repository}/{pr}")
 	PullRequestResponse analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
-		try {
+		Resource githubRes = resourceLoader.getResource("classpath:.github");
+		try (InputStream in = githubRes.getInputStream()) {
+			Properties props = new Properties();
+			props.load(in);
 			// Retrieve PR metadata from GH
-			GitHub gh = GitHubBuilder.fromPropertyFile("src/main/resources/.github").build();
+			GitHub gh = GitHubBuilder.fromProperties(props).build();
 			GHRepository repo = gh.getRepository(user + "/" + repository);
 			GHPullRequest pullRequest = repo.getPullRequest(pr);
 			GHCommitPointer head = pullRequest.getHead();
