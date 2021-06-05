@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.eclipse.jgit.api.Git;
@@ -148,6 +149,8 @@ public class GithubController {
 		} else logger.info("{} exists. Skipping.", dest);
 	}
 
+	// FIXME: Will only work with a pom.xml file located in the projet's root
+	// producing a JAR in the project's root /target/
 	private Path build(Path local) throws IOException, MavenInvocationException {
 		Path target = local.resolve("target");
 		Path pom = local.resolve("pom.xml");
@@ -167,7 +170,14 @@ public class GithubController {
 		     
 		    Invoker invoker = new DefaultInvoker();
 		    invoker.setMavenHome(new File("/usr"));
-		    invoker.execute(request);
+		    InvocationResult result = invoker.execute(request);
+
+		    if (result.getExecutionException() != null)
+		    	throw new MavenInvocationException("'package' goal failed: " + result.getExecutionException().getMessage());
+		    if (result.getExitCode() != 0)
+		    	throw new MavenInvocationException("'package' goal failed: " + result.getExitCode());
+		    if (!target.toFile().exists())
+		    	throw new MavenInvocationException("'package' goal did not produce a /target/");
 		} else logger.info("{} has already been built. Skipping.", local);
 
 		// FIXME: Just returning whatever .jar we found in /target/
