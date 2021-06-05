@@ -1,6 +1,9 @@
 FROM openjdk:8-jdk-alpine
 
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN addgroup -S spring && adduser -S spring -G spring \
+  && mkdir /clones \
+  && chown spring:spring /clones
+
 USER spring:spring
 
 ARG JAR_FILE=target/*.jar
