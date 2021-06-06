@@ -1,21 +1,29 @@
 package org.swat.maracas.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHFileNotFoundException;
@@ -39,8 +47,12 @@ import org.swat.maracas.rest.tasks.CloneAndBuild;
 
 import com.google.common.base.Stopwatch;
 
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IList;
+import nl.cwi.swat.aethereal.AetherCollector;
+import nl.cwi.swat.aethereal.AetherDownloader;
 
 @RestController
 @RequestMapping("/github")
@@ -125,5 +137,64 @@ public class GithubController {
 			logger.error(e);
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown error: " + e.getMessage(), e);
 		}
+	}
+	
+	public List<File> findAffectedVersions() throws IOException, XmlPullParserException {
+		GHRepository repo = github.getRepository("tdegueul/commons-io");
+		AetherCollector col = new AetherCollector(15, 15);
+		InputStream content = repo.getFileContent("pom.xml", "master").read();
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		Model model = reader.read(content);
+		String gid = model.getGroupId();
+		String aid = model.getArtifactId();
+		String vid = model.getVersion();
+		
+		// https://regex101.com/r/vkijKf/1/
+		String SEMVER_PATTERN = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
+		Pattern semVer = Pattern.compile(SEMVER_PATTERN);
+		Matcher matcher = semVer.matcher(vid);
+		
+		if (matcher.matches()) {
+			int major = Integer.parseInt(matcher.group(1));
+			String upperRange = vid;
+			String lowerRange = major + ".0";
+			List<Artifact> versions = col.collectAvailableVersions(String.format("%s:%s", gid, aid), lowerRange, upperRange);
+			
+			AetherDownloader downloader = new AetherDownloader(15);
+			
+			// @since 2.5
+			String brokenDecl = "org.apache.commons.io.IOUtils.buffer(Ljava/io/Reader;)Ljava/io/BufferedReader;";
+			List<String> brokenDecls = Collections.singletonList(brokenDecl);
+
+			return
+				versions
+					.parallelStream()
+					.map(v -> downloader.downloadArtifact(v).getFile())
+					.filter(f -> f.exists())
+					.filter(f -> {
+						// Does it contain one of the affected declaration?
+						try (ScanResult scanResult =
+								new ClassGraph()
+									.enableAllInfo()
+									.overrideClasspath(f.toPath().toAbsolutePath().toString())
+									.scan()
+							) {
+							// We can stop as soon as we find one match
+							return scanResult.getAllClasses().stream().anyMatch(c -> {
+								return
+										brokenDecls.contains(c.getName()) ||
+									   c.getDeclaredMethodAndConstructorInfo().stream().anyMatch(m -> {
+										   return brokenDecls.contains(c.getName() + "." + m.getName() + m.getTypeDescriptorStr());
+									   }) ||
+									   c.getDeclaredFieldInfo().stream().anyMatch(fld -> {
+										   return brokenDecls.contains(c.getName() + "." + fld.getName());
+									   });
+							});
+						}
+					})
+					.collect(Collectors.toList());
+		}
+
+		return Collections.emptyList();
 	}
 }
