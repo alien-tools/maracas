@@ -10,6 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,6 +48,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.swat.maracas.rest.data.BreakingChangeInstance;
 import org.swat.maracas.rest.data.ExecutionStatistics;
 import org.swat.maracas.rest.data.PullRequestResponse;
+import org.swat.maracas.rest.tasks.CloneAndBuild;
 
 import com.google.common.base.Stopwatch;
 
@@ -92,18 +96,14 @@ public class GithubController {
 			Path basePath = Paths.get(CLONE_PATH).resolve(baseSha);
 			Path headPath = Paths.get(CLONE_PATH).resolve(headSha);
 
-			// Clone both branches
+			// Clone and build both repos
 			Stopwatch stopwatch = Stopwatch.createStarted();
-			clone(baseUrl, baseRef, basePath);
-			clone(headUrl, headRef, headPath);
-			long cloneTime = stopwatch.elapsed().toMillis();
-			stopwatch.reset();
-
-			// Build both branches and retrieve the JARs
-			stopwatch.start();
-			Path j1 = build(basePath);
-			Path j2 = build(headPath);
-			long buildTime = stopwatch.elapsed().toMillis();
+			CompletableFuture<Path> baseFuture = CompletableFuture.supplyAsync(new CloneAndBuild(baseUrl, baseRef, basePath));
+			CompletableFuture<Path> headFuture = CompletableFuture.supplyAsync(new CloneAndBuild(headUrl, headRef, headPath));
+			CompletableFuture.allOf(baseFuture, headFuture).join();
+			long cloneAndBuildTime = stopwatch.elapsed().toMillis();
+			Path j1 = baseFuture.get();
+			Path j2 = headFuture.get();
 			stopwatch.reset();
 
 			// Build delta model
@@ -119,18 +119,22 @@ public class GithubController {
 
 			return new PullRequestResponse(
 				headRef, baseRef, 0,
-				new ExecutionStatistics(cloneTime, buildTime, deltaTime),
+				new ExecutionStatistics(cloneAndBuildTime, deltaTime),
 				bcs);
 		} catch (GHFileNotFoundException e) {
 			logger.error(e);
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "The repository or PR does not exist", e);
-		} catch (GitAPIException e) {
+		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "git clone failed: " + e.getMessage(), e);
-		} catch (MavenInvocationException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Execution error: " + e.getMessage(), e);
+		} catch (CompletionException e) {
 			logger.error(e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Maven build failed: " + e.getMessage(), e);
-		} catch (IOException e) {
+			if (e.getCause() instanceof GitAPIException)
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "git operation failed: " + e.getCause().getMessage(), e);
+			else if (e.getCause() instanceof MavenInvocationException)
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Maven build failed: " + e.getCause().getMessage(), e);
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown error: " + e.getMessage(), e);
+		} catch (Exception e) {
 			logger.error(e);
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown error: " + e.getMessage(), e);
 		}
@@ -167,7 +171,7 @@ public class GithubController {
 		    request.setGoals(Collections.singletonList("package"));
 		    request.setProperties(properties);
 		    request.setBatchMode(true);
-		     
+		    
 		    Invoker invoker = new DefaultInvoker();
 		    invoker.setMavenHome(new File("/usr"));
 		    InvocationResult result = invoker.execute(request);
