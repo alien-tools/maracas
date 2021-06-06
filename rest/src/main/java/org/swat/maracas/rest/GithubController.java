@@ -53,6 +53,7 @@ import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IList;
 import nl.cwi.swat.aethereal.AetherCollector;
 import nl.cwi.swat.aethereal.AetherDownloader;
+import nl.cwi.swat.aethereal.MavenCollector;
 
 @RestController
 @RequestMapping("/github")
@@ -141,7 +142,7 @@ public class GithubController {
 	
 	public List<File> findAffectedVersions() throws IOException, XmlPullParserException {
 		GHRepository repo = github.getRepository("tdegueul/commons-io");
-		AetherCollector col = new AetherCollector(15, 15);
+		MavenCollector col = new AetherCollector(15, 15);
 		InputStream content = repo.getFileContent("pom.xml", "master").read();
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(content);
