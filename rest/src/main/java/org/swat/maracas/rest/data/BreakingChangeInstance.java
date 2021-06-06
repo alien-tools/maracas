@@ -26,9 +26,9 @@ public class BreakingChangeInstance {
 
 	public static BreakingChangeInstance fromRascal(IConstructor instance) {
 		return new BreakingChangeInstance(
-			((IString) instance.get("typ")).defaultToString(),
-			((IString) instance.get("decl")).defaultToString(),
-			((IString) instance.get("file")).defaultToString(),
+			((IString) instance.get("typ")).getValue(),
+			((IString) instance.get("decl")).getValue(),
+			((IString) instance.get("file")).getValue(),
 			((IInteger) instance.get("startLine")).intValue(),
 			((IInteger) instance.get("endLine")).intValue(),
 			((IBool) instance.get("source")).getValue(),
