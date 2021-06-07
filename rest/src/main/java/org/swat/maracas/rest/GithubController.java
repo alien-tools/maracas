@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,7 +56,7 @@ public class GithubController {
 	private GitHub github;
 	private String clonePath;
 	private String deltaPath;
-	private Map<String, CompletableFuture<Delta>> jobs = new HashMap<>();
+	private Map<String, CompletableFuture<Delta>> jobs = new ConcurrentHashMap<>();
 
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 
