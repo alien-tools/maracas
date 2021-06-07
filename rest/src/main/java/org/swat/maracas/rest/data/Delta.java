@@ -15,13 +15,13 @@ public class Delta {
 	private Throwable error;
 
 	public Delta() {
-		
+
 	}
 
 	public Delta(List<BreakingChangeInstance> breakingChanges, Throwable error) {
 		this.breakingChanges = breakingChanges;
 		this.error = error;
-		
+
 	}
 
 	public Delta(List<BreakingChangeInstance> breakingChanges) {

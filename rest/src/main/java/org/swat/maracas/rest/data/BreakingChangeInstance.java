@@ -15,7 +15,7 @@ public class BreakingChangeInstance {
 	private boolean binaryCompatible;
 
 	public BreakingChangeInstance() {
-		
+
 	}
 
 	public BreakingChangeInstance(String type, String declaration, String file, int startLine, int endLine, boolean sourceCompatible, boolean binaryCompatible) {

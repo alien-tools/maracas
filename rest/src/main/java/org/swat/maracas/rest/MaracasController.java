@@ -34,16 +34,16 @@ public class MaracasController {
 	String delta(@RequestParam("jar1") MultipartFile jar1, @RequestParam("jar2") MultipartFile jar2, RedirectAttributes redirectAttrs) {
 		Path j1 = Paths.get(UPLOAD_PATH).resolve("v1.jar");
 		Path j2 = Paths.get(UPLOAD_PATH).resolve("v2.jar");
-		
+
 		try {
 			jar1.transferTo(j1);
 			jar2.transferTo(j2);
-			
+
 			//IValue delta = maracas.computeDelta(j1, j2);
-			
+
 			Files.delete(j1);
 			Files.delete(j2);
-			
+
 			return "";
 		} catch (IOException e) {
 			e.printStackTrace();

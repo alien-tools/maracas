@@ -57,7 +57,7 @@ public class GithubController {
 	private String clonePath;
 	private String deltaPath;
 	private Map<String, CompletableFuture<Delta>> jobs = new HashMap<>();
-	
+
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 
 	private static final String DEFAULT_CLONE_PATH = "./clones/";
@@ -160,7 +160,7 @@ public class GithubController {
 			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
-	
+
 	public List<File> findAffectedVersions() throws IOException, XmlPullParserException {
 		GHRepository repo = github.getRepository("tdegueul/commons-io");
 		MavenCollector col = new AetherCollector(15, 15);
@@ -170,20 +170,20 @@ public class GithubController {
 		String gid = model.getGroupId();
 		String aid = model.getArtifactId();
 		String vid = model.getVersion();
-		
+
 		// https://regex101.com/r/vkijKf/1/
 		String SEMVER_PATTERN = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$";
 		Pattern semVer = Pattern.compile(SEMVER_PATTERN);
 		Matcher matcher = semVer.matcher(vid);
-		
+
 		if (matcher.matches()) {
 			int major = Integer.parseInt(matcher.group(1));
 			String upperRange = vid;
 			String lowerRange = major + ".0";
 			List<Artifact> versions = col.collectAvailableVersions(String.format("%s:%s", gid, aid), lowerRange, upperRange);
-			
+
 			AetherDownloader downloader = new AetherDownloader(15);
-			
+
 			// @since 2.5
 			String brokenDecl = "org.apache.commons.io.IOUtils.buffer(Ljava/io/)Reader;)Ljava/io/BufferedReader;";
 			List<String> brokenDecls = Collections.singletonList(brokenDecl);

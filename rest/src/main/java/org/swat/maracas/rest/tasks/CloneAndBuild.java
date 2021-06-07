@@ -27,7 +27,7 @@ public class CloneAndBuild implements Supplier<Path> {
 	private final String url;
 	private final String ref;
 	private final Path dest;
-	
+
 	public CloneAndBuild(String url, String ref, Path dest) {
 		this.url = url;
 		this.ref = ref;
@@ -70,7 +70,7 @@ public class CloneAndBuild implements Supplier<Path> {
 			logger.info("Building {}", pom);
 			Properties properties = new Properties();
 			properties.setProperty("skipTests", "true");
-			
+
 		    InvocationRequest request = new DefaultInvocationRequest();
 		    request.setPomFile(pom.toFile());
 		    request.setGoals(Collections.singletonList("package"));
@@ -80,7 +80,7 @@ public class CloneAndBuild implements Supplier<Path> {
 		    try {
 			    Invoker invoker = new DefaultInvoker();
 			    InvocationResult result = invoker.execute(request);
-	
+
 			    if (result.getExecutionException() != null)
 			    	throw new BuildException("'package' goal failed: " + result.getExecutionException().getMessage());
 			    if (result.getExitCode() != 0)
