@@ -90,13 +90,14 @@ public class GithubController {
 			GHPullRequest pr = repo.getPullRequest(prId);
 			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
 			File deltaFile = Paths.get(deltaPath).resolve(user).resolve(repository).resolve(prId + ".json").toFile();
+			String uid = prUid(user, repository, prId);
 
 			String getLocation = String.format("/github/pr/%s/%s/%s", user, repository, prId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
 			response.setHeader("Location", getLocation);
 
 			// If we have not yet computed this delta, compute it and store the future
-			if (!deltaFile.exists()) {
+			if (!jobs.containsKey(uid) && !deltaFile.exists()) {
 				CompletableFuture<Delta> future =
 					prDiff.diffAsync()
 					.handle((delta, e) -> {
@@ -109,11 +110,11 @@ public class GithubController {
 							logger.error(e);
 						}
 
-						jobs.remove(prUid(user, repository, prId));
+						jobs.remove(uid);
 						return null;
 					});
 
-				jobs.put(prUid(user, repository, prId), future);
+				jobs.put(uid, future);
 				return "processing";
 			} else
 				return "already processed";
