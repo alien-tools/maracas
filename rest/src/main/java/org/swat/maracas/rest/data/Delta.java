@@ -11,8 +11,12 @@ import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IList;
 
 public class Delta {
-	private final List<BreakingChangeInstance> breakingChanges;
-	private final Throwable error;
+	private List<BreakingChangeInstance> breakingChanges;
+	private Throwable error;
+
+	public Delta() {
+		
+	}
 
 	public Delta(List<BreakingChangeInstance> breakingChanges, Throwable error) {
 		this.breakingChanges = breakingChanges;

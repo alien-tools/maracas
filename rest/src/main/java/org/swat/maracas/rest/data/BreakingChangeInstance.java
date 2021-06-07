@@ -6,13 +6,17 @@ import io.usethesource.vallang.IInteger;
 import io.usethesource.vallang.IString;
 
 public class BreakingChangeInstance {
-	private final String type;
-	private final String declaration;
-	private final String file;
-	private final int startLine;
-	private final int endLine;
-	private final boolean sourceCompatible;
-	private final boolean binaryCompatible;
+	private String type;
+	private String declaration;
+	private String file;
+	private int startLine;
+	private int endLine;
+	private boolean sourceCompatible;
+	private boolean binaryCompatible;
+
+	public BreakingChangeInstance() {
+		
+	}
 
 	public BreakingChangeInstance(String type, String declaration, String file, int startLine, int endLine, boolean sourceCompatible, boolean binaryCompatible) {
 		this.type = type;

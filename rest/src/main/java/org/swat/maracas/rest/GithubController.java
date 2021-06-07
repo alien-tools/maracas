@@ -89,7 +89,7 @@ public class GithubController {
 			GHRepository repo = github.getRepository(user + "/" + repository);
 			GHPullRequest pr = repo.getPullRequest(prId);
 			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
-			File deltaFile = Paths.get(deltaPath).resolve(prUid(user, repository, prId) + ".json").toFile();
+			File deltaFile = Paths.get(deltaPath).resolve(user).resolve(repository).resolve(prId + ".json").toFile();
 
 			String getLocation = String.format("/github/pr/%s/%s/%s", user, repository, prId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
@@ -102,6 +102,7 @@ public class GithubController {
 					.handle((delta, e) -> {
 						if (delta != null) {
 							logger.info("Serializing {}", deltaFile);
+							deltaFile.getParentFile().mkdirs();
 							delta.toJson(deltaFile);
 							return delta;
 						} else if (e != null) {
@@ -125,7 +126,7 @@ public class GithubController {
 	@GetMapping("/pr/{user}/{repository}/{prId}")
 	PullRequestResponse getPullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
 			// Either we have it already
-			File deltaFile = Paths.get(deltaPath).resolve(prUid(user, repository, prId) + ".json").toFile();
+			File deltaFile = Paths.get(deltaPath).resolve(user).resolve(repository).resolve(prId + ".json").toFile();
 			if (deltaFile.exists() && deltaFile.length() > 0) {
 				Delta delta = Delta.fromJson(deltaFile);
 				return new PullRequestResponse("ok", delta);
