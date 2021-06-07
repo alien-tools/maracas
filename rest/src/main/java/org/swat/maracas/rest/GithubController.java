@@ -3,54 +3,49 @@ package org.swat.maracas.rest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.kohsuke.github.GHCommitPointer;
-import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.swat.maracas.rest.data.BreakingChangeInstance;
-import org.swat.maracas.rest.data.ExecutionStatistics;
+import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.PullRequestResponse;
-import org.swat.maracas.rest.tasks.CloneAndBuild;
-
-import com.google.common.base.Stopwatch;
+import org.swat.maracas.rest.delta.PullRequestDiff;
+import org.swat.maracas.rest.tasks.BuildException;
+import org.swat.maracas.rest.tasks.CloneException;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
-import io.usethesource.vallang.IConstructor;
-import io.usethesource.vallang.IList;
 import nl.cwi.swat.aethereal.AetherCollector;
 import nl.cwi.swat.aethereal.AetherDownloader;
 import nl.cwi.swat.aethereal.MavenCollector;
@@ -58,85 +53,110 @@ import nl.cwi.swat.aethereal.MavenCollector;
 @RestController
 @RequestMapping("/github")
 public class GithubController {
-	private MaracasHelper maracas = MaracasHelper.getInstance();
 	private GitHub github;
-	private static final String CLONE_PATH = "./clones";
+	private String clonePath;
+	private String deltaPath;
+	private Map<String, CompletableFuture<Delta>> jobs = new HashMap<>();
+	
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
+
+	private static final String DEFAULT_CLONE_PATH = "./clones/";
+	private static final String DEFAULT_DELTA_PATH = "./deltas/";
 
 	@Autowired
     ResourceLoader resourceLoader;
+	@Autowired
+	Environment environment;
 
 	@PostConstruct
 	public void initialize() {
+		clonePath = environment.getProperty("maracas.clone-path", DEFAULT_CLONE_PATH);
+		deltaPath = environment.getProperty("maracas.delta-path", DEFAULT_DELTA_PATH);
+
 		Resource githubRes = resourceLoader.getResource("classpath:.github");
 		try (InputStream in = githubRes.getInputStream()) {
 			Properties props = new Properties();
 			props.load(in);
-			this.github = GitHubBuilder.fromProperties(props).build();
+			github = GitHubBuilder.fromProperties(props).build();
 		} catch (IOException e) {
 			logger.error(e);
 		}
 	}
 
-	// Considering the computation time, this should probably be a POST job/GET result duo
-	@GetMapping("/pr/{user}/{repository}/{pr}")
-	PullRequestResponse analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer pr) {
+	@PostMapping("/pr/{user}/{repository}/{prId}")
+	String analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
 		try {
-			// Retrieve PR metadata from GH
-			GHRepository repo = github.getRepository(String.format("%s/%s", user, repository));
-			GHPullRequest pullRequest = repo.getPullRequest(pr);
-			GHCommitPointer head = pullRequest.getHead();
-			GHCommitPointer base = pullRequest.getBase();
-			String headSha = head.getSha();
-			String baseSha = base.getSha();
-			String headUrl = head.getRepository().getHttpTransportUrl();
-			String baseUrl = base.getRepository().getHttpTransportUrl();
-			String headRef = head.getRef();
-			String baseRef = base.getRef();
-			Path basePath = Paths.get(CLONE_PATH).resolve(baseSha);
-			Path headPath = Paths.get(CLONE_PATH).resolve(headSha);
+			GHRepository repo = github.getRepository(user + "/" + repository);
+			GHPullRequest pr = repo.getPullRequest(prId);
+			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
+			File deltaFile = Paths.get(deltaPath).resolve(prUid(user, repository, prId) + ".json").toFile();
 
-			// Clone and build both repos
-			Stopwatch stopwatch = Stopwatch.createStarted();
-			CompletableFuture<Path> baseFuture = CompletableFuture.supplyAsync(new CloneAndBuild(baseUrl, baseRef, basePath));
-			CompletableFuture<Path> headFuture = CompletableFuture.supplyAsync(new CloneAndBuild(headUrl, headRef, headPath));
-			CompletableFuture.allOf(baseFuture, headFuture).join();
-			long cloneAndBuildTime = stopwatch.elapsed().toMillis();
-			Path j1 = baseFuture.get();
-			Path j2 = headFuture.get();
-			stopwatch.reset();
+			String getLocation = String.format("/github/pr/%s/%s/%s", user, repository, prId);
+			response.setStatus(HttpStatus.SC_ACCEPTED);
+			response.setHeader("Location", getLocation);
 
-			// Build delta model
-			stopwatch.start();
-			IList delta = maracas.computeDelta(j1, j2, basePath);
-			long deltaTime = stopwatch.elapsed().toMillis();
-			stopwatch.reset();
+			// If we have not yet computed this delta, compute it and store the future
+			if (!deltaFile.exists()) {
+				CompletableFuture<Delta> future =
+					prDiff.diffAsync()
+					.handle((delta, e) -> {
+						if (delta != null) {
+							logger.info("Serializing {}", deltaFile);
+							delta.toJson(deltaFile);
+							return delta;
+						} else if (e != null) {
+							logger.error(e);
+						}
 
-			List<BreakingChangeInstance> bcs =
-				delta.stream()
-					.map(e -> BreakingChangeInstance.fromRascal((IConstructor) e))
-					.collect(Collectors.toList());
+						jobs.remove(prUid(user, repository, prId));
+						return null;
+					});
 
-			return new PullRequestResponse(
-				headRef, baseRef, 0,
-				new ExecutionStatistics(cloneAndBuildTime, deltaTime),
-				bcs);
-		} catch (GHFileNotFoundException e) {
-			logger.error(e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "The repository or PR does not exist", e);
-		} catch (ExecutionException | InterruptedException e) {
-			logger.error(e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Execution error: " + e.getMessage(), e);
-		} catch (CompletionException e) {
-			logger.error(e);
-			if (e.getCause() instanceof GitAPIException)
-				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "git operation failed: " + e.getCause().getMessage(), e);
-			else if (e.getCause() instanceof MavenInvocationException)
-				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Maven build failed: " + e.getCause().getMessage(), e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown error: " + e.getMessage(), e);
-		} catch (Exception e) {
-			logger.error(e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown error: " + e.getMessage(), e);
+				jobs.put(prUid(user, repository, prId), future);
+				return "processing";
+			} else
+				return "already processed";
+		} catch (IOException e) {
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			return e.getMessage();
+		}
+	}
+
+	@GetMapping("/pr/{user}/{repository}/{prId}")
+	PullRequestResponse getPullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+			// Either we have it already
+			File deltaFile = Paths.get(deltaPath).resolve(prUid(user, repository, prId) + ".json").toFile();
+			if (deltaFile.exists() && deltaFile.length() > 0) {
+				Delta delta = Delta.fromJson(deltaFile);
+				return new PullRequestResponse("ok", delta);
+			}
+
+			// Or we're currently computing it
+			if (jobs.containsKey(prUid(user, repository, prId))) {
+				response.setStatus(HttpStatus.SC_ACCEPTED);
+				return new PullRequestResponse("processing", null);
+			}
+
+			// Or it doesn't exist
+			response.setStatus(HttpStatus.SC_NOT_FOUND);
+			return new PullRequestResponse("This PR isn't being analyzed", null);
+	}
+
+	@GetMapping("/pr-sync/{user}/{repository}/{prId}")
+	PullRequestResponse analyzePullRequestDebug(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+		try {
+			GHRepository repo = github.getRepository(user + "/" + repository);
+			GHPullRequest pr = repo.getPullRequest(prId);
+			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
+			Delta delta = prDiff.diff();
+
+			return new PullRequestResponse("ok", delta);
+		} catch (IOException e) {
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			return new PullRequestResponse(e.getMessage(), null);
+		} catch (CloneException | BuildException | CompletionException e) {
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
 	
@@ -164,7 +184,7 @@ public class GithubController {
 			AetherDownloader downloader = new AetherDownloader(15);
 			
 			// @since 2.5
-			String brokenDecl = "org.apache.commons.io.IOUtils.buffer(Ljava/io/Reader;)Ljava/io/BufferedReader;";
+			String brokenDecl = "org.apache.commons.io.IOUtils.buffer(Ljava/io/)Reader;)Ljava/io/BufferedReader;";
 			List<String> brokenDecls = Collections.singletonList(brokenDecl);
 
 			return
@@ -197,5 +217,9 @@ public class GithubController {
 		}
 
 		return Collections.emptyList();
+	}
+
+	private String prUid(String repository, String user, int prId) {
+		return repository + "-" + user + "-" + prId;
 	}
 }
