@@ -8,7 +8,8 @@ import io.usethesource.vallang.IString;
 public class BreakingChangeInstance {
 	private String type;
 	private String declaration;
-	private String file;
+	private String path;
+	private String url;
 	private int startLine;
 	private int endLine;
 	private boolean sourceCompatible;
@@ -18,10 +19,10 @@ public class BreakingChangeInstance {
 
 	}
 
-	public BreakingChangeInstance(String type, String declaration, String file, int startLine, int endLine, boolean sourceCompatible, boolean binaryCompatible) {
+	public BreakingChangeInstance(String type, String declaration, String path, int startLine, int endLine, boolean sourceCompatible, boolean binaryCompatible) {
 		this.type = type;
 		this.declaration = declaration;
-		this.file = file;
+		this.path = path;
 		this.startLine = startLine;
 		this.endLine = endLine;
 		this.sourceCompatible = sourceCompatible;
@@ -32,7 +33,7 @@ public class BreakingChangeInstance {
 		return new BreakingChangeInstance(
 			((IString) instance.get("typ")).getValue(),
 			((IString) instance.get("decl")).getValue(),
-			((IString) instance.get("file")).getValue(),
+			((IString) instance.get("path")).getValue(),
 			((IInteger) instance.get("startLine")).intValue(),
 			((IInteger) instance.get("endLine")).intValue(),
 			((IBool) instance.get("source")).getValue(),
@@ -40,16 +41,28 @@ public class BreakingChangeInstance {
 		);
 	}
 
-	public String getDeclaration() {
-		return declaration;
-	}
-
 	public String getType() {
 		return type;
 	}
 
-	public String getFile() {
-		return file;
+	public String getDeclaration() {
+		return declaration;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public int getStartLine() {

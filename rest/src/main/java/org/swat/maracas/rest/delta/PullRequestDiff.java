@@ -52,7 +52,16 @@ public class PullRequestDiff implements Diffable {
 			MaracasHelper maracas = MaracasHelper.getInstance();
 			IList delta = maracas.computeDelta(j1, j2, basePath);
 
-			return Delta.fromRascal(delta);
+			Delta res = Delta.fromRascal(delta);
+			// Set proper relative path and URLs
+			res.getBreakingChanges().forEach(bc -> {
+				bc.setPath(bc.getPath().replaceFirst(basePath.toAbsolutePath().toString(), ""));
+				bc.setUrl(
+					String.format("%s/blob/%s/%s#L%s-L%s",
+						base.getRepository().getHtmlUrl(), base.getRef(), bc.getPath(), bc.getStartLine(), bc.getEndLine())
+				);
+			});
+			return res;
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
