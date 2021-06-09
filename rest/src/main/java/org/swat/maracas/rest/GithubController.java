@@ -25,6 +25,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.aether.artifact.Artifact;
+import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -38,9 +39,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.swat.maracas.rest.data.Config;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.PullRequestResponse;
 import org.swat.maracas.rest.delta.PullRequestDiff;
+import org.swat.maracas.rest.impact.GithubRepository;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneException;
 
@@ -86,11 +89,17 @@ public class GithubController {
 	@PostMapping("/pr/{user}/{repository}/{prId}")
 	String analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
 		try {
+			// Read PR meta
 			GHRepository repo = github.getRepository(user + "/" + repository);
 			GHPullRequest pr = repo.getPullRequest(prId);
 			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
 			File deltaFile = Paths.get(deltaPath).resolve(user).resolve(repository).resolve(prId + ".json").toFile();
 			String uid = prUid(user, repository, prId);
+
+			// Read BreakBot config
+			GHContent configFile = github.getRepository("tdegueul/comp-changes").getFileContent(".breakbot.yml");
+			InputStream configIn = configFile.read();
+			Config config = Config.fromYaml(configIn);
 
 			String getLocation = String.format("/github/pr/%s/%s/%s", user, repository, prId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
@@ -100,7 +109,17 @@ public class GithubController {
 			if (!jobs.containsKey(uid) && !deltaFile.exists()) {
 				CompletableFuture<Delta> future =
 					prDiff.diffAsync()
-					.handle((delta, e) -> {
+					.thenApply(delta -> {
+						for (String c : config.getGithubClients())
+							try {
+								GHRepository clientRepo = github.getRepository(c);
+								GithubRepository client = new GithubRepository(clientRepo, clonePath);
+								delta = client.computeImpact(delta);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						return delta;
+					}).handle((delta, e) -> {
 						if (delta != null) {
 							logger.info("Serializing {}", deltaFile);
 							deltaFile.getParentFile().mkdirs();

@@ -8,6 +8,6 @@ public interface Diffable {
 	public Delta diff();
 
 	public default CompletableFuture<Delta> diffAsync() {
-		return CompletableFuture.supplyAsync(() -> diff());
+		return CompletableFuture.supplyAsync(this::diff);
 	}
 }

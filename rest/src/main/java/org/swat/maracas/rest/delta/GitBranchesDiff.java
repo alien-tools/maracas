@@ -16,13 +16,13 @@ import org.swat.maracas.rest.tasks.CloneException;
 
 import io.usethesource.vallang.IList;
 
-public class GItBranchesDiff implements Diffable {
+public class GitBranchesDiff implements Diffable {
 	private final GHBranch base;
 	private final GHBranch head;
 	private final String clonePath;
-	private static final Logger logger = LogManager.getLogger(GItBranchesDiff.class);
+	private static final Logger logger = LogManager.getLogger(GitBranchesDiff.class);
 
-	public GItBranchesDiff(GHBranch base, GHBranch head, String clonePath) {
+	public GitBranchesDiff(GHBranch base, GHBranch head, String clonePath) {
 		this.base = base;
 		this.head = head;
 		this.clonePath = clonePath;

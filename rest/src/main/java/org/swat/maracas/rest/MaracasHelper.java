@@ -43,6 +43,16 @@ public class MaracasHelper {
 		});
 	}
 
+	public IList computeImpact(Path oldJar, Path newJar, Path clientJar, Path sources) {
+		IValueFactory vf = ValueFactoryFactory.getValueFactory();
+		return run((eval) -> {
+			return (IList) eval.call("detections",
+				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
+				vf.sourceLocation(clientJar.toAbsolutePath().toString()),
+				vf.sourceLocation(sources.toAbsolutePath().toString()));
+		});
+	}
+
 	public ISet getChangedEntities(IValue delta) {
 		return (ISet) run((eval) -> eval.call("getChangedEntities", delta));
 	}

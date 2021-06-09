@@ -53,6 +53,9 @@ public class PullRequestDiff implements Diffable {
 			IList delta = maracas.computeDelta(j1, j2, basePath);
 
 			Delta res = Delta.fromRascal(delta);
+			res.setJarV1(j1);
+			res.setJarV2(j2);
+			res.setSources(basePath);
 			// Set proper relative path and URLs
 			res.getBreakingChanges().forEach(bc -> {
 				bc.setPath(bc.getPath().replaceFirst(basePath.toAbsolutePath().toString(), ""));

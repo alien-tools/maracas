@@ -1,8 +1,12 @@
 package org.swat.maracas.rest.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.usethesource.vallang.IBool;
 import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IInteger;
+import io.usethesource.vallang.IList;
 import io.usethesource.vallang.IString;
 
 public class BreakingChangeInstance {
@@ -14,6 +18,7 @@ public class BreakingChangeInstance {
 	private int endLine;
 	private boolean sourceCompatible;
 	private boolean binaryCompatible;
+	private List<Detection> detections = new ArrayList<>();
 
 	public BreakingChangeInstance() {
 
@@ -39,6 +44,20 @@ public class BreakingChangeInstance {
 			((IBool) instance.get("source")).getValue(),
 			((IBool) instance.get("binary")).getValue()
 		);
+	}
+
+	public void addDetectionsFromRascal(IList rascalDetections) {
+		rascalDetections.forEach(d -> {
+			detections.add(Detection.fromRascal(((IConstructor) d)));
+		});
+	}
+
+	public void addDetection(Detection d) {
+		detections.add(d);
+	}
+
+	public List<Detection> getDetections() {
+		return detections;
 	}
 
 	public String getType() {
