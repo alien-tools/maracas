@@ -8,6 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import fi.iki.elonen.NanoHTTPD.Response;
+
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,7 +35,30 @@ class GithubControllerTests {
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/2"))
     		.andExpect(status().isAccepted())
     		.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-    		.andExpect(result -> "/github/pr/tdegueul/comp-changes/2".equals(result.getResponse().getHeader("Location")))
-    		.andReturn();
+    		.andExpect(result -> "/github/pr/tdegueul/comp-changes/2".equals(result.getResponse().getHeader("Location")));
+	}
+
+	@Test
+	void testUnknownRepository() throws Exception {
+		mvc.perform(post("/github/pr/tdegueul/NOPE/2"))
+			.andExpect(status().isBadRequest());
+
+		mvc.perform(get("/github/pr-sync/tdegueul/NOPE/2"))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void testUnknownPR() throws Exception {
+		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999"))
+			.andExpect(status().isBadRequest());
+
+		mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/9999"))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void testPRExistsButNotAnalyzed() throws Exception {
+		mvc.perform(get("/github/pr/tdegueul/comp-changes/1"))
+			.andExpect(status().isNotFound());
 	}
 }
