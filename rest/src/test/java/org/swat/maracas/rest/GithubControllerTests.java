@@ -1,18 +1,27 @@
 package org.swat.maracas.rest;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
-import fi.iki.elonen.NanoHTTPD.Response;
-
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -20,6 +29,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GithubControllerTests {
 	@Autowired
 	private MockMvc mvc;
+
+	@Value("${maracas.clone-path}")
+	private String clonePath;
+	@Value("${maracas.delta-path")
+	private String deltaPath;
+
+	@BeforeEach
+	public void cleanData() throws IOException {
+		FileUtils.deleteDirectory(new File(clonePath));
+		FileUtils.deleteDirectory(new File(deltaPath));
+	}
 
 	@Test
 	void testSubmitAndCheckPRSync() throws Exception {
