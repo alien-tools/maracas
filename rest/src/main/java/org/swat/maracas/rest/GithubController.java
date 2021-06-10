@@ -31,7 +31,7 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,25 +57,22 @@ import nl.cwi.swat.aethereal.MavenCollector;
 @RequestMapping("/github")
 public class GithubController {
 	private GitHub github;
-	private String clonePath;
-	private String deltaPath;
 	private Map<String, CompletableFuture<Delta>> jobs = new ConcurrentHashMap<>();
 
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 
-	private static final String DEFAULT_CLONE_PATH = "./clones/";
-	private static final String DEFAULT_DELTA_PATH = "./deltas/";
+	@Value("${maracas.clone-path:./clones}")
+	private String clonePath;
+	@Value("${maracas.delta-path:./deltas}")
+	private String deltaPath;
+	@Value("${maracas.breakbot-file:.breakbot.yml}")
+	private String breakbotFile;
 
 	@Autowired
     ResourceLoader resourceLoader;
-	@Autowired
-	Environment environment;
 
 	@PostConstruct
 	public void initialize() {
-		clonePath = environment.getProperty("maracas.clone-path", DEFAULT_CLONE_PATH);
-		deltaPath = environment.getProperty("maracas.delta-path", DEFAULT_DELTA_PATH);
-
 		Resource githubRes = resourceLoader.getResource("classpath:.github");
 		try (InputStream in = githubRes.getInputStream()) {
 			Properties props = new Properties();
@@ -97,7 +94,7 @@ public class GithubController {
 			String uid = prUid(user, repository, prId);
 
 			// Read BreakBot config
-			GHContent configFile = github.getRepository("tdegueul/comp-changes").getFileContent(".breakbot.yml");
+			GHContent configFile = repo.getFileContent(breakbotFile);
 			InputStream configIn = configFile.read();
 			Config config = Config.fromYaml(configIn);
 

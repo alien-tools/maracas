@@ -44,10 +44,11 @@ class GithubControllerTests {
 	@Test
 	void testSubmitAndCheckPRSync() throws Exception {
 		mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/2"))
-    		.andExpect(status().isOk())
-    		.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-    		.andExpect(jsonPath("$.message", is("ok")))
-    		.andExpect(jsonPath("$.delta.breakingChanges", not(empty())));
+			.andExpect(status().isOk())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$.message", is("ok")))
+			.andExpect(jsonPath("$.delta.breakingChanges", not(empty())))
+			.andReturn();
 	}
 
 	@Test
