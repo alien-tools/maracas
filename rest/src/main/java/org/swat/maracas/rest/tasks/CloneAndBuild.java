@@ -1,22 +1,24 @@
 package org.swat.maracas.rest.tasks;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.Git;
 
 /**
@@ -63,10 +65,11 @@ public class CloneAndBuild implements Supplier<Path> {
 	private Path build(Path local) throws BuildException {
 		Path target = local.resolve("target");
 		Path pom = local.resolve("pom.xml");
-		if (!target.toFile().exists()) {
-			if (!pom.toFile().exists())
-				throw new BuildException("No root pom.xml file in " + local);
 
+		if (!pom.toFile().exists())
+			throw new BuildException("No root pom.xml file in " + local);
+
+		if (!target.toFile().exists()) {
 			logger.info("Building {}", pom);
 			Properties properties = new Properties();
 			properties.setProperty("skipTests", "true");
@@ -92,15 +95,20 @@ public class CloneAndBuild implements Supplier<Path> {
 		    }
 		} else logger.info("{} has already been built. Skipping.", local);
 
-		// FIXME: Just returning whatever .jar we found in /target/
-	    try (Stream<Path> walk = Files.walk(target, 1)) {
-	        Optional<Path> res = walk.filter(f -> f.toString().endsWith(".jar")).findFirst();
-	        if (res.isPresent())
-	        	return res.get();
-	        else
-	        	throw new BuildException("'package' goal on " + pom + " did not produce a JAR");
-	    } catch (IOException e) {
-	    	throw new BuildException(e);
+		// FIXME: Brittle
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		try (InputStream in = new FileInputStream(pom.toFile())) {
+			Model model = reader.read(in);
+			String aid = model.getArtifactId();
+			String vid = model.getVersion();
+			Path jar = target.resolve(String.format("%s-%s.jar", aid, vid));
+
+			if (!jar.toFile().exists())
+				throw new BuildException("'package' goal on " + pom + " did not produce a JAR");
+
+			return jar;
+		} catch (IOException | XmlPullParserException e) {
+			throw new BuildException("pom.xml", e);
 		}
 	}
 }
