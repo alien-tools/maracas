@@ -45,7 +45,7 @@ public class GithubRepository implements Impactable {
 			// FIXME: we should reuse the possibly-existing delta model,
 			// but easier for now to just pass all the JARs to Maracas
 			MaracasHelper maracas = MaracasHelper.getInstance();
-			IList detections = maracas.computeImpact(delta.getJarV1(), delta.getJarV2(), clientJar, delta.getSources());
+			IList detections = maracas.computeImpact(delta.getJarV1(), delta.getJarV2(), clientJar, clientPath);
 			detections.forEach(rascalDetection -> {
 				Detection d = Detection.fromRascal((IConstructor) rascalDetection);
 				Optional<BreakingChangeInstance> bc =
@@ -54,7 +54,12 @@ public class GithubRepository implements Impactable {
 					.findFirst();
 
 				d.setClient(repository.getHtmlUrl().toString());
-				
+				d.setPath(d.getPath().replaceFirst(clientPath.toAbsolutePath().toString(), ""));
+				d.setUrl(
+					String.format("%s/blob/%s/%s#L%s-L%s",
+						repository.getHtmlUrl(), repository.getDefaultBranch(), d.getPath(), d.getStartLine(), d.getEndLine())
+				);
+
 				if (bc.isPresent())
 					bc.get().addDetection(d);
 				else

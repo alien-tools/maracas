@@ -168,6 +168,20 @@ public class GithubController {
 			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
 			Delta delta = prDiff.diff();
 
+			// Read BreakBot config
+			GHContent configFile = repo.getFileContent(breakbotFile);
+			InputStream configIn = configFile.read();
+			Config config = Config.fromYaml(configIn);
+
+			for (String c : config.getGithubClients())
+				try {
+					GHRepository clientRepo = github.getRepository(c);
+					GithubRepository client = new GithubRepository(clientRepo, clonePath);
+					delta = client.computeImpact(delta);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
 			return new PullRequestResponse("ok", delta);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
