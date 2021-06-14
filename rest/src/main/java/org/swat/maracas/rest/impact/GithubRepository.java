@@ -50,7 +50,7 @@ public class GithubRepository implements Impactable {
 				Detection d = Detection.fromRascal((IConstructor) rascalDetection);
 				Optional<BreakingChangeInstance> bc =
 					delta.getBreakingChanges().stream()
-					.filter(c -> c.getDeclaration().equals(d.getUsed()))
+					.filter(c -> c.getDeclaration().equals(d.getSrc()))
 					.findFirst();
 
 				d.setClient(repository.getHtmlUrl().toString());
