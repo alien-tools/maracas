@@ -32,6 +32,7 @@ public class MaracasSpoon {
 		//List<JApiClass> tst = Collections.singletonList(classes.get(3));
 		Filter.filter(classes, new ImpactVisitor(processor));
 		
+		System.out.println(processor.getDetections().size() + " detections found");
 		processor.getDetections().forEach(d -> System.out.println(d));
 	}
 }

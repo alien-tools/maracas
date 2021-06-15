@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.swat.maracas.spoon.Detection.APIUse;
 
 import spoon.reflect.CtModel;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
@@ -22,7 +24,8 @@ public class SpoonHelper {
 					CtTypeReference<?> typeRef = (CtTypeReference<?>) ref;
 					if (fqn.equals(typeRef.getQualifiedName())) {
 						Detection d = new Detection();
-						d.setElement(typeRef.getParent());
+						
+						d.setElement(firstLocatableParent(typeRef));
 						d.setReference(typeRef);
 						d.setUsedApiElement(typeRef.getTypeDeclaration());
 						d.setUse(APIUse.TYPE_DEPENDENCY);
@@ -37,7 +40,7 @@ public class SpoonHelper {
 					String container = execRef.getDeclaringType().getQualifiedName();
 					if (fqn.equals(container)) {
 						Detection d = new Detection();
-						d.setElement(execRef.getParent());
+						d.setElement(firstLocatableParent(execRef));
 						d.setReference(execRef);
 						d.setUsedApiElement(execRef.getExecutableDeclaration());
 						d.setUse(APIUse.METHOD_INVOCATION);
@@ -52,7 +55,7 @@ public class SpoonHelper {
 					String container = fieldRef.getDeclaringType().getQualifiedName();
 					if (fqn.equals(container)) {
 						Detection d = new Detection();
-						d.setElement(fieldRef.getParent());
+						d.setElement(firstLocatableParent(fieldRef));
 						d.setReference(fieldRef);
 						d.setUsedApiElement(fieldRef.getFieldDeclaration());
 						d.setUse(APIUse.FIELD_ACCESS);
@@ -66,5 +69,14 @@ public class SpoonHelper {
 			})
 			.filter(d -> d != null)
 			.collect(Collectors.toList());
+	}
+
+	public static CtElement firstLocatableParent(CtElement element) {
+		CtElement parent = element;
+		while ((parent = parent.getParent()) != null) {
+			if (parent.getPosition().getFile() != null && parent instanceof CtNamedElement)
+				return parent;
+		}
+		return parent;
 	}
 }
