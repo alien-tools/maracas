@@ -68,27 +68,20 @@ public class Detection {
 
 	@Override
 	public String toString() {
-		if (reference.getPosition().getFile() == null) {
-//			System.out.println("elem="+element+" ["+element.getPosition()+"]");
-//			System.out.println("parent="+element.getParent()+" ["+element.getParent().getPosition()+"]");
-//			System.out.println("ref="+reference+" ["+reference.isImplicit()+"]");
-//			System.out.println(usedApiElement.isImplicit());
-//			System.out.println(use);
-			System.out.println("Unknown reference " + reference);
-		}
-		if (element.getPosition().getFile() == null) {
-			System.out.println("Unknown element " + element);
-		}
-		if (element.getPosition() instanceof NoSourcePosition) {
-			System.out.println("No source position for " + element);
-		}
-//		String[] elemLines = element.toString().split("\\n");
-//		String[] usedLines = usedApiElement.toString().split("\\n");
 		String elemName = ((CtNamedElement) element).getSimpleName();
 		String usedName = ((CtNamedElement) usedApiElement).getSimpleName();
-		return String.format("[%s] %s (%s:%d) (%d:%d) uses (%s -> %s) [%s]",
-			change, elemName, element.getPosition().getFile().getName(), element.getPosition().getLine(),
-			element.getPosition().getColumn(), element.getPosition().getEndColumn(), usedName, source, use);
+
+		return """
+		[%s]
+			Element: %s (%s:%d)
+			Used:    %s
+			Source:  %s
+			Use:     %s\
+		""".formatted(
+			change, elemName,
+			element.getPosition().getFile().getName(), element.getPosition().getLine(),
+			usedName, source, use
+		);
 	}
 
 	@Override

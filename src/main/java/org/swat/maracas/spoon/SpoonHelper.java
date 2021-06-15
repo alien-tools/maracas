@@ -1,74 +1,56 @@
 package org.swat.maracas.spoon;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.swat.maracas.spoon.Detection.APIUse;
 
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtModuleReference;
+import spoon.reflect.reference.CtPackageReference;
 import spoon.reflect.reference.CtReference;
+import spoon.reflect.reference.CtTypeMemberWildcardImportReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.reflect.reference.CtVariableReference;
+import spoon.reflect.visitor.Query;
+import spoon.reflect.visitor.filter.ReferenceTypeFilter;
 
 public class SpoonHelper {
-	public static List<Detection> allReferencesToType(CtModel m, String fqn) {
-		return
-			m.getElements(new TypeFilter<>(CtReference.class))
-			.stream()
-			.map(ref -> {
+	public static List<CtReference> allReferencesToType(CtModel m, String fqn) {
+		return Query.getReferences(m.getRootPackage(), new ReferenceTypeFilter<>(CtReference.class) {
+			@Override
+			public boolean matches(CtReference ref) {
+				/**
+				 * 3 ways to reference a type:
+				 *   - Reference to the type itself
+				 *   - Reference to one of its methods
+				 *   - Reference to one of its fields
+				 */
 				if (ref instanceof CtTypeReference) {
 					CtTypeReference<?> typeRef = (CtTypeReference<?>) ref;
-					if (fqn.equals(typeRef.getQualifiedName())) {
-						Detection d = new Detection();
-						
-						d.setElement(firstLocatableParent(typeRef));
-						d.setReference(typeRef);
-						d.setUsedApiElement(typeRef.getTypeDeclaration());
-						d.setUse(APIUse.TYPE_DEPENDENCY);
-						
-//						if (typeRef.getPosition().getFile() != null)
-							return d;
-					}
-				}
-
-				if (ref instanceof CtExecutableReference<?>) {
+					return fqn.equals(typeRef.getQualifiedName());
+				} else if (ref instanceof CtExecutableReference) {
 					CtExecutableReference<?> execRef = (CtExecutableReference<?>) ref;
 					String container = execRef.getDeclaringType().getQualifiedName();
-					if (fqn.equals(container)) {
-						Detection d = new Detection();
-						d.setElement(firstLocatableParent(execRef));
-						d.setReference(execRef);
-						d.setUsedApiElement(execRef.getExecutableDeclaration());
-						d.setUse(APIUse.METHOD_INVOCATION);
-						
-//						if (execRef.getPosition().getFile() != null)
-							return d;
-					}
-				}
-				
-				if (ref instanceof CtFieldReference<?>) {
+					return fqn.equals(container);
+				} else  if (ref instanceof CtFieldReference) {
 					CtFieldReference<?> fieldRef = (CtFieldReference<?>) ref;
 					String container = fieldRef.getDeclaringType().getQualifiedName();
-					if (fqn.equals(container)) {
-						Detection d = new Detection();
-						d.setElement(firstLocatableParent(fieldRef));
-						d.setReference(fieldRef);
-						d.setUsedApiElement(fieldRef.getFieldDeclaration());
-						d.setUse(APIUse.FIELD_ACCESS);
-						
-//						if (fieldRef.getPosition().getFile() != null)
-							return d;
-					}
+					return fqn.equals(container);
+				} else if (ref instanceof CtPackageReference) {
+					return false;
+				} else if (ref instanceof CtVariableReference) {
+					return false;
+				} else if (ref instanceof CtModuleReference) {
+					return false;
+				} else if (ref instanceof CtTypeMemberWildcardImportReference) {
+					return false;
+				} else {
+					throw new UnsupportedOperationException("Unknown ref type " + ref.getClass());
 				}
-				
-				return null;
-			})
-			.filter(d -> d != null)
-			.collect(Collectors.toList());
+			}
+		});
 	}
 
 	public static CtElement firstLocatableParent(CtElement element) {
