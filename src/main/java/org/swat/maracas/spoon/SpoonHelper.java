@@ -56,7 +56,7 @@ public class SpoonHelper {
 	public static CtElement firstLocatableParent(CtElement element) {
 		CtElement parent = element;
 		while ((parent = parent.getParent()) != null) {
-			if (parent.getPosition().getFile() != null && parent instanceof CtNamedElement)
+			if (parent.getPosition().getFile() != null)
 				return parent;
 		}
 		return parent;

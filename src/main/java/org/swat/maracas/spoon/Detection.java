@@ -68,8 +68,18 @@ public class Detection {
 
 	@Override
 	public String toString() {
-		String elemName = ((CtNamedElement) element).getSimpleName();
-		String usedName = ((CtNamedElement) usedApiElement).getSimpleName();
+		String elemName =
+			element instanceof CtNamedElement ?
+				((CtNamedElement) element).getSimpleName() :
+				element.toString();
+		String usedName =
+			usedApiElement instanceof CtNamedElement ?
+				((CtNamedElement) usedApiElement).getSimpleName() :
+				usedApiElement.toString();
+		int elemLine =
+			element.getPosition() instanceof NoSourcePosition ?
+				-1 :
+				element.getPosition().getLine();
 
 		return """
 		[%s]
@@ -79,10 +89,15 @@ public class Detection {
 			Use:     %s\
 		""".formatted(
 			change, elemName,
-			element.getPosition().getFile().getName(), element.getPosition().getLine(),
+			element.getPosition().getFile().getName(), elemLine,
 			usedName, source, use
 		);
 	}
+	
+	@Override
+    public int hashCode() {
+        return 1;
+    }
 
 	@Override
 	public boolean equals(Object other) {
@@ -90,6 +105,8 @@ public class Detection {
 			return false;
 		if (this == other)
 			return true;
+		if (!(other instanceof Detection))
+			return false;
 		Detection that = (Detection) other;
 		return  element.equals(that.getElement()) &&
 				reference.equals(that.getReference()) &&
