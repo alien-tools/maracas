@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.swat.maracas.spoon.Detection.APIUse;
-
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -22,15 +20,6 @@ import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import spoon.reflect.CtModel;
-import spoon.reflect.code.CtConstructorCall;
-import spoon.reflect.code.CtThrow;
-import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtInterface;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ImpactProcessor {
@@ -46,13 +35,13 @@ public class ImpactProcessor {
 	}
 
 	@SafeVarargs
-	public static <T> List<? extends T> union(List<? extends T>... lists) {
+	public static <T> List<T> union(List<T>... lists) {
 		return Lists.newArrayList(Iterables.concat(lists));
 	}
 
 	public void process(JApiClass cls, JApiCompatibilityChange c) {
 		CtTypeReference<?> clsRef = toTypeReference(model, cls.getFullyQualifiedName());
-		List<? extends CtElement> refs = switch (c) {
+		List<Detection> ds = switch (c) {
 			case ANNOTATION_DEPRECATED_ADDED,
 				CLASS_REMOVED,
 				CLASS_LESS_ACCESSIBLE,
@@ -79,7 +68,6 @@ public class ImpactProcessor {
 					yield new ArrayList<>();
 				throw new UnsupportedOperationException("Unsupported " + oldType);
 			}
-				
 			case INTERFACE_ADDED,
 				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
 				METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE,
@@ -91,49 +79,10 @@ public class ImpactProcessor {
 				throw new UnsupportedOperationException(c.name());
 		};
 		
-		for (CtElement element : refs) {
-			Detection d = new Detection();
-			d.setElement(firstLocatableParent(element));
-			//d.setReference(element);
+		for (Detection d : ds) {
 			d.setSource(clsRef);
 			d.setChange(c);
 			
-			if (element instanceof CtTypeReference) {
-				d.setUsedApiElement(((CtTypeReference<?>) element).getTypeDeclaration());
-				d.setUse(APIUse.TYPE_DEPENDENCY);
-				
-				if (element.getParent() instanceof CtType) {
-					CtType<?> parent = (CtType<?>) element.getParent();
-					if (element.equals(parent.getSuperclass()))
-						d.setUse(APIUse.EXTENDS);
-					if (parent.getSuperInterfaces().contains(element))
-						d.setUse(APIUse.IMPLEMENTS);
-				}
-			} else if (element instanceof CtExecutableReference) {
-				d.setUsedApiElement(((CtExecutableReference<?>) element).getExecutableDeclaration());
-				d.setUse(APIUse.METHOD_INVOCATION);
-			} else if (element instanceof CtFieldReference) {
-				d.setUsedApiElement(((CtFieldReference<?>) element).getFieldDeclaration());
-				d.setUse(APIUse.FIELD_ACCESS);
-			} else if (element instanceof CtThrow) {
-				d.setUsedApiElement(((CtThrow) element).getThrownExpression().getType());
-				d.setUse(APIUse.TYPE_DEPENDENCY);
-			} else if (element instanceof CtClass) {
-				d.setUsedApiElement(clsRef); // FIXME: ...
-				d.setUse(APIUse.EXTENDS);
-			} else if (element instanceof CtInterface) {
-				d.setUsedApiElement(clsRef); // FIXME: ...
-				d.setUse(APIUse.IMPLEMENTS);
-			} else if (element instanceof CtConstructorCall) {
-				d.setUsedApiElement(((CtConstructorCall<?>) element).getType());
-				d.setUse(APIUse.METHOD_INVOCATION);
-			} else if (element instanceof CtAnnotation) {
-				d.setUsedApiElement(((CtAnnotation<?>) element).getType());
-				d.setUse(APIUse.ANNOTATION);
-			} else {
-				throw new RuntimeException("Unknown element " + element.getClass());
-			}
-
 			detections.add(d);
 		}
 	}
