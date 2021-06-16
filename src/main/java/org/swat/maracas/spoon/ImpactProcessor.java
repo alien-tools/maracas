@@ -19,6 +19,7 @@ import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtThrow;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
@@ -48,9 +49,10 @@ public class ImpactProcessor {
 			case CLASS_NOW_ABSTRACT ->
 				allReferencesToType(model, clsRef, SpoonHelper::isConstructor);
 			case CLASS_NOW_CHECKED_EXCEPTION ->
-				allThrown(model, clsRef);
+				allExpressionsThrowing(model, clsRef);
+			case CLASS_NOW_FINAL ->
+				allClassesExtending(model, clsRef);
 			case CLASS_TYPE_CHANGED,
-				CLASS_NOW_FINAL,
 				INTERFACE_ADDED,
 				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
 				FIELD_REMOVED_IN_SUPERCLASS,
@@ -74,7 +76,7 @@ public class ImpactProcessor {
 				d.setUse(APIUse.TYPE_DEPENDENCY);
 				
 				if (element.getParent() instanceof CtType) {
-					CtType parent = (CtType) element.getParent();
+					CtType<?> parent = (CtType<?>) element.getParent();
 					if (element.equals(parent.getSuperclass()))
 						d.setUse(APIUse.EXTENDS);
 					if (parent.getSuperInterfaces().contains(element))
@@ -89,6 +91,9 @@ public class ImpactProcessor {
 			} else if (element instanceof CtThrow) {
 				d.setUsedApiElement(((CtThrow) element).getThrownExpression().getType());
 				d.setUse(APIUse.TYPE_DEPENDENCY);
+			} else if (element instanceof CtClass) {
+				d.setUsedApiElement(((CtClass<?>) element).getSuperclass());
+				d.setUse(APIUse.EXTENDS);
 			} else {
 				throw new RuntimeException("Unknown element " + element);
 			}
