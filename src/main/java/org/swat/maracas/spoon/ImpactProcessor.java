@@ -1,5 +1,7 @@
 package org.swat.maracas.spoon;
 
+import static org.swat.maracas.spoon.SpoonHelper.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,10 +18,11 @@ import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtThrow;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
-import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ImpactProcessor {
@@ -35,18 +38,18 @@ public class ImpactProcessor {
 	}
 
 	public void process(JApiClass cls, JApiCompatibilityChange c) {
-		
-		List<CtReference> refs = switch (c) {
+		CtTypeReference<?> clsRef = toTypeReference(model, cls.getFullyQualifiedName());
+		List<? extends CtElement> refs = switch (c) {
 			case ANNOTATION_DEPRECATED_ADDED,
 				CLASS_REMOVED,
 				CLASS_LESS_ACCESSIBLE,
 				CLASS_NO_LONGER_PUBLIC ->
-				SpoonHelper.allReferencesToType(model, cls.getFullyQualifiedName());
+				allReferencesToType(model, clsRef);
 			case CLASS_NOW_ABSTRACT ->
-				SpoonHelper.allReferencesToType(model, cls.getFullyQualifiedName(),
-					ref -> ref instanceof CtExecutableReference && ((CtExecutableReference<?>) ref).isConstructor());
+				allReferencesToType(model, clsRef, SpoonHelper::isConstructor);
+			case CLASS_NOW_CHECKED_EXCEPTION ->
+				allThrown(model, clsRef);
 			case CLASS_TYPE_CHANGED,
-				CLASS_NOW_CHECKED_EXCEPTION,
 				CLASS_NOW_FINAL,
 				INTERFACE_ADDED,
 				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
@@ -59,31 +62,36 @@ public class ImpactProcessor {
 				throw new UnsupportedOperationException(c.name());
 		};
 		
-		for (CtReference ref : refs) {
+		for (CtElement element : refs) {
 			Detection d = new Detection();
-			d.setElement(SpoonHelper.firstLocatableParent(ref));
-			d.setReference(ref);
-			d.setSource(cls.getFullyQualifiedName());
+			d.setElement(firstLocatableParent(element));
+			//d.setReference(element);
+			d.setSource(clsRef);
 			d.setChange(c);
 			
-			if (ref instanceof CtTypeReference) {
-				d.setUsedApiElement(((CtTypeReference<?>) ref).getTypeDeclaration());
+			if (element instanceof CtTypeReference) {
+				d.setUsedApiElement(((CtTypeReference<?>) element).getTypeDeclaration());
 				d.setUse(APIUse.TYPE_DEPENDENCY);
 				
-				if (ref.getParent() instanceof CtType) {
-					CtType parent = (CtType) ref.getParent();
-					if (ref.equals(parent.getSuperclass()))
+				if (element.getParent() instanceof CtType) {
+					CtType parent = (CtType) element.getParent();
+					if (element.equals(parent.getSuperclass()))
 						d.setUse(APIUse.EXTENDS);
-					if (parent.getSuperInterfaces().contains(ref))
+					if (parent.getSuperInterfaces().contains(element))
 						d.setUse(APIUse.IMPLEMENTS);
 				}
-			} else if (ref instanceof CtExecutableReference) {
-				d.setUsedApiElement(((CtExecutableReference<?>) ref).getExecutableDeclaration());
+			} else if (element instanceof CtExecutableReference) {
+				d.setUsedApiElement(((CtExecutableReference<?>) element).getExecutableDeclaration());
 				d.setUse(APIUse.METHOD_INVOCATION);
-			} else if (ref instanceof CtFieldReference) {
-				d.setUsedApiElement(((CtFieldReference<?>) ref).getFieldDeclaration());
+			} else if (element instanceof CtFieldReference) {
+				d.setUsedApiElement(((CtFieldReference<?>) element).getFieldDeclaration());
 				d.setUse(APIUse.FIELD_ACCESS);
-			} else throw new RuntimeException("Unknown ref " + ref);
+			} else if (element instanceof CtThrow) {
+				d.setUsedApiElement(((CtThrow) element).getThrownExpression().getType());
+				d.setUse(APIUse.TYPE_DEPENDENCY);
+			} else {
+				throw new RuntimeException("Unknown element " + element);
+			}
 
 			detections.add(d);
 		}

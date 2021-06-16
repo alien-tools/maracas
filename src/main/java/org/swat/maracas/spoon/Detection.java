@@ -8,9 +8,9 @@ import spoon.reflect.reference.CtReference;
 
 public class Detection {
 	private CtElement element;
-	private CtReference reference;
+	//private CtReference reference;
 	private CtElement usedApiElement;
-	private String source;
+	private CtReference source;
 	private APIUse use;
 	private JApiCompatibilityChange change;
 
@@ -26,13 +26,13 @@ public class Detection {
 		this.element = element;
 	}
 
-	public CtReference getReference() {
+	/*public CtReference getReference() {
 		return reference;
 	}
 
 	public void setReference(CtReference reference) {
 		this.reference = reference;
-	}
+	}*/
 
 	public CtElement getUsedApiElement() {
 		return usedApiElement;
@@ -42,11 +42,11 @@ public class Detection {
 		this.usedApiElement = usedApiElement;
 	}
 
-	public String getSource() {
+	public CtReference getSource() {
 		return source;
 	}
 
-	public void setSource(String source) {
+	public void setSource(CtReference source) {
 		this.source = source;
 	}
 
@@ -109,7 +109,7 @@ public class Detection {
 			return false;
 		Detection that = (Detection) other;
 		return  element.equals(that.getElement()) &&
-				reference.equals(that.getReference()) &&
+				//reference.equals(that.getReference()) &&
 				usedApiElement.equals(that.getUsedApiElement()) &&
 				source.equals(that.getSource()) &&
 				use.equals(that.getUse()) &&
