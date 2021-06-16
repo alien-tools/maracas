@@ -1,10 +1,10 @@
 package org.swat.maracas.spoon;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtModuleReference;
@@ -17,7 +17,7 @@ import spoon.reflect.visitor.Query;
 import spoon.reflect.visitor.filter.ReferenceTypeFilter;
 
 public class SpoonHelper {
-	public static List<CtReference> allReferencesToType(CtModel m, String fqn) {
+	public static List<CtReference> allReferencesToType(CtModel m, String fqn, Predicate<CtReference> p) {
 		return Query.getReferences(m.getRootPackage(), new ReferenceTypeFilter<>(CtReference.class) {
 			@Override
 			public boolean matches(CtReference ref) {
@@ -26,18 +26,20 @@ public class SpoonHelper {
 				 *   - Reference to the type itself
 				 *   - Reference to one of its methods
 				 *   - Reference to one of its fields
+				 * 
+				 * FIXME: method polymorphism, etc.
 				 */
 				if (ref instanceof CtTypeReference) {
 					CtTypeReference<?> typeRef = (CtTypeReference<?>) ref;
-					return fqn.equals(typeRef.getQualifiedName());
+					return fqn.equals(typeRef.getQualifiedName()) && p.test(typeRef);
 				} else if (ref instanceof CtExecutableReference) {
 					CtExecutableReference<?> execRef = (CtExecutableReference<?>) ref;
 					String container = execRef.getDeclaringType().getQualifiedName();
-					return fqn.equals(container);
+					return fqn.equals(container) && p.test(execRef);
 				} else  if (ref instanceof CtFieldReference) {
 					CtFieldReference<?> fieldRef = (CtFieldReference<?>) ref;
 					String container = fieldRef.getDeclaringType().getQualifiedName();
-					return fqn.equals(container);
+					return fqn.equals(container) && p.test(fieldRef);
 				} else if (ref instanceof CtPackageReference) {
 					return false;
 				} else if (ref instanceof CtVariableReference) {
@@ -51,6 +53,10 @@ public class SpoonHelper {
 				}
 			}
 		});
+	}
+
+	public static List<CtReference> allReferencesToType(CtModel m, String fqn) {
+		return SpoonHelper.allReferencesToType(m, fqn, ref -> true);
 	}
 
 	public static CtElement firstLocatableParent(CtElement element) {

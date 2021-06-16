@@ -1,5 +1,6 @@
 package org.swat.maracas.spoon;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,26 +35,29 @@ public class ImpactProcessor {
 	}
 
 	public void process(JApiClass cls, JApiCompatibilityChange c) {
-		List<CtReference> refs =
-			SpoonHelper.allReferencesToType(model, cls.getFullyQualifiedName());
 		
-		switch (c) {
-			case ANNOTATION_DEPRECATED_ADDED:
-			case CLASS_REMOVED:
-			case CLASS_LESS_ACCESSIBLE:
-			case CLASS_NO_LONGER_PUBLIC:
-				
-				break;
-			case CLASS_NOW_ABSTRACT:
-				refs.removeIf(ref -> {
-					System.out.println(ref);
-					return true;
-				});
-				break;
-			default:
-				//throw new UnsupportedOperationException(c.name());
-				refs.removeIf(ref -> true);
-		}
+		List<CtReference> refs = switch (c) {
+			case ANNOTATION_DEPRECATED_ADDED,
+				CLASS_REMOVED,
+				CLASS_LESS_ACCESSIBLE,
+				CLASS_NO_LONGER_PUBLIC ->
+				SpoonHelper.allReferencesToType(model, cls.getFullyQualifiedName());
+			case CLASS_NOW_ABSTRACT ->
+				SpoonHelper.allReferencesToType(model, cls.getFullyQualifiedName(),
+					ref -> ref instanceof CtExecutableReference && ((CtExecutableReference<?>) ref).isConstructor());
+			case CLASS_TYPE_CHANGED,
+				CLASS_NOW_CHECKED_EXCEPTION,
+				CLASS_NOW_FINAL,
+				INTERFACE_ADDED,
+				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
+				FIELD_REMOVED_IN_SUPERCLASS,
+				METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE,
+				METHOD_ABSTRACT_ADDED_IN_SUPERCLASS,
+				METHOD_REMOVED_IN_SUPERCLASS ->
+				new ArrayList<>();
+			default ->
+				throw new UnsupportedOperationException(c.name());
+		};
 		
 		for (CtReference ref : refs) {
 			Detection d = new Detection();
