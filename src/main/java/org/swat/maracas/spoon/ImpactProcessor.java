@@ -9,8 +9,12 @@ import java.util.Set;
 
 import org.swat.maracas.spoon.Detection.APIUse;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
+import japicmp.model.JApiClassType.ClassType;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiConstructor;
 import japicmp.model.JApiField;
@@ -20,8 +24,10 @@ import japicmp.model.JApiSuperclass;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtThrow;
+import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -39,6 +45,11 @@ public class ImpactProcessor {
 		return detections;
 	}
 
+	@SafeVarargs
+	public static <T> List<? extends T> union(List<? extends T>... lists) {
+		return Lists.newArrayList(Iterables.concat(lists));
+	}
+
 	public void process(JApiClass cls, JApiCompatibilityChange c) {
 		CtTypeReference<?> clsRef = toTypeReference(model, cls.getFullyQualifiedName());
 		List<? extends CtElement> refs = switch (c) {
@@ -52,9 +63,24 @@ public class ImpactProcessor {
 			case CLASS_NOW_CHECKED_EXCEPTION ->
 				allExpressionsThrowing(model, clsRef);
 			case CLASS_NOW_FINAL ->
-				allClassesExtending(model, clsRef);
-			case CLASS_TYPE_CHANGED,
-				INTERFACE_ADDED,
+				allExtensionsOf(model, clsRef);
+			case CLASS_TYPE_CHANGED -> { // FIXME: not sure of all the cases here
+				ClassType oldType = cls.getClassType().getOldTypeOptional().get();
+				if (oldType.equals(ClassType.ANNOTATION)) // Cannot be used as an @annotation anymore
+					yield allAnnotationsOfType(model, clsRef);
+				if (oldType.equals(ClassType.CLASS)) // Cannot be instantiated nor used as superclass anymore
+					yield union(
+						allInstantiationsOf(model, clsRef),
+						allExtensionsOf(model, clsRef)
+					);
+				if (oldType.equals(ClassType.INTERFACE)) // Cannot be implemented anymore
+					yield allImplementationsOf(model, clsRef);
+				if (oldType.equals(ClassType.ENUM)) // FIXME: ...
+					yield new ArrayList<>();
+				throw new UnsupportedOperationException("Unsupported " + oldType);
+			}
+				
+			case INTERFACE_ADDED,
 				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
 				METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE,
 				FIELD_REMOVED_IN_SUPERCLASS,
@@ -93,11 +119,17 @@ public class ImpactProcessor {
 				d.setUsedApiElement(((CtThrow) element).getThrownExpression().getType());
 				d.setUse(APIUse.TYPE_DEPENDENCY);
 			} else if (element instanceof CtClass) {
-				d.setUsedApiElement(((CtClass<?>) element).getSuperclass());
+				d.setUsedApiElement(clsRef); // FIXME: ...
 				d.setUse(APIUse.EXTENDS);
-			} else if (element instanceof CtConstructorCall<?>) {
+			} else if (element instanceof CtInterface) {
+				d.setUsedApiElement(clsRef); // FIXME: ...
+				d.setUse(APIUse.IMPLEMENTS);
+			} else if (element instanceof CtConstructorCall) {
 				d.setUsedApiElement(((CtConstructorCall<?>) element).getType());
 				d.setUse(APIUse.METHOD_INVOCATION);
+			} else if (element instanceof CtAnnotation) {
+				d.setUsedApiElement(((CtAnnotation<?>) element).getType());
+				d.setUse(APIUse.ANNOTATION);
 			} else {
 				throw new RuntimeException("Unknown element " + element.getClass());
 			}

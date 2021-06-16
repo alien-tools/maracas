@@ -6,8 +6,10 @@ import java.util.function.Predicate;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtThrow;
+import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
@@ -65,9 +67,19 @@ public class SpoonHelper {
 			(CtThrow thrw) -> thrw.getThrownExpression().getType().isSubtypeOf(typeRef));
 	}
 
-	public static List<CtClass<?>> allClassesExtending(CtModel m, CtTypeReference<?> typeRef) {
+	public static List<CtClass<?>> allExtensionsOf(CtModel m, CtTypeReference<?> typeRef) {
 		return Query.getElements(m.getRootPackage(),
 			(CtClass<?> cls) -> typeRef.equals(cls.getSuperclass()));
+	}
+
+	public static List<CtType<?>> allImplementationsOf(CtModel m, CtTypeReference<?> typeRef) {
+		return Query.getElements(m.getRootPackage(),
+			(CtType<?> cls) -> cls.getSuperInterfaces().contains(typeRef));
+	}
+
+	public static List<CtAnnotation<?>> allAnnotationsOfType(CtModel m, CtTypeReference<?> typeRef) {
+		return Query.getElements(m.getRootPackage(),
+			(CtAnnotation<?> ann) -> typeRef.equals(ann.getAnnotationType()));
 	}
 
 	public static CtTypeReference<?> toTypeReference(CtModel m, String fqn) {
