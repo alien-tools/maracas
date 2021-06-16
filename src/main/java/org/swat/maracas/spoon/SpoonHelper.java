@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
@@ -38,7 +39,12 @@ public class SpoonHelper {
 	}
 
 	public static List<CtReference> allReferencesToType(CtModel m, CtTypeReference<?> typeRef) {
-		return SpoonHelper.allReferencesToType(m, typeRef, ref -> true);
+		return allReferencesToType(m, typeRef, ref -> true);
+	}
+
+	public static List<CtConstructorCall<?>> allInstantiationsOf(CtModel m, CtTypeReference<?> typeRef) {
+		return Query.getElements(m.getRootPackage(),
+			(CtConstructorCall<?> cons) -> typeRef.equals(cons.getType()));
 	}
 
 	public static CtElement firstLocatableParent(CtElement element) {
@@ -56,12 +62,12 @@ public class SpoonHelper {
 
 	public static List<CtThrow> allExpressionsThrowing(CtModel m, CtTypeReference<?> typeRef) {
 		return Query.getElements(m.getRootPackage(),
-				(CtThrow thrw) -> thrw.getThrownExpression().getType().isSubtypeOf(typeRef));
+			(CtThrow thrw) -> thrw.getThrownExpression().getType().isSubtypeOf(typeRef));
 	}
 
 	public static List<CtClass<?>> allClassesExtending(CtModel m, CtTypeReference<?> typeRef) {
 		return Query.getElements(m.getRootPackage(),
-				(CtClass<?> cls) -> typeRef.equals(cls.getSuperclass()));
+			(CtClass<?> cls) -> typeRef.equals(cls.getSuperclass()));
 	}
 
 	public static CtTypeReference<?> toTypeReference(CtModel m, String fqn) {

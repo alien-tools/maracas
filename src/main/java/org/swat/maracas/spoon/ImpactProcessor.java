@@ -18,6 +18,7 @@ import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
@@ -47,7 +48,7 @@ public class ImpactProcessor {
 				CLASS_NO_LONGER_PUBLIC ->
 				allReferencesToType(model, clsRef);
 			case CLASS_NOW_ABSTRACT ->
-				allReferencesToType(model, clsRef, SpoonHelper::isConstructor);
+				allInstantiationsOf(model, clsRef);
 			case CLASS_NOW_CHECKED_EXCEPTION ->
 				allExpressionsThrowing(model, clsRef);
 			case CLASS_NOW_FINAL ->
@@ -55,8 +56,8 @@ public class ImpactProcessor {
 			case CLASS_TYPE_CHANGED,
 				INTERFACE_ADDED,
 				METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE,
-				FIELD_REMOVED_IN_SUPERCLASS,
 				METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE,
+				FIELD_REMOVED_IN_SUPERCLASS,
 				METHOD_ABSTRACT_ADDED_IN_SUPERCLASS,
 				METHOD_REMOVED_IN_SUPERCLASS ->
 				new ArrayList<>();
@@ -94,8 +95,11 @@ public class ImpactProcessor {
 			} else if (element instanceof CtClass) {
 				d.setUsedApiElement(((CtClass<?>) element).getSuperclass());
 				d.setUse(APIUse.EXTENDS);
+			} else if (element instanceof CtConstructorCall<?>) {
+				d.setUsedApiElement(((CtConstructorCall<?>) element).getType());
+				d.setUse(APIUse.METHOD_INVOCATION);
 			} else {
-				throw new RuntimeException("Unknown element " + element);
+				throw new RuntimeException("Unknown element " + element.getClass());
 			}
 
 			detections.add(d);
