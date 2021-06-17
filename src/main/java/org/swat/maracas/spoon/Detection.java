@@ -83,13 +83,13 @@ public class Detection {
 
 		return """
 		[%s]
-			Element: %s (%s:%d)
+			Element: %s
 			Used:    %s
 			Source:  %s
 			Use:     %s\
 		""".formatted(
 			change, elemName,
-			element.getPosition().getFile().getName(), elemLine,
+			
 			usedName, source, use
 		);
 	}

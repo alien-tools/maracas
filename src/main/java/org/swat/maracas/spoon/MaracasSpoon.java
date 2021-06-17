@@ -9,6 +9,7 @@ import japicmp.model.JApiClass;
 import japicmp.output.Filter;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtComment.CommentType;
 
 public class MaracasSpoon {
 	public static void main(String[] args) {
@@ -33,6 +34,14 @@ public class MaracasSpoon {
 		Filter.filter(classes, new ImpactVisitor(processor));
 		
 		System.out.println(processor.getDetections().size() + " detections found");
-		processor.getDetections().forEach(d -> System.out.println(d));
+//		processor.getDetections().forEach(d -> System.out.println(d));
+
+		processor.getDetections().forEach(d -> {
+			String comment = "";
+			SpoonHelper.firstLocatableParent(d.getElement()).addComment(model.getRootPackage().getFactory().Code().createComment(d.toString(), CommentType.BLOCK));
+		});
+		
+		launcher.setSourceOutputDirectory("/home/dig/repositories/comp-changes-client-output/src");
+		launcher.prettyprint();
 	}
 }

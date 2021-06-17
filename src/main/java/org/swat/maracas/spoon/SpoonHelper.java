@@ -8,6 +8,7 @@ import org.swat.maracas.spoon.Detection.APIUse;
 
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtConstructorCall;
+import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
@@ -26,15 +27,19 @@ public class SpoonHelper {
 		
 		for (CtReference ref : Query.getElements(m.getRootPackage(), new TypeFilter<>(CtReference.class))) {
 			if (ref instanceof CtTypeReference) {
-				if (typeRef.equals(ref))
+				if (typeRef.equals(ref)) {
 					if (ref.getParent() instanceof CtType) {
 						CtType<?> typ = (CtType<?>) ref.getParent();
-						if (ref.equals(typ.getSuperclass()))
+						if (ref.equals(typ.getSuperclass())) {
 							ds.add(toDetection(typ, typeRef.getTypeDeclaration(), APIUse.EXTENDS));
-						else if (typ.getSuperInterfaces().contains(ref))
+							continue;
+						} else if (typ.getSuperInterfaces().contains(ref)) {
 							ds.add(toDetection(typ, typeRef.getTypeDeclaration(), APIUse.IMPLEMENTS));
-					} else
-						ds.add(toDetection(ref, typeRef.getTypeDeclaration(), APIUse.TYPE_DEPENDENCY));
+							continue;
+						}
+					}
+					ds.add(toDetection(ref, typeRef.getTypeDeclaration(), APIUse.TYPE_DEPENDENCY));
+				}
 			} else if (ref instanceof CtExecutableReference) {
 				CtExecutableReference<?> execRef = (CtExecutableReference<?>) ref;
 				if (typeRef.equals(execRef.getDeclaringType()))
@@ -49,9 +54,19 @@ public class SpoonHelper {
 		return ds;
 	}
 
+	public static List<Detection> allReferencesToMethod(CtModel m, CtExecutableReference<?> mthRef) {
+		return
+			Query.getElements(m.getRootPackage(), new TypeFilter<>(CtExecutableReference.class))
+				.stream()
+				.filter(ref -> ref.equals(mthRef))
+				.map(ref -> toDetection(ref, ref.getExecutableDeclaration(), APIUse.METHOD_INVOCATION))
+				.collect(Collectors.toList());
+	}
+
 	public static Detection toDetection(CtElement element, CtElement used, APIUse use) {
 		Detection d = new Detection();
-		d.setElement(firstLocatableParent(element));
+		//d.setElement(firstLocatableParent(element));
+		d.setElement(element);
 		d.setUsedApiElement(used);
 		d.setUse(use);
 		return d;
@@ -68,45 +83,52 @@ public class SpoonHelper {
 
 	public static List<Detection> allInstantiationsOf(CtModel m, CtTypeReference<?> typeRef) {
 		return
-			Query.getElements(m.getRootPackage(), new TypeFilter<>(CtConstructorCall.class))
+			Query.getElements(m.getRootPackage(), (CtConstructorCall<?> cons) -> typeRef.equals(cons.getType()))
 				.stream()
-				.filter(cons -> typeRef.equals(cons.getType()))
 				.map(cons -> toDetection(cons, cons.getType(), APIUse.METHOD_INVOCATION))
 				.collect(Collectors.toList());
 	}
 
 	public static List<Detection> allExpressionsThrowing(CtModel m, CtTypeReference<?> typeRef) {
 		return
-			Query.getElements(m.getRootPackage(), new TypeFilter<>(CtThrow.class))
+			Query.getElements(m.getRootPackage(), (CtThrow thrw) -> thrw.getThrownExpression().getType().isSubtypeOf(typeRef))
 				.stream()
-				.filter(thrw -> thrw.getThrownExpression().getType().isSubtypeOf(typeRef))
 				.map(thrw -> toDetection(thrw, thrw.getThrownExpression().getType(), APIUse.TYPE_DEPENDENCY))
 				.collect(Collectors.toList());
 	}
 
-	public static List<Detection> allExtensionsOf(CtModel m, CtTypeReference<?> typeRef) {
+	public static List<Detection> allAnonymousClassesOf(CtModel m, CtTypeReference<?> typeRef) {
 		return
-			Query.getElements(m.getRootPackage(), new TypeFilter<>(CtClass.class))
+				Query.getElements(m.getRootPackage(), (CtNewClass<?> cls) -> {
+					System.out.println("cls="+cls);
+					System.out.println("\tanon="+cls.getType());
+					return typeRef.equals(cls.getType());
+				})
+					.stream()
+					.map(cls -> toDetection(cls, cls.getAnonymousClass(), APIUse.EXTENDS))
+					.collect(Collectors.toList());
+	}
+
+	public static List<Detection> allClassesExtending(CtModel m, CtTypeReference<?> typeRef) {
+		return
+			Query.getElements(m.getRootPackage(), (CtClass<?> cls) -> typeRef.equals(cls.getSuperclass()))
 				.stream()
-				.filter(cls -> typeRef.equals(cls.getSuperclass()))
 				.map(cls -> toDetection(cls, cls.getSuperclass(), APIUse.EXTENDS))
 				.collect(Collectors.toList());
 	}
 
-	public static List<Detection> allImplementationsOf(CtModel m, CtTypeReference<?> typeRef) {
+	public static List<Detection> allClassesImplementing(CtModel m, CtTypeReference<?> typeRef) {
 		return
-				Query.getElements(m.getRootPackage(), new TypeFilter<>(CtType.class))
+				Query.getElements(m.getRootPackage(), (CtClass<?> cls) -> cls.getSuperInterfaces().contains(typeRef))
 					.stream()
-					.filter(cls -> cls.getSuperInterfaces().contains(typeRef))
 					.map(cls -> toDetection(cls, typeRef, APIUse.IMPLEMENTS))
 					.collect(Collectors.toList());
 	}
 
 	public static List<Detection> allAnnotationsOfType(CtModel m, CtTypeReference<?> typeRef) {
 		return
-				Query.getElements(m.getRootPackage(), new TypeFilter<>(CtAnnotation.class))
+				Query.getElements(m.getRootPackage(), (CtAnnotation<?> ann) -> typeRef.equals(ann.getAnnotationType()))
 					.stream()
-					.filter(ann -> typeRef.equals(ann.getAnnotationType()))
 					.map(ann -> toDetection(ann, ann.getAnnotationType(), APIUse.IMPLEMENTS))
 					.collect(Collectors.toList());
 	}
