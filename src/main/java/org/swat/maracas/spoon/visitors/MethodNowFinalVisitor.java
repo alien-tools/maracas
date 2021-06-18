@@ -10,7 +10,7 @@ import spoon.reflect.reference.CtExecutableReference;
 
 /**
  * Detections of METHOD_NOW_FINAL are:
- *	- Method @Override-ing the now-final method
+ *	- Method overriding the now-final method (with or w/o explicit @Override)
  */
 public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 	private final CtExecutableReference<?> mRef;
@@ -22,7 +22,6 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (m.hasAnnotation(java.lang.Override.class)) {
 			Optional<CtMethod<?>> superMethod = 
 				m.getTopDefinitions()
 					.stream()
@@ -31,7 +30,6 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 
 			if (superMethod.isPresent())
 				detection(m, superMethod.get(), mRef, APIUse.METHOD_OVERRIDE);
-		}
 
 		super.visitCtMethod(m);
 	}
