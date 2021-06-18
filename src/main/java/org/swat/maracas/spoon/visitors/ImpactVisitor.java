@@ -15,9 +15,11 @@ import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import japicmp.output.Filter.FilterVisitor;
+import javassist.CtField;
 import javassist.CtMethod;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ImpactVisitor implements FilterVisitor {
@@ -106,6 +108,26 @@ public class ImpactVisitor implements FilterVisitor {
 
 	@Override
 	public void visit(Iterator<JApiField> iterator, JApiField elem) {
+		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getjApiClass().getFullyQualifiedName());
+		elem.getCompatibilityChanges().forEach(c -> {
+			japicmp.util.Optional<CtField> oldFieldOpt = elem.getOldFieldOptional();
+			if (oldFieldOpt.isPresent()) {
+				CtField oldField = oldFieldOpt.get();
+				CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
+
+				BreakingChangeVisitor visitor = switch (c) {
+					case FIELD_NOW_FINAL -> new FieldNowFinalVisitor(fRef);
+					default -> null;
+				};
+				
+				if (visitor != null) {
+					visitor.scan(root);
+					detections.addAll(visitor.getDetections());
+				}
+			} else {
+				// No oldMethod
+			}
+		});
 	}
 
 	@Override
