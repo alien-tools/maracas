@@ -69,12 +69,12 @@ public class Detection {
 	@Override
 	public String toString() {
 		String elemName =
-			element instanceof CtNamedElement ?
-				((CtNamedElement) element).getSimpleName() :
+			element instanceof CtNamedElement namedElement ?
+				namedElement.getSimpleName() :
 				element.toString();
 		String usedName =
-			usedApiElement instanceof CtNamedElement ?
-				((CtNamedElement) usedApiElement).getSimpleName() :
+			usedApiElement instanceof CtNamedElement namedUsedApiElement ?
+				namedUsedApiElement.getSimpleName() :
 				usedApiElement.toString();
 		int elemLine =
 			element.getPosition() instanceof NoSourcePosition ?
@@ -116,7 +116,7 @@ public class Detection {
 				change.equals(that.getChange());
 	}
 
-	enum APIUse {
+	public enum APIUse {
 		METHOD_INVOCATION,
 		METHOD_OVERRIDE,
 		FIELD_ACCESS,

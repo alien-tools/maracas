@@ -28,8 +28,7 @@ public class SpoonHelper {
 		for (CtReference ref : Query.getElements(m.getRootPackage(), new TypeFilter<>(CtReference.class))) {
 			if (ref instanceof CtTypeReference) {
 				if (typeRef.equals(ref)) {
-					if (ref.getParent() instanceof CtType) {
-						CtType<?> typ = (CtType<?>) ref.getParent();
+					if (ref.getParent() instanceof CtType typ) {
 						if (ref.equals(typ.getSuperclass())) {
 							ds.add(toDetection(typ, typeRef.getTypeDeclaration(), APIUse.EXTENDS));
 							continue;
@@ -40,16 +39,16 @@ public class SpoonHelper {
 					}
 					ds.add(toDetection(ref, typeRef.getTypeDeclaration(), APIUse.TYPE_DEPENDENCY));
 				}
-			} else if (ref instanceof CtExecutableReference) {
-				CtExecutableReference<?> execRef = (CtExecutableReference<?>) ref;
+			} else if (ref instanceof CtExecutableReference execRef) {
 				if (typeRef.equals(execRef.getDeclaringType()))
 					ds.add(toDetection(execRef, execRef.getExecutableDeclaration(), APIUse.METHOD_INVOCATION));
-			} else if (ref instanceof CtFieldReference) {
-				CtFieldReference<?> fieldRef = (CtFieldReference<?>) ref;
+			} else if (ref instanceof CtFieldReference fieldRef) {
 				if (typeRef.equals(fieldRef.getDeclaringType()))
 					ds.add(toDetection(fieldRef, fieldRef.getFieldDeclaration(), APIUse.FIELD_ACCESS));
 			}
 		}
+		
+		System.out.println("ds="+ds.size());
 	
 		return ds;
 	}
@@ -99,11 +98,7 @@ public class SpoonHelper {
 
 	public static List<Detection> allAnonymousClassesOf(CtModel m, CtTypeReference<?> typeRef) {
 		return
-				Query.getElements(m.getRootPackage(), (CtNewClass<?> cls) -> {
-					System.out.println("cls="+cls);
-					System.out.println("\tanon="+cls.getType());
-					return typeRef.equals(cls.getType());
-				})
+				Query.getElements(m.getRootPackage(), (CtNewClass<?> cls) -> typeRef.equals(cls.getType()))
 					.stream()
 					.map(cls -> toDetection(cls, cls.getAnonymousClass(), APIUse.EXTENDS))
 					.collect(Collectors.toList());

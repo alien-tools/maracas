@@ -3,10 +3,8 @@ package org.swat.maracas.spoon;
 import static org.swat.maracas.spoon.SpoonHelper.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -27,13 +25,13 @@ import spoon.reflect.reference.CtTypeReference;
 
 public class ImpactProcessor {
 	private final CtModel model;
-	private final Set<Detection> detections = new HashSet<>();
+	private final List<Detection> detections = new ArrayList<>();
 
 	public ImpactProcessor(CtModel model) {
 		this.model = model;
 	}
 
-	public Set<Detection> getDetections() {
+	public List<Detection> getDetections() {
 		return detections;
 	}
 
@@ -45,7 +43,6 @@ public class ImpactProcessor {
 	// FIXME: to debug later, insert all detections as comments
 	// and output comp-changes to check manually
 	public void process(JApiClass cls, JApiCompatibilityChange c) {
-		allAnonymousClassesOf(model, toTypeReference(model, "main.classNowFinal.ClassNowFinal"));
 		CtTypeReference<?> clsRef = toTypeReference(model, cls.getFullyQualifiedName());
 		List<Detection> ds = switch (c) {
 			case ANNOTATION_DEPRECATED_ADDED,
