@@ -17,15 +17,15 @@ public class Delta {
 	public List<JApiClass> compute(Path oldJar, Path newJar, List<Path> oldCP, List<Path> newCP) {
 		Options defaultOptions = getDefaultOptions();
 		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(defaultOptions);
-		
+
 		oldCP.forEach(p -> options.getOldClassPath().add(p.toAbsolutePath().toString()));
 		newCP.forEach(p -> options.getNewClassPath().add(p.toAbsolutePath().toString()));
 
 		JarArchiveComparator comparator = new JarArchiveComparator(options);
-		
+
 		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
 		JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
-		
+
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 
 		OutputFilter filter = new OutputFilter(defaultOptions);
@@ -33,14 +33,14 @@ public class Delta {
 
 		return classes;
 	}
-	
+
 	private Options getDefaultOptions() {
 		Options defaultOptions = Options.newDefault();
 		defaultOptions.setAccessModifier(AccessModifier.PROTECTED);
 		defaultOptions.setOutputOnlyModifications(true);
 		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
 		defaultOptions.setIgnoreMissingClasses(false);
-		
+
 		String[] excl = { "(*.)?tests(.*)?", "(*.)?test(.*)?", 
 				"@org.junit.After",
 				"@org.junit.AfterClass",
@@ -49,11 +49,11 @@ public class Delta {
 				"@org.junit.Ignore",
 				"@org.junit.Test",
 				"@org.junit.runner.RunWith" };
-		
+
 		for (String e : excl) {
 			defaultOptions.addExcludeFromArgument(Optional.of(e), false);
 		}
-		
+
 		return defaultOptions;
 	}
 }

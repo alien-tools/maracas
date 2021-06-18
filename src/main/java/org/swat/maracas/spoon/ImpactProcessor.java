@@ -84,11 +84,11 @@ public class ImpactProcessor {
 			default ->
 				throw new UnsupportedOperationException(c.name());
 		};
-		
+
 		for (Detection d : ds) {
 			d.setSource(clsRef);
 			d.setChange(c);
-			
+
 			detections.add(d);
 		}
 	}
@@ -107,7 +107,7 @@ public class ImpactProcessor {
 				System.out.println("Skipping unknown " + m.getOldMethod().get().getLongName());
 				System.out.println("\t"+clsRef.getAllExecutables());
 			}
-			
+
 				CtExecutableReference<?> mthRef = mthRefOpt.get();
 				List<Detection> ds = switch (c) {
 					case ANNOTATION_DEPRECATED_ADDED ->

@@ -33,17 +33,17 @@ class ClassNowFinalTests extends CompChangesTest {
 	void testAbsExtMethod() {
 		assertDetection("ClassNowFinalAbsExt.java", 8, CLASS_NOW_FINAL, METHOD_OVERRIDE);
 	}
-	
+
 	@Test
 	void testAbsExtSup() {
 		assertDetection("ClassNowFinalAbsExtSup.java", 5, CLASS_NOW_FINAL, EXTENDS);
 	}
-	
+
 	@Test
 	void testAnonymousSub() {
 		assertDetection("ClassNowFinalAnonymousSub.java", 8, CLASS_NOW_FINAL, EXTENDS);
 	}
-	
+
 	@Test
 	void testAnonymousSubAbs() {
 		assertDetection("ClassNowFinalAnonymousSub.java", 13, CLASS_NOW_FINAL, EXTENDS);

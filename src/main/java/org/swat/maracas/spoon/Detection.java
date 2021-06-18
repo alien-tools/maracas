@@ -15,7 +15,7 @@ public class Detection {
 	private JApiCompatibilityChange change;
 
 	public Detection() {
-		
+
 	}
 
 	public CtElement getElement() {
@@ -84,7 +84,7 @@ public class Detection {
 			element.getPosition() instanceof NoSourcePosition ?
 				-1 :
 				element.getPosition().getLine();
-				
+
 
 		return """
 		[%s]
@@ -102,7 +102,7 @@ public class Detection {
 	public String toJavaComment() {
 		return "[" + change + ":" + use + "]";
 	}
-	
+
 	@Override
     public int hashCode() {
         return 1;

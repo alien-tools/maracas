@@ -24,7 +24,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 public class SpoonHelper {
 	public static List<Detection> allReferencesToType(CtModel m, CtTypeReference<?> typeRef) {
 		List<Detection> ds = new ArrayList<>();
-		
+
 		for (CtReference ref : Query.getElements(m.getRootPackage(), new TypeFilter<>(CtReference.class))) {
 			if (ref instanceof CtTypeReference) {
 				if (typeRef.equals(ref)) {
@@ -47,9 +47,9 @@ public class SpoonHelper {
 					ds.add(toDetection(fieldRef, fieldRef.getFieldDeclaration(), APIUse.FIELD_ACCESS));
 			}
 		}
-		
+
 		System.out.println("ds="+ds.size());
-	
+
 		return ds;
 	}
 

@@ -45,13 +45,13 @@ public class MaracasSpoon {
 
 		visitor.getDetections().forEach(d -> {
 			CtElement anchor = SpoonHelper.firstLocatableParent(d.getElement());
-			
+
 			if (anchor != null)
 				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(d.toJavaComment(), CommentType.INLINE));
 			else
 				System.out.println("Cannot attach comment on " + d);
 		});
-		
+
 		launcher.setSourceOutputDirectory("/home/dig/repositories/comp-changes-data/client-commented/src");
 		launcher.prettyprint();
 	}

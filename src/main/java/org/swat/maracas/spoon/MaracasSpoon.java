@@ -50,45 +50,45 @@ public class MaracasSpoon {
 			@Override
 			public void visit(Iterator<JApiMethod> iterator, JApiMethod jApiMethod) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void visit(Iterator<JApiConstructor> iterator, JApiConstructor jApiConstructor) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void visit(Iterator<JApiImplementedInterface> iterator,
 					JApiImplementedInterface jApiImplementedInterface) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void visit(Iterator<JApiField> iterator, JApiField jApiField) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void visit(Iterator<JApiAnnotation> iterator, JApiAnnotation jApiAnnotation) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void visit(JApiSuperclass jApiSuperclass) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
-		
+
 //		LibraryUsageVisitor visit = new LibraryUsageVisitor(types);
 //		visit.scan(model.getRootPackage());
 		//model.getRootPackage().accept(visit);
-		
+
 //		ImpactProcessor processor = new ImpactProcessor(model);
 //		//List<JApiClass> tst = Collections.singletonList(classes.get(3));
 //		Filter.filter(classes, new ImpactVisitor(processor));

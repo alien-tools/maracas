@@ -19,7 +19,7 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		this.clsRef = clsRef;
 		this.newAccessModifier = newAccessModifier;
 	}
-	
+
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
@@ -36,7 +36,7 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 				default ->
 					throw new RuntimeException("Unmanaged role " + role);
 			};
-			
+
 			// If private, always breaks
 			if (newAccessModifier == AccessModifier.PRIVATE)
 				detection(reference.getParent(), reference, clsRef, use);
@@ -45,7 +45,7 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 			if (newAccessModifier == AccessModifier.PROTECTED)
 				if (!reference.getParent(CtType.class).isSubtypeOf(clsRef))
 					detection(reference.getParent(), reference, clsRef, use);
-			
+
 			// If package private, breaks if != package
 			if (newAccessModifier == AccessModifier.PACKAGE_PROTECTED) {
 				// FIXME: ...
@@ -65,7 +65,7 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
 			detection(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
-		
+
 		super.visitCtFieldReference(reference);
 	}
 

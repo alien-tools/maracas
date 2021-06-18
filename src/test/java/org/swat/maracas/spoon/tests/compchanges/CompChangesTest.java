@@ -64,7 +64,7 @@ public class CompChangesTest {
 					return false;
 				if (line != pos.getLine())
 					return false;
-				
+
 				return true;
 			}).findAny();
 

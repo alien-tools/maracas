@@ -51,7 +51,7 @@ public class ImpactVisitor implements FilterVisitor {
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
 				default -> null;
 			};
-			
+
 			if (visitor != null) {
 				visitor.scan(root);
 				detections.addAll(visitor.getDetections());
@@ -66,7 +66,7 @@ public class ImpactVisitor implements FilterVisitor {
 			japicmp.util.Optional<CtMethod> oldMethodOpt = elem.getOldMethod();
 			if (oldMethodOpt.isPresent()) {
 				CtMethod oldMethod = oldMethodOpt.get();
-				
+
 				Optional<CtExecutableReference<?>> mRefOpt =
 					clsRef.getDeclaredExecutables()
 					.stream()
@@ -78,7 +78,7 @@ public class ImpactVisitor implements FilterVisitor {
 						case METHOD_NOW_FINAL -> new MethodNowFinalVisitor(mRefOpt.get());
 						default -> null;
 					};
-					
+
 					if (visitor != null) {
 						visitor.scan(root);
 						detections.addAll(visitor.getDetections());
@@ -119,7 +119,7 @@ public class ImpactVisitor implements FilterVisitor {
 					case FIELD_NOW_FINAL -> new FieldNowFinalVisitor(fRef);
 					default -> null;
 				};
-				
+
 				if (visitor != null) {
 					visitor.scan(root);
 					detections.addAll(visitor.getDetections());

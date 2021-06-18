@@ -20,7 +20,7 @@ class FieldNowFinalTests extends CompChangesTest {
 	void testExtNoSuper() {
 		assertDetection("FieldNowFinalExt.java", 17, FIELD_NOW_FINAL, FIELD_ACCESS);
 	}
-	
+
 	@Test
 	void testExtSubSuper() {
 		assertDetection("FieldNowFinalExtSub.java", 8, FIELD_NOW_FINAL, FIELD_ACCESS);
@@ -30,7 +30,7 @@ class FieldNowFinalTests extends CompChangesTest {
 	void testExtSupNoSuper() {
 		assertDetection("FieldNowFinalExtSub.java", 17, FIELD_NOW_FINAL, FIELD_ACCESS);
 	}
-	
+
 	@Test
 	void testFA() {
 		assertDetection("FieldNowFinalFA.java", 10, FIELD_NOW_FINAL, FIELD_ACCESS);

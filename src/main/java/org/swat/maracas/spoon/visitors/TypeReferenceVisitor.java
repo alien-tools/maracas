@@ -15,7 +15,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 		super(change);
 		this.clsRef = clsRef;
 	}
-	
+
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
@@ -32,7 +32,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 				default ->
 					throw new RuntimeException("Unmanaged role " + role);
 			};
-			
+
 			detection(reference.getParent(), reference, clsRef, use);
 		}
 
@@ -43,7 +43,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
 			detection(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
-		
+
 		super.visitCtFieldReference(reference);
 	}
 
