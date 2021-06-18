@@ -80,7 +80,15 @@ public class ImpactVisitor implements FilterVisitor {
 						visitor.scan(root);
 						detections.addAll(visitor.getDetections());
 					}
-				} else System.out.println("Didn't find " + oldMethod);
+				} else {
+					if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf"))
+						// When an enum is transformed into anything else,
+						// japicmp reports that valueOf(String)/values() are removed
+						// Ignore.
+						;
+					else
+						throw new RuntimeException("Unmatched " + oldMethod);
+				}
 			} else {
 				// No oldMethod
 			}

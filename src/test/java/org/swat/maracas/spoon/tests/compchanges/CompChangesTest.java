@@ -1,7 +1,6 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,9 +28,9 @@ public class CompChangesTest {
 
 	@BeforeAll
 	static void setUp() {
-		Path v1 = Paths.get("/home/dig/repositories/maracas/data/comp-changes-old/target/comp-changes-0.0.1.jar");
-		Path v2 = Paths.get("/home/dig/repositories/maracas/data/comp-changes-new/target/comp-changes-0.0.2.jar");
-		Path client = Paths.get("/home/dig/repositories/comp-changes-client/src/");
+		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
+		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
+		Path client = Paths.get("/home/dig/repositories/comp-changes-data/client/src/");
 
 		detections = computeDetections(v1, v2, client);
 	}
