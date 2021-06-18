@@ -12,7 +12,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Detections of CLASS_NOW_FINAL are:
- *	- Client classes (regular and anonymous) extending the now-final class
+ *	- Classes (regular and anonymous) extending the now-final class
  *	- Methods @Override-ing a method of the now-final class
  */
 public class ClassNowFinalVisitor extends BreakingChangeVisitor {

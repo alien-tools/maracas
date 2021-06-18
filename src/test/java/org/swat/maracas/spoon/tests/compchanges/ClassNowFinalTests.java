@@ -4,8 +4,6 @@ import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
 import static org.swat.maracas.spoon.Detection.APIUse.EXTENDS;
 import static org.swat.maracas.spoon.Detection.APIUse.METHOD_OVERRIDE;
 
-import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.Test;
 
 class ClassNowFinalTests extends CompChangesTest {

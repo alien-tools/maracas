@@ -35,6 +35,7 @@ public class ImpactVisitor implements FilterVisitor {
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
 				case CLASS_LESS_ACCESSIBLE -> new ClassLessAccessibleVisitor(clsRef);
+				case CLASS_NOW_ABSTRACT -> new ClassNowAbstractVisitor(clsRef);
 				case CLASS_NOW_FINAL -> new ClassNowFinalVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
 				default -> {

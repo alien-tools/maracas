@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.swat.maracas.spoon.Delta;
@@ -76,8 +77,8 @@ public class CompChangesTest {
 	}
 
 	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
-		assertEquals(
-			n,
-			detections.stream().filter(d -> d.getChange() == change).count());
+		List<Detection> ds = detections.stream().filter(d -> d.getChange() == change).collect(Collectors.toList());
+
+		assertEquals(n, ds.size(), ds.toString());
 	}
 }

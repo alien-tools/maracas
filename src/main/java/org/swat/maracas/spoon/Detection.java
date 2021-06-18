@@ -126,6 +126,7 @@ public class Detection {
 	}
 
 	public enum APIUse {
+		INSTANTIATION,
 		METHOD_INVOCATION,
 		METHOD_OVERRIDE,
 		FIELD_ACCESS,
