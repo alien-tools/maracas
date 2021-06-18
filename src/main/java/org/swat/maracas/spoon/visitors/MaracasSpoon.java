@@ -6,11 +6,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.swat.maracas.spoon.Delta;
+import org.swat.maracas.spoon.SpoonHelper;
 
 import japicmp.model.JApiClass;
 import japicmp.output.Filter;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtComment.CommentType;
+import spoon.reflect.declaration.CtElement;
 
 public class MaracasSpoon {
 	public static void main(String[] args) {
@@ -35,5 +38,18 @@ public class MaracasSpoon {
 		Filter.filter(classes, visitor);
 
 		System.out.println(visitor.getDetections());
+
+		visitor.getDetections().forEach(d -> {
+			String comment = "";
+			CtElement anchor = SpoonHelper.firstLocatableParent(d.getElement());
+			
+			if (anchor != null)
+				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(d.toJavaComment(), CommentType.INLINE));
+			else
+				System.out.println("Cannot attach comment on " + d);
+		});
+	
+		launcher.setSourceOutputDirectory("/home/dig/repositories/comp-changes-client-output/src");
+		launcher.prettyprint();
 	}
 }

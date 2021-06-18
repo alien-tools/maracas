@@ -85,8 +85,8 @@ public class MaracasSpoon {
 			}
 		});
 		
-		LibraryUsageVisitor visit = new LibraryUsageVisitor(types);
-		visit.scan(model.getRootPackage());
+//		LibraryUsageVisitor visit = new LibraryUsageVisitor(types);
+//		visit.scan(model.getRootPackage());
 		//model.getRootPackage().accept(visit);
 		
 //		ImpactProcessor processor = new ImpactProcessor(model);

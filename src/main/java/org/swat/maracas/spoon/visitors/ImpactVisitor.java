@@ -34,9 +34,13 @@ public class ImpactVisitor implements FilterVisitor {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
+				case CLASS_LESS_ACCESSIBLE -> new ClassLessAccessibleVisitor(clsRef);
 				case CLASS_NOW_FINAL -> new ClassNowFinalVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
-				default -> null;
+				default -> {
+					System.out.println("Unknown " + c.name());
+					yield null;
+				}
 			};
 			
 			if (visitor != null) {

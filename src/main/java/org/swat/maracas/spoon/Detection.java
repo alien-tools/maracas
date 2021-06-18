@@ -76,22 +76,31 @@ public class Detection {
 			usedApiElement instanceof CtNamedElement namedUsedApiElement ?
 				namedUsedApiElement.getSimpleName() :
 				usedApiElement.toString();
+		String elemFile =
+			element.getPosition() instanceof NoSourcePosition ?
+				"unknown" :
+				element.getPosition().getFile().getName();
 		int elemLine =
 			element.getPosition() instanceof NoSourcePosition ?
 				-1 :
 				element.getPosition().getLine();
+				
 
 		return """
 		[%s]
-			Element: %s
+			Element: %s (%s:%d)
 			Used:    %s
 			Source:  %s
 			Use:     %s\
 		""".formatted(
 			change, elemName,
-			
+			elemFile, elemLine,
 			usedName, source, use
 		);
+	}
+
+	public String toJavaComment() {
+		return "[" + change + ":" + use + "]";
 	}
 	
 	@Override
