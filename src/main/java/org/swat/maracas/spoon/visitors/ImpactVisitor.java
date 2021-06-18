@@ -2,6 +2,7 @@ package org.swat.maracas.spoon.visitors;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import org.swat.maracas.spoon.Detection;
@@ -14,7 +15,9 @@ import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
 import japicmp.output.Filter.FilterVisitor;
+import javassist.CtMethod;
 import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ImpactVisitor implements FilterVisitor {
@@ -29,6 +32,11 @@ public class ImpactVisitor implements FilterVisitor {
 		return detections;
 	}
 
+	public boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtMethod japiMethod) {
+		return
+			japiMethod.getName().concat(japiMethod.getSignature()).startsWith(spoonMethod.getSignature());
+	}
+
 	@Override
 	public void visit(Iterator<JApiClass> iterator, JApiClass elem) {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
@@ -38,10 +46,7 @@ public class ImpactVisitor implements FilterVisitor {
 				case CLASS_NOW_ABSTRACT -> new ClassNowAbstractVisitor(clsRef);
 				case CLASS_NOW_FINAL -> new ClassNowFinalVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
-				default -> {
-					System.out.println("Unknown " + c.name());
-					yield null;
-				}
+				default -> null;
 			};
 			
 			if (visitor != null) {
@@ -53,6 +58,33 @@ public class ImpactVisitor implements FilterVisitor {
 
 	@Override
 	public void visit(Iterator<JApiMethod> iterator, JApiMethod elem) {
+		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getjApiClass().getFullyQualifiedName());
+		elem.getCompatibilityChanges().forEach(c -> {
+			japicmp.util.Optional<CtMethod> oldMethodOpt = elem.getOldMethod();
+			if (oldMethodOpt.isPresent()) {
+				CtMethod oldMethod = oldMethodOpt.get();
+				
+				Optional<CtExecutableReference<?>> mRefOpt =
+					clsRef.getDeclaredExecutables()
+					.stream()
+					.filter(m -> matchingSignatures(m, oldMethod))
+					.findFirst();
+
+				if (mRefOpt.isPresent()) {
+					BreakingChangeVisitor visitor = switch (c) {
+						case METHOD_NOW_FINAL -> new MethodNowFinalVisitor(mRefOpt.get());
+						default -> null;
+					};
+					
+					if (visitor != null) {
+						visitor.scan(root);
+						detections.addAll(visitor.getDetections());
+					}
+				} else System.out.println("Didn't find " + oldMethod);
+			} else {
+				// No oldMethod
+			}
+		});
 	}
 
 	@Override

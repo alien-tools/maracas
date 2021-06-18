@@ -48,7 +48,7 @@ public class MaracasSpoon {
 			else
 				System.out.println("Cannot attach comment on " + d);
 		});
-	
+		
 		launcher.setSourceOutputDirectory("/home/dig/repositories/comp-changes-client-output/src");
 		launcher.prettyprint();
 	}
