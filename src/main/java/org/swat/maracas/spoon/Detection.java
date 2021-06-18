@@ -134,6 +134,7 @@ public class Detection {
 		IMPLEMENTS,
 		ANNOTATION,
 		TYPE_DEPENDENCY,
-		DECLARATION
+		DECLARATION,
+		IMPORT
 	}
 }

@@ -9,13 +9,13 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
-	private final CtTypeReference<?> clsRef;
+	protected final CtTypeReference<?> clsRef;
 
 	protected TypeReferenceVisitor(JApiCompatibilityChange change, CtTypeReference<?> clsRef) {
 		super(change);
 		this.clsRef = clsRef;
 	}
-
+	
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
@@ -32,7 +32,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 				default ->
 					throw new RuntimeException("Unmanaged role " + role);
 			};
-
+			
 			detection(reference.getParent(), reference, clsRef, use);
 		}
 

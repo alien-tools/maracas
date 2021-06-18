@@ -9,6 +9,7 @@ import org.swat.maracas.spoon.Delta;
 import org.swat.maracas.spoon.SpoonHelper;
 
 import japicmp.model.JApiClass;
+import japicmp.model.JApiCompatibilityChange;
 import japicmp.output.Filter;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
@@ -37,7 +38,10 @@ public class MaracasSpoon {
 		ImpactVisitor visitor = new ImpactVisitor(model.getRootPackage());
 		Filter.filter(classes, visitor);
 
-		System.out.println(visitor.getDetections());
+		visitor.getDetections().forEach(d -> {
+			if (d.getChange() == JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE)
+				System.out.println(d);
+		});
 
 		visitor.getDetections().forEach(d -> {
 			CtElement anchor = SpoonHelper.firstLocatableParent(d.getElement());
