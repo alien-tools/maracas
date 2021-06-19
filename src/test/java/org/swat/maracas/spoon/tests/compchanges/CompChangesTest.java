@@ -4,24 +4,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.swat.maracas.spoon.Delta;
 import org.swat.maracas.spoon.Detection;
 import org.swat.maracas.spoon.Detection.APIUse;
+import org.swat.maracas.spoon.Maracas;
 import org.swat.maracas.spoon.SpoonHelper;
-import org.swat.maracas.spoon.visitors.ImpactVisitor;
 
-import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
-import japicmp.output.Filter;
-import spoon.Launcher;
-import spoon.reflect.CtModel;
 import spoon.reflect.cu.SourcePosition;
 
 public class CompChangesTest {
@@ -32,24 +26,10 @@ public class CompChangesTest {
 		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
 		Path client = Paths.get("/home/dig/repositories/comp-changes-data/client/src/");
+		Maracas maracas = new Maracas(v1, v2, client);
 
-		detections = computeDetections(v1, v2, client);
-	}
-
-	public static Set<Detection> computeDetections(Path v1, Path v2, Path client) {
-		Delta delta = new Delta();
-		List<JApiClass> classes = delta.compute(v1, v2, Collections.emptyList(), Collections.emptyList());
-
-		Launcher launcher = new Launcher();
-		launcher.addInputResource(client.toAbsolutePath().toString());
-		String[] cp = {v1.toAbsolutePath().toString()};
-		launcher.getEnvironment().setSourceClasspath(cp);
-		CtModel model = launcher.buildModel();
-
-		ImpactVisitor visitor = new ImpactVisitor(model.getRootPackage());
-		Filter.filter(classes, visitor);
-
-		return visitor.getDetections();
+		maracas.computeDelta();
+		detections = maracas.computeDetections();
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
