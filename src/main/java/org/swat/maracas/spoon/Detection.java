@@ -112,6 +112,7 @@ public class Detection {
 	}
 
 	public enum APIUse {
+		THROWS,
 		INSTANTIATION,
 		METHOD_INVOCATION,
 		METHOD_OVERRIDE,
