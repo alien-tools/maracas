@@ -44,13 +44,13 @@ public class ImpactVisitor implements FilterVisitor {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
-				case CLASS_NO_LONGER_PUBLIC -> null; // CLASS_LESS_ACCESSIBLE is a superset; fix japicmp 
-				case CLASS_LESS_ACCESSIBLE -> new ClassLessAccessibleVisitor(clsRef, elem.getAccessModifier().getNewModifier().get());
-				case CLASS_NOW_ABSTRACT -> new ClassNowAbstractVisitor(clsRef);
-				case CLASS_NOW_FINAL -> new ClassNowFinalVisitor(clsRef);
+				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset; fix japicmp 
+				case CLASS_LESS_ACCESSIBLE       -> new ClassLessAccessibleVisitor(clsRef, elem.getAccessModifier().getNewModifier().get());
+				case CLASS_NOW_ABSTRACT          -> new ClassNowAbstractVisitor(clsRef);
+				case CLASS_NOW_FINAL             -> new ClassNowFinalVisitor(clsRef);
 				case CLASS_NOW_CHECKED_EXCEPTION -> new ClassNowCheckedExceptionVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
-				case CLASS_REMOVED -> new ClassRemovedVisitor(clsRef);
+				case CLASS_REMOVED               -> new ClassRemovedVisitor(clsRef);
 				default -> null;
 			};
 
@@ -77,7 +77,8 @@ public class ImpactVisitor implements FilterVisitor {
 
 				if (mRefOpt.isPresent()) {
 					BreakingChangeVisitor visitor = switch (c) {
-						case METHOD_NOW_FINAL -> new MethodNowFinalVisitor(mRefOpt.get());
+						case METHOD_NOW_FINAL    -> new MethodNowFinalVisitor(mRefOpt.get());
+						case METHOD_NOW_ABSTRACT -> new MethodNowAbstractVisitor(mRefOpt.get());
 						default -> null;
 					};
 
