@@ -22,14 +22,14 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
-			Optional<CtMethod<?>> superMethod = 
-				m.getTopDefinitions()
-					.stream()
-					.filter(superM -> mRef.equals(superM.getReference()))
-					.findAny();
+		Optional<CtMethod<?>> superMethod = 
+			m.getTopDefinitions()
+				.stream()
+				.filter(superM -> mRef.equals(superM.getReference()))
+				.findAny();
 
-			if (superMethod.isPresent())
-				detection(m, superMethod.get(), mRef, APIUse.METHOD_OVERRIDE);
+		if (superMethod.isPresent())
+			detection(m, superMethod.get(), mRef, APIUse.METHOD_OVERRIDE);
 
 		super.visitCtMethod(m);
 	}

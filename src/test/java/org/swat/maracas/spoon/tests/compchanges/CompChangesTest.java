@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.swat.maracas.spoon.Delta;
 import org.swat.maracas.spoon.Detection;
 import org.swat.maracas.spoon.Detection.APIUse;
+import org.swat.maracas.spoon.SpoonHelper;
 import org.swat.maracas.spoon.visitors.ImpactVisitor;
 
 import japicmp.model.JApiClass;
@@ -59,7 +60,7 @@ public class CompChangesTest {
 				if (use != d.getUse())
 					return false;
 
-				SourcePosition pos = d.getElement().getPosition();
+				SourcePosition pos = SpoonHelper.firstLocatableParent(d.getElement()).getPosition();
 				if (!file.equals(pos.getFile().getName().toString()))
 					return false;
 				if (line != pos.getLine())
