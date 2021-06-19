@@ -53,7 +53,7 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 			Optional<CtTypeReference<? extends Throwable>> compatibleThrows =
 				thrownTypes
 				.stream()
-				.filter((CtTypeReference<?> t) -> thrownType.isSubtypeOf(t))
+				.filter(thrownType::isSubtypeOf)
 				.findAny();
 			
 			if (compatibleThrows.isPresent())

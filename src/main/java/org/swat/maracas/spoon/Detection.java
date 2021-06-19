@@ -1,5 +1,7 @@
 package org.swat.maracas.spoon;
 
+import java.util.Objects;
+
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
@@ -95,20 +97,21 @@ public class Detection {
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		if (other == null)
-			return false;
-		if (this == other)
+	public int hashCode() {
+		return Objects.hash(change, element, source, use, usedApiElement);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
 			return true;
-		if (!(other instanceof Detection))
+		if (obj == null)
 			return false;
-		Detection that = (Detection) other;
-		return
-			element.equals(that.getElement()) &&
-			usedApiElement.equals(that.getUsedApiElement()) &&
-			source.equals(that.getSource()) &&
-			use.equals(that.getUse()) &&
-			change.equals(that.getChange());
+		if (getClass() != obj.getClass())
+			return false;
+		Detection other = (Detection) obj;
+		return change == other.change && Objects.equals(element, other.element) && Objects.equals(source, other.source)
+				&& use == other.use && Objects.equals(usedApiElement, other.usedApiElement);
 	}
 
 	public enum APIUse {

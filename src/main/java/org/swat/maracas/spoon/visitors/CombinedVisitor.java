@@ -111,7 +111,7 @@ public class CombinedVisitor extends CtScanner {
 	public Set<Detection> getDetections() {
 		return
 			visitors.stream()
-			.map(v -> v.getDetections())
+			.map(BreakingChangeVisitor::getDetections)
 			.flatMap(Collection::stream)
 			.collect(Collectors.toSet());
 	}

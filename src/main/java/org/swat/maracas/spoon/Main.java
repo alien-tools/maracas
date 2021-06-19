@@ -2,10 +2,7 @@ package org.swat.maracas.spoon;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Set;
-
-import japicmp.model.JApiClass;
 
 public class Main {
 	public static void main(String[] args) {
@@ -15,7 +12,7 @@ public class Main {
 		Path output = Paths.get("/home/dig/repositories/comp-changes-data/client-commented/src");
 		
 		Maracas maracas = new Maracas(v1, v2, c);
-		List<JApiClass> delta = maracas.computeDelta();
+		maracas.computeDelta();
 		Set<Detection> detections = maracas.computeDetections();
 
 		detections.forEach(d -> {
