@@ -33,8 +33,6 @@ public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 					detection(ctClass, enclosingType, mRef, APIUse.EXTENDS);
 			}
 		}
-		
-		super.visitCtClass(ctClass);
 	}
 	
 	@Override
@@ -42,7 +40,5 @@ public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 		if (mRef.equals(invocation.getExecutable())) {
 			detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 		}
-
-		super.visitCtInvocation(invocation);
 	}
 }

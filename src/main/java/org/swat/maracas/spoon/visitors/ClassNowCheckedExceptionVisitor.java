@@ -27,42 +27,40 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 	}
 
 	@Override
-		public void visitCtThrow(CtThrow throwStatement) {
-			CtTypeReference<? extends Throwable> thrownType = throwStatement.getThrownExpression().getType();
-			if (thrownType.isSubtypeOf(clsRef)) {
-				boolean isCaught = false;
-				boolean isDeclared = false;
-				
-				CtTry enclosingTry = throwStatement.getParent(CtTry.class);
-				if (enclosingTry != null) {
-					Optional<CtCatch> excCatcher =
-						enclosingTry.getCatchers()
-						.stream()
-						.filter(c -> thrownType.isSubtypeOf(c.getParameter().getType()))
-						.findAny();
-					
-					if (excCatcher.isPresent())
-						isCaught = true;
-				}
-				
-				@SuppressWarnings("unchecked")
-				Set<CtTypeReference<? extends Throwable>> thrownTypes =
-					throwStatement.getParent(CtMethod.class)
-					.getThrownTypes();
-				
-				Optional<CtTypeReference<? extends Throwable>> compatibleThrows =
-					thrownTypes
+	public void visitCtThrow(CtThrow throwStatement) {
+		CtTypeReference<? extends Throwable> thrownType = throwStatement.getThrownExpression().getType();
+		if (thrownType.isSubtypeOf(clsRef)) {
+			boolean isCaught = false;
+			boolean isDeclared = false;
+			
+			CtTry enclosingTry = throwStatement.getParent(CtTry.class);
+			if (enclosingTry != null) {
+				Optional<CtCatch> excCatcher =
+					enclosingTry.getCatchers()
 					.stream()
-					.filter((CtTypeReference<?> t) -> thrownType.isSubtypeOf(t))
+					.filter(c -> thrownType.isSubtypeOf(c.getParameter().getType()))
 					.findAny();
 				
-				if (compatibleThrows.isPresent())
-					isDeclared = true;
-				
-				if (!isCaught && !isDeclared)
-					detection(throwStatement, throwStatement.getThrownExpression().getType(), clsRef, APIUse.THROWS);
+				if (excCatcher.isPresent())
+					isCaught = true;
 			}
 			
-			super.visitCtThrow(throwStatement);
+			@SuppressWarnings("unchecked")
+			Set<CtTypeReference<? extends Throwable>> thrownTypes =
+				throwStatement.getParent(CtMethod.class)
+				.getThrownTypes();
+			
+			Optional<CtTypeReference<? extends Throwable>> compatibleThrows =
+				thrownTypes
+				.stream()
+				.filter((CtTypeReference<?> t) -> thrownType.isSubtypeOf(t))
+				.findAny();
+			
+			if (compatibleThrows.isPresent())
+				isDeclared = true;
+			
+			if (!isCaught && !isDeclared)
+				detection(throwStatement, throwStatement.getThrownExpression().getType(), clsRef, APIUse.THROWS);
 		}
+	}
 }

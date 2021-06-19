@@ -1,11 +1,9 @@
 package org.swat.maracas.spoon.visitors;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-
-import org.swat.maracas.spoon.Detection;
 
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
@@ -22,21 +20,16 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class ImpactVisitor implements FilterVisitor {
+public class DeltaVisitor implements FilterVisitor {
 	private final CtPackage root;
-	private final Set<Detection> detections = new HashSet<>();
+	private final List<BreakingChangeVisitor> visitors = new ArrayList<>();
 
-	public ImpactVisitor(CtPackage root) {
+	public DeltaVisitor(CtPackage root) {
 		this.root = root;
 	}
 
-	public Set<Detection> getDetections() {
-		return detections;
-	}
-
-	public boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtMethod japiMethod) {
-		return
-			japiMethod.getName().concat(japiMethod.getSignature()).startsWith(spoonMethod.getSignature());
+	public List<BreakingChangeVisitor> getVisitors() {
+		return visitors;
 	}
 
 	@Override
@@ -44,7 +37,7 @@ public class ImpactVisitor implements FilterVisitor {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
-				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset; fix japicmp 
+				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset of CLASS_LESS_ACCESSIBLE; fix japicmp 
 				case CLASS_LESS_ACCESSIBLE       -> new ClassLessAccessibleVisitor(clsRef, elem.getAccessModifier().getNewModifier().get());
 				case CLASS_NOW_ABSTRACT          -> new ClassNowAbstractVisitor(clsRef);
 				case CLASS_NOW_FINAL             -> new ClassNowFinalVisitor(clsRef);
@@ -54,10 +47,8 @@ public class ImpactVisitor implements FilterVisitor {
 				default -> null;
 			};
 
-			if (visitor != null) {
-				visitor.scan(root);
-				detections.addAll(visitor.getDetections());
-			}
+			if (visitor != null)
+				visitors.add(visitor);
 		});
 	}
 
@@ -82,10 +73,8 @@ public class ImpactVisitor implements FilterVisitor {
 						default -> null;
 					};
 
-					if (visitor != null) {
-						visitor.scan(root);
-						detections.addAll(visitor.getDetections());
-					}
+					if (visitor != null)
+						visitors.add(visitor);
 				} else {
 					if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf"))
 						// When an enum is transformed into anything else,
@@ -123,10 +112,8 @@ public class ImpactVisitor implements FilterVisitor {
 					default -> null;
 				};
 
-				if (visitor != null) {
-					visitor.scan(root);
-					detections.addAll(visitor.getDetections());
-				}
+				if (visitor != null)
+					visitors.add(visitor);
 			} else {
 				// No oldMethod
 			}
@@ -139,5 +126,10 @@ public class ImpactVisitor implements FilterVisitor {
 
 	@Override
 	public void visit(JApiSuperclass elem) {
+	}
+
+	private boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtMethod japiMethod) {
+		return
+			japiMethod.getName().concat(japiMethod.getSignature()).startsWith(spoonMethod.getSignature());
 	}
 }

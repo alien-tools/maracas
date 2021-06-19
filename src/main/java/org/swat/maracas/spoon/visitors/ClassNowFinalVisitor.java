@@ -27,8 +27,6 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtClass(CtClass<T> ctClass) {
 		if (clsRef.equals(ctClass.getSuperclass()))
 			detection(ctClass, ctClass.getSuperclass(), clsRef, APIUse.EXTENDS);
-
-		super.visitCtClass(ctClass);
 	}
 
 	@Override
@@ -43,8 +41,6 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 			if (superMethod.isPresent())
 				detection(m, superMethod.get(), clsRef, APIUse.METHOD_OVERRIDE);
 		}
-
-		super.visitCtMethod(m);
 	}
 
 	@Override
@@ -54,7 +50,5 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 
 		// if (clsRef.equals(newClass.getType()))
 		//	detection(newClass, newClass.getType(), clsRef, APIUse.EXTENDS);
-
-		super.visitCtNewClass(newClass);
 	}
 }

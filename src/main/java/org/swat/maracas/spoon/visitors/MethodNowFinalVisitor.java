@@ -30,7 +30,5 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 
 		if (superMethod.isPresent())
 			detection(m, superMethod.get(), mRef, APIUse.METHOD_OVERRIDE);
-
-		super.visitCtMethod(m);
 	}
 }

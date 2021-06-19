@@ -35,23 +35,17 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 			
 			detection(reference.getParent(), reference, clsRef, use);
 		}
-
-		super.visitCtTypeReference(reference);
 	}
 
 	@Override
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
 			detection(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
-
-		super.visitCtFieldReference(reference);
 	}
 
 	@Override
 	public <T> void visitCtExecutableReference(CtExecutableReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
 			detection(reference.getParent(), reference.getExecutableDeclaration(), clsRef, APIUse.METHOD_INVOCATION);
-
-		super.visitCtExecutableReference(reference);
 	}
 }

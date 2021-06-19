@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import japicmp.model.JApiClass;
-import japicmp.model.JApiCompatibilityChange;
 
 public class Main {
 	public static void main(String[] args) {
@@ -20,7 +19,7 @@ public class Main {
 		Set<Detection> detections = maracas.computeDetections();
 
 		detections.forEach(d -> {
-			if (d.getChange() == JApiCompatibilityChange.METHOD_NOW_ABSTRACT)
+			//if (d.getChange() == JApiCompatibilityChange.METHOD_NOW_ABSTRACT)
 				System.out.println(d);
 		});
 		

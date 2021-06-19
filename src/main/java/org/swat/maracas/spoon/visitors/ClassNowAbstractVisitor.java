@@ -22,7 +22,5 @@ public class ClassNowAbstractVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtConstructorCall(CtConstructorCall<T> ctConstructorCall) {
 		if (clsRef.equals(ctConstructorCall.getType()))
 				detection(ctConstructorCall, ctConstructorCall.getType(), clsRef, APIUse.INSTANTIATION);
-
-		super.visitCtConstructorCall(ctConstructorCall);
 	}
 }

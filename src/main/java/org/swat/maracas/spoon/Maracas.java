@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.swat.maracas.spoon.visitors.ImpactVisitor;
+import org.swat.maracas.spoon.visitors.BreakingChangeVisitor;
+import org.swat.maracas.spoon.visitors.CombinedVisitor;
+import org.swat.maracas.spoon.visitors.DeltaVisitor;
 
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
@@ -66,8 +68,13 @@ public class Maracas {
 		launcher.getEnvironment().setSourceClasspath(cp);
 		model = launcher.buildModel();
 
-		ImpactVisitor visitor = new ImpactVisitor(model.getRootPackage());
-		Filter.filter(delta, visitor);
+		DeltaVisitor deltaVisitor = new DeltaVisitor(model.getRootPackage());
+		Filter.filter(delta, deltaVisitor);
+
+		List<BreakingChangeVisitor> visitors = deltaVisitor.getVisitors();
+		CombinedVisitor visitor = new CombinedVisitor(visitors);
+
+		visitor.scan(model.getRootPackage());
 
 		detections = visitor.getDetections();
 		return detections;

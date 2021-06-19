@@ -9,9 +9,9 @@ import org.swat.maracas.spoon.Detection.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtReference;
-import spoon.reflect.visitor.CtScanner;
+import spoon.reflect.visitor.CtAbstractVisitor;
 
-public abstract class BreakingChangeVisitor extends CtScanner {
+public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	private final JApiCompatibilityChange change;
 	private final Set<Detection> detections = new HashSet<>();
 

@@ -19,10 +19,8 @@ public class FieldNowFinalVisitor extends BreakingChangeVisitor {
 	}
 
 	@Override
-		public <T> void visitCtFieldWrite(CtFieldWrite<T> fieldWrite) {
-			if (fRef.equals(fieldWrite.getVariable()))
-				detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
-
-			super.visitCtFieldWrite(fieldWrite);
-		}
+	public <T> void visitCtFieldWrite(CtFieldWrite<T> fieldWrite) {
+		if (fRef.equals(fieldWrite.getVariable()))
+			detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
+	}
 }
