@@ -10,7 +10,7 @@ import spoon.reflect.reference.CtExecutableReference;
 
 /**
  * Detections of METHOD_NOW_FINAL are:
- *	- Method overriding the now-final method (with or w/o explicit @Override)
+ *	- Methods overriding the now-final method (with or w/o explicit @Override)
  */
 public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 	private final CtExecutableReference<?> mRef;

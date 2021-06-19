@@ -8,7 +8,6 @@ import spoon.reflect.reference.CtReference;
 
 public class Detection {
 	private CtElement element;
-	//private CtReference reference;
 	private CtElement usedApiElement;
 	private CtReference source;
 	private APIUse use;
@@ -25,14 +24,6 @@ public class Detection {
 	public void setElement(CtElement element) {
 		this.element = element;
 	}
-
-	/*public CtReference getReference() {
-		return reference;
-	}
-
-	public void setReference(CtReference reference) {
-		this.reference = reference;
-	}*/
 
 	public CtElement getUsedApiElement() {
 		return usedApiElement;
@@ -104,11 +95,6 @@ public class Detection {
 	}
 
 	@Override
-    public int hashCode() {
-        return 1;
-    }
-
-	@Override
 	public boolean equals(Object other) {
 		if (other == null)
 			return false;
@@ -117,12 +103,12 @@ public class Detection {
 		if (!(other instanceof Detection))
 			return false;
 		Detection that = (Detection) other;
-		return  element.equals(that.getElement()) &&
-				//reference.equals(that.getReference()) &&
-				usedApiElement.equals(that.getUsedApiElement()) &&
-				source.equals(that.getSource()) &&
-				use.equals(that.getUse()) &&
-				change.equals(that.getChange());
+		return
+			element.equals(that.getElement()) &&
+			usedApiElement.equals(that.getUsedApiElement()) &&
+			source.equals(that.getSource()) &&
+			use.equals(that.getUse()) &&
+			change.equals(that.getChange());
 	}
 
 	public enum APIUse {

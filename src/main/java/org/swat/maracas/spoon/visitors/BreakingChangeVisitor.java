@@ -27,6 +27,7 @@ public abstract class BreakingChangeVisitor extends CtScanner {
 		d.setSource(source);
 		d.setUse(use);
 		d.setChange(change);
+		
 		detections.add(d);
 	}
 

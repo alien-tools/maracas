@@ -18,10 +18,10 @@ import spoon.reflect.declaration.CtElement;
 
 public class MaracasSpoon {
 	public static void main(String[] args) {
-		Path v1 = Paths.get("/home/dig/repositories/maracas/data/comp-changes-old/target/comp-changes-0.0.1.jar");
-		Path v2 = Paths.get("/home/dig/repositories/maracas/data/comp-changes-new/target/comp-changes-0.0.2.jar");
-		Path c = Paths.get("/home/dig/repositories/maracas/data/comp-changes-client/src/");
-		//Path c = Paths.get("/home/dig/repositories/maracas/data/comp-changes-client/src/mainclient/annotationDeprecatedAdded/AnnotationDeprecatedAddedExt.java");
+		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
+		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
+		//Path c = Paths.get("/home/dig/repositories/maracas/data/comp-changes-client/src/");
+		Path c = Paths.get("/home/dig/repositories/comp-changes-data/client/src/mainclient/classNowFinal");
 		new MaracasSpoon().run(v1, v2, c);
 	}
 
@@ -39,7 +39,7 @@ public class MaracasSpoon {
 		Filter.filter(classes, visitor);
 
 		visitor.getDetections().forEach(d -> {
-			if (d.getChange() == JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE)
+			if (d.getChange() == JApiCompatibilityChange.CLASS_NOW_FINAL)
 				System.out.println(d);
 		});
 
