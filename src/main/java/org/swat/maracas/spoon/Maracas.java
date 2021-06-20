@@ -82,10 +82,11 @@ public class Maracas {
 
 	public void writeAnnotatedClient(Path output) {
 		detections.forEach(d -> {
-			CtElement anchor = SpoonHelper.firstLocatableParent(d.getElement());
+			CtElement anchor = SpoonHelper.firstLocatableParent(d.element());
+			String comment = String.format("[%s:%s]", d.change(), d.use());
 
 			if (anchor != null)
-				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(d.toJavaComment(), CommentType.INLINE));
+				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(comment, CommentType.INLINE));
 			else
 				System.out.println("Cannot attach comment on " + d);
 		});

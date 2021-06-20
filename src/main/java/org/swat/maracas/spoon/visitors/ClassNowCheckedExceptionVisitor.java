@@ -3,7 +3,7 @@ package org.swat.maracas.spoon.visitors;
 import java.util.Optional;
 import java.util.Set;
 
-import org.swat.maracas.spoon.Detection.APIUse;
+import org.swat.maracas.spoon.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtCatch;

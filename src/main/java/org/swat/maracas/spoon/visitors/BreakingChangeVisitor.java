@@ -3,8 +3,8 @@ package org.swat.maracas.spoon.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.swat.maracas.spoon.APIUse;
 import org.swat.maracas.spoon.Detection;
-import org.swat.maracas.spoon.Detection.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;
@@ -21,12 +21,13 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	}
 
 	protected void detection(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
-		Detection d = new Detection();
-		d.setElement(element);
-		d.setUsedApiElement(usedApiElement);
-		d.setSource(source);
-		d.setUse(use);
-		d.setChange(change);
+		Detection d = new Detection(
+			element,
+			usedApiElement,
+			source,
+			use,
+			change
+		);
 		
 		detections.add(d);
 	}

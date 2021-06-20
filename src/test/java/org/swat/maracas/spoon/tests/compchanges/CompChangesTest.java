@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.swat.maracas.spoon.APIUse;
 import org.swat.maracas.spoon.Detection;
-import org.swat.maracas.spoon.Detection.APIUse;
 import org.swat.maracas.spoon.Maracas;
 import org.swat.maracas.spoon.SpoonHelper;
 
@@ -35,12 +35,12 @@ public class CompChangesTest {
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
 		Optional<Detection> find =
 			detections.stream().filter(d -> {
-				if (change != d.getChange())
+				if (change != d.change())
 					return false;
-				if (use != d.getUse())
+				if (use != d.use())
 					return false;
 
-				SourcePosition pos = SpoonHelper.firstLocatableParent(d.getElement()).getPosition();
+				SourcePosition pos = SpoonHelper.firstLocatableParent(d.element()).getPosition();
 				if (!file.equals(pos.getFile().getName().toString()))
 					return false;
 				if (line != pos.getLine())
@@ -57,7 +57,7 @@ public class CompChangesTest {
 	}
 
 	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
-		List<Detection> ds = detections.stream().filter(d -> d.getChange() == change).collect(Collectors.toList());
+		List<Detection> ds = detections.stream().filter(d -> d.change() == change).collect(Collectors.toList());
 
 		assertEquals(n, ds.size(), ds.toString());
 	}
