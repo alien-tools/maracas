@@ -1,6 +1,5 @@
 package org.swat.maracas.spoon.visitors;
 
-import java.util.Objects;
 import java.util.Set;
 
 import org.swat.maracas.spoon.APIUse;
@@ -90,12 +89,15 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 		if (given.isSubtypeOf(expected))
 			return true;
 		
-		// If we expect a primitive, either we can widen it, or they box to the same type
+		// If we expect a primitive, either we can widen the given primitive,
+		// or it is a compatible boxed type
 		if (expected.isPrimitive()) {
-			if (given.isPrimitive())
-				return primitivesAreCompatible(expected, given); // No helper for that!?
-			
-			return Objects.equals(expected.box(), given.box());
+			return primitivesAreCompatible(expected, given.unbox()); // No helper for that!?
+		}
+		
+		// If it's a boxed type
+		else if (!expected.equals(expected.unbox())) {
+			return primitivesAreCompatible(expected.unbox(), given.unbox());
 		}
 		
 		// If we expect an array, only compatible type is an array of a subtype
@@ -110,17 +112,25 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 			
 			return false;
 		}
-	
+		
+		// If we expect a class/interface, we already checked for subtyping,
+		// so that's a no
+		else if (expected.isClass() || expected.isInterface())
+			return false;
+
 		// If we have classes/interfaces, check subtyping. Otherwise if given is
 		// not a class/interface, check for boxing
-		else if (expected.isClass() || expected.isInterface()) {
-			if (given.isClass() || given.isInterface())
-				return given.isSubtypeOf(expected);
-			
-			return Objects.equals(expected.box(), given.box());
-		}
+//		else if (expected.isClass() || expected.isInterface()) {
+//			System.out.println("Checking boxing of " + expected + " and " + given);
+//			if (given.isClass() || given.isInterface())
+//				return given.isSubtypeOf(expected);
+//			
+//			System.out.println("Checking boxing of " + expected + " and " + given);
+//			return Objects.equals(expected.box(), given.box());
+//		}
 		
-		throw new RuntimeException("Unhandled type " + expected);
+		throw new RuntimeException(
+			"Unhandled type conversion case (" + expected + " <: " + given + ")");
 	}
 
 	private boolean primitivesAreCompatible(CtTypeReference<?> expected, CtTypeReference<?> given) {
