@@ -1,6 +1,6 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static japicmp.model.JApiCompatibilityChange.*;
+import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
 import static org.swat.maracas.spoon.APIUse.*;
 
 import org.junit.jupiter.api.Test;

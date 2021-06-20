@@ -1,7 +1,8 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static japicmp.model.JApiCompatibilityChange.*;
-import static org.swat.maracas.spoon.APIUse.*;
+import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
+import static org.swat.maracas.spoon.APIUse.EXTENDS;
+import static org.swat.maracas.spoon.APIUse.METHOD_OVERRIDE;
 
 import org.junit.jupiter.api.Test;
 

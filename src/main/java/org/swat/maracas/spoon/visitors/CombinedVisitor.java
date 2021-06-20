@@ -429,7 +429,7 @@ public class CombinedVisitor extends CtScanner {
 	}
 
 	@Override
-	public <R> void visitCtStatementList(CtStatementList statements) {
+	public void visitCtStatementList(CtStatementList statements) {
 		visitors.forEach(v -> v.visitCtStatementList(statements));
 		super.visitCtStatementList(statements);
 	}

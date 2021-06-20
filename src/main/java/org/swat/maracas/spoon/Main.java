@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
+import japicmp.model.JApiCompatibilityChange;
+
 public class Main {
 	public static void main(String[] args) {
 		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
@@ -16,8 +18,9 @@ public class Main {
 		Set<Detection> detections = maracas.computeDetections();
 
 		detections.forEach(d -> {
-			//if (d.getChange() == JApiCompatibilityChange.METHOD_NOW_ABSTRACT)
+			if (d.change() == JApiCompatibilityChange.FIELD_NO_LONGER_STATIC) {
 				System.out.println(d);
+			}
 		});
 		
 		maracas.writeAnnotatedClient(output);
