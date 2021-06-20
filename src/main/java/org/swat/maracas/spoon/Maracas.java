@@ -102,7 +102,7 @@ public class Maracas {
 		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
 		defaultOptions.setIgnoreMissingClasses(false);
 
-		String[] excl = { "(*.)?tests(.*)?", "(*.)?test(.*)?", 
+		String[] excl = { "(*.)?tests(.*)?", "(*.)?test(.*)?",
 				"@org.junit.After",
 				"@org.junit.AfterClass",
 				"@org.junit.Before",

@@ -31,8 +31,8 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 					APIUse.ANNOTATION;
 				default ->
 					throw new RuntimeException("Unmanaged role " + role);
-			};	
-			
+			};
+
 			detection(reference.getParent(), reference, clsRef, use);
 		}
 	}

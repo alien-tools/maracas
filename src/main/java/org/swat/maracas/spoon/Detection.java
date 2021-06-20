@@ -33,7 +33,7 @@ public record Detection (
 			use
 		);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		// CtElement::equals/hashCode() do not check the position

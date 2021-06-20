@@ -34,7 +34,7 @@ public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 			}
 		}
 	}
-	
+
 	@Override
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
 		if (mRef.equals(invocation.getExecutable())) {

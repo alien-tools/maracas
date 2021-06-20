@@ -32,7 +32,7 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 		if (thrownType.isSubtypeOf(clsRef)) {
 			boolean isCaught = false;
 			boolean isDeclared = false;
-			
+
 			CtTry enclosingTry = throwStatement.getParent(CtTry.class);
 			if (enclosingTry != null) {
 				Optional<CtCatch> excCatcher =
@@ -40,25 +40,25 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 					.stream()
 					.filter(c -> thrownType.isSubtypeOf(c.getParameter().getType()))
 					.findAny();
-				
+
 				if (excCatcher.isPresent())
 					isCaught = true;
 			}
-			
+
 			@SuppressWarnings("unchecked")
 			Set<CtTypeReference<? extends Throwable>> thrownTypes =
 				throwStatement.getParent(CtMethod.class)
 				.getThrownTypes();
-			
+
 			Optional<CtTypeReference<? extends Throwable>> compatibleThrows =
 				thrownTypes
 				.stream()
 				.filter(thrownType::isSubtypeOf)
 				.findAny();
-			
+
 			if (compatibleThrows.isPresent())
 				isDeclared = true;
-			
+
 			if (!isCaught && !isDeclared)
 				detection(throwStatement, throwStatement.getThrownExpression().getType(), clsRef, APIUse.THROWS);
 		}

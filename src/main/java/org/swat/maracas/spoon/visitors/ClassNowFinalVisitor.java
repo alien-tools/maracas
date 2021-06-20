@@ -32,7 +32,7 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
 		if (m.hasAnnotation(java.lang.Override.class)) {
-			Optional<CtMethod<?>> superMethod = 
+			Optional<CtMethod<?>> superMethod =
 				m.getTopDefinitions()
 					.stream()
 					.filter(superM -> clsRef.equals(superM.getDeclaringType().getReference()))

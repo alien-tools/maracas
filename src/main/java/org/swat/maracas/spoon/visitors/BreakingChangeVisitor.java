@@ -28,7 +28,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 			use,
 			change
 		);
-		
+
 		detections.add(d);
 	}
 

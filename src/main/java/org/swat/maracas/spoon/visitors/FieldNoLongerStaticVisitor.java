@@ -26,13 +26,13 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 		if (fRef.equals(fieldRead.getVariable()) && isStaticAccess(fieldRead))
 			detection(fieldRead, fieldRead.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
-	
+
 	@Override
 	public <T> void visitCtFieldWrite(CtFieldWrite<T> fieldWrite) {
 		if (fRef.equals(fieldWrite.getVariable()) && isStaticAccess(fieldWrite))
 			detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
-	
+
 	private <T> boolean isStaticAccess(CtFieldAccess<T> fieldAccess) {
 		if (fieldAccess.getTarget() instanceof CtTypeAccess<?> ta) {
 			// In a subclass, direct (unprefixed) access to a parent static field would
@@ -40,7 +40,7 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 			// in a static way with isImplicit()
 			return !ta.isImplicit();
 		}
-		
+
 		return false;
 	}
 }

@@ -12,7 +12,7 @@ public class Main {
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
 		Path c = Paths.get("/home/dig/repositories/comp-changes-data/client/src/");
 		Path output = Paths.get("/home/dig/repositories/comp-changes-data/client-commented/src");
-		
+
 		Maracas maracas = new Maracas(v1, v2, c);
 		maracas.computeDelta();
 		Set<Detection> detections = maracas.computeDetections();
@@ -22,7 +22,7 @@ public class Main {
 				System.out.println(d);
 			}
 		});
-		
+
 		maracas.writeAnnotatedClient(output);
 	}
 }

@@ -38,7 +38,7 @@ public class DeltaVisitor implements FilterVisitor {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
-				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset of CLASS_LESS_ACCESSIBLE; fix japicmp 
+				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset of CLASS_LESS_ACCESSIBLE; fix japicmp
 				case CLASS_LESS_ACCESSIBLE       -> new ClassLessAccessibleVisitor(clsRef, elem.getAccessModifier().getNewModifier().get());
 				case CLASS_NOW_ABSTRACT          -> new ClassNowAbstractVisitor(clsRef);
 				case CLASS_NOW_FINAL             -> new ClassNowFinalVisitor(clsRef);

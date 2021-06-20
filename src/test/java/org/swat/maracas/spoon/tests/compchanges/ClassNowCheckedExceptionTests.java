@@ -30,7 +30,7 @@ class ClassNowCheckedExceptionTests extends CompChangesTest {
 	void testThrowsClientSubExcep() {
 		assertDetection("ClassNowCheckedExceptionThrows.java", 40, CLASS_NOW_CHECKED_EXCEPTION, THROWS);
 	}
-	
+
 	@Test
 	void testThrowsVariableException() {
 		assertDetection("ClassNowCheckedExceptionThrows.java", 50, CLASS_NOW_CHECKED_EXCEPTION, THROWS);
