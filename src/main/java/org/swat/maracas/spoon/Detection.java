@@ -1,5 +1,7 @@
 package org.swat.maracas.spoon;
 
+import java.util.Objects;
+
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
@@ -30,5 +32,30 @@ public record Detection (
 			source,
 			use
 		);
+	}
+	
+	@Override
+	public int hashCode() {
+		// CtElement::equals/hashCode() do not check the position
+		return Objects.hash(element, element.getPosition(), usedApiElement, source, use, change);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Detection other = (Detection) obj;
+		return
+			Objects.equals(element, other.element) &&
+			// CtElement::equals/hashCode() do not check the position
+			Objects.equals(element.getPosition(), other.element.getPosition()) &&
+			Objects.equals(usedApiElement, other.usedApiElement) &&
+			Objects.equals(source, other.source) &&
+			use == other.use &&
+			change == other.change;
 	}
 }
