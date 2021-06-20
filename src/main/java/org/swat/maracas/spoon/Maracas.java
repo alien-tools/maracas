@@ -86,7 +86,7 @@ public class Maracas {
 			String comment = String.format("[%s:%s]", d.change(), d.use());
 
 			if (anchor != null)
-				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(comment, CommentType.INLINE));
+				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(comment, CommentType.BLOCK));
 			else
 				System.out.println("Cannot attach comment on " + d);
 		});

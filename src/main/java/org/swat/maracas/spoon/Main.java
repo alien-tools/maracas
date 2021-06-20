@@ -18,7 +18,7 @@ public class Main {
 		Set<Detection> detections = maracas.computeDetections();
 
 		detections.forEach(d -> {
-			if (d.change() == JApiCompatibilityChange.FIELD_NO_LONGER_STATIC) {
+			if (d.change() == JApiCompatibilityChange.FIELD_TYPE_CHANGED) {
 				System.out.println(d);
 			}
 		});
