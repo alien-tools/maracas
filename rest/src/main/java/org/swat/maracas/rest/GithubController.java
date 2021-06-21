@@ -73,6 +73,9 @@ public class GithubController {
 
 	@PostConstruct
 	public void initialize() {
+		Paths.get(clonePath).toFile().mkdirs();
+		Paths.get(deltaPath).toFile().mkdirs();
+
 		Resource githubRes = resourceLoader.getResource("classpath:.github");
 		try (InputStream in = githubRes.getInputStream()) {
 			Properties props = new Properties();
