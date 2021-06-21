@@ -52,16 +52,27 @@ class GithubControllerTests {
 	}
 
 	@Test
-	void testSubmitPRASync() throws Exception {
-		mvc.perform(post("/github/pr/tdegueul/comp-changes/2"))
+	void testSubmitPRPoll() throws Exception {
+		mvc.perform(post("/github/pr-poll/tdegueul/comp-changes/2"))
     		.andExpect(status().isAccepted())
     		.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
     		.andExpect(result -> "/github/pr/tdegueul/comp-changes/2".equals(result.getResponse().getHeader("Location")));
 	}
 
 	@Test
+	void testSubmitPRPush() throws Exception {
+		mvc.perform(post("/github/pr/tdegueul/comp-changes/2"))
+			.andExpect(status().isAccepted())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+			.andExpect(result -> { "processing".equals(result.getResponse().getContentAsString()); });
+	}
+
+	@Test
 	void testUnknownRepository() throws Exception {
 		mvc.perform(post("/github/pr/tdegueul/NOPE/2"))
+			.andExpect(status().isBadRequest());
+
+		mvc.perform(post("/github/pr-poll/tdegueul/NOPE/2"))
 			.andExpect(status().isBadRequest());
 
 		mvc.perform(get("/github/pr-sync/tdegueul/NOPE/2"))
@@ -71,6 +82,9 @@ class GithubControllerTests {
 	@Test
 	void testUnknownPR() throws Exception {
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999"))
+			.andExpect(status().isBadRequest());
+
+		mvc.perform(post("/github/pr-poll/tdegueul/comp-changes/9999"))
 			.andExpect(status().isBadRequest());
 
 		mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/9999"))

@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.swat.maracas.rest.data.Config;
 import org.swat.maracas.rest.data.Delta;
@@ -86,8 +87,13 @@ public class GithubController {
 		}
 	}
 
+	/**
+	 * Mode push: accept the request if it's valid; send back the results to
+	 * {@code callback} when ready
+	 */
 	@PostMapping("/pr/{user}/{repository}/{prId}")
-	String analyzePullRequest(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+	String analyzePullRequest(@PathVariable String user, @PathVariable String repository,
+		@PathVariable Integer prId, @RequestParam String callback, HttpServletResponse response) {
 		try {
 			// Read PR meta
 			GHRepository repo = github.getRepository(user + "/" + repository);
@@ -123,7 +129,67 @@ public class GithubController {
 						if (delta != null) {
 							logger.info("Serializing {}", deltaFile);
 							deltaFile.getParentFile().mkdirs();
-							delta.toJson(deltaFile);
+							delta.writeJson(deltaFile);
+
+
+
+							return delta;
+						} else if (e != null) {
+							logger.error(e);
+						}
+
+						jobs.remove(uid);
+						return null;
+					});
+
+				jobs.put(uid, future);
+				return "processing";
+			} else
+				return "already processed";
+		} catch (IOException e) {
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			return e.getMessage();
+		}
+	}
+
+	@PostMapping("/pr-poll/{user}/{repository}/{prId}")
+	String analyzePullRequestPoll(@PathVariable String user, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+		try {
+			// Read PR meta
+			GHRepository repo = github.getRepository(user + "/" + repository);
+			GHPullRequest pr = repo.getPullRequest(prId);
+			PullRequestDiff prDiff = new PullRequestDiff(pr, clonePath);
+			File deltaFile = Paths.get(deltaPath).resolve(user).resolve(repository).resolve(prId + ".json").toFile();
+			String uid = prUid(user, repository, prId);
+
+			// Read BreakBot config
+			GHContent configFile = repo.getFileContent(breakbotFile);
+			InputStream configIn = configFile.read();
+			Config config = Config.fromYaml(configIn);
+
+			String getLocation = String.format("/github/pr/%s/%s/%s", user, repository, prId);
+			response.setStatus(HttpStatus.SC_ACCEPTED);
+			response.setHeader("Location", getLocation);
+
+			// If we have not yet computed this delta, compute it and store the future
+			if (!jobs.containsKey(uid) && !deltaFile.exists()) {
+				CompletableFuture<Delta> future =
+					prDiff.diffAsync()
+					.thenApply(delta -> {
+						for (String c : config.getGithubClients())
+							try {
+								GHRepository clientRepo = github.getRepository(c);
+								GithubRepository client = new GithubRepository(clientRepo, clonePath);
+								delta = client.computeImpact(delta);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						return delta;
+					}).handle((delta, e) -> {
+						if (delta != null) {
+							logger.info("Serializing {}", deltaFile);
+							deltaFile.getParentFile().mkdirs();
+							delta.writeJson(deltaFile);
 							return delta;
 						} else if (e != null) {
 							logger.error(e);

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.usethesource.vallang.IConstructor;
@@ -33,7 +34,17 @@ public class Delta {
 		this(breakingChanges, null);
 	}
 
-	public void toJson(File json) {
+	public String toJson() {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			return objectMapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	public void writeJson(File json) {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.writeValue(json, this);
