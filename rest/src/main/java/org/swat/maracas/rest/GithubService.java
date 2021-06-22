@@ -111,7 +111,7 @@ public class GithubService {
 						GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
 						delta = client.computeImpact(delta);
 					} catch (IOException e) {
-						e.printStackTrace();
+						logger.error(e);
 					}
 				return delta;
 			}).handle((delta, e) -> {

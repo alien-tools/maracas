@@ -28,6 +28,7 @@ public class MaracasService {
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
 	public IList computeDelta(Path oldJar, Path newJar, Path sources) {
+		logger.info("Computing delta ({} -> {})", oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run((eval) -> {
 			return (IList) eval.call("bcInstances",
@@ -37,6 +38,7 @@ public class MaracasService {
 	}
 
 	public IList computeImpact(Path oldJar, Path newJar, Path clientJar, Path clientSources) {
+		logger.info("Computing impact on {} ({} -> {})", clientJar, oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run((eval) -> {
 			return (IList) eval.call("detections",
