@@ -14,7 +14,6 @@ import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -22,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.swat.maracas.rest.breakbot.BreakBot;
-import org.swat.maracas.rest.data.Config;
+import org.swat.maracas.rest.breakbot.Config;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.delta.PullRequestDiff;
 import org.swat.maracas.rest.impact.GithubRepository;
@@ -171,15 +170,12 @@ public class GithubService {
 	}
 
 	public Config readBreakbotConfig(GHRepository repo) {
-		try {
-			GHContent configFile = repo.getFileContent(breakbotFile);
-			try (InputStream configIn = configFile.read()) {
-				Config res = Config.fromYaml(configIn);
-				if (res != null)
-					return res;
-			}
-		} catch (IOException e) {
-			logger.error(e);
+		try (InputStream configIn = repo.getFileContent(breakbotFile).read()) {
+			Config res = Config.fromYaml(configIn);
+			if (res != null)
+				return res;
+		} catch (@SuppressWarnings("unused") IOException e) {
+			// shh
 		}
 
 		return Config.defaultConfig();

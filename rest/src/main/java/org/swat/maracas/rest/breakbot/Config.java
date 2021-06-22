@@ -1,4 +1,4 @@
-package org.swat.maracas.rest.data;
+package org.swat.maracas.rest.breakbot;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class Config {
-	private List<String> githubClients = new ArrayList();
+	private List<String> githubClients = new ArrayList<>();
 
 	public Config() {
 
@@ -30,13 +30,8 @@ public class Config {
 		return new Config();
 	}
 
-	public static Config fromYaml(InputStream in) {
-		try {
-			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-			return mapper.readValue(in, Config.class);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public static Config fromYaml(InputStream in) throws IOException {
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+		return mapper.readValue(in, Config.class);
 	}
 }
