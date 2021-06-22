@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -69,15 +68,19 @@ public class GithubService {
 							GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
 							delta = client.computeImpact(delta);
 						} catch (IOException e) {
-							e.printStackTrace();
+							logger.error(e);
 						}
 					return delta;
 				}).handle((delta, e) -> {
 					jobs.remove(uid);
 					if (delta != null) {
-						logger.info("Serializing {}", deltaFile);
-						deltaFile.getParentFile().mkdirs();
-						delta.writeJson(deltaFile);
+						try {
+							logger.info("Serializing {}", deltaFile);
+							deltaFile.getParentFile().mkdirs();
+							delta.writeJson(deltaFile);
+						} catch (IOException ee) {
+							logger.error(ee);
+						}
 
 						return delta;
 					} else {
@@ -114,16 +117,14 @@ public class GithubService {
 					}
 				return delta;
 			}).handle((delta, e) -> {
-				System.out.println("handle("+delta+")");
 				if (delta != null) {
-					logger.info("Serializing {}", deltaFile);
-					deltaFile.getParentFile().mkdirs();
-					delta.writeJson(deltaFile);
-
 					try {
+						logger.info("Serializing {}", deltaFile);
+						deltaFile.getParentFile().mkdirs();
+						delta.writeJson(deltaFile);
 						BreakBot bb = new BreakBot(new URI(callback), installationId);
 						bb.sendDelta(delta);
-					} catch (URISyntaxException ee) {
+					} catch (Exception ee) {
 						logger.error(ee);
 					}
 
@@ -151,17 +152,22 @@ public class GithubService {
 				GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
 				delta = client.computeImpact(delta);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 
 		return delta;
 	}
 
 	public Delta getPullRequest(String owner, String repository, int prId) {
-		File deltaFile = deltaFile(owner, repository, prId);
-		if (deltaFile.exists() && deltaFile.length() > 0) {
-			return Delta.fromJson(deltaFile);
+		try {
+			File deltaFile = deltaFile(owner, repository, prId);
+			if (deltaFile.exists() && deltaFile.length() > 0) {
+				return Delta.fromJson(deltaFile);
+			}
+		} catch (IOException e) {
+			logger.error(e);
 		}
+
 		return null;
 	}
 

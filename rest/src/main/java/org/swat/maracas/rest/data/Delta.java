@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.usethesource.vallang.IConstructor;
@@ -32,25 +31,6 @@ public class Delta {
 
 	public Delta(List<BreakingChangeInstance> breakingChanges) {
 		this(breakingChanges, null);
-	}
-
-	public String toJson() {
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			return objectMapper.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			return "";
-		}
-	}
-
-	public void writeJson(File json) {
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			objectMapper.writeValue(json, this);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public Path getJarV1() {
@@ -93,13 +73,18 @@ public class Delta {
 		);
 	}
 
-	public static Delta fromJson(File json) {
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			return objectMapper.readValue(json, Delta.class);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public static Delta fromJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.readValue(json, Delta.class);
+	}
+
+	public String toJson() throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.writeValueAsString(this);
+	}
+
+	public void writeJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.writeValue(json, this);
 	}
 }

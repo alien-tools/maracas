@@ -19,16 +19,18 @@ import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 
 /**
  * Clones & builds a repository, returns the JAR
  */
 public class CloneAndBuild implements Supplier<Path> {
-	private static final Logger logger = LogManager.getLogger(CloneAndBuild.class);
 	private final String url;
 	private final String ref;
 	private final Path dest;
+
+	private static final Logger logger = LogManager.getLogger(CloneAndBuild.class);
 
 	public CloneAndBuild(String url, String ref, Path dest) {
 		this.url = url;
@@ -38,36 +40,41 @@ public class CloneAndBuild implements Supplier<Path> {
 
 	@Override
 	public Path get() {
-		clone(url, ref, dest);
-		return build(dest);
+		// Re-throw any checked exception as unchecked CloneException/BuildException
+		cloneRemote();
+		return build();
 	}
 
-	private void clone(String url, String ref, Path dest) throws CloneException {
-		if (!dest.toFile().exists()) {
-			logger.info("Cloning {} [{}]", url, ref);
-			String fullRef = "refs/heads/" + ref; // FIXME
+	private void cloneRemote() throws CloneException {
+		if (dest.toFile().exists()) {
+			logger.info("{} exists. Skipping.", dest);
+			return;
+		}
 
-			try {
-				Git.cloneRepository()
-					.setURI(url)
-					.setBranchesToClone(Collections.singletonList(fullRef))
-					.setBranch(fullRef)
-					.setDirectory(dest.toFile())
-					.call();
-			} catch (Exception e) {
-				throw new CloneException(e);
-			}
-		} else logger.info("{} exists. Skipping.", dest);
+		logger.info("Cloning {} [{}]", url, ref);
+		String fullRef = "refs/heads/" + ref; // FIXME
+		CloneCommand command =
+			Git.cloneRepository()
+				.setURI(url)
+				.setBranchesToClone(Collections.singletonList(fullRef))
+				.setBranch(fullRef)
+				.setDirectory(dest.toFile());
+
+		try (Git g = command.call()) {
+			// Let me please try-with-resource without a variable :(
+		} catch (Exception e) {
+			throw new CloneException(e);
+		}
 	}
 
 	// FIXME: Will only work with a pom.xml file located in the projet's root
 	// producing a JAR in the project's root /target/
-	private Path build(Path local) throws BuildException {
-		Path target = local.resolve("target");
-		Path pom = local.resolve("pom.xml");
+	private Path build() throws BuildException {
+		Path target = dest.resolve("target");
+		Path pom = dest.resolve("pom.xml");
 
 		if (!pom.toFile().exists())
-			throw new BuildException("No root pom.xml file in " + local);
+			throw new BuildException("No root pom.xml file in " + dest);
 
 		if (!target.toFile().exists()) {
 			logger.info("Building {}", pom);
@@ -93,9 +100,8 @@ public class CloneAndBuild implements Supplier<Path> {
 		    } catch (MavenInvocationException e) {
 		    	throw new BuildException(e);
 		    }
-		} else logger.info("{} has already been built. Skipping.", local);
+		} else logger.info("{} has already been built. Skipping.", dest);
 
-		// FIXME: Brittle
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pom.toFile())) {
 			Model model = reader.read(in);
