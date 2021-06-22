@@ -56,7 +56,7 @@ public class GithubService {
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
-		File deltaFile = Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
+		File deltaFile = deltaFile(owner, repository, prId);
 		String uid = prUid(owner, repository, prId);
 		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
@@ -81,11 +81,10 @@ public class GithubService {
 						delta.writeJson(deltaFile);
 
 						return delta;
-					} else if (e != null) {
+					} else {
 						logger.error(e);
+						return null;
 					}
-
-					return null;
 				});
 
 			jobs.put(uid, future);
@@ -100,6 +99,7 @@ public class GithubService {
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
+		File deltaFile = deltaFile(owner, repository, prId);
 		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
 		CompletableFuture<Delta> future =
@@ -115,7 +115,12 @@ public class GithubService {
 					}
 				return delta;
 			}).handle((delta, e) -> {
+				System.out.println("handle("+delta+")");
 				if (delta != null) {
+					logger.info("Serializing {}", deltaFile);
+					deltaFile.getParentFile().mkdirs();
+					delta.writeJson(deltaFile);
+
 					try {
 						BreakBot bb = new BreakBot(new URI(callback), installationId);
 						bb.sendDelta(delta);
@@ -124,11 +129,10 @@ public class GithubService {
 					}
 
 					return delta;
-				} else if (e != null) {
+				} else {
 					logger.error(e);
+					return null;
 				}
-
-				return null;
 			});
 
 		return getLocation;
@@ -155,7 +159,7 @@ public class GithubService {
 	}
 
 	public Delta getPullRequest(String owner, String repository, int prId) {
-		File deltaFile = Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
+		File deltaFile = deltaFile(owner, repository, prId);
 		if (deltaFile.exists() && deltaFile.length() > 0) {
 			return Delta.fromJson(deltaFile);
 		}
@@ -175,5 +179,9 @@ public class GithubService {
 
 	private String prUid(String repository, String user, int prId) {
 		return repository + "-" + user + "-" + prId;
+	}
+
+	private File deltaFile(String owner, String repository, int prId) {
+		return Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
 	}
 }

@@ -1,6 +1,8 @@
 package org.swat.maracas.rest;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -31,9 +33,12 @@ public class MaracasService {
 		logger.info("Computing delta ({} -> {})", oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run((eval) -> {
-			return (IList) eval.call("bcInstances",
+			Instant start = Instant.now();
+			IList res = (IList) eval.call("bcInstances",
 				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
 				vf.sourceLocation(sources.toAbsolutePath().toString()));
+			logger.info("Delta computation took {}ms", Duration.between(start, Instant.now()).toMillis());
+			return res;
 		});
 	}
 
@@ -41,10 +46,13 @@ public class MaracasService {
 		logger.info("Computing impact on {} ({} -> {})", clientJar, oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run((eval) -> {
-			return (IList) eval.call("detections",
+			Instant start = Instant.now();
+			IList res = (IList) eval.call("detections",
 				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
 				vf.sourceLocation(clientJar.toAbsolutePath().toString()),
 				vf.sourceLocation(clientSources.toAbsolutePath().toString()));
+			logger.info("Impact computation took {}ms", Duration.between(start, Instant.now()).toMillis());
+			return res;
 		});
 	}
 

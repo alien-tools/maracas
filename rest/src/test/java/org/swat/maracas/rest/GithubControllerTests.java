@@ -97,7 +97,7 @@ class GithubControllerTests {
 
 			mockServer.verify(
 				request()
-					.withPath("/pr/tdegueul/comp-changes/3")
+					.withPath("/breakbot/pr/tdegueul/comp-changes/3")
 					.withMethod("POST")
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
 				exactly(1)
