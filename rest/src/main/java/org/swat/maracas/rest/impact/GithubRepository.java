@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHRepository;
-import org.swat.maracas.rest.MaracasHelper;
+import org.swat.maracas.rest.MaracasService;
 import org.swat.maracas.rest.data.BreakingChangeInstance;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.Detection;
@@ -22,9 +22,11 @@ import io.usethesource.vallang.IList;
 public class GithubRepository implements Impactable {
 	private final GHRepository repository;
 	private final String clonePath;
+	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(GithubRepository.class);
 
-	public GithubRepository(GHRepository repository, String clonePath) {
+	public GithubRepository(MaracasService maracas, GHRepository repository, String clonePath) {
+		this.maracas = maracas;
 		this.repository = repository;
 		this.clonePath = clonePath;
 	}
@@ -44,7 +46,6 @@ public class GithubRepository implements Impactable {
 			// Build impact model
 			// FIXME: we should reuse the possibly-existing delta model,
 			// but easier for now to just pass all the JARs to Maracas
-			MaracasHelper maracas = MaracasHelper.getInstance();
 			IList detections = maracas.computeImpact(delta.getJarV1(), delta.getJarV2(), clientJar, clientPath);
 			detections.forEach(rascalDetection -> {
 				Detection d = Detection.fromRascal((IConstructor) rascalDetection);

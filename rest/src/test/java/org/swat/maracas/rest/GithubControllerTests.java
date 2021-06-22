@@ -48,6 +48,11 @@ class GithubControllerTests {
 	public void cleanData() throws IOException {
 		FileUtils.deleteDirectory(new File(clonePath));
 		FileUtils.deleteDirectory(new File(deltaPath));
+
+//		Mockito.when(maracas.computeDelta(Mockito.any(Path.class), Mockito.any(Path.class), Mockito.any(Path.class)))
+//			.thenReturn(ValueFactoryFactory.getValueFactory().list());
+//		Mockito.when(maracas.computeImpact(Mockito.any(Path.class), Mockito.any(Path.class), Mockito.any(Path.class), Mockito.any(Path.class)))
+//			.thenReturn(ValueFactoryFactory.getValueFactory().list());
 	}
 
 	@Test
@@ -76,7 +81,9 @@ class GithubControllerTests {
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
 				.andExpect(result -> "processing".equals(result.getResponse().getContentAsString()));
 
+			System.out.println("Wait for PR");
 			ResultActions res = waitForPRAnalysis("/github/pr/tdegueul/comp-changes/3");
+			System.out.println("Done!");
 			isValidDelta(res);
 			String delta = res.andReturn().getResponse().getContentAsString();
 

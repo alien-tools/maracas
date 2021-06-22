@@ -13,7 +13,7 @@ public class Config {
 	private List<String> githubClients;
 
 	public Config() {
-		
+
 	}
 
 	@JsonProperty("clients")

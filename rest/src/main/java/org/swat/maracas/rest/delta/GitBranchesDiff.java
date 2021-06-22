@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHBranch;
-import org.swat.maracas.rest.MaracasHelper;
+import org.swat.maracas.rest.MaracasService;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
@@ -20,9 +20,11 @@ public class GitBranchesDiff implements Diffable {
 	private final GHBranch base;
 	private final GHBranch head;
 	private final String clonePath;
+	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(GitBranchesDiff.class);
 
-	public GitBranchesDiff(GHBranch base, GHBranch head, String clonePath) {
+	public GitBranchesDiff(MaracasService maracas, GHBranch base, GHBranch head, String clonePath) {
+		this.maracas = maracas;
 		this.base = base;
 		this.head = head;
 		this.clonePath = clonePath;
@@ -48,7 +50,6 @@ public class GitBranchesDiff implements Diffable {
 			Path j2 = headFuture.get();
 
 			// Build delta model
-			MaracasHelper maracas = MaracasHelper.getInstance();
 			IList delta = maracas.computeDelta(j1, j2, basePath);
 
 			Delta res = Delta.fromRascal(delta);

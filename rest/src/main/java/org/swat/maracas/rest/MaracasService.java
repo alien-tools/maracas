@@ -14,6 +14,7 @@ import org.rascalmpl.interpreter.load.StandardLibraryContributor;
 import org.rascalmpl.uri.URIUtil;
 import org.rascalmpl.util.ConcurrentSoftReferenceObjectPool;
 import org.rascalmpl.values.ValueFactoryFactory;
+import org.springframework.stereotype.Service;
 
 import io.usethesource.vallang.IList;
 import io.usethesource.vallang.ISet;
@@ -21,18 +22,10 @@ import io.usethesource.vallang.ISourceLocation;
 import io.usethesource.vallang.IValue;
 import io.usethesource.vallang.IValueFactory;
 
-public class MaracasHelper {
-	private static MaracasHelper instance;
+@Service
+public class MaracasService {
 	private final ConcurrentSoftReferenceObjectPool<Evaluator> pool = getEvaluatorPool();
-	private static final Logger logger = LogManager.getLogger(MaracasHelper.class);
-
-	private MaracasHelper() {}
-
-	public synchronized static MaracasHelper getInstance() {
-	    if (instance == null)
-	    	instance = new MaracasHelper();
-	    return instance;
-	}
+	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
 	public IList computeDelta(Path oldJar, Path newJar, Path sources) {
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();

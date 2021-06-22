@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHPullRequest;
-import org.swat.maracas.rest.MaracasHelper;
+import org.swat.maracas.rest.MaracasService;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
@@ -20,9 +20,11 @@ import io.usethesource.vallang.IList;
 public class PullRequestDiff implements Diffable {
 	private final GHPullRequest pr;
 	private final String clonePath;
+	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(PullRequestDiff.class);
 
-	public PullRequestDiff(GHPullRequest pr, String clonePath) {
+	public PullRequestDiff(MaracasService maracas, GHPullRequest pr, String clonePath) {
+		this.maracas = maracas;
 		this.pr = pr;
 		this.clonePath = clonePath;
 	}
@@ -49,7 +51,6 @@ public class PullRequestDiff implements Diffable {
 			Path j2 = headFuture.get();
 
 			// Build delta model
-			MaracasHelper maracas = MaracasHelper.getInstance();
 			IList delta = maracas.computeDelta(j1, j2, basePath);
 
 			Delta res = Delta.fromRascal(delta);
