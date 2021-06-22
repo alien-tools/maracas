@@ -174,12 +174,15 @@ public class GithubService {
 		try {
 			GHContent configFile = repo.getFileContent(breakbotFile);
 			try (InputStream configIn = configFile.read()) {
-				return Config.fromYaml(configIn);
+				Config res = Config.fromYaml(configIn);
+				if (res != null)
+					return res;
 			}
 		} catch (IOException e) {
 			logger.error(e);
-			return Config.defaultConfig();
 		}
+
+		return Config.defaultConfig();
 	}
 
 	private String prUid(String repository, String user, int prId) {
