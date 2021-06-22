@@ -38,7 +38,7 @@ public class GithubController {
 	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository,
 		@PathVariable Integer prId, @RequestParam String callback, HttpServletResponse response) {
 		try {
-			String getLocation = github.analyzePR(owner, repository, prId);
+			String getLocation = github.analyzePR(owner, repository, prId, callback);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
 			response.setHeader("Location", getLocation);
 			return "processing";

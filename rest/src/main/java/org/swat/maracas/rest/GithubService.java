@@ -3,6 +3,8 @@ package org.swat.maracas.rest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +21,7 @@ import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.swat.maracas.rest.breakbot.BreakBot;
 import org.swat.maracas.rest.data.Config;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.delta.PullRequestDiff;
@@ -76,6 +79,57 @@ public class GithubService {
 						logger.info("Serializing {}", deltaFile);
 						deltaFile.getParentFile().mkdirs();
 						delta.writeJson(deltaFile);
+
+						return delta;
+					} else if (e != null) {
+						logger.error(e);
+					}
+
+					return null;
+				});
+
+			jobs.put(uid, future);
+		}
+
+		return getLocation;
+	}
+
+	public String analyzePR(String owner, String repository, int prId, String callback) throws IOException {
+		// Read PR meta
+		GHRepository repo = github.getRepository(owner + "/" + repository);
+		GHPullRequest pr = repo.getPullRequest(prId);
+		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
+		Config config = readBreakbotConfig(repo);
+		File deltaFile = Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
+		String uid = prUid(owner, repository, prId);
+		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
+
+		if (!jobs.containsKey(uid) && !deltaFile.exists()) {
+			CompletableFuture<Delta> future =
+				prDiff.diffAsync()
+				.thenApply(delta -> {
+					for (String c : config.getGithubClients())
+						try {
+							GHRepository clientRepo = github.getRepository(c);
+							GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
+							delta = client.computeImpact(delta);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					return delta;
+				}).handle((delta, e) -> {
+					jobs.remove(uid);
+					if (delta != null) {
+						logger.info("Serializing {}", deltaFile);
+						deltaFile.getParentFile().mkdirs();
+						delta.writeJson(deltaFile);
+
+						try {
+							BreakBot bb = new BreakBot(new URI(callback));
+							bb.sendDelta(delta);
+						} catch (URISyntaxException ee) {
+							logger.error(ee);
+						}
 
 						return delta;
 					} else if (e != null) {

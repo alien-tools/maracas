@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,7 +23,6 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.model.JsonBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -76,14 +76,18 @@ class GithubControllerTests {
 		String callback = "http://localhost:" + port + "/pr/tdegueul/comp-changes/3";
 
 		try (ClientAndServer mockServer = startClientAndServer(port)) {
+			mockServer.when(
+				request().withPath("/pr/tdegueul/comp-changes/3")
+			).respond(
+				response().withBody("ok")
+			);
+
 			mvc.perform(post("/github/pr/tdegueul/comp-changes/3?callback=" + callback))
 				.andExpect(status().isAccepted())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
 				.andExpect(result -> "processing".equals(result.getResponse().getContentAsString()));
 
-			System.out.println("Wait for PR");
 			ResultActions res = waitForPRAnalysis("/github/pr/tdegueul/comp-changes/3");
-			System.out.println("Done!");
 			isValidDelta(res);
 			String delta = res.andReturn().getResponse().getContentAsString();
 
@@ -91,7 +95,7 @@ class GithubControllerTests {
 				request()
 					.withPath("/pr/tdegueul/comp-changes/3")
 					.withMethod("POST")
-					.withBody(new JsonBody(delta)),
+					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
 				exactly(1)
 			);
 		}

@@ -1,13 +1,16 @@
 package org.swat.maracas.rest.breakbot;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 import org.swat.maracas.rest.data.Delta;
+
+import net.minidev.json.JSONObject;
 
 public class BreakBot {
 	private final URI callbackUri;
@@ -16,29 +19,17 @@ public class BreakBot {
 		this.callbackUri = callbackUri;
 	}
 
-	public void sendDelta(Delta d) {
-		String json = d.toJson();
-		WebClient client = WebClient.create();
+	public boolean sendDelta(Delta d) {
+		Map<String, String> bodyValues = new HashMap<>();
+		bodyValues.put("delta", d.toJson());
+		String body = new JSONObject(bodyValues).toJSONString();
 
-		MultiValueMap<String, String> bodyValues = new LinkedMultiValueMap<>();
+		RestTemplate rest = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> request = new HttpEntity<>(body, headers);
+		String res = rest.postForObject(callbackUri, request, String.class);
 
-		bodyValues.add("delta", json);
-
-		WebClient.ResponseSpec res =
-			client.post()
-			.uri(callbackUri)
-			.body(BodyInserters.fromFormData(bodyValues))
-			.retrieve();
-
-		System.out.println(res);
-	}
-
-	public static void main(String[] args) {
-		try {
-			new BreakBot(new URI("https://breakbot-app.herokuapp.com/probot/publish"));
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		return "ok".equals(res);
 	}
 }
