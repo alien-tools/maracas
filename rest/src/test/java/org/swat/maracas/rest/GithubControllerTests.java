@@ -3,6 +3,8 @@ package org.swat.maracas.rest;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.NottableString.not;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -78,8 +80,8 @@ class GithubControllerTests {
 
 			mvc.perform(
 				post("/github/pr/tdegueul/comp-changes/3?callback=" + callback)
+				.header("installationId", 123456789)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"installationId\": 123456789}")
 			)
 				.andExpect(status().isAccepted())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
@@ -91,6 +93,40 @@ class GithubControllerTests {
 				request()
 					.withPath("/breakbot/pr/tdegueul/comp-changes/3")
 					.withMethod("POST")
+					.withHeader("installationId", "123456789")
+					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
+				exactly(1)
+			);
+		}
+	}
+
+	@Test
+	void testSubmitPRPushWithouIdentificationId() throws Exception {
+		int port = 8080;
+		String callback = "http://localhost:" + port + "/breakbot/pr/tdegueul/comp-changes/3";
+
+		try (ClientAndServer mockServer = startClientAndServer(port)) {
+			mockServer.when(
+				request().withPath("/breakbot/pr/tdegueul/comp-changes/3")
+			).respond(
+				response().withBody("received")
+			);
+
+			mvc.perform(
+				post("/github/pr/tdegueul/comp-changes/3?callback=" + callback)
+				.contentType(MediaType.APPLICATION_JSON)
+			)
+				.andExpect(status().isAccepted())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+				.andExpect(result -> "processing".equals(result.getResponse().getContentAsString()));
+
+			checkDelta(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+
+			mockServer.verify(
+				request()
+					.withPath("/breakbot/pr/tdegueul/comp-changes/3")
+					.withMethod("POST")
+					.withHeader(not("installationId"), string(".*"))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
 				exactly(1)
 			);

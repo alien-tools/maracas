@@ -7,11 +7,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,9 +23,6 @@ import org.swat.maracas.rest.tasks.CloneException;
 @RequestMapping("/github")
 public class GithubController {
 	@Autowired
-  ResourceLoader resourceLoader;
-
-	@Autowired
 	GithubService github;
 	@Autowired
 	MaracasService maracas;
@@ -35,17 +31,13 @@ public class GithubController {
 		public int installationId;
 	}
 
-	/**
-	 * Mode push: accept the request if it's valid; send back the results to
-	 * {@code callback} when ready
-	 */
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
-	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository,
-		@PathVariable Integer prId, @RequestParam String callback, @RequestBody BreakbotRequest request, HttpServletResponse response) {
+	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+		@RequestParam String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
 		try {
-			String getLocation = github.analyzePR(owner, repository, prId, callback, request.installationId);
+			String location = github.analyzePR(owner, repository, prId, callback, installationId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
-			response.setHeader("Location", getLocation);
+			response.setHeader("Location", location);
 			return "processing";
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
@@ -54,11 +46,12 @@ public class GithubController {
 	}
 
 	@PostMapping("/pr-poll/{owner}/{repository}/{prId}")
-	String analyzePullRequestPoll(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+	String analyzePullRequestPoll(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+		HttpServletResponse response) {
 		try {
-			String getLocation = github.analyzePR(owner, repository, prId);
+			String location = github.analyzePR(owner, repository, prId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
-			response.setHeader("Location", getLocation);
+			response.setHeader("Location", location);
 			return "processing";
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
@@ -67,7 +60,8 @@ public class GithubController {
 	}
 
 	@GetMapping("/pr/{owner}/{repository}/{prId}")
-	PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+	PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+		HttpServletResponse response) {
 		// Either we have it already
 		Delta delta = github.getPullRequest(owner, repository, prId);
 		if (delta != null) {
@@ -86,7 +80,8 @@ public class GithubController {
 	}
 
 	@GetMapping("/pr-sync/{owner}/{repository}/{prId}")
-	PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId, HttpServletResponse response) {
+	PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+		HttpServletResponse response) {
 		try {
 			Delta delta = github.analyzePRSync(owner, repository, prId);
 

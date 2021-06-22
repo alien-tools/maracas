@@ -95,7 +95,7 @@ public class GithubService {
 		return getLocation;
 	}
 
-	public String analyzePR(String owner, String repository, int prId, String callback, int installationId) throws IOException {
+	public String analyzePR(String owner, String repository, int prId, String callback, String installationId) throws IOException {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
