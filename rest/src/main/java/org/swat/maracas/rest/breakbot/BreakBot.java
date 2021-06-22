@@ -25,9 +25,9 @@ public class BreakBot {
 	}
 
 	public boolean sendDelta(Delta d) {
-		Map<String, String> bodyValues = new HashMap<>();
-		bodyValues.put("delta", d.toJson());
-		bodyValues.put("installationId", Integer.toString(installationId));
+		Map<String, Object> bodyValues = new HashMap<>();
+		bodyValues.put("delta", d);
+		bodyValues.put("installationId", installationId);
 		String body = new JSONObject(bodyValues).toJSONString();
 
 		RestTemplate rest = new RestTemplate();
@@ -36,6 +36,7 @@ public class BreakBot {
 		HttpEntity<String> request = new HttpEntity<>(body, headers);
 		String res = rest.postForObject(callbackUri, request, String.class);
 
+		System.out.println("body="+body);
 		logger.info("Sent delta back to BreakBot ({}): {}", callbackUri, res);
 		return "ok".equals(res);
 	}

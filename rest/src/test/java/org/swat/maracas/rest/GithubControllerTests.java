@@ -73,13 +73,13 @@ class GithubControllerTests {
 	@Test
 	void testSubmitPRPush() throws Exception {
 		int port = 8080;
-		String callback = "http://localhost:" + port + "/pr/tdegueul/comp-changes/3";
+		String callback = "http://localhost:" + port + "/breakbot/pr/tdegueul/comp-changes/3";
 
 		try (ClientAndServer mockServer = startClientAndServer(port)) {
 			mockServer.when(
-				request().withPath("/pr/tdegueul/comp-changes/3")
+				request().withPath("/breakbot/pr/tdegueul/comp-changes/3")
 			).respond(
-				response().withBody("ok")
+				response().withBody("received")
 			);
 
 			mvc.perform(
