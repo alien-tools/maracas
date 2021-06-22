@@ -100,47 +100,36 @@ public class GithubService {
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
-		File deltaFile = Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
-		String uid = prUid(owner, repository, prId);
 		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
-		if (!jobs.containsKey(uid) && !deltaFile.exists()) {
-			CompletableFuture<Delta> future =
-				prDiff.diffAsync()
-				.thenApply(delta -> {
-					for (String c : config.getGithubClients())
-						try {
-							GHRepository clientRepo = github.getRepository(c);
-							GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
-							delta = client.computeImpact(delta);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					return delta;
-				}).handle((delta, e) -> {
-					jobs.remove(uid);
-					if (delta != null) {
-						logger.info("Serializing {}", deltaFile);
-						deltaFile.getParentFile().mkdirs();
-						delta.writeJson(deltaFile);
-
-						try {
-							BreakBot bb = new BreakBot(new URI(callback), installationId);
-							bb.sendDelta(delta);
-						} catch (URISyntaxException ee) {
-							logger.error(ee);
-						}
-
-						return delta;
-					} else if (e != null) {
-						logger.error(e);
+		CompletableFuture<Delta> future =
+			prDiff.diffAsync()
+			.thenApply(delta -> {
+				for (String c : config.getGithubClients())
+					try {
+						GHRepository clientRepo = github.getRepository(c);
+						GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
+						delta = client.computeImpact(delta);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				return delta;
+			}).handle((delta, e) -> {
+				if (delta != null) {
+					try {
+						BreakBot bb = new BreakBot(new URI(callback), installationId);
+						bb.sendDelta(delta);
+					} catch (URISyntaxException ee) {
+						logger.error(ee);
 					}
 
-					return null;
-				});
+					return delta;
+				} else if (e != null) {
+					logger.error(e);
+				}
 
-			jobs.put(uid, future);
-		}
+				return null;
+			});
 
 		return getLocation;
 	}
