@@ -25,6 +25,10 @@ public class Config {
 		return githubClients;
 	}
 
+	public static Config defaultConfig() {
+		return new Config();
+	}
+
 	public static Config fromYaml(InputStream in) {
 		try {
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

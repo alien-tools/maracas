@@ -170,10 +170,15 @@ public class GithubService {
 		return jobs.containsKey(prUid(owner, repository, prId));
 	}
 
-	public Config readBreakbotConfig(GHRepository repo) throws IOException {
-		GHContent configFile = repo.getFileContent(breakbotFile);
-		try (InputStream configIn = configFile.read()) {
-			return Config.fromYaml(configIn);
+	public Config readBreakbotConfig(GHRepository repo) {
+		try {
+			GHContent configFile = repo.getFileContent(breakbotFile);
+			try (InputStream configIn = configFile.read()) {
+				return Config.fromYaml(configIn);
+			}
+		} catch (IOException e) {
+			logger.error(e);
+			return Config.defaultConfig();
 		}
 	}
 
