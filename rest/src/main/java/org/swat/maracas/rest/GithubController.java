@@ -11,6 +11,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,15 +31,19 @@ public class GithubController {
 	@Autowired
 	MaracasService maracas;
 
+	static class BreakbotRequest {
+		public int installationId;
+	}
+
 	/**
 	 * Mode push: accept the request if it's valid; send back the results to
 	 * {@code callback} when ready
 	 */
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
 	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository,
-		@PathVariable Integer prId, @RequestParam String callback, HttpServletResponse response) {
+		@PathVariable Integer prId, @RequestParam String callback, @RequestBody BreakbotRequest request, HttpServletResponse response) {
 		try {
-			String getLocation = github.analyzePR(owner, repository, prId, callback);
+			String getLocation = github.analyzePR(owner, repository, prId, callback, request.installationId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
 			response.setHeader("Location", getLocation);
 			return "processing";

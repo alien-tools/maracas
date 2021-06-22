@@ -94,7 +94,7 @@ public class GithubService {
 		return getLocation;
 	}
 
-	public String analyzePR(String owner, String repository, int prId, String callback) throws IOException {
+	public String analyzePR(String owner, String repository, int prId, String callback, int installationId) throws IOException {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
@@ -125,7 +125,7 @@ public class GithubService {
 						delta.writeJson(deltaFile);
 
 						try {
-							BreakBot bb = new BreakBot(new URI(callback));
+							BreakBot bb = new BreakBot(new URI(callback), installationId);
 							bb.sendDelta(delta);
 						} catch (URISyntaxException ee) {
 							logger.error(ee);

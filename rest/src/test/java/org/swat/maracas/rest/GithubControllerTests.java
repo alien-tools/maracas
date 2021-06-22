@@ -82,7 +82,11 @@ class GithubControllerTests {
 				response().withBody("ok")
 			);
 
-			mvc.perform(post("/github/pr/tdegueul/comp-changes/3?callback=" + callback))
+			mvc.perform(
+				post("/github/pr/tdegueul/comp-changes/3?callback=" + callback)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"installationId\": 123456789}")
+			)
 				.andExpect(status().isAccepted())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
 				.andExpect(result -> "processing".equals(result.getResponse().getContentAsString()));

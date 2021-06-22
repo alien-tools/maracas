@@ -17,15 +17,18 @@ import net.minidev.json.JSONObject;
 
 public class BreakBot {
 	private final URI callbackUri;
+	private final int installationId;
 	private static final Logger logger = LogManager.getLogger(GithubService.class);
 
-	public BreakBot(URI callbackUri) {
+	public BreakBot(URI callbackUri, int installationId) {
 		this.callbackUri = callbackUri;
+		this.installationId = installationId;
 	}
 
 	public boolean sendDelta(Delta d) {
 		Map<String, String> bodyValues = new HashMap<>();
 		bodyValues.put("delta", d.toJson());
+		bodyValues.put("installationId", Integer.toString(installationId));
 		String body = new JSONObject(bodyValues).toJSONString();
 
 		RestTemplate rest = new RestTemplate();
