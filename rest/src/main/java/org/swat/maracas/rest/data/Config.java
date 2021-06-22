@@ -2,6 +2,7 @@ package org.swat.maracas.rest.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class Config {
-	private List<String> githubClients;
+	private List<String> githubClients = new ArrayList();
 
 	public Config() {
 
