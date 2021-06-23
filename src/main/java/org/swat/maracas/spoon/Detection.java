@@ -41,14 +41,14 @@ public record Detection (
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object that) {
+		if (this == that)
 			return true;
-		if (obj == null)
+		if (that == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (getClass() != that.getClass())
 			return false;
-		Detection other = (Detection) obj;
+		Detection other = (Detection) that;
 		return
 			Objects.equals(element, other.element) &&
 			// CtElement::equals/hashCode() do not check the position

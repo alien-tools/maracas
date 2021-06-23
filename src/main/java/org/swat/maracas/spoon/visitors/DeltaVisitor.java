@@ -112,9 +112,10 @@ public class DeltaVisitor implements FilterVisitor {
 					case FIELD_NOW_FINAL        -> new FieldNowFinalVisitor(fRef);
 					case FIELD_NO_LONGER_STATIC -> new FieldNoLongerStaticVisitor(fRef);
 					case FIELD_NOW_STATIC       -> new FieldNowStaticVisitor(fRef);
+					case FIELD_LESS_ACCESSIBLE  -> new FieldLessAccessibleVisitor(fRef, elem.getAccessModifier().getNewModifier().get());
 					case FIELD_TYPE_CHANGED     -> {
 						try {
-							// Thanks for the checked exception...
+							// Thanks for the checked exception
 							String newTypeName = elem.getNewFieldOptional().get().getType().getName();
 							CtTypeReference<?> newType = root.getFactory().Type().createReference(newTypeName);
 							yield new FieldTypeChangedVisitor(fRef, newType);
