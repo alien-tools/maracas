@@ -21,6 +21,7 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
  * Clones & builds a repository, returns the JAR
@@ -53,16 +54,18 @@ public class CloneAndBuild implements Supplier<Path> {
 
 		logger.info("Cloning {} [{}]", url, ref);
 		String fullRef = "refs/heads/" + ref; // FIXME
-		CloneCommand command =
+		CloneCommand clone =
 			Git.cloneRepository()
 				.setURI(url)
 				.setBranchesToClone(Collections.singletonList(fullRef))
 				.setBranch(fullRef)
 				.setDirectory(dest.toFile());
 
-		try (Git g = command.call()) {
+		try (Git g = clone.call()) {
 			// Let me please try-with-resource without a variable :(
-		} catch (Exception e) {
+		} catch (GitAPIException e) {
+			// Rethrow unchecked to get past
+			// the Supplier interface
 			throw new CloneException(e);
 		}
 	}

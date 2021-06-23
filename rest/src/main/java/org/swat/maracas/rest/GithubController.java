@@ -44,21 +44,26 @@ public class GithubController {
 	@GetMapping("/pr/{owner}/{repository}/{prId}")
 	public PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		HttpServletResponse response) {
-		// Either we have it already
-		Delta delta = github.getPullRequest(owner, repository, prId);
-		if (delta != null) {
-			return new PullRequestResponse("ok", delta);
-		}
+		try {
+			// Either we have it already
+			Delta delta = github.getDelta(owner, repository, prId);
+			if (delta != null) {
+				return new PullRequestResponse("ok", delta);
+			}
 
-		// Or we're currently computing it
-		if (github.isProcessing(owner, repository, prId)) {
-			response.setStatus(HttpStatus.SC_ACCEPTED);
-			return new PullRequestResponse("processing", null);
-		}
+			// Or we're currently computing it
+			if (github.isProcessing(owner, repository, prId)) {
+				response.setStatus(HttpStatus.SC_ACCEPTED);
+				return new PullRequestResponse("processing", null);
+			}
 
-		// Or it doesn't exist
-		response.setStatus(HttpStatus.SC_NOT_FOUND);
-		return new PullRequestResponse("This PR isn't being analyzed", null);
+			// Or it doesn't exist
+			response.setStatus(HttpStatus.SC_NOT_FOUND);
+			return new PullRequestResponse("This PR isn't being analyzed", null);
+		} catch (IOException e) {
+			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			return new PullRequestResponse(e.getMessage(), null);
+		}
 	}
 
 	@GetMapping("/pr-sync/{owner}/{repository}/{prId}")

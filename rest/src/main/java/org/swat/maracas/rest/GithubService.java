@@ -53,11 +53,14 @@ public class GithubService {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
+		String prHead = pr.getHead().getSha();
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
-		String uid = prUid(owner, repository, prId);
-		File deltaFile = deltaFile(owner, repository, prId);
+		String uid = prUid(owner, repository, prId, prHead);
+		File deltaFile = deltaFile(owner, repository, prId, prHead);
 		String deltaLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
+
+		logger.info("Starting the analysis of {}", uid);
 
 		// If we're already on it, no need to compute it twice
 		if (!jobs.containsKey(uid) && !deltaFile.exists()) {
@@ -114,9 +117,9 @@ public class GithubService {
 		return delta;
 	}
 
-	public Delta getPullRequest(String owner, String repository, int prId) {
+	public Delta getDelta(String owner, String repository, int id, String head) {
 		try {
-			File deltaFile = deltaFile(owner, repository, prId);
+			File deltaFile = deltaFile(owner, repository, id, head);
 			if (deltaFile.exists() && deltaFile.length() > 0) {
 				return Delta.fromJson(deltaFile);
 			}
@@ -127,8 +130,24 @@ public class GithubService {
 		return null;
 	}
 
-	public boolean isProcessing(String owner, String repository, int prId) {
-		return jobs.containsKey(prUid(owner, repository, prId));
+	public Delta getDelta(String owner, String repository, int id) throws IOException {
+		GHRepository repo = github.getRepository(owner + "/" + repository);
+		GHPullRequest pr = repo.getPullRequest(id);
+		String head = pr.getHead().getSha();
+
+		return getDelta(owner, repository, id, head);
+	}
+
+	public boolean isProcessing(String owner, String repository, int id, String head) {
+		return jobs.containsKey(prUid(owner, repository, id, head));
+	}
+
+	public boolean isProcessing(String owner, String repository, int id) throws IOException {
+		GHRepository repo = github.getRepository(owner + "/" + repository);
+		GHPullRequest pr = repo.getPullRequest(id);
+		String head = pr.getHead().getSha();
+
+		return isProcessing(owner, repository, id, head);
 	}
 
 	private void computeAndWeaveImpact(Delta delta, String c) {
@@ -155,11 +174,12 @@ public class GithubService {
 		return Config.defaultConfig();
 	}
 
-	private String prUid(String repository, String user, int prId) {
-		return repository + "-" + user + "-" + prId;
+	private String prUid(String repository, String user, int id, String head) {
+		return repository + "-" + user + "-" + id + "-" + head;
 	}
 
-	private File deltaFile(String owner, String repository, int prId) {
-		return Paths.get(deltaPath).resolve(owner).resolve(repository).resolve(prId + ".json").toFile();
+	private File deltaFile(String owner, String repository, int id, String head) {
+		return Paths.get(deltaPath).resolve(owner).resolve(repository)
+			.resolve(id + "-" + head + ".json").toFile();
 	}
 }
