@@ -6,6 +6,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.swat.maracas.rest.TestHelpers.checkDeltaWithoutDetections;
 import static org.swat.maracas.rest.TestHelpers.waitForPRAnalysis;
@@ -61,11 +62,11 @@ class ConfigLessGithubControllerTests {
 			mvc.perform(
 				post("/github/pr/tdegueul/comp-changes/3?callback=" + callback)
 				.header("installationId", 123456789)
-				.contentType(MediaType.APPLICATION_JSON)
 			)
 				.andExpect(status().isAccepted())
-				.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-				.andExpect(result -> "processing".equals(result.getResponse().getContentAsString()));
+				.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
 
 			ResultActions res = waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3");
 			checkDeltaWithoutDetections(res);

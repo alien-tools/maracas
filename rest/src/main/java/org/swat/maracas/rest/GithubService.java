@@ -81,7 +81,7 @@ public class GithubService {
 
 							if (callback != null) {
 								BreakBot bb = new BreakBot(new URI(callback), installationId);
-								bb.sendDelta(delta);
+								bb.sendPullRequestResponse(delta);
 							}
 						} catch (Exception e) {
 							logger.error(e);

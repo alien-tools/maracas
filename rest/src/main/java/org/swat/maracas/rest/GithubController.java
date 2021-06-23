@@ -28,16 +28,19 @@ public class GithubController {
 	MaracasService maracas;
 
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
-	public String analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+	public PullRequestResponse analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		@RequestParam(required=false) String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
 		try {
 			String location = github.analyzePR(owner, repository, prId, callback, installationId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
 			response.setHeader("Location", location);
-			return "processing";
+			return new PullRequestResponse("processing", null);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
-			return e.getMessage();
+			return new PullRequestResponse(e.getMessage(), null);
+		} catch (Exception e) {
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
 
@@ -53,7 +56,7 @@ public class GithubController {
 
 			// Or we're currently computing it
 			if (github.isProcessing(owner, repository, prId)) {
-				response.setStatus(HttpStatus.SC_ACCEPTED);
+				response.setStatus(HttpStatus.SC_PROCESSING);
 				return new PullRequestResponse("processing", null);
 			}
 
@@ -62,6 +65,9 @@ public class GithubController {
 			return new PullRequestResponse("This PR isn't being analyzed", null);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			return new PullRequestResponse(e.getMessage(), null);
+		} catch (Exception e) {
+			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}

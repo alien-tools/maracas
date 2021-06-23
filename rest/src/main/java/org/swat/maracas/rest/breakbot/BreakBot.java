@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 import org.swat.maracas.rest.data.Delta;
+import org.swat.maracas.rest.data.PullRequestResponse;
 
 public class BreakBot {
 	private final URI callbackUri;
@@ -20,7 +21,7 @@ public class BreakBot {
 		this.installationId = installationId;
 	}
 
-	public boolean sendDelta(Delta d) {
+	public boolean sendPullRequestResponse(Delta d) {
 		try {
 			RestTemplate rest = new RestTemplate();
 
@@ -30,8 +31,8 @@ public class BreakBot {
 			if (installationId != null && !installationId.isEmpty())
 				headers.set("installationId", installationId);
 
-			String body = d.toJson();
-			HttpEntity<String> request = new HttpEntity<>(body, headers);
+			PullRequestResponse pr = new PullRequestResponse("ok", d);
+			HttpEntity<String> request = new HttpEntity<>(pr.toJson(), headers);
 			String res = rest.postForObject(callbackUri, request, String.class);
 
 			logger.info("Sent delta back to BreakBot ({}): {}", callbackUri, res);
