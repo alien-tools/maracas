@@ -32,7 +32,7 @@ public class MaracasService {
 	public IList computeDelta(Path oldJar, Path newJar, Path sources) {
 		logger.info("Computing delta ({} -> {})", oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
-		return run((eval) -> {
+		return run(eval -> {
 			Instant start = Instant.now();
 			IList res = (IList) eval.call("bcInstances",
 				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
@@ -45,7 +45,7 @@ public class MaracasService {
 	public IList computeImpact(Path oldJar, Path newJar, Path clientJar, Path clientSources) {
 		logger.info("Computing impact on {} ({} -> {})", clientJar, oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
-		return run((eval) -> {
+		return run(eval -> {
 			Instant start = Instant.now();
 			IList res = (IList) eval.call("detections",
 				vf.sourceLocation(oldJar.toAbsolutePath().toString()), vf.sourceLocation(newJar.toAbsolutePath().toString()),
@@ -57,7 +57,7 @@ public class MaracasService {
 	}
 
 	public ISet getChangedEntities(IValue delta) {
-		return (ISet) run((eval) -> eval.call("getChangedEntities", delta));
+		return (ISet) run(eval -> eval.call("getChangedEntities", delta));
 	}
 
 	public <T> T run(Function<Evaluator, T> func) {

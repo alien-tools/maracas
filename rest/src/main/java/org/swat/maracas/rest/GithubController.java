@@ -27,12 +27,8 @@ public class GithubController {
 	@Autowired
 	MaracasService maracas;
 
-	static class BreakbotRequest {
-		public int installationId;
-	}
-
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
-	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+	public String analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		@RequestParam(required=false) String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
 		try {
 			String location = github.analyzePR(owner, repository, prId, callback, installationId);
@@ -46,7 +42,7 @@ public class GithubController {
 	}
 
 	@GetMapping("/pr/{owner}/{repository}/{prId}")
-	PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+	public PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		HttpServletResponse response) {
 		// Either we have it already
 		Delta delta = github.getPullRequest(owner, repository, prId);
@@ -66,7 +62,7 @@ public class GithubController {
 	}
 
 	@GetMapping("/pr-sync/{owner}/{repository}/{prId}")
-	PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
+	public PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		HttpServletResponse response) {
 		try {
 			Delta delta = github.analyzePRSync(owner, repository, prId);

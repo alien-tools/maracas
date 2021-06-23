@@ -14,15 +14,13 @@ import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 public class MaracasConfiguration {
-	@Autowired
-	private ResourceLoader resourceLoader;
-
 	@Bean
-	public GitHub gitHub() throws IOException {
+	public GitHub gitHub(@Autowired ResourceLoader resourceLoader) throws IOException {
 		Resource githubRes = resourceLoader.getResource("classpath:.github");
-		InputStream in = githubRes.getInputStream();
-		Properties props = new Properties();
-		props.load(in);
-		return GitHubBuilder.fromProperties(props).build();
+		try (InputStream in = githubRes.getInputStream()) {
+			Properties props = new Properties();
+			props.load(in);
+			return GitHubBuilder.fromProperties(props).build();
+		}
 	}
 }

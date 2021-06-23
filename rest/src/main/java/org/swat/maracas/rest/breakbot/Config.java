@@ -13,10 +13,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class Config {
 	private List<String> githubClients = new ArrayList<>();
 
-	public Config() {
-
-	}
-
 	@JsonProperty("clients")
 	public void unpackClients(Map<String, List<String>> clients) {
 		githubClients = clients.get("github");

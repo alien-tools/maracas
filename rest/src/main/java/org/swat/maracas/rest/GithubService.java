@@ -65,9 +65,7 @@ public class GithubService {
 				prDiff.diffAsync()
 				.thenApply(delta -> {
 					// Compute impact
-					config.getGithubClients().parallelStream().forEach(c -> {
-						computeAndWeaveImpact(delta, c);
-					});
+					config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
 					return delta;
 				}).handle((delta, exc) -> {
 					jobs.remove(uid);
@@ -111,9 +109,7 @@ public class GithubService {
 		Config config = readBreakbotConfig(repo);
 
 		Delta delta = prDiff.diff();
-		config.getGithubClients().parallelStream().forEach(c -> {
-			computeAndWeaveImpact(delta, c);
-		});
+		config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
 
 		return delta;
 	}
