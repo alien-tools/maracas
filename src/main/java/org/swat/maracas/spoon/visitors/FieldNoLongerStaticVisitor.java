@@ -23,14 +23,17 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtFieldRead(CtFieldRead<T> fieldRead) {
-		if (fRef.equals(fieldRead.getVariable()) && isStaticAccess(fieldRead))
-			detection(fieldRead, fieldRead.getVariable(), fRef, APIUse.FIELD_ACCESS);
+		visitCtFieldAccess(fieldRead);
 	}
 
 	@Override
 	public <T> void visitCtFieldWrite(CtFieldWrite<T> fieldWrite) {
-		if (fRef.equals(fieldWrite.getVariable()) && isStaticAccess(fieldWrite))
-			detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
+		visitCtFieldAccess(fieldWrite);
+	}
+
+	private <T> void visitCtFieldAccess(CtFieldAccess<T> fieldAccess) {
+		if (fRef.equals(fieldAccess.getVariable()) && isStaticAccess(fieldAccess))
+			detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
 
 	private <T> boolean isStaticAccess(CtFieldAccess<T> fieldAccess) {
