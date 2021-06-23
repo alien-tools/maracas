@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.swat.maracas.rest.breakbot.BreakBot;
 import org.swat.maracas.rest.breakbot.Config;
 import org.swat.maracas.rest.data.Delta;
+import org.swat.maracas.rest.data.ImpactModel;
 import org.swat.maracas.rest.delta.PullRequestDiff;
 import org.swat.maracas.rest.impact.GithubRepository;
 
@@ -48,94 +49,58 @@ public class GithubService {
 		Paths.get(deltaPath).toFile().mkdirs();
 	}
 
-	public String analyzePR(String owner, String repository, int prId) throws IOException {
-		// Read PR meta
-		GHRepository repo = github.getRepository(owner + "/" + repository);
-		GHPullRequest pr = repo.getPullRequest(prId);
-		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
-		Config config = readBreakbotConfig(repo);
-		File deltaFile = deltaFile(owner, repository, prId);
-		String uid = prUid(owner, repository, prId);
-		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
-
-		if (!jobs.containsKey(uid) && !deltaFile.exists()) {
-			CompletableFuture<Delta> future =
-				prDiff.diffAsync()
-				.thenApply(delta -> {
-					for (String c : config.getGithubClients())
-						try {
-							GHRepository clientRepo = github.getRepository(c);
-							GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
-							delta = client.computeImpact(delta);
-						} catch (IOException e) {
-							logger.error(e);
-						}
-					return delta;
-				}).handle((delta, e) -> {
-					jobs.remove(uid);
-					if (delta != null) {
-						try {
-							logger.info("Serializing {}", deltaFile);
-							deltaFile.getParentFile().mkdirs();
-							delta.writeJson(deltaFile);
-						} catch (IOException ee) {
-							logger.error(ee);
-						}
-
-						return delta;
-					} else {
-						logger.error(e);
-						return null;
-					}
-				});
-
-			jobs.put(uid, future);
-		}
-
-		return getLocation;
-	}
-
 	public String analyzePR(String owner, String repository, int prId, String callback, String installationId) throws IOException {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
+		String uid = prUid(owner, repository, prId);
 		File deltaFile = deltaFile(owner, repository, prId);
-		String getLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
+		String deltaLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
-		CompletableFuture<Delta> future =
-			prDiff.diffAsync()
-			.thenApply(delta -> {
-				for (String c : config.getGithubClients())
-					try {
-						GHRepository clientRepo = github.getRepository(c);
-						GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
-						delta = client.computeImpact(delta);
-					} catch (IOException e) {
-						logger.error(e);
-					}
-				return delta;
-			}).handle((delta, e) -> {
-				if (delta != null) {
-					try {
-						logger.info("Serializing {}", deltaFile);
-						deltaFile.getParentFile().mkdirs();
-						delta.writeJson(deltaFile);
-						BreakBot bb = new BreakBot(new URI(callback), installationId);
-						bb.sendDelta(delta);
-					} catch (Exception ee) {
-						logger.error(ee);
-					}
-
+		// If we're already on it, no need to compute it twice
+		if (!jobs.containsKey(uid) && !deltaFile.exists()) {
+			CompletableFuture<Delta> future =
+				prDiff.diffAsync()
+				.thenApply(delta -> {
+					// Compute impact
+					config.getGithubClients().parallelStream().forEach(c -> {
+						computeAndWeaveImpact(delta, c);
+					});
 					return delta;
-				} else {
-					logger.error(e);
-					return null;
-				}
-			});
+				}).handle((delta, exc) -> {
+					jobs.remove(uid);
+					// Write down results to disk and/or notify BreakBot
+					if (delta != null) {
+						try {
+							logger.info("Serializing {}", deltaFile);
+							deltaFile.getParentFile().mkdirs();
+							delta.writeJson(deltaFile);
 
-		return getLocation;
+							if (callback != null) {
+								BreakBot bb = new BreakBot(new URI(callback), installationId);
+								bb.sendDelta(delta);
+							}
+						} catch (Exception e) {
+							logger.error(e);
+						}
+
+						return delta;
+					}
+
+					logger.error(exc);
+					return null;
+				});
+
+			jobs.put(uid, future);
+		}
+
+		return deltaLocation;
+	}
+
+	public String analyzePR(String owner, String repository, int prId) throws IOException {
+		return analyzePR(owner, repository, prId, null, null);
 	}
 
 	public Delta analyzePRSync(String owner, String repository, int prId) throws IOException {
@@ -144,16 +109,11 @@ public class GithubService {
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
 		Config config = readBreakbotConfig(repo);
-		Delta delta = prDiff.diff();
 
-		for (String c : config.getGithubClients())
-			try {
-				GHRepository clientRepo = github.getRepository(c);
-				GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
-				delta = client.computeImpact(delta);
-			} catch (IOException e) {
-				logger.error(e);
-			}
+		Delta delta = prDiff.diff();
+		config.getGithubClients().parallelStream().forEach(c -> {
+			computeAndWeaveImpact(delta, c);
+		});
 
 		return delta;
 	}
@@ -175,7 +135,19 @@ public class GithubService {
 		return jobs.containsKey(prUid(owner, repository, prId));
 	}
 
-	public Config readBreakbotConfig(GHRepository repo) {
+	private void computeAndWeaveImpact(Delta delta, String c) {
+		try {
+			GHRepository clientRepo = github.getRepository(c);
+			GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
+			ImpactModel impact = client.computeImpact(delta);
+
+			delta.weaveImpact(impact);
+		} catch (IOException e) {
+			logger.error(e);
+		}
+	}
+
+	private Config readBreakbotConfig(GHRepository repo) {
 		try (InputStream configIn = repo.getFileContent(breakbotFile).read()) {
 			Config res = Config.fromYaml(configIn);
 			if (res != null)

@@ -69,9 +69,9 @@ public class PullRequestDiff implements Diffable {
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
-			return new Delta(null, e);
+			return new Delta(e);
 		} catch (BuildException | CloneException e) {
-			return new Delta(null, e);
+			return new Delta(e);
 		}
 	}
 }

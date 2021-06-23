@@ -5,7 +5,7 @@ import io.usethesource.vallang.IInteger;
 import io.usethesource.vallang.IString;
 
 public class Detection {
-	private String client;
+	private String clientUrl;
 	private String elem;
 	private String used;
 	private String src;
@@ -16,7 +16,7 @@ public class Detection {
 	private String url;
 
 	public Detection() {
-		
+
 	}
 
 	public Detection(String elem, String used, String src, String apiUse) {
@@ -33,12 +33,12 @@ public class Detection {
 		this.endLine = endLine;
 	}
 
-	public String getClient() {
-		return client;
+	public String getClientUrl() {
+		return clientUrl;
 	}
 
-	public void setClient(String client) {
-		this.client = client;
+	public void setClientUrl(String clientUrl) {
+		this.clientUrl = clientUrl;
 	}
 
 	public String getElem() {

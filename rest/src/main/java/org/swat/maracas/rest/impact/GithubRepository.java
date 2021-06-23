@@ -3,17 +3,14 @@ package org.swat.maracas.rest.impact;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHRepository;
 import org.swat.maracas.rest.MaracasService;
-import org.swat.maracas.rest.data.BreakingChangeInstance;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.Detection;
+import org.swat.maracas.rest.data.ImpactModel;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
 
 import io.usethesource.vallang.IConstructor;
@@ -32,49 +29,40 @@ public class GithubRepository implements Impactable {
 	}
 
 	@Override
-	public Delta computeImpact(Delta delta) {
+	public ImpactModel computeImpact(Delta delta) {
 		try {
 			Path clientPath = Paths.get(clonePath)
 				.resolve(repository.getOwnerName())
 				.resolve(repository.getBranch(repository.getDefaultBranch()).getSHA1());
 
 			// Clone and build the client
-			CompletableFuture<Path> clientFuture = CompletableFuture.supplyAsync(
-				new CloneAndBuild(repository.getHttpTransportUrl(), repository.getDefaultBranch(), clientPath));
-			Path clientJar = clientFuture.get();
+			Path clientJar = new CloneAndBuild(repository.getHttpTransportUrl(), repository.getDefaultBranch(), clientPath).get();
 
 			// Build impact model
-			// FIXME: we should reuse the possibly-existing delta model,
+			// FIXME: we should reuse the existing delta model,
 			// but easier for now to just pass all the JARs to Maracas
 			IList detections = maracas.computeImpact(delta.getJarV1(), delta.getJarV2(), clientJar, clientPath);
+			ImpactModel impact = new ImpactModel();
+			impact.setClientJar(clientJar);
+			impact.setClientUrl(repository.getHtmlUrl().toString());
+
 			detections.forEach(rascalDetection -> {
 				Detection d = Detection.fromRascal((IConstructor) rascalDetection);
-				Optional<BreakingChangeInstance> bc =
-					delta.getBreakingChanges().stream()
-					.filter(c -> c.getDeclaration().equals(d.getSrc()))
-					.findFirst();
-
-				d.setClient(repository.getHtmlUrl().toString());
+				d.setClientUrl(repository.getHtmlUrl().toString());
 				d.setPath(d.getPath().replaceFirst(clientPath.toAbsolutePath().toString(), ""));
 				d.setUrl(
 					String.format("%s/blob/%s/%s#L%s-L%s",
-						repository.getHtmlUrl(), repository.getDefaultBranch(), d.getPath(), d.getStartLine(), d.getEndLine())
+						repository.getHtmlUrl(), repository.getDefaultBranch(), d.getPath(),
+						d.getStartLine(), d.getEndLine())
 				);
 
-				if (bc.isPresent())
-					bc.get().addDetection(d);
-				else
-					logger.warn("Couldn't find matching BC for " + d.getElem() + " => " + d.getUsed());
+				impact.addDetection(d);
 			});
 
-			return delta;
-		} catch (ExecutionException | InterruptedException e) {
-			logger.error(e);
-			Thread.currentThread().interrupt();
-			return delta;
+			return impact;
 		} catch (IOException e) {
 			logger.error(e);
-			return delta;
+			return new ImpactModel(e);
 		}
 	}
 }

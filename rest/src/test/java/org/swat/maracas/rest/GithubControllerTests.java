@@ -58,7 +58,7 @@ class GithubControllerTests {
 
 	@Test
 	void testSubmitPRPoll() throws Exception {
-		mvc.perform(post("/github/pr-poll/tdegueul/comp-changes/3"))
+		mvc.perform(post("/github/pr/tdegueul/comp-changes/3"))
     	.andExpect(status().isAccepted())
     	.andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
     	.andExpect(result -> "/github/pr/tdegueul/comp-changes/3".equals(result.getResponse().getHeader("Location")));
@@ -134,17 +134,11 @@ class GithubControllerTests {
 	}
 
 	@Test
-	void testMissingCallback() throws Exception {
-		mvc.perform(post("/github/pr/tdegueul/comp-changes/3"))
-			.andExpect(status().isBadRequest());
-	}
-
-	@Test
 	void testUnknownRepository() throws Exception {
 		mvc.perform(post("/github/pr/tdegueul/NOPE/3"))
 			.andExpect(status().isBadRequest());
 
-		mvc.perform(post("/github/pr-poll/tdegueul/NOPE/3"))
+		mvc.perform(post("/github/pr/tdegueul/NOPE/3?callback=foo"))
 			.andExpect(status().isBadRequest());
 
 		mvc.perform(get("/github/pr-sync/tdegueul/NOPE/3"))
@@ -156,7 +150,7 @@ class GithubControllerTests {
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999"))
 			.andExpect(status().isBadRequest());
 
-		mvc.perform(post("/github/pr-poll/tdegueul/comp-changes/9999"))
+		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999?callback=foo"))
 			.andExpect(status().isBadRequest());
 
 		mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/9999"))

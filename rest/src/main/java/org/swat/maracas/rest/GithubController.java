@@ -33,23 +33,9 @@ public class GithubController {
 
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
 	String analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
-		@RequestParam String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
+		@RequestParam(required=false) String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
 		try {
 			String location = github.analyzePR(owner, repository, prId, callback, installationId);
-			response.setStatus(HttpStatus.SC_ACCEPTED);
-			response.setHeader("Location", location);
-			return "processing";
-		} catch (IOException e) {
-			response.setStatus(HttpStatus.SC_BAD_REQUEST);
-			return e.getMessage();
-		}
-	}
-
-	@PostMapping("/pr-poll/{owner}/{repository}/{prId}")
-	String analyzePullRequestPoll(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
-		HttpServletResponse response) {
-		try {
-			String location = github.analyzePR(owner, repository, prId);
 			response.setStatus(HttpStatus.SC_ACCEPTED);
 			response.setHeader("Location", location);
 			return "processing";
@@ -84,7 +70,6 @@ public class GithubController {
 		HttpServletResponse response) {
 		try {
 			Delta delta = github.analyzePRSync(owner, repository, prId);
-
 			return new PullRequestResponse("ok", delta);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);

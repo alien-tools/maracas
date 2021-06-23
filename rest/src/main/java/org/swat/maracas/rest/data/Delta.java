@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -19,18 +23,18 @@ public class Delta {
 	private List<BreakingChangeInstance> breakingChanges = new ArrayList<>();
 	private Throwable error;
 
+	private static final Logger logger = LogManager.getLogger(Delta.class);
+
 	public Delta() {
 
 	}
 
-	public Delta(List<BreakingChangeInstance> breakingChanges, Throwable error) {
+	public Delta(List<BreakingChangeInstance> breakingChanges) {
 		this.breakingChanges = breakingChanges;
-		this.error = error;
-
 	}
 
-	public Delta(List<BreakingChangeInstance> breakingChanges) {
-		this(breakingChanges, null);
+	public Delta(Throwable error) {
+		this.error = error;
 	}
 
 	public Path getJarV1() {
@@ -63,6 +67,21 @@ public class Delta {
 
 	public Throwable getError() {
 		return error;
+	}
+
+	public void weaveImpact(ImpactModel impact) {
+		impact.getDetections().forEach(d -> {
+			Optional<BreakingChangeInstance> bc =
+				breakingChanges.stream()
+				.filter(c -> c.getDeclaration().equals(d.getSrc()))
+				.findFirst();
+
+			if (bc.isPresent())
+				bc.get().addDetection(d);
+			else
+				logger.warn("Couldn't find matching BC for {} => {}",
+					d.getElem(), d.getUsed());
+		});
 	}
 
 	public static Delta fromRascal(IList delta) {
