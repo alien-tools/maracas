@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.swat.maracas.rest.breakbot.BreakBot;
-import org.swat.maracas.rest.breakbot.Config;
+import org.swat.maracas.rest.breakbot.BreakBotConfig;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.ImpactModel;
 import org.swat.maracas.rest.delta.PullRequestDiff;
@@ -55,7 +55,7 @@ public class GithubService {
 		GHPullRequest pr = repo.getPullRequest(prId);
 		String prHead = pr.getHead().getSha();
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
-		Config config = readBreakbotConfig(repo);
+		BreakBotConfig config = readBreakbotConfig(repo);
 		String uid = prUid(owner, repository, prId, prHead);
 		File deltaFile = deltaFile(owner, repository, prId, prHead);
 		String deltaLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
@@ -109,7 +109,7 @@ public class GithubService {
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
-		Config config = readBreakbotConfig(repo);
+		BreakBotConfig config = readBreakbotConfig(repo);
 
 		Delta delta = prDiff.diff();
 		config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
@@ -162,16 +162,16 @@ public class GithubService {
 		}
 	}
 
-	private Config readBreakbotConfig(GHRepository repo) {
+	private BreakBotConfig readBreakbotConfig(GHRepository repo) {
 		try (InputStream configIn = repo.getFileContent(breakbotFile).read()) {
-			Config res = Config.fromYaml(configIn);
+			BreakBotConfig res = BreakBotConfig.fromYaml(configIn);
 			if (res != null)
 				return res;
 		} catch (@SuppressWarnings("unused") IOException e) {
 			// shh
 		}
 
-		return Config.defaultConfig();
+		return BreakBotConfig.defaultConfig();
 	}
 
 	private String prUid(String repository, String user, int id, String head) {
