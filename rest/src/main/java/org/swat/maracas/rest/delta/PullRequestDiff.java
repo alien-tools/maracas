@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHPullRequest;
 import org.swat.maracas.rest.MaracasService;
+import org.swat.maracas.rest.breakbot.BreakbotConfig;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
@@ -18,13 +19,15 @@ import org.swat.maracas.rest.tasks.CloneException;
 import io.usethesource.vallang.IList;
 
 public class PullRequestDiff implements Diffable {
+	private final MaracasService maracas;
+	private final BreakbotConfig config;
 	private final GHPullRequest pr;
 	private final String clonePath;
-	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(PullRequestDiff.class);
 
-	public PullRequestDiff(MaracasService maracas, GHPullRequest pr, String clonePath) {
+	public PullRequestDiff(MaracasService maracas, BreakbotConfig config, GHPullRequest pr, String clonePath) {
 		this.maracas = maracas;
+		this.config = config;
 		this.pr = pr;
 		this.clonePath = clonePath;
 	}

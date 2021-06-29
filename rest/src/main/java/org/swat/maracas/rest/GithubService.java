@@ -19,8 +19,8 @@ import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.swat.maracas.rest.breakbot.BreakBot;
-import org.swat.maracas.rest.breakbot.BreakBotConfig;
+import org.swat.maracas.rest.breakbot.Breakbot;
+import org.swat.maracas.rest.breakbot.BreakbotConfig;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.ImpactModel;
 import org.swat.maracas.rest.delta.PullRequestDiff;
@@ -54,8 +54,8 @@ public class GithubService {
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
 		String prHead = pr.getHead().getSha();
-		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
-		BreakBotConfig config = readBreakbotConfig(repo);
+		BreakbotConfig config = readBreakbotConfig(repo);
+		PullRequestDiff prDiff = new PullRequestDiff(maracas, config, pr, clonePath);
 		String uid = prUid(owner, repository, prId, prHead);
 		File deltaFile = deltaFile(owner, repository, prId, prHead);
 		String deltaLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
@@ -80,7 +80,7 @@ public class GithubService {
 							delta.writeJson(deltaFile);
 
 							if (callback != null) {
-								BreakBot bb = new BreakBot(new URI(callback), installationId);
+								Breakbot bb = new Breakbot(new URI(callback), installationId);
 								bb.sendPullRequestResponse(delta);
 							}
 						} catch (Exception e) {
@@ -108,8 +108,8 @@ public class GithubService {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
-		PullRequestDiff prDiff = new PullRequestDiff(maracas, pr, clonePath);
-		BreakBotConfig config = readBreakbotConfig(repo);
+		BreakbotConfig config = readBreakbotConfig(repo);
+		PullRequestDiff prDiff = new PullRequestDiff(maracas, config, pr, clonePath);
 
 		Delta delta = prDiff.diff();
 		config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
@@ -162,16 +162,16 @@ public class GithubService {
 		}
 	}
 
-	private BreakBotConfig readBreakbotConfig(GHRepository repo) {
+	private BreakbotConfig readBreakbotConfig(GHRepository repo) {
 		try (InputStream configIn = repo.getFileContent(breakbotFile).read()) {
-			BreakBotConfig res = BreakBotConfig.fromYaml(configIn);
+			BreakbotConfig res = BreakbotConfig.fromYaml(configIn);
 			if (res != null)
 				return res;
 		} catch (@SuppressWarnings("unused") IOException e) {
 			// shh
 		}
 
-		return BreakBotConfig.defaultConfig();
+		return BreakbotConfig.defaultConfig();
 	}
 
 	private String prUid(String repository, String user, int id, String head) {

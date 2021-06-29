@@ -11,12 +11,12 @@ import org.springframework.web.client.RestTemplate;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.PullRequestResponse;
 
-public class BreakBot {
+public class Breakbot {
 	private final URI callbackUri;
 	private final String installationId;
-	private static final Logger logger = LogManager.getLogger(BreakBot.class);
+	private static final Logger logger = LogManager.getLogger(Breakbot.class);
 
-	public BreakBot(URI callbackUri, String installationId) {
+	public Breakbot(URI callbackUri, String installationId) {
 		this.callbackUri = callbackUri;
 		this.installationId = installationId;
 	}
