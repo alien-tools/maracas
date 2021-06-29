@@ -68,7 +68,7 @@ public class GithubService {
 				prDiff.diffAsync()
 				.thenApply(delta -> {
 					// Compute impact
-					config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
+					config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, config, c));
 					return delta;
 				}).handle((delta, exc) -> {
 					jobs.remove(uid);
@@ -112,7 +112,7 @@ public class GithubService {
 		PullRequestDiff prDiff = new PullRequestDiff(maracas, config, pr, clonePath);
 
 		Delta delta = prDiff.diff();
-		config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, c));
+		config.getGithubClients().parallelStream().forEach(c -> computeAndWeaveImpact(delta, config, c));
 
 		return delta;
 	}
@@ -150,10 +150,10 @@ public class GithubService {
 		return isProcessing(owner, repository, id, head);
 	}
 
-	private void computeAndWeaveImpact(Delta delta, String c) {
+	private void computeAndWeaveImpact(Delta delta, BreakbotConfig config, String c) {
 		try {
 			GHRepository clientRepo = github.getRepository(c);
-			GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
+			GithubRepository client = new GithubRepository(maracas, config, clientRepo, clonePath);
 			ImpactModel impact = client.computeImpact(delta);
 
 			delta.weaveImpact(impact);

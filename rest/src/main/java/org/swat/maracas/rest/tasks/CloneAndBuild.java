@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -25,6 +24,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.swat.maracas.rest.breakbot.BreakbotConfig;
 
 /**
  * Clones & builds a repository, returns the JAR
@@ -33,30 +33,15 @@ public class CloneAndBuild implements Supplier<Path> {
 	private final String url;
 	private final String ref;
 	private final Path dest;
-	private final Path mvnPom;
-	private final List<String> mvnGoals;
-	private final List<String> mvnProperties;
-	private final Path jarLocation;
+	private final BreakbotConfig config;
 
 	private static final Logger logger = LogManager.getLogger(CloneAndBuild.class);
 
-	public CloneAndBuild(String url, String ref, Path dest, Path mvnPom,
-		List<String> mvnGoals, List<String> mvnProperties, Path jarLocation) {
+	public CloneAndBuild(String url, String ref, Path dest, BreakbotConfig config) {
 		this.url = url;
 		this.ref = ref;
 		this.dest = dest;
-		this.mvnPom = mvnPom;
-		this.mvnProperties = mvnProperties;
-		this.mvnGoals = mvnGoals;
-		this.jarLocation = jarLocation;
-	}
-
-	public CloneAndBuild(String url, String ref, Path dest) {
-		// By default, we'll `mvn package -DskipTests` on the root pom.xml
-		// and look for a JAR in target/
-		this(url, ref, dest,
-			Paths.get("pom.xml"), Collections.singletonList("package"),
-			Collections.singletonList("skipTests"), null);
+		this.config = config;
 	}
 
 	@Override
@@ -92,12 +77,15 @@ public class CloneAndBuild implements Supplier<Path> {
 	}
 
 	private void build() {
-		File pom = dest.resolve(mvnPom).toFile();
-		Path target = dest.resolve(mvnPom).getParent().resolve("target");
+		File pom =
+			config.getMvnPom() != null ?
+				dest.resolve(config.getMvnPom()).toFile() :
+				dest.resolve("pom.xml").toFile();
 
-		System.out.println("build()");
-		System.out.println("pom="+pom);
-		System.out.println("target="+target);
+		Path target =
+			config.getMvnPom() != null ?
+				dest.resolve(config.getMvnPom()).getParent().resolve("target") :
+				dest.resolve("target");
 
 		if (!pom.exists())
 			throw new BuildException("The pom file " + pom + " could not be found in " + dest);
@@ -105,7 +93,13 @@ public class CloneAndBuild implements Supplier<Path> {
 		if (!target.toFile().exists()) {
 			logger.info("Building {}", pom);
 			Properties properties = new Properties();
-			mvnProperties.forEach(p -> properties.put(p, "true"));
+			config.getMvnProperties().forEach(p -> properties.put(p, "true"));
+			properties.put("skipTests", "true");
+
+			List<String> mvnGoals =
+				!config.getMvnGoals().isEmpty() ?
+					config.getMvnGoals() :
+					Collections.singletonList("package");
 
 	    InvocationRequest request = new DefaultInvocationRequest();
 	    request.setPomFile(pom);
@@ -130,16 +124,23 @@ public class CloneAndBuild implements Supplier<Path> {
 	}
 
 	public Path locateJar() {
-		if (jarLocation != null) {
-			if (jarLocation.toFile().exists())
-				return jarLocation;
-
-			throw new BuildException(mvnGoals + " goal did not produce the JAR " + jarLocation);
+		if (config.getJarLocation() != null) {
+			Path customLocation = dest.resolve(config.getJarLocation());
+			if (customLocation.toFile().exists())
+				return customLocation;
+			throw new BuildException("Couldn't find the JAR " + customLocation);
 		}
 
 		// Otherwise just look for the default location
-		File pom = dest.resolve(mvnPom).toFile();
-		Path target = dest.resolve(mvnPom).getParent().resolve("target");
+		File pom =
+			config.getMvnPom() != null ?
+				dest.resolve(config.getMvnPom()).toFile() :
+				dest.resolve("pom.xml").toFile();
+		Path target =
+			config.getMvnPom() != null ?
+				dest.resolve(config.getMvnPom()).getParent().resolve("target") :
+				dest.resolve("target");
+
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pom)) {
 			Model model = reader.read(in);
@@ -148,7 +149,7 @@ public class CloneAndBuild implements Supplier<Path> {
 			Path jar = target.resolve(String.format("%s-%s.jar", aid, vid));
 
 			if (!jar.toFile().exists())
-				throw new BuildException(mvnGoals + " goal did not produce the JAR " + jar);
+				throw new BuildException("Couldn't find the JAR " + jar);
 
 			return jar;
 		} catch (IOException | XmlPullParserException e) {

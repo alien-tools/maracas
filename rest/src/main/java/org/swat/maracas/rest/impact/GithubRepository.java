@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHRepository;
 import org.swat.maracas.rest.MaracasService;
+import org.swat.maracas.rest.breakbot.BreakbotConfig;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.Detection;
 import org.swat.maracas.rest.data.ImpactModel;
@@ -17,13 +18,15 @@ import io.usethesource.vallang.IConstructor;
 import io.usethesource.vallang.IList;
 
 public class GithubRepository implements Impactable {
+	private final MaracasService maracas;
+	private final BreakbotConfig config;
 	private final GHRepository repository;
 	private final String clonePath;
-	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(GithubRepository.class);
 
-	public GithubRepository(MaracasService maracas, GHRepository repository, String clonePath) {
+	public GithubRepository(MaracasService maracas, BreakbotConfig config, GHRepository repository, String clonePath) {
 		this.maracas = maracas;
+		this.config = config;
 		this.repository = repository;
 		this.clonePath = clonePath;
 	}
@@ -36,7 +39,8 @@ public class GithubRepository implements Impactable {
 				.resolve(repository.getBranch(repository.getDefaultBranch()).getSHA1());
 
 			// Clone and build the client
-			Path clientJar = new CloneAndBuild(repository.getHttpTransportUrl(), repository.getDefaultBranch(), clientPath).get();
+			Path clientJar = new CloneAndBuild(repository.getHttpTransportUrl(), repository.getDefaultBranch(),
+				clientPath, config).get();
 
 			// Build impact model
 			// FIXME: we should reuse the existing delta model,

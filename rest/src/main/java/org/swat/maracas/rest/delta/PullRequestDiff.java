@@ -46,9 +46,11 @@ public class PullRequestDiff implements Diffable {
 
 			// Clone and build both repos
 			CompletableFuture<Path> baseFuture = CompletableFuture.supplyAsync(
-					new CloneAndBuild(base.getRepository().getHttpTransportUrl(), base.getRef(), basePath));
+					new CloneAndBuild(base.getRepository().getHttpTransportUrl(), base.getRef(),
+						basePath, config));
 			CompletableFuture<Path> headFuture = CompletableFuture.supplyAsync(
-					new CloneAndBuild(head.getRepository().getHttpTransportUrl(), head.getRef(), headPath));
+					new CloneAndBuild(head.getRepository().getHttpTransportUrl(), head.getRef(),
+						headPath, config));
 			CompletableFuture.allOf(baseFuture, headFuture).join();
 			Path j1 = baseFuture.get();
 			Path j2 = headFuture.get();

@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHBranch;
 import org.swat.maracas.rest.MaracasService;
+import org.swat.maracas.rest.breakbot.BreakbotConfig;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
@@ -17,14 +18,16 @@ import org.swat.maracas.rest.tasks.CloneException;
 import io.usethesource.vallang.IList;
 
 public class GitBranchesDiff implements Diffable {
+	private final MaracasService maracas;
+	private final BreakbotConfig config;
 	private final GHBranch base;
 	private final GHBranch head;
 	private final String clonePath;
-	private final MaracasService maracas;
 	private static final Logger logger = LogManager.getLogger(GitBranchesDiff.class);
 
-	public GitBranchesDiff(MaracasService maracas, GHBranch base, GHBranch head, String clonePath) {
+	public GitBranchesDiff(MaracasService maracas, BreakbotConfig config, GHBranch base, GHBranch head, String clonePath) {
 		this.maracas = maracas;
+		this.config = config;
 		this.base = base;
 		this.head = head;
 		this.clonePath = clonePath;
@@ -42,9 +45,11 @@ public class GitBranchesDiff implements Diffable {
 
 			// Clone and build both repos
 			CompletableFuture<Path> baseFuture = CompletableFuture.supplyAsync(
-					new CloneAndBuild(base.getOwner().getHttpTransportUrl(), base.getName(), basePath));
+					new CloneAndBuild(base.getOwner().getHttpTransportUrl(), base.getName(),
+						basePath, config));
 			CompletableFuture<Path> headFuture = CompletableFuture.supplyAsync(
-					new CloneAndBuild(head.getOwner().getHttpTransportUrl(), head.getName(), headPath));
+					new CloneAndBuild(head.getOwner().getHttpTransportUrl(), head.getName(),
+						headPath, config));
 			CompletableFuture.allOf(baseFuture, headFuture).join();
 			Path j1 = baseFuture.get();
 			Path j2 = headFuture.get();

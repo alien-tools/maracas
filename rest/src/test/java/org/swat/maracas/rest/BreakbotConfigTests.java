@@ -75,7 +75,7 @@ class BreakbotConfigTests {
 		sb.append("build:\n");
 		sb.append("  pom: anotherpom.xml\n");
 		sb.append("  goals: package\n");
-		sb.append("  properties: skipTests");
+		sb.append("  properties: skipTests\n");
 		sb.append("  jar: build/out.jar\n");
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(sb.toString(), Charset.defaultCharset()));
 		assertEquals("anotherpom.xml", c.getMvnPom());
