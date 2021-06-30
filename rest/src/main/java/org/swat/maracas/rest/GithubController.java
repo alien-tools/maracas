@@ -6,6 +6,8 @@ import java.util.concurrent.CompletionException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +29,8 @@ public class GithubController {
 	@Autowired
 	MaracasService maracas;
 
+	private static final Logger logger = LogManager.getLogger(GithubController.class);
+
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
 	public PullRequestResponse analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		@RequestParam(required=false) String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
@@ -37,9 +41,11 @@ public class GithubController {
 			return new PullRequestResponse("processing", null);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		} catch (Exception e) {
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
@@ -65,9 +71,11 @@ public class GithubController {
 			return new PullRequestResponse("This PR isn't being analyzed", null);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		} catch (Exception e) {
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
@@ -80,9 +88,11 @@ public class GithubController {
 			return new PullRequestResponse("ok", delta);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		} catch (CloneException | BuildException | CompletionException e) {
 			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			logger.error(e);
 			return new PullRequestResponse(e.getMessage(), null);
 		}
 	}
