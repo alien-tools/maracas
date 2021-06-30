@@ -1,7 +1,6 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +17,7 @@ import org.swat.maracas.spoon.SpoonHelper;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.cu.position.NoSourcePosition;
 
 public class CompChangesTest {
 	static Set<Detection> detections;
@@ -42,6 +42,8 @@ public class CompChangesTest {
 					return false;
 
 				SourcePosition pos = SpoonHelper.firstLocatableParent(d.element()).getPosition();
+				if (pos instanceof NoSourcePosition)
+					return false;
 				if (!file.equals(pos.getFile().getName().toString()))
 					return false;
 				if (line != pos.getLine())

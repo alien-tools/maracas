@@ -7,7 +7,6 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
-import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtFieldReference;
 
@@ -41,24 +40,25 @@ public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 
 	private <T> void visitCtFieldAccess(CtFieldAccess<T> fieldAccess) {
 		if (fRef.equals(fieldAccess.getVariable())) {
-			String enclosingPkg = fieldAccess.getParent(CtPackage.class).getQualifiedName();
-			String expectedPkg = fRef.getFieldDeclaration().getParent(CtPackage.class).getQualifiedName();
+			String enclosingPkg = getEnclosingPkgName(fieldAccess);
+			String expectedPkg = getEnclosingPkgName(fRef.getFieldDeclaration());
 
 			switch (newAccessModifier) {
+				// Private always breaks
 				case PRIVATE:
 					detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
-				case PACKAGE_PROTECTED: {
+				// Package-private breaks if packages do not match
+				case PACKAGE_PROTECTED:
 					if (!enclosingPkg.equals(expectedPkg))
 						detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
-				}
-				case PROTECTED: {
+				// Protected fails if not a subtype and packages do not match
+				case PROTECTED:
 					if (!fieldAccess.getParent(CtType.class).isSubtypeOf(fRef.getDeclaringType()) &&
 						!enclosingPkg.equals(expectedPkg))
 						detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
-				}
 				default:
 					// Can't happen
 			}

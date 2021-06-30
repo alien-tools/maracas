@@ -37,24 +37,27 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 					throw new RuntimeException("Unmanaged role " + role);
 			};
 
-			// If private, always breaks
-			if (newAccessModifier == AccessModifier.PRIVATE)
-				detection(reference.getParent(), reference, clsRef, use);
+			String enclosingPkg = getEnclosingPkgName(reference);
+			String expectedPkg = getEnclosingPkgName(clsRef.getTypeDeclaration());
 
-			// If protected (inner), breaks if not a subtype
-			if (newAccessModifier == AccessModifier.PROTECTED)
-				if (!reference.getParent(CtType.class).isSubtypeOf(clsRef))
+			switch (newAccessModifier) {
+				// Private always breaks
+				case PRIVATE:
 					detection(reference.getParent(), reference, clsRef, use);
-
-			// If package private, breaks if != package
-			if (newAccessModifier == AccessModifier.PACKAGE_PROTECTED) {
-				// FIXME: ...
-				String refFqn = reference.getQualifiedName();
-				String clsRefFqn = clsRef.getQualifiedName();
-				String refPkg = refFqn.substring(0, refFqn.lastIndexOf("."));
-				String clsRefPkg = clsRefFqn.substring(0, clsRefFqn.lastIndexOf("."));
-				if (!refPkg.equals(clsRefPkg))
-					detection(reference.getParent(), reference, clsRef, use);
+					break;
+				// Package-private breaks if packages do not match
+				case PACKAGE_PROTECTED:
+					if (!enclosingPkg.equals(expectedPkg))
+						detection(reference.getParent(), reference, clsRef, use);
+					break;
+				// Protected fails if not a subtype and packages do not match
+				case PROTECTED:
+					if (!reference.getParent(CtType.class).isSubtypeOf(clsRef) &&
+						!enclosingPkg.equals(expectedPkg))
+						detection(reference.getParent(), reference, clsRef, use);
+					break;
+				default:
+					// Can't happen
 			}
 		}
 	}

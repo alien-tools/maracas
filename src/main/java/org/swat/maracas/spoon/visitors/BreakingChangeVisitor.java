@@ -8,6 +8,7 @@ import org.swat.maracas.spoon.Detection;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.visitor.CtAbstractVisitor;
 
@@ -34,5 +35,16 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 
 	public Set<Detection> getDetections() {
 		return detections;
+	}
+
+	//
+	// Common utilities
+	//
+	protected String getEnclosingPkgName(CtElement e) {
+		CtPackage enclosing = e.getParent(CtPackage.class);
+		return
+			enclosing != null ?
+				enclosing.getQualifiedName() :
+				"";
 	}
 }
