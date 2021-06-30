@@ -110,6 +110,7 @@ public class DeltaVisitor implements FilterVisitor {
 				CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
 
 				BreakingChangeVisitor visitor = switch (c) {
+					case FIELD_REMOVED          -> new FieldRemovedVisitor(fRef);
 					case FIELD_NOW_FINAL        -> new FieldNowFinalVisitor(fRef);
 					case FIELD_NO_LONGER_STATIC -> new FieldNoLongerStaticVisitor(fRef);
 					case FIELD_NOW_STATIC       -> new FieldNowStaticVisitor(fRef);
