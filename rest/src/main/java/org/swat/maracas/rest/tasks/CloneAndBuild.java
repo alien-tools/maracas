@@ -108,6 +108,8 @@ public class CloneAndBuild implements Supplier<Path> {
 	    request.setBatchMode(true);
 
 	    try {
+	    	logger.info("Building {} with pom={} goals={} properties={}",
+	    		pom, mvnGoals, properties);
 		    Invoker invoker = new DefaultInvoker();
 		    InvocationResult result = invoker.execute(request);
 

@@ -19,14 +19,12 @@ import io.usethesource.vallang.IList;
 
 public class GithubRepository implements Impactable {
 	private final MaracasService maracas;
-	private final BreakbotConfig config;
 	private final GHRepository repository;
 	private final String clonePath;
 	private static final Logger logger = LogManager.getLogger(GithubRepository.class);
 
-	public GithubRepository(MaracasService maracas, BreakbotConfig config, GHRepository repository, String clonePath) {
+	public GithubRepository(MaracasService maracas, GHRepository repository, String clonePath) {
 		this.maracas = maracas;
-		this.config = config;
 		this.repository = repository;
 		this.clonePath = clonePath;
 	}
@@ -40,7 +38,7 @@ public class GithubRepository implements Impactable {
 
 			// Clone and build the client
 			Path clientJar = new CloneAndBuild(repository.getHttpTransportUrl(), repository.getDefaultBranch(),
-				clientPath, config).get();
+				clientPath, BreakbotConfig.defaultConfig()).get();
 
 			// Build impact model
 			// FIXME: we should reuse the existing delta model,

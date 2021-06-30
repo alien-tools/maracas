@@ -153,7 +153,7 @@ public class GithubService {
 	private void computeAndWeaveImpact(Delta delta, BreakbotConfig config, String c) {
 		try {
 			GHRepository clientRepo = github.getRepository(c);
-			GithubRepository client = new GithubRepository(maracas, config, clientRepo, clonePath);
+			GithubRepository client = new GithubRepository(maracas, clientRepo, clonePath);
 			ImpactModel impact = client.computeImpact(delta);
 
 			delta.weaveImpact(impact);
