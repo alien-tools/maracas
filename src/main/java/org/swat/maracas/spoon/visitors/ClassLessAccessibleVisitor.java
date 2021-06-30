@@ -20,11 +20,14 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		this.newAccessModifier = newAccessModifier;
 	}
 
+	// FIXME: import errors aren't supported
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
 			CtRole role = reference.getRoleInParent();
 			APIUse use = switch (role) {
+				// FIXME: try to distinguish between regular access to a type,
+				// and access to a type by instantiation (new)
 				case CAST, DECLARING_TYPE, TYPE, ARGUMENT_TYPE, ACCESSED_TYPE, TYPE_ARGUMENT, THROWN, MULTI_TYPE ->
 					APIUse.TYPE_DEPENDENCY;
 				case SUPER_TYPE ->

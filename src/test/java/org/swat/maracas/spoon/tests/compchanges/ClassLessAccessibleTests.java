@@ -1,6 +1,6 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
+import static japicmp.model.JApiCompatibilityChange.*;
 import static org.swat.maracas.spoon.APIUse.*;
 
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testInstantiatePro2PackPriv() {
-		assertDetection("ClassLessAccessiblePro2PackPrivExt.java", 8, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePro2PackPrivExt.java", 8, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
@@ -40,7 +40,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testInstantiatePro2Priv() {
-		assertDetection("ClassLessAccessiblePro2PrivExt.java", 8, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePro2PrivExt.java", 8, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
@@ -72,12 +72,12 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testInstantiatePub2PackPriv() {
-		assertDetection("ClassLessAccessiblePub2PackPrivExt.java", 8, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePub2PackPrivExt.java", 8, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
 	void testInstantiatePub2PackPrivExt() {
-		assertDetection("ClassLessAccessiblePub2PackPrivExt.java", 9, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePub2PackPrivExt.java", 9, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
@@ -95,11 +95,6 @@ class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testImportPub2PackPrivImp() {
 		assertDetection("ClassLessAccessiblePub2PackPrivImp.java", 3, CLASS_LESS_ACCESSIBLE, IMPORT);
-	}
-
-	@Test
-	void testExtendsPub2PackPrivImp() {
-		assertDetection("ClassLessAccessiblePub2PackPrivImp.java", 5, CLASS_LESS_ACCESSIBLE, EXTENDS);
 	}
 
 	@Test
@@ -121,12 +116,12 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testPub2PrivInner() {
-		assertDetection("ClassLessAccessiblePub2PrivExt.java", 8, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePub2PrivExt.java", 8, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
 	void testPub2PrivExtInner() {
-		assertDetection("ClassLessAccessiblePub2PrivExt.java", 9, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePub2PrivExt.java", 9, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
@@ -137,7 +132,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testPub2PrivExtInnerAccessPublicField() {
 		assertDetection("ClassLessAccessiblePub2PrivExt.java", 15, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
-		assertDetection("ClassLessAccessiblePub2PrivExt.java", 15, CLASS_LESS_ACCESSIBLE, METHOD_INVOCATION);
+		assertDetection("ClassLessAccessiblePub2PrivExt.java", 15, CLASS_LESS_ACCESSIBLE, FIELD_ACCESS);
 	}
 
 	@Test
@@ -148,7 +143,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testPub2ProInner() {
-		assertDetection("ClassLessAccessiblePub2ProExt.java", 8, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
+		assertDetection("ClassLessAccessiblePub2ProExt.java", 8, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	// Testing the old CLASS_NO_LONGER_PUBLIC tests
@@ -180,7 +175,6 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testNoLongerPublicExtAccessSuperMethod() {
-		assertDetection("ClassNoLongerPublicExt.java", 20, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 		assertDetection("ClassNoLongerPublicExt.java", 20, CLASS_LESS_ACCESSIBLE, METHOD_INVOCATION);
 	}
 
@@ -192,11 +186,6 @@ class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoLongerPublicImpImp() {
 		assertDetection("ClassNoLongerPublicImp.java", 5, CLASS_LESS_ACCESSIBLE, EXTENDS);
-	}
-
-	@Test
-	void testNoLongerPublicImpOverride() {
-		assertDetection("ClassNoLongerPublicImp.java", 8, CLASS_LESS_ACCESSIBLE, METHOD_OVERRIDE);
 	}
 
 	@Test
@@ -222,6 +211,5 @@ class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoLongerPublicTDInstantiate() {
 		assertDetection("ClassNoLongerPublicTD.java", 14, CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
-		assertDetection("ClassNoLongerPublicTD.java", 14, CLASS_LESS_ACCESSIBLE, INSTANTIATION);
 	}
 }
