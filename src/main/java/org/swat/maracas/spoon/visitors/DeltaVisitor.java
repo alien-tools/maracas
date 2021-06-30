@@ -69,6 +69,7 @@ public class DeltaVisitor implements FilterVisitor {
 
 				if (mRefOpt.isPresent()) {
 					BreakingChangeVisitor visitor = switch (c) {
+						case METHOD_REMOVED      -> new MethodRemovedVisitor(mRefOpt.get());
 						case METHOD_NOW_FINAL    -> new MethodNowFinalVisitor(mRefOpt.get());
 						case METHOD_NOW_ABSTRACT -> new MethodNowAbstractVisitor(mRefOpt.get());
 						default -> null;

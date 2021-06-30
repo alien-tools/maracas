@@ -18,7 +18,7 @@ public class Main {
 		Set<Detection> detections = maracas.computeDetections();
 
 		detections.forEach(d -> {
-			if (d.change() == JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE) {
+			if (d.change() == JApiCompatibilityChange.METHOD_REMOVED) {
 				System.out.println(d);
 			}
 		});
