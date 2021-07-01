@@ -1,6 +1,7 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.swat.maracas.spoon.APIUse;
 import org.swat.maracas.spoon.Detection;
-import org.swat.maracas.spoon.Maracas;
+import org.swat.maracas.spoon.MaracasAnalysis;
 import org.swat.maracas.spoon.SpoonHelper;
 
 import japicmp.model.JApiCompatibilityChange;
@@ -27,10 +28,11 @@ public class CompChangesTest {
 		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
 		Path client = Paths.get("/home/dig/repositories/comp-changes-data/client/src/");
-		Maracas maracas = new Maracas(v1, v2, client);
+		MaracasAnalysis maracas = new MaracasAnalysis(v1, v2);
 
 		maracas.computeDelta();
-		detections = maracas.computeDetections();
+		maracas.computeDetections(client);
+		detections = maracas.getDetections();
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {

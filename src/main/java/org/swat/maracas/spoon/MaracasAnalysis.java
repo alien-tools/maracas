@@ -24,24 +24,22 @@ import spoon.reflect.CtModel;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.declaration.CtElement;
 
-public class Maracas {
+public class MaracasAnalysis {
 	private final Path v1;
 	private final Path v2;
-	private final Path client;
 	private final List<Path> oldCP = new ArrayList<>();
 	private final List<Path> newCP = new ArrayList<>();
 	private final Launcher launcher = new Launcher();
 	private CtModel model;
-	private List<JApiClass> delta;
+	private Delta delta;
 	private Set<Detection> detections;
 
-	public Maracas(Path v1, Path v2, Path client) {
+	public MaracasAnalysis(Path v1, Path v2) {
 		this.v1 = v1;
 		this.v2 = v2;
-		this.client = client;
 	}
 
-	public List<JApiClass> computeDelta() {
+	public void computeDelta() {
 		Options defaultOptions = getDefaultOptions();
 		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(defaultOptions);
 
@@ -58,18 +56,17 @@ public class Maracas {
 		OutputFilter filter = new OutputFilter(defaultOptions);
 		filter.filter(classes);
 
-		delta = classes;
-		return delta;
+		delta = new Delta(classes);
 	}
 
-	public Set<Detection> computeDetections() {
+	public void computeDetections(Path client) {
 		launcher.addInputResource(client.toAbsolutePath().toString());
 		String[] cp = { v1.toAbsolutePath().toString() };
 		launcher.getEnvironment().setSourceClasspath(cp);
 		model = launcher.buildModel();
 
 		DeltaVisitor deltaVisitor = new DeltaVisitor(model.getRootPackage());
-		Filter.filter(delta, deltaVisitor);
+		Filter.filter(delta.getClasses(), deltaVisitor);
 
 		List<BreakingChangeVisitor> visitors = deltaVisitor.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
@@ -77,7 +74,6 @@ public class Maracas {
 		visitor.scan(model.getRootPackage());
 
 		detections = visitor.getDetections();
-		return detections;
 	}
 
 	public void writeAnnotatedClient(Path output) {
@@ -116,5 +112,21 @@ public class Maracas {
 		}
 
 		return defaultOptions;
+	}
+
+	public Path getV1() {
+		return v1;
+	}
+
+	public Path getV2() {
+		return v2;
+	}
+
+	public Delta getDelta() {
+		return delta;
+	}
+
+	public Set<Detection> getDetections() {
+		return detections;
 	}
 }
