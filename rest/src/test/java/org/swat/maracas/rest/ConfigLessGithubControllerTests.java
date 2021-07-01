@@ -63,10 +63,10 @@ class ConfigLessGithubControllerTests {
 				.andExpect(status().isAccepted())
 				.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
 			ResultActions res = waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3");
-			checkDeltaWithoutDetections(res);
+			checkReportWithoutDetections(res);
 
 			mockServer.verify(
 				request()

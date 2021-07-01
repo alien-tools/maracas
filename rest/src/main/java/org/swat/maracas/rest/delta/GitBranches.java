@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +17,8 @@ import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.swat.maracas.rest.breakbot.BreakbotConfig;
+import org.swat.maracas.rest.data.Delta;
+import org.swat.maracas.rest.data.Detection;
 import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
@@ -99,7 +102,13 @@ public class GitBranches implements Diffable {
 				}
 			});
 
-			return new MaracasReport(analyzer);
+			return new MaracasReport(
+				Delta.fromMaracasDelta(analyzer.getDelta()),
+				analyzer.getDetections()
+					.stream()
+					.map(d -> Detection.fromMaracasDetection(d))
+					.collect(Collectors.toSet())
+			);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();

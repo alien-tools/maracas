@@ -44,7 +44,7 @@ class GithubControllerTests {
 
 	@Test
 	void testSubmitAndCheckPRSync() throws Exception {
-		checkDelta(mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/3")));
+		checkReport(mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/3")));
 	}
 
 	@Test
@@ -53,9 +53,9 @@ class GithubControllerTests {
 			.andExpect(status().isAccepted())
 			.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-			.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+			.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-		checkDelta(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+		checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 	}
 
 	@Test
@@ -77,13 +77,13 @@ class GithubControllerTests {
 				.andExpect(status().isAccepted())
 				.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
 			mvc.perform(get("/github/pr/tdegueul/comp-changes/3"))
 				.andExpect(status().isProcessing())
-				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-			checkDelta(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+			checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 
 			mockServer.verify(
 				request()
@@ -115,13 +115,13 @@ class GithubControllerTests {
 				.andExpect(status().isAccepted())
 				.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
 			mvc.perform(get("/github/pr/tdegueul/comp-changes/3"))
 				.andExpect(status().isProcessing())
-				.andExpect(content().json("{'message': 'processing', 'delta': null}"));
+				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-			checkDelta(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+			checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 
 			mockServer.verify(
 				request()

@@ -11,8 +11,12 @@ public class Detection {
 	private int endLine;
 	private String url;
 
-	public Detection() {
+	private Detection() {
 
+	}
+
+	public static Detection fromMaracasDetection(org.swat.maracas.spoon.Detection d) {
+		return new Detection();
 	}
 
 	public Detection(String elem, String used, String src, String apiUse) {

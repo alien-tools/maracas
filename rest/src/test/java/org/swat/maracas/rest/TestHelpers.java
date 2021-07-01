@@ -1,12 +1,8 @@
 package org.swat.maracas.rest;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -17,22 +13,22 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class TestHelpers {
-	public static void checkDelta(ResultActions res) throws Exception {
+	public static void checkReport(ResultActions res) throws Exception {
 		res
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message", is("ok")))
-			.andExpect(jsonPath("$.delta.breakingChanges", not(empty())))
-			.andExpect(jsonPath("$.delta.breakingChanges[*].detections[*]", not(empty())));
+			.andExpect(jsonPath("$.report.breakingChanges", not(empty())))
+			.andExpect(jsonPath("$.report.breakingChanges[*].detections[*]", not(empty())));
 	}
 
-	public static void checkDeltaWithoutDetections(ResultActions res) throws Exception {
+	public static void checkReportWithoutDetections(ResultActions res) throws Exception {
 		res
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message", is("ok")))
-			.andExpect(jsonPath("$.delta.breakingChanges", not(empty())))
-			.andExpect(jsonPath("$.delta.breakingChanges[*].detections[*]", is(empty())));
+			.andExpect(jsonPath("$.report.breakingChanges", not(empty())))
+			.andExpect(jsonPath("$.report.breakingChanges[*].detections[*]", is(empty())));
 	}
 
 	// Sigh

@@ -91,7 +91,6 @@ public class CloneAndBuild implements Supplier<Path> {
 			throw new BuildException("The pom file " + pom + " could not be found in " + dest);
 
 		if (!target.toFile().exists()) {
-			logger.info("Building {}", pom);
 			Properties properties = new Properties();
 			config.getMvnProperties().forEach(p -> properties.put(p, "true"));
 			properties.put("skipTests", "true");

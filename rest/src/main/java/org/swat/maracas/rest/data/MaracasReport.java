@@ -2,20 +2,24 @@ package org.swat.maracas.rest.data;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.swat.maracas.spoon.VersionAnalyzer;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MaracasReport {
-	private VersionAnalyzer analyzer;
-	private Throwable error;
+	private final Delta delta;
+	private final Set<Detection> detections;
+	private final Throwable error;
 
-	public MaracasReport(VersionAnalyzer analyzer) {
-		this.analyzer = analyzer;
+	public MaracasReport(Delta delta, Set<Detection> detections) {
+		this.delta = delta;
+		this.detections = detections;
+		this.error = null;
 	}
 
 	public MaracasReport(Throwable error) {
+		this.delta = null;
+		this.detections = null;
 		this.error = error;
 	}
 
