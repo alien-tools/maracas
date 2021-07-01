@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.swat.maracas.rest.data.Delta;
+import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.data.PullRequestResponse;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneException;
@@ -27,7 +27,7 @@ public class GithubController {
 	@Autowired
 	GithubService github;
 	@Autowired
-	MaracasService maracas;
+	MaracasRascalService maracas;
 
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 
@@ -55,9 +55,9 @@ public class GithubController {
 		HttpServletResponse response) {
 		try {
 			// Either we have it already
-			Delta delta = github.getDelta(owner, repository, prId);
-			if (delta != null) {
-				return new PullRequestResponse("ok", delta);
+			MaracasReport report = github.getReport(owner, repository, prId);
+			if (report != null) {
+				return new PullRequestResponse("ok", report);
 			}
 
 			// Or we're currently computing it
@@ -84,8 +84,8 @@ public class GithubController {
 	public PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
 		HttpServletResponse response) {
 		try {
-			Delta delta = github.analyzePRSync(owner, repository, prId);
-			return new PullRequestResponse("ok", delta);
+			MaracasReport report = github.analyzePRSync(owner, repository, prId);
+			return new PullRequestResponse("ok", report);
 		} catch (IOException e) {
 			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			logger.error(e);

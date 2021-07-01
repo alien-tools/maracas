@@ -6,19 +6,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PullRequestResponse {
 	private final String message;
-	private final Delta delta;
+	private final MaracasReport report;
 
-	public PullRequestResponse(String message, Delta delta) {
+	public PullRequestResponse(String message, MaracasReport report) {
 		this.message = message;
-		this.delta = delta;
+		this.report = report;
 	}
 
 	public String getMessage() {
 		return message;
 	}
 
-	public Delta getDelta() {
-		return delta;
+	public MaracasReport getReport() {
+		return report;
 	}
 
 	public String toJson() throws IOException {

@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Profile;
 public class MaracasTestConfiguration {
 	@Bean
 	@Primary
-	public MaracasService maracasService() {
+	public MaracasRascalService maracasService() {
 		//return Mockito.mock(MaracasService.class);
-		return new MaracasService();
+		return new MaracasRascalService();
 	}
 }

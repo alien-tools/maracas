@@ -8,7 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
-import org.swat.maracas.rest.data.Delta;
+import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.data.PullRequestResponse;
 
 public class Breakbot {
@@ -21,7 +21,7 @@ public class Breakbot {
 		this.installationId = installationId;
 	}
 
-	public boolean sendPullRequestResponse(Delta d) {
+	public boolean sendPullRequestResponse(MaracasReport d) {
 		try {
 			RestTemplate rest = new RestTemplate();
 

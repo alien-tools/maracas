@@ -25,11 +25,11 @@ import io.usethesource.vallang.IValue;
 import io.usethesource.vallang.IValueFactory;
 
 @Service
-public class MaracasService {
+public class MaracasRascalService {
 	private final ConcurrentSoftReferenceObjectPool<Evaluator> pool = getEvaluatorPool();
-	private static final Logger logger = LogManager.getLogger(MaracasService.class);
+	private static final Logger logger = LogManager.getLogger(MaracasRascalService.class);
 
-	public IList computeDelta(Path oldJar, Path newJar, Path sources) {
+	private IList computeDelta(Path oldJar, Path newJar, Path sources) {
 		logger.info("Computing delta ({} -> {})", oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run(eval -> {
@@ -42,7 +42,7 @@ public class MaracasService {
 		});
 	}
 
-	public IList computeImpact(Path oldJar, Path newJar, Path clientJar, Path clientSources) {
+	private IList computeImpact(Path oldJar, Path newJar, Path clientJar, Path clientSources) {
 		logger.info("Computing impact on {} ({} -> {})", clientJar, oldJar, newJar);
 		IValueFactory vf = ValueFactoryFactory.getValueFactory();
 		return run(eval -> {
@@ -56,11 +56,11 @@ public class MaracasService {
 		});
 	}
 
-	public ISet getChangedEntities(IValue delta) {
+	private ISet getChangedEntities(IValue delta) {
 		return (ISet) run(eval -> eval.call("getChangedEntities", delta));
 	}
 
-	public <T> T run(Function<Evaluator, T> func) {
+	private <T> T run(Function<Evaluator, T> func) {
 		return pool.useAndReturn(func);
 	}
 
