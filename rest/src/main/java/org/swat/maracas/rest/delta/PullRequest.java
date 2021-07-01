@@ -64,7 +64,7 @@ public class PullRequest implements Diffable {
 			logger.info("Computing delta {} -> {}", j1, j2);
 			analyzer.computeDelta();
 
-			config.getGithubClients().forEach(c -> {
+			config.getGithubClients().parallelStream().forEach(c -> {
 				try {
 					// Clone the client
 					logger.info("Building client {}", c);
