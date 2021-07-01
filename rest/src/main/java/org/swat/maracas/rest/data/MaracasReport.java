@@ -23,6 +23,10 @@ public class MaracasReport {
 		this.error = error;
 	}
 
+	public Delta getDelta() {
+		return delta;
+	}
+
 	public Throwable getError() {
 		return error;
 	}

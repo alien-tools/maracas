@@ -70,7 +70,7 @@ public class GitBranches implements Diffable {
 			config.getGithubClients().parallelStream().forEach(c -> {
 				try {
 					// Clone the client
-					logger.info("Building client {}", c);
+					logger.info("Cloning client {}", c);
 					GHRepository clientRepo = github.getRepository(c);
 					String clientBranch = clientRepo.getDefaultBranch();
 					Path clientPath = Paths.get(clonePath)
