@@ -3,16 +3,16 @@ package org.swat.maracas.rest.data;
 import java.io.File;
 import java.io.IOException;
 
-import org.swat.maracas.spoon.MaracasAnalysis;
+import org.swat.maracas.spoon.VersionAnalyzer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MaracasReport {
-	private MaracasAnalysis analysis;
+	private VersionAnalyzer analyzer;
 	private Throwable error;
 
-	public MaracasReport(MaracasAnalysis analysis) {
-		this.analysis = analysis;
+	public MaracasReport(VersionAnalyzer analyzer) {
+		this.analyzer = analyzer;
 	}
 
 	public MaracasReport(Throwable error) {

@@ -20,7 +20,7 @@ import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
 import org.swat.maracas.rest.tasks.CloneException;
-import org.swat.maracas.spoon.MaracasAnalysis;
+import org.swat.maracas.spoon.VersionAnalyzer;
 
 public class PullRequest implements Diffable {
 	private final GitHub github;
@@ -60,11 +60,11 @@ public class PullRequest implements Diffable {
 			Path j2 = headFuture.get();
 
 			// Compute delta model
-			MaracasAnalysis analysis = new MaracasAnalysis(j1, j2);
+			VersionAnalyzer analyzer = new VersionAnalyzer(j1, j2);
 			logger.info("Computing delta {} -> {}", j1, j2);
-			analysis.computeDelta();
+			analyzer.computeDelta();
 
-			config.getGithubClients().parallelStream().forEach(c -> {
+			config.getGithubClients().forEach(c -> {
 				try {
 					// Clone the client
 					logger.info("Building client {}", c);
@@ -95,13 +95,13 @@ public class PullRequest implements Diffable {
 					logger.info("Computing detections on client {}", c);
 					// FIXME: let the user configure the sources to analyse in the
 					//        config file
-					analysis.computeDetections(clientPath.resolve("src/main/java"));
+					analyzer.analyzeClient(clientPath.resolve("src/main/java"));
 				} catch (Exception e) {
-					logger.error(e);
+					logger.error("Error building {}", c, e);
 				}
 			});
 
-			return new MaracasReport(analysis);
+			return new MaracasReport(analyzer);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
