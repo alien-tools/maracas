@@ -93,7 +93,9 @@ public class PullRequest implements Diffable {
 					} else logger.info("{} exists. Skipping.", clientPath);
 
 					logger.info("Computing detections on client {}", c);
-					analysis.computeDetections(clientPath);
+					// FIXME: let the user configure the sources to analyse in the
+					//        config file
+					analysis.computeDetections(clientPath.resolve("src/main/java"));
 				} catch (Exception e) {
 					logger.error(e);
 				}

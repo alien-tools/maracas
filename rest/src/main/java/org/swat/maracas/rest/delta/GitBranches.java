@@ -91,7 +91,9 @@ public class GitBranches implements Diffable {
 					}
 
 					logger.info("Computing detections on client {}", c);
-					analysis.computeDetections(clientPath);
+					// FIXME: let the user configure the sources to analyse in the
+					//        config file
+					analysis.computeDetections(clientPath.resolve("src/main/java"));
 				} catch (IOException e) {
 					logger.error(e);
 				}
