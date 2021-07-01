@@ -5,11 +5,8 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.swat.maracas.rest.TestHelpers.checkDeltaWithoutDetections;
-import static org.swat.maracas.rest.TestHelpers.waitForPRAnalysis;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.swat.maracas.rest.TestHelpers.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,13 +35,13 @@ class ConfigLessGithubControllerTests {
 
 	@Value("${maracas.clone-path}")
 	private String clonePath;
-	@Value("${maracas.delta-path}")
-	private String deltaPath;
+	@Value("${maracas.report-path}")
+	private String reportPath;
 
 	@BeforeEach
 	public void cleanData() throws IOException {
 		FileUtils.deleteDirectory(new File(clonePath));
-		FileUtils.deleteDirectory(new File(deltaPath));
+		FileUtils.deleteDirectory(new File(reportPath));
 	}
 
 	@Test

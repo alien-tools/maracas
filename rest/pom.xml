@@ -33,11 +33,6 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.ow2.asm</groupId>
-			<artifactId>asm-all</artifactId>
-			<version>5.0.4</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
 		</dependency>
@@ -57,21 +52,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.rascalmpl</groupId>
-			<artifactId>rascal</artifactId>
-			<version>0.19.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.siom79.japicmp</groupId>
-			<artifactId>japicmp</artifactId>
-			<version>0.14.5-maracas</version>
-		</dependency>
-		<dependency>
-			<groupId>org.swat.maracas</groupId>
-			<artifactId>maracas</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
@@ -103,37 +83,4 @@
 			<version>5.11.1</version>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<dependencies>
-					<!-- The following enables the "thin jar" deployment option. -->
-					<dependency>
-						<groupId>org.springframework.boot.experimental</groupId>
-						<artifactId>spring-boot-thin-layout</artifactId>
-						<version>1.0.27.RELEASE</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.springframework.boot.experimental</groupId>
-				<artifactId>spring-boot-thin-maven-plugin</artifactId>
-				<version>1.0.27.RELEASE</version>
-				<executions>
-					<execution>
-						<!-- Download the dependencies at build time -->
-						<id>resolve</id>
-						<goals>
-							<goal>resolve</goal>
-						</goals>
-						<inherited>false</inherited>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
 </project>

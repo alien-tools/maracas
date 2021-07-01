@@ -1,7 +1,7 @@
 package org.swat.maracas.rest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 import java.nio.charset.Charset;
 
@@ -49,12 +49,12 @@ class BreakbotConfigTests {
 		sb.append("  goals: package\n");
 		sb.append("  properties: skipTests");
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(sb.toString(), Charset.defaultCharset()));
-		assertEquals("anotherpom.xml", c.getMvnPom());
+		assertThat(c.getMvnPom(), is("anotherpom.xml"));
 		assertThat(c.getMvnGoals(), hasSize(1));
-		assertEquals("package", c.getMvnGoals().get(0));
+		assertThat(c.getMvnGoals().get(0), is("package"));
 		assertThat(c.getMvnProperties(), hasSize(1));
-		assertEquals("skipTests", c.getMvnProperties().get(0));
-		assertNull(c.getJarLocation());
+		assertThat(c.getMvnProperties().get(0), is("skipTests"));
+		assertThat(c.getJarLocation(), nullValue());
 	}
 
 	@Test
@@ -63,8 +63,8 @@ class BreakbotConfigTests {
 		sb.append("build:\n");
 		sb.append("  jar: build/out.jar\n");
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(sb.toString(), Charset.defaultCharset()));
-		assertEquals("build/out.jar", c.getJarLocation());
-		assertNull(c.getMvnPom());
+		assertThat(c.getJarLocation(), is("build/out.jar"));
+		assertThat(c.getMvnPom(), nullValue());
 		assertThat(c.getMvnGoals(), is(empty()));
 		assertThat(c.getMvnProperties(), is(empty()));
 	}
@@ -78,12 +78,12 @@ class BreakbotConfigTests {
 		sb.append("  properties: skipTests\n");
 		sb.append("  jar: build/out.jar\n");
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(sb.toString(), Charset.defaultCharset()));
-		assertEquals("anotherpom.xml", c.getMvnPom());
+		assertThat(c.getMvnPom(), is("anotherpom.xml"));
 		assertThat(c.getMvnGoals(), hasSize(1));
-		assertEquals("package", c.getMvnGoals().get(0));
+		assertThat(c.getMvnGoals().get(0), is("package"));
 		assertThat(c.getMvnProperties(), hasSize(1));
-		assertEquals("skipTests", c.getMvnProperties().get(0));
-		assertEquals("build/out.jar", c.getJarLocation());
+		assertThat(c.getMvnProperties().get(0), is("skipTests"));
+		assertThat(c.getJarLocation(), is("build/out.jar"));
 	}
 
 }

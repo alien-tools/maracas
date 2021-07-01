@@ -28,8 +28,6 @@ import org.swat.maracas.rest.delta.PullRequest;
 public class GithubService {
 	@Autowired
 	GitHub github;
-	@Autowired
-	MaracasRascalService maracas;
 
 	private Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(GithubService.class);

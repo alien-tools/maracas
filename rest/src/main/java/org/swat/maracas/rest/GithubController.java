@@ -26,8 +26,6 @@ import org.swat.maracas.rest.tasks.CloneException;
 public class GithubController {
 	@Autowired
 	GithubService github;
-	@Autowired
-	MaracasRascalService maracas;
 
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 

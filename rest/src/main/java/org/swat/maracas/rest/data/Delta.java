@@ -6,15 +6,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.usethesource.vallang.IConstructor;
-import io.usethesource.vallang.IList;
 
 public class Delta {
 	private Path jarV1;
@@ -82,14 +78,6 @@ public class Delta {
 				logger.warn("Couldn't find matching BC for {} => {}",
 					d.getElem(), d.getUsed());
 		});
-	}
-
-	public static Delta fromRascal(IList delta) {
-		return new Delta(
-			delta.stream()
-				.map(e -> BreakingChangeInstance.fromRascal((IConstructor) e))
-				.collect(Collectors.toList())
-		);
 	}
 
 	public static Delta fromJson(File json) throws IOException {

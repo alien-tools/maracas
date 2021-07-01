@@ -3,12 +3,6 @@ package org.swat.maracas.rest.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.usethesource.vallang.IBool;
-import io.usethesource.vallang.IConstructor;
-import io.usethesource.vallang.IInteger;
-import io.usethesource.vallang.IList;
-import io.usethesource.vallang.IString;
-
 public class BreakingChangeInstance {
 	private String type;
 	private String declaration;
@@ -32,24 +26,6 @@ public class BreakingChangeInstance {
 		this.endLine = endLine;
 		this.sourceCompatible = sourceCompatible;
 		this.binaryCompatible = binaryCompatible;
-	}
-
-	public static BreakingChangeInstance fromRascal(IConstructor instance) {
-		return new BreakingChangeInstance(
-			((IString) instance.get("typ")).getValue(),
-			((IString) instance.get("decl")).getValue(),
-			((IString) instance.get("path")).getValue(),
-			((IInteger) instance.get("startLine")).intValue(),
-			((IInteger) instance.get("endLine")).intValue(),
-			((IBool) instance.get("source")).getValue(),
-			((IBool) instance.get("binary")).getValue()
-		);
-	}
-
-	public void addDetectionsFromRascal(IList rascalDetections) {
-		rascalDetections.forEach(d -> {
-			detections.add(Detection.fromRascal(((IConstructor) d)));
-		});
 	}
 
 	public void addDetection(Detection d) {

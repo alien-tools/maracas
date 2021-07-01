@@ -1,9 +1,5 @@
 package org.swat.maracas.rest.data;
 
-import io.usethesource.vallang.IConstructor;
-import io.usethesource.vallang.IInteger;
-import io.usethesource.vallang.IString;
-
 public class Detection {
 	private String clientUrl;
 	private String elem;
@@ -95,17 +91,5 @@ public class Detection {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public static Detection fromRascal(IConstructor detection) {
-		return new Detection(
-			((IString) detection.get("elem")).getValue(),
-			((IString) detection.get("used")).getValue(),
-			((IString) detection.get("src")).getValue(),
-			((IString) detection.get("apiUse")).getValue(),
-			((IString) detection.get("path")).getValue(),
-			((IInteger) detection.get("startLine")).intValue(),
-			((IInteger) detection.get("endLine")).intValue()
-		);
 	}
 }

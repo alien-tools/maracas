@@ -3,10 +3,6 @@ package org.swat.maracas.rest.data;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import io.usethesource.vallang.IConstructor;
-import io.usethesource.vallang.IList;
 
 public class ImpactModel {
 	private String clientUrl;
@@ -61,13 +57,5 @@ public class ImpactModel {
 
 	public Throwable getError() {
 		return error;
-	}
-
-	public static ImpactModel fromRascal(IList detections) {
-		return new ImpactModel(
-			detections.stream()
-				.map(d -> Detection.fromRascal((IConstructor) d))
-				.collect(Collectors.toList())
-		);
 	}
 }
