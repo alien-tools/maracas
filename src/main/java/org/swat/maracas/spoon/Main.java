@@ -13,10 +13,10 @@ public class Main {
 		Path c = Paths.get("/home/dig/repositories/comp-changes-data/client/src/");
 		Path output = Paths.get("/home/dig/repositories/comp-changes-data/client-commented/src");
 
-		MaracasAnalysis maracas = new MaracasAnalysis(v1, v2);
-		maracas.computeDelta();
-		maracas.computeDetections(c);
-		Set<Detection> detections = maracas.getDetections();
+		VersionAnalyzer version = new VersionAnalyzer(v1, v2);
+		version.computeDelta();
+		ClientAnalyzer analyzer = version.analyzeClient(c);
+		Set<Detection> detections = version.getDetections();
 
 		detections.forEach(d -> {
 			if (d.change() == JApiCompatibilityChange.FIELD_REMOVED) {
@@ -24,6 +24,6 @@ public class Main {
 			}
 		});
 
-		maracas.writeAnnotatedClient(output);
+		analyzer.writeAnnotatedClient(output);
 	}
 }

@@ -2,12 +2,12 @@ package org.swat.maracas.spoon;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.swat.maracas.spoon.visitors.BreakingChangeVisitor;
-import org.swat.maracas.spoon.visitors.CombinedVisitor;
-import org.swat.maracas.spoon.visitors.DeltaVisitor;
+import java.util.stream.Collectors;
 
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
@@ -16,25 +16,18 @@ import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.config.Options;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
-import japicmp.output.Filter;
 import japicmp.output.OutputFilter;
 import japicmp.util.Optional;
-import spoon.Launcher;
-import spoon.reflect.CtModel;
-import spoon.reflect.code.CtComment.CommentType;
-import spoon.reflect.declaration.CtElement;
 
-public class MaracasAnalysis {
+public class VersionAnalyzer {
 	private final Path v1;
 	private final Path v2;
 	private final List<Path> oldCP = new ArrayList<>();
 	private final List<Path> newCP = new ArrayList<>();
-	private final Launcher launcher = new Launcher();
-	private CtModel model;
+	private final Map<Path, Set<Detection>> clients = new HashMap<>();
 	private Delta delta;
-	private Set<Detection> detections;
 
-	public MaracasAnalysis(Path v1, Path v2) {
+	public VersionAnalyzer(Path v1, Path v2) {
 		this.v1 = v1;
 		this.v2 = v2;
 	}
@@ -59,36 +52,11 @@ public class MaracasAnalysis {
 		delta = new Delta(classes);
 	}
 
-	public void computeDetections(Path client) {
-		launcher.addInputResource(client.toAbsolutePath().toString());
-		String[] cp = { v1.toAbsolutePath().toString() };
-		launcher.getEnvironment().setSourceClasspath(cp);
-		model = launcher.buildModel();
-
-		DeltaVisitor deltaVisitor = new DeltaVisitor(model.getRootPackage());
-		Filter.filter(delta.getClasses(), deltaVisitor);
-
-		List<BreakingChangeVisitor> visitors = deltaVisitor.getVisitors();
-		CombinedVisitor visitor = new CombinedVisitor(visitors);
-
-		visitor.scan(model.getRootPackage());
-
-		detections = visitor.getDetections();
-	}
-
-	public void writeAnnotatedClient(Path output) {
-		detections.forEach(d -> {
-			CtElement anchor = SpoonHelper.firstLocatableParent(d.element());
-			String comment = String.format("[%s:%s]", d.change(), d.use());
-
-			if (anchor != null)
-				anchor.addComment(model.getRootPackage().getFactory().Code().createComment(comment, CommentType.BLOCK));
-			else
-				System.out.println("Cannot attach comment on " + d);
-		});
-
-		launcher.setSourceOutputDirectory(output.toFile());
-		launcher.prettyprint();
+	public ClientAnalyzer analyzeClient(Path client) {
+		ClientAnalyzer analyzer = new ClientAnalyzer(delta, client, v1);
+		analyzer.computeDetections();
+		clients.put(client, analyzer.getDetections());
+		return analyzer;
 	}
 
 	public Options getDefaultOptions() {
@@ -127,6 +95,9 @@ public class MaracasAnalysis {
 	}
 
 	public Set<Detection> getDetections() {
-		return detections;
+		return clients.values()
+			.stream()
+			.flatMap(Collection::stream)
+			.collect(Collectors.toSet());
 	}
 }
