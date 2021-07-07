@@ -13,7 +13,7 @@ import spoon.reflect.reference.CtFieldReference;
 public class FieldNowStaticVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
 
-	protected FieldNowStaticVisitor(CtFieldReference<?> fRef) {
+	public FieldNowStaticVisitor(CtFieldReference<?> fRef) {
 		super(JApiCompatibilityChange.FIELD_NOW_STATIC);
 		this.fRef = fRef;
 	}

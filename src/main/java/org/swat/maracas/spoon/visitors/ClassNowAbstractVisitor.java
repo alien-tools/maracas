@@ -13,7 +13,7 @@ import spoon.reflect.reference.CtTypeReference;
 public class ClassNowAbstractVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
 
-	protected ClassNowAbstractVisitor(CtTypeReference<?> clsRef) {
+	public ClassNowAbstractVisitor(CtTypeReference<?> clsRef) {
 		super(JApiCompatibilityChange.CLASS_NOW_ABSTRACT);
 		this.clsRef = clsRef;
 	}

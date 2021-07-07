@@ -17,7 +17,7 @@ import spoon.reflect.reference.CtTypeReference;
 public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 	private final CtExecutableReference<?> mRef;
 
-	protected MethodNowAbstractVisitor(CtExecutableReference<?> mRef) {
+	public MethodNowAbstractVisitor(CtExecutableReference<?> mRef) {
 		super(JApiCompatibilityChange.METHOD_NOW_ABSTRACT);
 		this.mRef = mRef;
 	}

@@ -8,7 +8,7 @@ import spoon.reflect.reference.CtTypeReference;
  *   - Any reference to the now-removed class
  */
 public class ClassRemovedVisitor extends TypeReferenceVisitor {
-	protected ClassRemovedVisitor(CtTypeReference<?> clsRef) {
+	public ClassRemovedVisitor(CtTypeReference<?> clsRef) {
 		super(JApiCompatibilityChange.CLASS_REMOVED, clsRef);
 	}
 }

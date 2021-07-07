@@ -15,7 +15,7 @@ import spoon.reflect.reference.CtFieldReference;
 public class FieldRemovedVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
 
-	protected FieldRemovedVisitor(CtFieldReference<?> fRef) {
+	public FieldRemovedVisitor(CtFieldReference<?> fRef) {
 		super(JApiCompatibilityChange.FIELD_REMOVED);
 		this.fRef = fRef;
 	}

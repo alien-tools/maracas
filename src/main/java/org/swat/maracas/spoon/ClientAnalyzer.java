@@ -4,11 +4,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import org.swat.maracas.spoon.delta.Delta;
 import org.swat.maracas.spoon.visitors.BreakingChangeVisitor;
 import org.swat.maracas.spoon.visitors.CombinedVisitor;
-import org.swat.maracas.spoon.visitors.DeltaVisitor;
 
-import japicmp.output.Filter;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtComment.CommentType;
@@ -34,10 +33,7 @@ public class ClientAnalyzer {
 		launcher.getEnvironment().setSourceClasspath(javaCp);
 		model = launcher.buildModel();
 
-		DeltaVisitor deltaVisitor = new DeltaVisitor(model.getRootPackage());
-		Filter.filter(delta.getClasses(), deltaVisitor);
-
-		List<BreakingChangeVisitor> visitors = deltaVisitor.getVisitors();
+		List<BreakingChangeVisitor> visitors = delta.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
 
 		visitor.scan(model.getRootPackage());

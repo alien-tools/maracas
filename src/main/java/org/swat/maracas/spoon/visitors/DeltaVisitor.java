@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import org.swat.maracas.spoon.SpoonHelper;
+
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -64,7 +66,7 @@ public class DeltaVisitor implements FilterVisitor {
 				Optional<CtExecutableReference<?>> mRefOpt =
 					clsRef.getDeclaredExecutables()
 					.stream()
-					.filter(m -> matchingSignatures(m, oldMethod))
+					.filter(m -> SpoonHelper.matchingSignatures(m, oldMethod))
 					.findFirst();
 
 				if (mRefOpt.isPresent()) {
@@ -142,10 +144,5 @@ public class DeltaVisitor implements FilterVisitor {
 
 	@Override
 	public void visit(JApiSuperclass elem) {
-	}
-
-	private boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtMethod japiMethod) {
-		return
-			japiMethod.getName().concat(japiMethod.getSignature()).startsWith(spoonMethod.getSignature());
 	}
 }

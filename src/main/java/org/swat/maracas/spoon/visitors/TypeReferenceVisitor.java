@@ -11,7 +11,7 @@ import spoon.reflect.reference.CtTypeReference;
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	protected final CtTypeReference<?> clsRef;
 
-	protected TypeReferenceVisitor(JApiCompatibilityChange change, CtTypeReference<?> clsRef) {
+	public TypeReferenceVisitor(JApiCompatibilityChange change, CtTypeReference<?> clsRef) {
 		super(change);
 		this.clsRef = clsRef;
 	}

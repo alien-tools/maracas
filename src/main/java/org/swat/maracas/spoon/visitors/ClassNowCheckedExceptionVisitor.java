@@ -21,7 +21,7 @@ import spoon.reflect.reference.CtTypeReference;
 public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
 
-	protected ClassNowCheckedExceptionVisitor(CtTypeReference<?> clsRef) {
+	public ClassNowCheckedExceptionVisitor(CtTypeReference<?> clsRef) {
 		super(JApiCompatibilityChange.CLASS_NOW_CHECKED_EXCEPTION);
 		this.clsRef = clsRef;
 	}

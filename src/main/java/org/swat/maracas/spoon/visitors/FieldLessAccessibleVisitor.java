@@ -22,7 +22,7 @@ public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
 	private final AccessModifier newAccessModifier;
 
-	protected FieldLessAccessibleVisitor(CtFieldReference<?> fRef, AccessModifier newAccessModifier) {
+	public FieldLessAccessibleVisitor(CtFieldReference<?> fRef, AccessModifier newAccessModifier) {
 		super(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE);
 		this.fRef = fRef;
 		this.newAccessModifier = newAccessModifier;

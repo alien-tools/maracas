@@ -14,7 +14,7 @@ import spoon.reflect.reference.CtExecutableReference;
 public class MethodRemovedVisitor extends BreakingChangeVisitor {
 	private final CtExecutableReference<?> mRef;
 
-	protected MethodRemovedVisitor(CtExecutableReference<?> mRef) {
+	public MethodRemovedVisitor(CtExecutableReference<?> mRef) {
 		super(JApiCompatibilityChange.METHOD_REMOVED);
 		this.mRef = mRef;
 	}

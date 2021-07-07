@@ -16,7 +16,7 @@ import spoon.reflect.reference.CtFieldReference;
 public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
 
-	protected FieldNoLongerStaticVisitor(CtFieldReference<?> fRef) {
+	public FieldNoLongerStaticVisitor(CtFieldReference<?> fRef) {
 		super(JApiCompatibilityChange.FIELD_NO_LONGER_STATIC);
 		this.fRef = fRef;
 	}

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.swat.maracas.spoon.delta.Delta;
+
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
@@ -18,6 +20,9 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
 import japicmp.util.Optional;
+import spoon.Launcher;
+import spoon.reflect.CtModel;
+import spoon.reflect.declaration.CtPackage;
 
 public class VersionAnalyzer {
 	private final Path v1;
@@ -49,7 +54,16 @@ public class VersionAnalyzer {
 		OutputFilter filter = new OutputFilter(defaultOptions);
 		filter.filter(classes);
 
-		delta = new Delta(classes);
+		// We need to create CtReferences to v1 to map japicmp's delta
+		// to our own. It seems building an empty model with the right
+		// classpath allows us to create these references. FIXME
+		Launcher launcher = new Launcher();
+		String[] javaCp = { v1.toAbsolutePath().toString() };
+		launcher.getEnvironment().setSourceClasspath(javaCp);
+		CtModel model = launcher.buildModel();
+		CtPackage root = model.getRootPackage();
+
+		delta = new Delta(v1, v2, root, classes);
 	}
 
 	public ClientAnalyzer analyzeClient(Path client) {

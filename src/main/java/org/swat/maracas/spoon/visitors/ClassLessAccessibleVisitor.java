@@ -14,7 +14,7 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
 	private final AccessModifier newAccessModifier;
 
-	protected ClassLessAccessibleVisitor(CtTypeReference<?> clsRef, AccessModifier newAccessModifier) {
+	public ClassLessAccessibleVisitor(CtTypeReference<?> clsRef, AccessModifier newAccessModifier) {
 		super(JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE);
 		this.clsRef = clsRef;
 		this.newAccessModifier = newAccessModifier;

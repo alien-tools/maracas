@@ -32,7 +32,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
 	private final CtTypeReference<?> newType;
 
-	protected FieldTypeChangedVisitor(CtFieldReference<?> fRef, CtTypeReference<?> newType) {
+	public FieldTypeChangedVisitor(CtFieldReference<?> fRef, CtTypeReference<?> newType) {
 		super(JApiCompatibilityChange.FIELD_TYPE_CHANGED);
 		this.fRef = fRef;
 		this.newType = newType;
