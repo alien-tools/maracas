@@ -22,6 +22,8 @@ import japicmp.output.Filter;
 import japicmp.output.Filter.FilterVisitor;
 import javassist.CtField;
 import javassist.CtMethod;
+import spoon.Launcher;
+import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -32,13 +34,22 @@ public class Delta {
 	private final Path v2;
 	private final List<BrokenDeclaration> brokenDeclarations = new ArrayList<>();
 
-	public Delta(Path v1, Path v2, CtPackage root, List<JApiClass> classes) {
+	public Delta(Path v1, Path v2, List<JApiClass> classes) {
 		this.v1 = v1;
 		this.v2 = v2;
-		extractBrokenDeclarations(root, classes);
+		extractBrokenDeclarations(classes);
 	}
 
-	public void extractBrokenDeclarations(CtPackage root, List<JApiClass> classes) {
+	public void extractBrokenDeclarations(List<JApiClass> classes) {
+		// We need to create CtReferences to v1 to map japicmp's delta
+		// to our own. It seems building an empty model with the right
+		// classpath allows us to create these references. FIXME
+		Launcher launcher = new Launcher();
+		String[] javaCp = { v1.toAbsolutePath().toString() };
+		launcher.getEnvironment().setSourceClasspath(javaCp);
+		CtModel model = launcher.buildModel();
+		CtPackage root = model.getRootPackage();
+
 		Filter.filter(classes, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {
