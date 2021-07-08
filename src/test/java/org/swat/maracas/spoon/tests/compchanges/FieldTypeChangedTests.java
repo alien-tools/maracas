@@ -1,7 +1,7 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
 import static japicmp.model.JApiCompatibilityChange.FIELD_TYPE_CHANGED;
-import static org.swat.maracas.spoon.APIUse.FIELD_ACCESS;
+import static org.swat.maracas.spoon.delta.APIUse.FIELD_ACCESS;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,9 +1,9 @@
 package org.swat.maracas.spoon.tests.compchanges;
 
 import static japicmp.model.JApiCompatibilityChange.METHOD_NOW_ABSTRACT;
-import static org.swat.maracas.spoon.APIUse.EXTENDS;
-import static org.swat.maracas.spoon.APIUse.IMPLEMENTS;
-import static org.swat.maracas.spoon.APIUse.METHOD_INVOCATION;
+import static org.swat.maracas.spoon.delta.APIUse.EXTENDS;
+import static org.swat.maracas.spoon.delta.APIUse.IMPLEMENTS;
+import static org.swat.maracas.spoon.delta.APIUse.METHOD_INVOCATION;
 
 import org.junit.jupiter.api.Test;
 

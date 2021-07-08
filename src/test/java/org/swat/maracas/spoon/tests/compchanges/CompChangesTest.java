@@ -10,10 +10,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.swat.maracas.spoon.APIUse;
 import org.swat.maracas.spoon.Detection;
 import org.swat.maracas.spoon.SpoonHelper;
 import org.swat.maracas.spoon.VersionAnalyzer;
+import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;

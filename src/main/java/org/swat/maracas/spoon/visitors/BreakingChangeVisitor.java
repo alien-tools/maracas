@@ -3,8 +3,8 @@ package org.swat.maracas.spoon.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.swat.maracas.spoon.APIUse;
 import org.swat.maracas.spoon.Detection;
+import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;

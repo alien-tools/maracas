@@ -1,6 +1,6 @@
 package org.swat.maracas.spoon.visitors;
 
-import org.swat.maracas.spoon.APIUse;
+import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;

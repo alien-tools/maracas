@@ -2,7 +2,7 @@ package org.swat.maracas.spoon.visitors;
 
 import java.util.Optional;
 
-import org.swat.maracas.spoon.APIUse;
+import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtNewClass;

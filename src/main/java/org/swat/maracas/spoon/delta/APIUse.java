@@ -1,4 +1,4 @@
-package org.swat.maracas.spoon;
+package org.swat.maracas.spoon.delta;
 
 public enum APIUse {
 	THROWS,
