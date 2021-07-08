@@ -26,7 +26,7 @@ public class VersionAnalyzer {
 	private final Path v2;
 	private final List<Path> oldCP = new ArrayList<>();
 	private final List<Path> newCP = new ArrayList<>();
-	private final Map<Path, Set<Detection>> clients = new HashMap<>();
+	private final Map<Path, ClientAnalyzer> clients = new HashMap<>();
 	private Delta delta;
 
 	public VersionAnalyzer(Path v1, Path v2) {
@@ -57,7 +57,7 @@ public class VersionAnalyzer {
 	public ClientAnalyzer analyzeClient(Path client) {
 		ClientAnalyzer analyzer = new ClientAnalyzer(delta, client, v1);
 		analyzer.computeDetections();
-		clients.put(client, analyzer.getDetections());
+		clients.put(client, analyzer);
 		return analyzer;
 	}
 
@@ -99,6 +99,7 @@ public class VersionAnalyzer {
 	public Set<Detection> getDetections() {
 		return clients.values()
 			.stream()
+			.map(analyzer -> analyzer.getDetections())
 			.flatMap(Collection::stream)
 			.collect(Collectors.toSet());
 	}

@@ -131,6 +131,10 @@ public class Delta {
 				.collect(Collectors.toList());
 	}
 
+	public List<BrokenDeclaration> getBrokenDeclarations() {
+		return brokenDeclarations;
+	}
+
 	public Path getV1() {
 		return v1;
 	}
