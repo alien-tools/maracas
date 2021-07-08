@@ -27,6 +27,10 @@ public class MaracasReport {
 		return delta;
 	}
 
+	public Set<Detection> getDetections() {
+		return detections;
+	}
+
 	public Throwable getError() {
 		return error;
 	}
