@@ -98,7 +98,12 @@ public class PullRequest implements Diffable {
 					logger.info("Computing detections on client {}", c);
 					// FIXME: let the user configure the sources to analyse in the
 					//        config file
-					analyzer.analyzeClient(clientPath.resolve("src/main/java"));
+					if (clientPath.resolve("src/main/java").toFile().exists())
+						analyzer.analyzeClient(clientPath.resolve("src/main/java"));
+					else if (clientPath.resolve("src/").toFile().exists())
+						analyzer.analyzeClient(clientPath.resolve("src/"));
+					else
+						logger.warn("Couldn't find src path in {}", clientPath);
 				} catch (Exception e) {
 					logger.error("Error building {}", c, e);
 				}
