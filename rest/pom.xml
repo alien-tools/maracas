@@ -19,13 +19,6 @@
 		<java.version>16</java.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>rascal-public</id>
-			<url>https://nexus.usethesource.io/content/repositories/releases/</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.swat.maracas</groupId>
