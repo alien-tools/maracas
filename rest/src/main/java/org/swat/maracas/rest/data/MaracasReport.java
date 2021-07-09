@@ -6,33 +6,17 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MaracasReport {
-	private final Delta delta;
-	private final Set<Detection> detections;
-	private final Throwable error;
-
+public record MaracasReport(
+	Delta delta,
+	Set<Detection> detections,
+	Throwable error
+) {
 	public MaracasReport(Delta delta, Set<Detection> detections) {
-		this.delta = delta;
-		this.detections = detections;
-		this.error = null;
+		this(delta, detections, null);
 	}
 
 	public MaracasReport(Throwable error) {
-		this.delta = null;
-		this.detections = null;
-		this.error = error;
-	}
-
-	public Delta getDelta() {
-		return delta;
-	}
-
-	public Set<Detection> getDetections() {
-		return detections;
-	}
-
-	public Throwable getError() {
-		return error;
+		this(null, null, error);
 	}
 
 	public static MaracasReport fromJson(File json) throws IOException {

@@ -65,7 +65,7 @@ public class GithubService {
 				.thenAccept(report -> {
 					jobs.remove(uid);
 
-					if (report.getError() == null) {
+					if (report.error() == null) {
 						try {
 							logger.info("Serializing {}", reportFile);
 							reportFile.getParentFile().mkdirs();
@@ -79,7 +79,7 @@ public class GithubService {
 							logger.error(e);
 						}
 					} else
-						logger.error(report.getError());
+						logger.error(report.error());
 				});
 
 			jobs.put(uid, future);
