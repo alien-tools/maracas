@@ -14,11 +14,19 @@ public record BrokenDeclaration(
 	String url
 ) {
 	public static BrokenDeclaration fromMaracasDeclaration(org.swat.maracas.spoon.delta.BrokenDeclaration decl) {
-		SourcePosition pos = decl.getReference().getPosition();
+		String file = "";
+		int startLine = -1;
+		int endLine = -1;
 
-		String file = pos instanceof NoSourcePosition ? "" : pos.getFile().getAbsolutePath();
-		int startLine = pos instanceof NoSourcePosition ? -1 : pos.getLine();
-		int endLine = pos instanceof NoSourcePosition ? -1 : pos.getEndLine();
+		if (decl.getSourceElement() != null) {
+			SourcePosition pos = decl.getSourceElement().getPosition();
+
+			if (pos != null) {
+				file = pos instanceof NoSourcePosition ? "" : pos.getFile().getAbsolutePath();
+				startLine = pos instanceof NoSourcePosition ? -1 : pos.getLine();
+				endLine = pos instanceof NoSourcePosition ? -1 : pos.getEndLine();
+			}
+		}
 
 		return new BrokenDeclaration(
 			SpoonHelper.fullyQualifiedName(decl.getReference()),

@@ -66,6 +66,7 @@ public class PullRequest implements Diffable {
 			VersionAnalyzer analyzer = new VersionAnalyzer(j1, j2);
 			logger.info("Computing delta {} -> {}", j1, j2);
 			analyzer.computeDelta();
+			analyzer.populateLocations(basePath); // FIXME
 
 			config.getGithubClients().parallelStream().forEach(c -> {
 				try {

@@ -19,10 +19,12 @@ class MaracasReportTests {
 		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
 		Path c1 = Paths.get("/home/dig/repositories/comp-changes-data/client/src");
+		Path sources = Paths.get("/home/dig/repositories/comp-changes-data/old/src");
 
 		VersionAnalyzer analyzer = new VersionAnalyzer(v1, v2);
 		analyzer.computeDelta();
 		analyzer.analyzeClient(c1);
+		analyzer.populateLocations(sources);
 
 		Delta delta = Delta.fromMaracasDelta(analyzer.getDelta());
 		ObjectMapper mapper = new ObjectMapper();

@@ -10,5 +10,5 @@ public record ImpactModel(
 	List<Detection> detections,
 	Throwable error
 ) {
-	
+
 }
