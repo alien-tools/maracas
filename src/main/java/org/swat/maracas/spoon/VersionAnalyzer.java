@@ -20,6 +20,13 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
 import japicmp.util.Optional;
+import spoon.Launcher;
+import spoon.reflect.CtModel;
+import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtReference;
+import spoon.reflect.reference.CtTypeReference;
 
 public class VersionAnalyzer {
 	private final Path v1;
@@ -54,6 +61,33 @@ public class VersionAnalyzer {
 		delta = new Delta(v1, v2, classes);
 	}
 
+	public void populateLocations(Path sources) {
+		if (delta != null) {
+			Launcher launcher = new Launcher();
+			launcher.addInputResource(sources.toAbsolutePath().toString());
+			CtModel model = launcher.buildModel();
+			CtPackage root = model.getRootPackage();
+
+			delta.getBrokenDeclarations().forEach(decl -> {
+				CtReference bytecodeRef = decl.getReference();
+				if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
+					CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
+					decl.setSourceElement(sourceRef.getTypeDeclaration());
+				} else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
+					// FIXME: hacky; can't get a reference in the same way as the others;
+					// 			  won't work with parameters, etc.; FIX
+					String signature = String.format("%s %s#%s()", execRef.getType(), execRef.getDeclaringType(), execRef.getSimpleName());
+					CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(signature);
+					decl.setSourceElement(sourceRef.getExecutableDeclaration());
+				} else if (bytecodeRef instanceof CtFieldReference<?> fieldRef) {
+					CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
+					decl.setSourceElement(sourceRef.getFieldDeclaration());
+				} else
+					throw new RuntimeException("Shouldn't be here");
+			});
+		}
+	}
+
 	public ClientAnalyzer analyzeClient(Path client) {
 		ClientAnalyzer analyzer = new ClientAnalyzer(delta, client, v1);
 		analyzer.computeDetections();
@@ -68,6 +102,7 @@ public class VersionAnalyzer {
 		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
 		defaultOptions.setIgnoreMissingClasses(false);
 
+		// FIXME: inherited from maracas-rascal
 		String[] excl = { "(*.)?tests(.*)?", "(*.)?test(.*)?",
 				"@org.junit.After",
 				"@org.junit.AfterClass",
@@ -99,7 +134,7 @@ public class VersionAnalyzer {
 	public Set<Detection> getDetections() {
 		return clients.values()
 			.stream()
-			.map(analyzer -> analyzer.getDetections())
+			.map(ClientAnalyzer::getDetections)
 			.flatMap(Collection::stream)
 			.collect(Collectors.toSet());
 	}

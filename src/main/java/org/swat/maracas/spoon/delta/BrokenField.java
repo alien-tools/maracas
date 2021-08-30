@@ -15,25 +15,19 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class BrokenField implements BrokenDeclaration {
+public class BrokenField extends AbstractBrokenDeclaration {
 	private final JApiField jApiField;
 	private final CtFieldReference<?> fRef;
-	private final JApiCompatibilityChange change;
 
 	public BrokenField(JApiField field, CtFieldReference<?> fRef, JApiCompatibilityChange change) {
+		super(change);
 		this.jApiField = field;
 		this.fRef = fRef;
-		this.change = change;
 	}
 
 	@Override
 	public CtReference getReference() {
 		return fRef;
-	}
-
-	@Override
-	public JApiCompatibilityChange getChange() {
-		return change;
 	}
 
 	@Override

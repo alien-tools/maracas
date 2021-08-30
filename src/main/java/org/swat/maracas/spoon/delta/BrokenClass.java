@@ -13,25 +13,19 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class BrokenClass implements BrokenDeclaration {
+public class BrokenClass extends AbstractBrokenDeclaration {
 	private final JApiClass jApiCls;
 	private final CtTypeReference<?> clsRef;
-	private final JApiCompatibilityChange change;
 
 	public BrokenClass(JApiClass cls, CtTypeReference<?> clsRef, JApiCompatibilityChange change) {
+		super(change);
 		this.jApiCls = cls;
 		this.clsRef = clsRef;
-		this.change = change;
 	}
 
 	@Override
 	public CtReference getReference() {
 		return clsRef;
-	}
-
-	@Override
-	public JApiCompatibilityChange getChange() {
-		return change;
 	}
 
 	@Override

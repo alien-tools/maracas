@@ -10,25 +10,19 @@ import japicmp.model.JApiMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtReference;
 
-public class BrokenMethod implements BrokenDeclaration {
+public class BrokenMethod extends AbstractBrokenDeclaration {
 	private final JApiMethod jApiMethod;
 	private final CtExecutableReference<?> mRef;
-	private final JApiCompatibilityChange change;
 
 	public BrokenMethod(JApiMethod method, CtExecutableReference<?> mRef, JApiCompatibilityChange change) {
+		super(change);
 		this.jApiMethod = method;
 		this.mRef = mRef;
-		this.change = change;
 	}
 
 	@Override
 	public CtReference getReference() {
 		return mRef;
-	}
-
-	@Override
-	public JApiCompatibilityChange getChange() {
-		return change;
 	}
 
 	@Override
