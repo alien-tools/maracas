@@ -20,6 +20,8 @@ public class Main {
 		ClientAnalyzer analyzer = version.analyzeClient(c);
 		Set<Detection> detections = version.getDetections();
 
+		System.out.println(version.getDelta());
+
 		detections.forEach(d -> {
 			if (d.change() == JApiCompatibilityChange.FIELD_REMOVED) {
 				System.out.println(d);

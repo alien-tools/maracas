@@ -24,6 +24,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -141,5 +142,23 @@ public class Delta {
 
 	public Path getV2() {
 		return v2;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Δ(" + v1 + " -> " + v2 + ")\n");
+		sb.append(
+			brokenDeclarations.stream()
+			.map(bd -> """
+				[%s]
+					Reference: %s
+					Source: %s %s
+				""".formatted(bd.getChange(), bd.getReference(),
+					bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement().toString(),
+					bd.getSourceElement().getPosition())
+			).collect(Collectors.joining())
+		);
+		return sb.toString();
 	}
 }
