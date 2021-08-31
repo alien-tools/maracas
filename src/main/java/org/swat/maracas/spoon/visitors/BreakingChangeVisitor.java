@@ -4,9 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.swat.maracas.spoon.Detection;
+import org.swat.maracas.spoon.SpoonHelper;
 import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
+import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
@@ -22,8 +24,17 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	}
 
 	protected void detection(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
+		// We may encounter detections on synthetic/implicit code elements
+		// (e.g., default constructors, super() calls, etc.) that do not have
+		// position information since they're absent from source code.
+		// => just point the first locatable parent element
+		CtElement locatableElement =
+			element.getPosition() instanceof NoSourcePosition ?
+				SpoonHelper.firstLocatableParent(element) :
+				element;
+
 		Detection d = new Detection(
-			element,
+			locatableElement,
 			usedApiElement,
 			source,
 			use,

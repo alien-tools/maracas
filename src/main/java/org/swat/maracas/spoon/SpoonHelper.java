@@ -1,6 +1,7 @@
 package org.swat.maracas.spoon;
 
 import javassist.CtMethod;
+import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -11,7 +12,7 @@ public class SpoonHelper {
 	public static CtElement firstLocatableParent(CtElement element) {
 		CtElement parent = element;
 		do {
-			if (parent.getPosition().getFile() != null)
+			if (!(parent.getPosition() instanceof NoSourcePosition))
 				return parent;
 		} while ((parent = parent.getParent()) != null);
 		return parent;
