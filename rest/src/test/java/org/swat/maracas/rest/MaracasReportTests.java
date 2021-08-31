@@ -25,6 +25,7 @@ class MaracasReportTests {
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
 		Path c1 = Paths.get("/home/dig/repositories/comp-changes-data/client/");
 		Path sources = Paths.get("/home/dig/repositories/comp-changes-data/old/src");
+		String libGithub = "tdegueul/comp-changes";
 		String clientGithub = "tdegueul/comp-changes-client";
 
 		VersionAnalyzer analyzer = new VersionAnalyzer(v1, v2);
@@ -33,7 +34,7 @@ class MaracasReportTests {
 		analyzer.populateLocations(sources);
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(analyzer.getDelta()),
+			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "/home/dig/repositories/comp-changes-data/old/"),
 			analyzer.getDetections()
 				.stream()
 				.map(d -> Detection.fromMaracasDetection(d, clientGithub, c1.toString()))

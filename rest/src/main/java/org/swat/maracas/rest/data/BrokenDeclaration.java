@@ -1,5 +1,7 @@
 package org.swat.maracas.rest.data;
 
+import java.nio.file.Paths;
+
 import org.swat.maracas.spoon.SpoonHelper;
 
 import spoon.reflect.cu.SourcePosition;
@@ -13,7 +15,7 @@ public record BrokenDeclaration(
 	int endLine,
 	String url
 ) {
-	public static BrokenDeclaration fromMaracasDeclaration(org.swat.maracas.spoon.delta.BrokenDeclaration decl) {
+	public static BrokenDeclaration fromMaracasDeclaration(org.swat.maracas.spoon.delta.BrokenDeclaration decl, String repository, String clonePath) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -28,13 +30,14 @@ public record BrokenDeclaration(
 			}
 		}
 
+		String relativeFile = Paths.get(clonePath).relativize(Paths.get(file)).toString();
 		return new BrokenDeclaration(
 			SpoonHelper.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),
-			file,
+			relativeFile,
 			startLine,
 			endLine,
-			null
+			repository != null ? GitHubUtils.buildGitHubUrl(repository, relativeFile, startLine, endLine) : null
 		);
 	}
 }

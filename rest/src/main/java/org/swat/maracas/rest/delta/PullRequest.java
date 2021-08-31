@@ -115,7 +115,7 @@ public class PullRequest implements Diffable {
 						detections.addAll(
 							clientAnalyzer.getDetections()
 								.stream()
-								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toString()))
+								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toAbsolutePath().toString()))
 								.collect(Collectors.toSet())
 						);
 					}
@@ -125,7 +125,11 @@ public class PullRequest implements Diffable {
 			});
 
 			return new MaracasReport(
-				Delta.fromMaracasDelta(analyzer.getDelta()),
+				Delta.fromMaracasDelta(
+					analyzer.getDelta(),
+					base.getRepository().getFullName(),
+					basePath.toAbsolutePath().toString()
+				),
 				detections
 			);
 		} catch (ExecutionException | InterruptedException e) {

@@ -112,7 +112,7 @@ public class GitBranches implements Diffable {
 						detections.addAll(
 							clientAnalyzer.getDetections()
 								.stream()
-								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toString()))
+								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toAbsolutePath().toString()))
 								.collect(Collectors.toSet())
 						);
 					}
@@ -122,7 +122,11 @@ public class GitBranches implements Diffable {
 			});
 
 			return new MaracasReport(
-				Delta.fromMaracasDelta(analyzer.getDelta()),
+				Delta.fromMaracasDelta(
+					analyzer.getDelta(),
+					base.getOwner().getFullName(),
+					basePath.toAbsolutePath().toString()
+				),
 				detections
 			);
 		} catch (ExecutionException | InterruptedException e) {
