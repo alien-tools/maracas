@@ -3,6 +3,8 @@ package org.swat.maracas.rest.delta;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.tasks.BuildException;
 import org.swat.maracas.rest.tasks.CloneAndBuild;
 import org.swat.maracas.rest.tasks.CloneException;
+import org.swat.maracas.spoon.ClientAnalyzer;
 import org.swat.maracas.spoon.VersionAnalyzer;
 
 public class PullRequest implements Diffable {
@@ -68,6 +71,7 @@ public class PullRequest implements Diffable {
 			analyzer.computeDelta();
 			analyzer.populateLocations(basePath); // FIXME
 
+			Set<Detection> detections = new HashSet<>();
 			config.getGithubClients().parallelStream().forEach(c -> {
 				try {
 					// Clone the client
@@ -99,12 +103,22 @@ public class PullRequest implements Diffable {
 					logger.info("Computing detections on client {}", c);
 					// FIXME: let the user configure the sources to analyse in the
 					//        config file
+					ClientAnalyzer clientAnalyzer = null;
 					if (clientPath.resolve("src/main/java").toFile().exists())
-						analyzer.analyzeClient(clientPath.resolve("src/main/java"));
+						clientAnalyzer = analyzer.analyzeClient(clientPath.resolve("src/main/java"));
 					else if (clientPath.resolve("src/").toFile().exists())
-						analyzer.analyzeClient(clientPath.resolve("src/"));
+						clientAnalyzer = analyzer.analyzeClient(clientPath.resolve("src/"));
 					else
 						logger.warn("Couldn't find src path in {}", clientPath);
+
+					if (clientAnalyzer != null) {
+						detections.addAll(
+							clientAnalyzer.getDetections()
+								.stream()
+								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toString()))
+								.collect(Collectors.toSet())
+						);
+					}
 				} catch (Exception e) {
 					logger.error("Error building {}", c, e);
 				}
@@ -112,10 +126,7 @@ public class PullRequest implements Diffable {
 
 			return new MaracasReport(
 				Delta.fromMaracasDelta(analyzer.getDelta()),
-				analyzer.getDetections()
-					.stream()
-					.map(d -> Detection.fromMaracasDetection(d))
-					.collect(Collectors.toSet())
+				detections
 			);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);

@@ -1,7 +1,7 @@
 package org.swat.maracas.rest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
 
@@ -23,8 +23,9 @@ class MaracasReportTests {
 	void setUp() {
 		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
 		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
-		Path c1 = Paths.get("/home/dig/repositories/comp-changes-data/client/src");
+		Path c1 = Paths.get("/home/dig/repositories/comp-changes-data/client/");
 		Path sources = Paths.get("/home/dig/repositories/comp-changes-data/old/src");
+		String clientGithub = "tdegueul/comp-changes-client";
 
 		VersionAnalyzer analyzer = new VersionAnalyzer(v1, v2);
 		analyzer.computeDelta();
@@ -35,7 +36,7 @@ class MaracasReportTests {
 			Delta.fromMaracasDelta(analyzer.getDelta()),
 			analyzer.getDetections()
 				.stream()
-				.map(Detection::fromMaracasDetection)
+				.map(d -> Detection.fromMaracasDetection(d, clientGithub, c1.toString()))
 				.collect(Collectors.toSet())
 		);
 	}
@@ -53,7 +54,7 @@ class MaracasReportTests {
 		//);
 
 		report.delta().brokenDeclarations().forEach(d -> {
-			assertThat(d.path(),      not(emptyString()));
+			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
 		});
@@ -61,20 +62,25 @@ class MaracasReportTests {
 
 	@Test
 	void testSourceLocationsDetections() {
-		// Hamcrest's hasProperty doesn't work with records yet
-		//assertThat(
-		//	report.detections(),
-		//	everyItem(allOf(
-		//		hasProperty("path", not(emptyString())),
-		//		hasProperty("startLine", not(equalTo(-1))),
-		//		hasProperty("endLine", not(equalTo(-1)))
-		//	))
-		//);
-
 		report.detections().forEach(d -> {
-			assertThat(d.path(),      not(emptyString()));
+			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
+		});
+	}
+
+	@Test
+	void testGitHubLocationsDelta() {
+		report.delta().brokenDeclarations().forEach(d -> {
+			assertThat(d.url(), not(emptyOrNullString()));
+		});
+	}
+
+	@Test
+	void testGitHubLocationsDetections() {
+		report.detections().forEach(d -> {
+			assertThat(d.url(),       not(emptyOrNullString()));
+			assertThat(d.clientUrl(), not(emptyOrNullString()));
 		});
 	}
 
