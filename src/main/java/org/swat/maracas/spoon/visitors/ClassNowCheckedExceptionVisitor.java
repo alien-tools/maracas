@@ -29,7 +29,7 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 	@Override
 	public void visitCtThrow(CtThrow throwStatement) {
 		CtTypeReference<? extends Throwable> thrownType = throwStatement.getThrownExpression().getType();
-		if (thrownType.isSubtypeOf(clsRef)) {
+		if (thrownType != null && thrownType.isSubtypeOf(clsRef)) {
 			boolean isCaught = false;
 			boolean isDeclared = false;
 
