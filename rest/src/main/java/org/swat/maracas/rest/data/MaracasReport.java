@@ -2,17 +2,17 @@ package org.swat.maracas.rest.data;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public record MaracasReport(
 	Delta delta,
-	Set<Detection> detections,
+	List<ClientDetections> clientDetections,
 	Throwable error
 ) {
-	public MaracasReport(Delta delta, Set<Detection> detections) {
-		this(delta, detections, null);
+	public MaracasReport(Delta delta, List<ClientDetections> clientDetections) {
+		this(delta, clientDetections, null);
 	}
 
 	public MaracasReport(Throwable error) {

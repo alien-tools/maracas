@@ -9,7 +9,6 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
 public record Detection(
-	String clientUrl,
 	String elem,
 	String used,
 	String src,
@@ -24,7 +23,6 @@ public record Detection(
 
 		if (pos instanceof NoSourcePosition)
 			return new Detection(
-				repository,
 				d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 				d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
 				SpoonHelper.fullyQualifiedName(d.source()),
@@ -37,7 +35,6 @@ public record Detection(
 
 		String relativeFile = Paths.get(clonePath).relativize(pos.getFile().toPath()).toString();
 		return new Detection(
-			repository,
 			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
 			SpoonHelper.fullyQualifiedName(d.source()),

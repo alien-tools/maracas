@@ -3,8 +3,6 @@ package org.swat.maracas.rest.delta;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -19,6 +17,7 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.swat.maracas.rest.breakbot.BreakbotConfig;
+import org.swat.maracas.rest.data.ClientDetections;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.Detection;
 import org.swat.maracas.rest.data.MaracasReport;
@@ -27,6 +26,9 @@ import org.swat.maracas.rest.tasks.CloneAndBuild;
 import org.swat.maracas.rest.tasks.CloneException;
 import org.swat.maracas.spoon.ClientAnalyzer;
 import org.swat.maracas.spoon.VersionAnalyzer;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 public class PullRequest implements Diffable {
 	private final GitHub github;
@@ -71,7 +73,7 @@ public class PullRequest implements Diffable {
 			analyzer.computeDelta();
 			analyzer.populateLocations(basePath); // FIXME
 
-			Set<Detection> detections = new HashSet<>();
+			Multimap<String, Detection> detections = ArrayListMultimap.create();
 			config.getGithubClients().parallelStream().forEach(c -> {
 				try {
 					// Clone the client
@@ -112,11 +114,10 @@ public class PullRequest implements Diffable {
 						logger.warn("Couldn't find src path in {}", clientPath);
 
 					if (clientAnalyzer != null) {
-						detections.addAll(
-							clientAnalyzer.getDetections()
-								.stream()
+						detections.putAll(c,
+							clientAnalyzer.getDetections().stream()
 								.map(d -> Detection.fromMaracasDetection(d, c, clientPath.toAbsolutePath().toString()))
-								.collect(Collectors.toSet())
+								.collect(Collectors.toList())
 						);
 					}
 				} catch (Exception e) {
@@ -130,7 +131,9 @@ public class PullRequest implements Diffable {
 					base.getRepository().getFullName(),
 					basePath.toAbsolutePath().toString()
 				),
-				detections
+				detections.keySet().stream()
+					.map(repo -> new ClientDetections(repo, detections.get(repo).stream().collect(Collectors.toList())))
+					.collect(Collectors.toList())
 			);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);

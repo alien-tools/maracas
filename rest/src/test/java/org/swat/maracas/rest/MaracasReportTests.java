@@ -3,14 +3,17 @@ package org.swat.maracas.rest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.swat.maracas.rest.data.ClientDetections;
 import org.swat.maracas.rest.data.Delta;
 import org.swat.maracas.rest.data.Detection;
 import org.swat.maracas.rest.data.MaracasReport;
@@ -35,10 +38,12 @@ class MaracasReportTests {
 
 		report = new MaracasReport(
 			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "/home/dig/repositories/comp-changes-data/old/"),
-			analyzer.getDetections()
-				.stream()
-				.map(d -> Detection.fromMaracasDetection(d, clientGithub, c1.toString()))
-				.collect(Collectors.toSet())
+			Arrays.asList(new ClientDetections(clientGithub,
+				analyzer.getDetections()
+					.stream()
+					.map(d -> Detection.fromMaracasDetection(d, clientGithub, c1.toString()))
+					.collect(Collectors.toList())
+			))
 		);
 	}
 
@@ -63,7 +68,8 @@ class MaracasReportTests {
 
 	@Test
 	void testSourceLocationsDetections() {
-		report.detections().forEach(d -> {
+		assertThat(report.clientDetections().size(), is(1));
+		report.clientDetections().get(0).detections().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -79,10 +85,18 @@ class MaracasReportTests {
 
 	@Test
 	void testGitHubLocationsDetections() {
-		report.detections().forEach(d -> {
+		assertThat(report.clientDetections().size(), is(1));
+		assertThat(report.clientDetections().get(0).url(), not(emptyOrNullString()));
+		report.clientDetections().get(0).detections().forEach(d -> {
 			assertThat(d.url(),       not(emptyOrNullString()));
-			assertThat(d.clientUrl(), not(emptyOrNullString()));
 		});
+	}
+
+	@Test
+	void testGithubClientsArePresent() {
+		assertThat(report.clientDetections().size(), is(1));
+		assertThat(report.clientDetections().get(0).url(), is("tdegueul/comp-changes-client"));
+		assertThat(report.clientDetections().get(0).detections().size(), is(greaterThan(1)));
 	}
 
 }
