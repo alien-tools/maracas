@@ -108,7 +108,7 @@ public class CloneAndBuild implements Supplier<Path> {
 
 	    try {
 	    	logger.info("Building {} with pom={} goals={} properties={}",
-	    		pom, mvnGoals, properties);
+	    		url, pom, mvnGoals, properties);
 		    Invoker invoker = new DefaultInvoker();
 		    InvocationResult result = invoker.execute(request);
 
