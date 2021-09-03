@@ -16,7 +16,7 @@ public class BreakbotConfig {
 	private List<String> mvnGoals = new ArrayList<>();
 	private List<String> mvnProperties = new ArrayList<>();
 	private String jarLocation;
-	private List<String> githubClients = new ArrayList<>();
+	private List<GithubClientConfig> clients = new ArrayList<>();
 
 	public String getMvnPom() {
 		return mvnPom;
@@ -34,8 +34,8 @@ public class BreakbotConfig {
 		return jarLocation;
 	}
 
-	public List<String> getGithubClients() {
-		return githubClients;
+	public List<GithubClientConfig> getClients() {
+		return clients;
 	}
 
 	@JsonProperty("build")
@@ -48,11 +48,6 @@ public class BreakbotConfig {
 			mvnProperties = Arrays.asList(build.get("properties").split(" "));
 		if (build.containsKey("jar"))
 			jarLocation = build.get("jar");
-	}
-
-	@JsonProperty("clients")
-	private void unpackClients(Map<String, List<String>> clients) {
-		githubClients = clients.get("github");
 	}
 
 	public static BreakbotConfig defaultConfig() {
