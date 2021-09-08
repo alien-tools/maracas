@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.swat.maracas.spoon.delta.Delta;
+import org.swat.maracas.spoon.delta.Detection;
 
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;

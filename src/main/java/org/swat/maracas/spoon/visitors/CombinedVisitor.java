@@ -3,10 +3,9 @@ package org.swat.maracas.spoon.visitors;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.swat.maracas.spoon.Detection;
+import org.swat.maracas.spoon.delta.Detection;
 
 import spoon.reflect.code.CtAnnotationFieldAccess;
 import spoon.reflect.code.CtArrayRead;
@@ -108,12 +107,12 @@ public class CombinedVisitor extends CtScanner {
 		this.visitors = visitors;
 	}
 
-	public Set<Detection> getDetections() {
+	public List<Detection> getDetections() {
 		return
 			visitors.stream()
 			.map(BreakingChangeVisitor::getDetections)
 			.flatMap(Collection::stream)
-			.collect(Collectors.toSet());
+			.collect(Collectors.toList());
 	}
 
 	@Override

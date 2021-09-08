@@ -1,10 +1,11 @@
 package org.swat.maracas.spoon;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.swat.maracas.spoon.delta.Delta;
+import org.swat.maracas.spoon.delta.Detection;
 import org.swat.maracas.spoon.visitors.BreakingChangeVisitor;
 import org.swat.maracas.spoon.visitors.CombinedVisitor;
 
@@ -18,7 +19,7 @@ public class ClientAnalyzer {
 	private final Path client;
 	private final Path cp;
 	private CtModel model;
-	private Set<Detection> detections;
+	private List<Detection> detections = new ArrayList<>();
 	private final Launcher launcher = new Launcher();
 
 	public ClientAnalyzer(Delta delta, Path client, Path cp) {
@@ -55,7 +56,7 @@ public class ClientAnalyzer {
 		launcher.setSourceOutputDirectory(output.toFile());
 		launcher.prettyprint();
 	}
-	public Set<Detection> getDetections() {
+	public List<Detection> getDetections() {
 		return detections;
 	}
 }

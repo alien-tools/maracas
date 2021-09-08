@@ -155,8 +155,8 @@ public class Delta {
 					Reference: %s
 					Source: %s %s
 				""".formatted(bd.getChange(), bd.getReference(),
-					bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement().toString(),
-					bd.getSourceElement().getPosition())
+					bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement(),
+					bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : null)
 			).collect(Collectors.joining())
 		);
 		return sb.toString();

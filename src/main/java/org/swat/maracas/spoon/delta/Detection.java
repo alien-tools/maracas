@@ -1,8 +1,6 @@
-package org.swat.maracas.spoon;
+package org.swat.maracas.spoon.delta;
 
 import java.util.Objects;
-
-import org.swat.maracas.spoon.delta.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;

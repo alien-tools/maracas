@@ -3,9 +3,9 @@ package org.swat.maracas.spoon.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.swat.maracas.spoon.Detection;
 import org.swat.maracas.spoon.SpoonHelper;
 import org.swat.maracas.spoon.delta.APIUse;
+import org.swat.maracas.spoon.delta.Detection;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
