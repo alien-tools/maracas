@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import org.swat.maracas.rest.data.MaracasReport;
 
 public interface Diffable {
-	public MaracasReport diff();
+	public abstract MaracasReport diff();
 
 	public default CompletableFuture<MaracasReport> diffAsync() {
 		return CompletableFuture.supplyAsync(this::diff);

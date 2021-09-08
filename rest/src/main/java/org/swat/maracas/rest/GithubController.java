@@ -18,14 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.swat.maracas.rest.data.MaracasReport;
 import org.swat.maracas.rest.data.PullRequestResponse;
-import org.swat.maracas.rest.tasks.BuildException;
-import org.swat.maracas.rest.tasks.CloneException;
 
 @RestController
 @RequestMapping("/github")
 public class GithubController {
 	@Autowired
-	GithubService github;
+	private PullRequestService github;
 
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 

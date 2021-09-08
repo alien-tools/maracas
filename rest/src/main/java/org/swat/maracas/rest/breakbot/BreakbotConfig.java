@@ -7,6 +7,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.swat.maracas.rest.MaracasService;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -17,6 +21,8 @@ public class BreakbotConfig {
 	private List<String> mvnProperties = new ArrayList<>();
 	private String jarLocation;
 	private List<GithubClientConfig> clients = new ArrayList<>();
+
+	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
 	public String getMvnPom() {
 		return mvnPom;
@@ -59,6 +65,7 @@ public class BreakbotConfig {
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 			return mapper.readValue(in, BreakbotConfig.class);
 		} catch (IOException e) {
+			logger.warn("Couldn't parse .breakbot.yml: returning default configuration", e);
 			return defaultConfig();
 		}
 	}

@@ -18,7 +18,7 @@ public record Detection(
 	int endLine,
 	String url
 ) {
-	public static Detection fromMaracasDetection(org.swat.maracas.spoon.Detection d, String repository, String clonePath) {
+	public static Detection fromMaracasDetection(org.swat.maracas.spoon.delta.Detection d, String repository, String clonePath) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)

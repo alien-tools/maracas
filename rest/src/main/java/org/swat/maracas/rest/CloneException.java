@@ -1,4 +1,4 @@
-package org.swat.maracas.rest.tasks;
+package org.swat.maracas.rest;
 
 public class CloneException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

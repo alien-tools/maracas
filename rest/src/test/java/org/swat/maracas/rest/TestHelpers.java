@@ -23,7 +23,7 @@ public class TestHelpers {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message", is("ok")))
 			.andExpect(jsonPath("$.report.delta.brokenDeclarations", not(empty())))
-			.andExpect(jsonPath("$.report.detections", not(empty())));
+			.andExpect(jsonPath("$.report.clientDetections", not(empty())));
 	}
 
 	public static void checkReportWithoutDetections(ResultActions res) throws Exception {
@@ -32,7 +32,7 @@ public class TestHelpers {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message", is("ok")))
 			.andExpect(jsonPath("$.report.delta.brokenDeclarations", not(empty())))
-			.andExpect(jsonPath("$.report.detections", is(empty())));
+			.andExpect(jsonPath("$.report.clientDetections", is(empty())));
 	}
 
 	// Sigh
