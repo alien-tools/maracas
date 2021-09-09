@@ -18,5 +18,3 @@ jobs:
       - name: Publish test results
         used: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
-        with:
-          files: *.xml
