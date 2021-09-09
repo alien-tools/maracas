@@ -5,11 +5,12 @@
 
 	<parent>
 		<groupId>com.github.maracas</groupId>
-		<artifactId>comp-changes</artifactId>
+		<artifactId>comp-changes-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>client</artifactId>
+	<artifactId>comp-changes-client</artifactId>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<name>comp-changes client</name>
 
@@ -20,8 +21,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.github.maracas</groupId>
-			<artifactId>old</artifactId>
-			<version>${project.version}</version>
+			<artifactId>comp-changes-old</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
 		</dependency>
 	</dependencies>
 </project>

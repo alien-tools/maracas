@@ -5,13 +5,14 @@
 
 	<parent>
 		<groupId>com.github.maracas</groupId>
-		<artifactId>comp-changes</artifactId>
+		<artifactId>comp-changes-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>old</artifactId>
+	<artifactId>comp-changes-old</artifactId>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
-	<name>comp-changes old</name>
+	<name>comp-changes v1</name>
 
 	<build>
 		<sourceDirectory>src/</sourceDirectory>

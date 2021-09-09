@@ -9,7 +9,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>comp-changes</artifactId>
+	<artifactId>comp-changes-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Maracas comp-changes tests</name>
 

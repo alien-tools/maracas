@@ -25,8 +25,8 @@ class MaracasReportTests {
 
 	@BeforeEach
 	void setUp() {
-		Path v1 = Paths.get("../test-data/comp-changes/old/target/old-0.0.1-SNAPSHOT.jar");
-		Path v2 = Paths.get("../test-data/comp-changes/new/target/new-0.0.1-SNAPSHOT.jar");
+		Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
+		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path c1 = Paths.get("../test-data/comp-changes/client/src");
 		Path sources = Paths.get("../test-data/comp-changes/old/src");
 		String libGithub = "tdegueul/comp-changes";
