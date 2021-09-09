@@ -16,5 +16,5 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots -Dmaven.test.failure.ignore=true verify
       - name: Publish test results
-        used: EnricoMi/publish-unit-test-result-action@v1.19
+        uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
