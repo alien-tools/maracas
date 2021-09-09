@@ -24,10 +24,10 @@ class MaracasReportTests {
 
 	@BeforeEach
 	void setUp() {
-		Path v1 = Paths.get("/home/dig/repositories/comp-changes-data/old/target/comp-changes-0.0.1.jar");
-		Path v2 = Paths.get("/home/dig/repositories/comp-changes-data/new/target/comp-changes-0.0.2.jar");
-		Path c1 = Paths.get("/home/dig/repositories/comp-changes-data/client/");
-		Path sources = Paths.get("/home/dig/repositories/comp-changes-data/old/src");
+		Path v1 = Paths.get("../test-data/comp-changes/old/target/old-0.0.1-SNAPSHOT.jar");
+		Path v2 = Paths.get("../test-data/comp-changes/new/target/new-0.0.1-SNAPSHOT.jar");
+		Path c1 = Paths.get("../test-data/comp-changes/client/");
+		Path sources = Paths.get("../test-data/comp-changes/old/src");
 		String libGithub = "tdegueul/comp-changes";
 		String clientGithub = "tdegueul/comp-changes-client";
 
@@ -37,7 +37,7 @@ class MaracasReportTests {
 		analyzer.populateLocations(sources);
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "/home/dig/repositories/comp-changes-data/old/"),
+			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "../test-data/comp-changes/old/"),
 			Arrays.asList(new ClientDetections(clientGithub,
 				analyzer.getDetections()
 					.stream()

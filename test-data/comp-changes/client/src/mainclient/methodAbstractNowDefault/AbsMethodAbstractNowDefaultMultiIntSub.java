@@ -1,0 +1,8 @@
+package mainclient.methodAbstractNowDefault;
+
+import main.methodAbstractNowDefault.IMethodAbstractNowDefaultOther;
+import main.methodAbstractNowDefault.IMethodAbstractNowDefaultSub;
+
+public abstract class AbsMethodAbstractNowDefaultMultiIntSub implements IMethodAbstractNowDefaultSub, IMethodAbstractNowDefaultOther {
+
+}

@@ -1,0 +1,5 @@
+package main.methodNoLongerThrowsCheckedException;
+
+public class MethodNoLongerThrowsCheckedExceptionSub extends MethodNoLongerThrowsCheckedException {
+
+}

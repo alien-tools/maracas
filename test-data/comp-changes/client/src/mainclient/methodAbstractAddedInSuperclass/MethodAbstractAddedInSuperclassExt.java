@@ -1,0 +1,7 @@
+package mainclient.methodAbstractAddedInSuperclass;
+
+import main.methodAbstractAddedInSuperclass.MethodAbstractAddedInSuperclass;
+
+public class MethodAbstractAddedInSuperclassExt extends MethodAbstractAddedInSuperclass {
+
+}

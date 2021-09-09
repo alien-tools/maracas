@@ -1,0 +1,5 @@
+package main.methodAbstractAddedInImplementedInterface;
+
+public abstract class MethodAbstractAddedInImplementedInterface implements IMethodAbstractAddedInImplementedInterface {
+
+}

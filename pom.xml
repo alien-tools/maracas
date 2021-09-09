@@ -18,6 +18,7 @@
 	<modules>
 		<module>core</module>
 		<module>rest</module>
+		<module>test-data</module>
 	</modules>
 
 </project>

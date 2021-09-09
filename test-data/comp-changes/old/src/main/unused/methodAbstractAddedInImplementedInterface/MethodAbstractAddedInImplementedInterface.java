@@ -1,0 +1,5 @@
+package main.unused.methodAbstractAddedInImplementedInterface;
+
+public abstract class MethodAbstractAddedInImplementedInterface implements IMethodAbstractAddedInImplementedInterface {
+
+}
