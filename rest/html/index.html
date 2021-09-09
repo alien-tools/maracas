@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Maracas REST</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<h2>Delta</h2>
+<form method="POST" enctype="multipart/form-data" action="http://localhost:8080/delta">
+	<table>
+		<tr><td>JAR v1:</td><td><input type="file" name="jar1" /></td></tr>
+		<tr><td>JAR v2:</td><td><input type="file" name="jar2" /></td></tr>
+		<tr><td></td><td><input type="submit" value="Upload" /></td></tr>
+	</table>
+</form>
+<hr />
+<h2>Detections</h2>
+<form method="POST" enctype="multipart/form-data" action="http://localhost:8080/detections">
+	<table>
+		<tr><td>JAR v1:</td><td><input type="file" name="jar1" /></td></tr>
+		<tr><td>JAR v2:</td><td><input type="file" name="jar2" /></td></tr>
+		<tr><td>Client:</td><td><input type="file" name="client" /></td></tr>
+		<tr><td></td><td><input type="submit" value="Upload" /></td></tr>
+	</table>
+</form>
+<hr />
+<h2>Clients</h2>
+<a href="http://localhost:8080/clients/com.google.guava/guava/18.0">Get clients of Guava 18.0</a>
+</body>
+</html>
