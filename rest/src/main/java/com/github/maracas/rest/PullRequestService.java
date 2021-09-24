@@ -59,13 +59,14 @@ public class PullRequestService {
 		File reportFile = reportFile(owner, repository, prId, prHead);
 		String reportLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
-		logger.info("Starting the analysis of {}", uid);
-
 		// If we're already on it, no need to compute it twice
 		if (!jobs.containsKey(uid) && !reportFile.exists()) {
+			logger.info("Starting the analysis of {}", uid);
+
 			CompletableFuture<Void> future =
 				prDiff.diffAsync()
 				.thenAccept(report -> {
+					logger.info("Done analyzing {}", uid);
 					jobs.remove(uid);
 
 					if (report.error() == null) {
@@ -86,7 +87,8 @@ public class PullRequestService {
 				});
 
 			jobs.put(uid, future);
-		}
+		} else
+			logger.info("{} is already being analyzed", uid);
 
 		return reportLocation;
 	}
