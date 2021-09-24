@@ -54,7 +54,8 @@ public class MaracasService {
 
 	public MaracasReport makeReport(String repository, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
-		Delta maracasDelta = makeDelta(jar1, jar2, basePath);
+		Path sources = findSourceDirectory(basePath, null);
+		Delta maracasDelta = makeDelta(jar1, jar2, sources);
 
 		// Compute detections per client
 		Multimap<String, com.github.maracas.rest.data.Detection> detections = ArrayListMultimap.create();
@@ -70,18 +71,7 @@ public class MaracasService {
 
 				githubService.cloneRemote(clientRepo.getHttpTransportUrl(), clientBranch, clientPath);
 
-				Path clientSources = clientPath;
-				// From .breakbot.yml
-				if (c.sources() != null && !c.sources().isEmpty())
-					clientSources = clientPath.resolve(c.sources());
-				// Or just try "standard" paths
-				else if (clientPath.resolve("src/main/java").toFile().exists())
-					clientSources = clientPath.resolve("src/main/java");
-				else if (clientPath.resolve("src/").toFile().exists())
-					clientSources = clientPath.resolve("src/");
-				else {
-					logger.warn("Couldn't find src path in {}, defaulting to {}", clientPath, clientSources);
-				}
+				Path clientSources = findSourceDirectory(clientPath, c.sources());
 
 				detections.putAll(c.repository(),
 					makeDetections(maracasDelta, clientSources).stream()
@@ -102,5 +92,20 @@ public class MaracasService {
 				.map(repo -> new ClientDetections(repo, new ArrayList<>(detections.get(repo))))
 				.toList()
 		);
+	}
+
+	protected Path findSourceDirectory(Path basePath, String configSources) {
+		Path sources = basePath;
+		// User-defined config
+		if (configSources != null && !configSources.isEmpty()
+			&& basePath.resolve(configSources).toFile().exists())
+			sources = basePath.resolve(configSources);
+		// Or just try "standard" paths
+		else if (basePath.resolve("src/main/java").toFile().exists())
+			sources = basePath.resolve("src/main/java");
+		else if (basePath.resolve("src/").toFile().exists())
+			sources = basePath.resolve("src/");
+
+		return sources;
 	}
 }
