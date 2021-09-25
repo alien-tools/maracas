@@ -1,6 +1,5 @@
 package com.github.maracas.rest;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -22,8 +21,6 @@ import com.github.maracas.delta.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.MaracasReport;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 @Service
 public class MaracasService {
@@ -58,7 +55,7 @@ public class MaracasService {
 		Delta maracasDelta = makeDelta(jar1, jar2, sources);
 
 		// Compute detections per client
-		Multimap<String, com.github.maracas.rest.data.Detection> detections = ArrayListMultimap.create();
+		List<ClientDetections> detections = new ArrayList<>();
 		config.getClients().parallelStream().forEach(c -> {
 			try {
 				// Clone the client
@@ -73,12 +70,18 @@ public class MaracasService {
 
 				Path clientSources = findSourceDirectory(clientPath, c.sources());
 
-				detections.putAll(c.repository(),
-					makeDetections(maracasDelta, clientSources).stream()
-						.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientBranch, clientPath.toAbsolutePath().toString()))
-						.collect(Collectors.toList()));
-			} catch (IOException e) {
+				detections.add(
+					new ClientDetections(c.repository(),
+						makeDetections(maracasDelta, clientSources).stream()
+							.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientBranch, clientPath.toAbsolutePath().toString()))
+							.collect(Collectors.toList()))
+				);
+
+				logger.info("Done computing detections on {}", c.repository());
+			} catch (Exception e) {
 				logger.error(e);
+				detections.add(new ClientDetections(c.repository(),
+					new MaracasException("Couldn't analyze client " + c.repository(), e)));
 			}
 		});
 
@@ -89,9 +92,7 @@ public class MaracasService {
 				ref,
 				basePath.toAbsolutePath().toString()
 			),
-			config.getClients().stream()
-				.map(c -> new ClientDetections(c.repository(), new ArrayList<>(detections.get(c.repository()))))
-				.toList()
+			detections
 		);
 	}
 
