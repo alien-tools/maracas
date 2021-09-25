@@ -52,7 +52,7 @@ public class MaracasService {
 		return clientAnalyzer.getDetections();
 	}
 
-	public MaracasReport makeReport(String repository, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
+	public MaracasReport makeReport(String repository, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
 		Path sources = findSourceDirectory(basePath, null);
 		Delta maracasDelta = makeDelta(jar1, jar2, sources);
@@ -75,7 +75,7 @@ public class MaracasService {
 
 				detections.putAll(c.repository(),
 					makeDetections(maracasDelta, clientSources).stream()
-						.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientPath.toAbsolutePath().toString()))
+						.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientBranch, clientPath.toAbsolutePath().toString()))
 						.collect(Collectors.toList()));
 			} catch (IOException e) {
 				logger.error(e);
@@ -86,6 +86,7 @@ public class MaracasService {
 			com.github.maracas.rest.data.Delta.fromMaracasDelta(
 				maracasDelta,
 				repository,
+				ref,
 				basePath.toAbsolutePath().toString()
 			),
 			detections.keySet().stream()

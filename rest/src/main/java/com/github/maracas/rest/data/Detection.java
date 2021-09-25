@@ -18,7 +18,7 @@ public record Detection(
 	int endLine,
 	String url
 ) {
-	public static Detection fromMaracasDetection(com.github.maracas.delta.Detection d, String repository, String clonePath) {
+	public static Detection fromMaracasDetection(com.github.maracas.delta.Detection d, String repository, String ref, String clonePath) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)
@@ -42,7 +42,7 @@ public record Detection(
 			relativeFile,
 			pos.getLine(),
 			pos.getEndLine(),
-			repository != null ? GitHubUtils.buildGitHubUrl(repository, relativeFile, pos.getLine(), pos.getEndLine()) : null
+			repository != null ? GitHubUtils.buildGitHubUrl(repository, ref, relativeFile, pos.getLine(), pos.getEndLine()) : null
 		);
 	}
 }

@@ -15,7 +15,7 @@ public record BrokenDeclaration(
 	int endLine,
 	String url
 ) {
-	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BrokenDeclaration decl, String repository, String clonePath) {
+	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BrokenDeclaration decl, String repository, String ref, String clonePath) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -37,7 +37,7 @@ public record BrokenDeclaration(
 			relativeFile,
 			startLine,
 			endLine,
-			repository != null ? GitHubUtils.buildGitHubUrl(repository, relativeFile, startLine, endLine) : null
+			repository != null ? GitHubUtils.buildGitHubUrl(repository, ref, relativeFile, startLine, endLine) : null
 		);
 	}
 }

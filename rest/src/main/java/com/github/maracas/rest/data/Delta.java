@@ -9,13 +9,13 @@ public record Delta(
 	Path jarV2,
 	List<BrokenDeclaration> brokenDeclarations
 ) {
-	public static Delta fromMaracasDelta(com.github.maracas.delta.Delta d, String repository, String clonePath) {
+	public static Delta fromMaracasDelta(com.github.maracas.delta.Delta d, String repository, String ref, String clonePath) {
 		return new Delta(
 			d.getV1(),
 			d.getV2(),
 			d.getBrokenDeclarations()
 				.stream()
-				.map(decl -> BrokenDeclaration.fromMaracasDeclaration(decl, repository, clonePath))
+				.map(decl -> BrokenDeclaration.fromMaracasDeclaration(decl, repository, ref, clonePath))
 				.collect(Collectors.toList())
 		);
 	}

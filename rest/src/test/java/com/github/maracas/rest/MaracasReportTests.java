@@ -38,11 +38,11 @@ class MaracasReportTests {
 		analyzer.populateLocations(sources);
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "../test-data/comp-changes/old/"),
+			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "main", "../test-data/comp-changes/old/"),
 			Arrays.asList(new ClientDetections(clientGithub,
 				analyzer.getDetections()
 					.stream()
-					.map(d -> Detection.fromMaracasDetection(d, clientGithub, c1.toString()))
+					.map(d -> Detection.fromMaracasDetection(d, clientGithub, "main", c1.toString()))
 					.collect(Collectors.toList())
 			))
 		);
