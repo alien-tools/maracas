@@ -20,5 +20,5 @@ jobs:
         if: always()
         with:
           files: |
-            core/**/*.xml |
-            rest/**/*.xml
+            core/target/**/*.xml |
+            rest/target/**/*.xml
