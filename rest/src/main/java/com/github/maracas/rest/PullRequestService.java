@@ -60,7 +60,11 @@ public class PullRequestService {
 		String reportLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
 
 		// If we're already on it, no need to compute it twice
-		if (!jobs.containsKey(uid) && !reportFile.exists()) {
+		if (jobs.containsKey(uid))
+			logger.info("{} is already being analyzed", uid);
+		else if (reportFile.exists())
+			logger.info("{} has already been analyzed: {}", uid, reportFile);
+		else {
 			logger.info("Starting the analysis of {}", uid);
 
 			CompletableFuture<Void> future =
@@ -87,8 +91,7 @@ public class PullRequestService {
 				});
 
 			jobs.put(uid, future);
-		} else
-			logger.info("{} is already being analyzed", uid);
+		}
 
 		return reportLocation;
 	}
