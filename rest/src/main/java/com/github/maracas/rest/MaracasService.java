@@ -89,8 +89,8 @@ public class MaracasService {
 				ref,
 				basePath.toAbsolutePath().toString()
 			),
-			detections.keySet().stream()
-				.map(repo -> new ClientDetections(repo, new ArrayList<>(detections.get(repo))))
+			config.getClients().stream()
+				.map(c -> new ClientDetections(c.repository(), new ArrayList<>(detections.get(c.repository()))))
 				.toList()
 		);
 	}
