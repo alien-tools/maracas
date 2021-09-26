@@ -27,6 +27,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
         with:
-          files: |
-            core/target/**/*.xml |
-            rest/target/**/*.xml
+          files: **/target/**/*.xml
