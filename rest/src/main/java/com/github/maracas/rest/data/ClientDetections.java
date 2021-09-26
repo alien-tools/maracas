@@ -27,6 +27,10 @@ public class ClientDetections {
 	private List<Detection> detections;
 	private Throwable error;
 
+	public ClientDetections() {
+
+	}
+
 	public ClientDetections(String u, List<Detection> d, Throwable t) {
 		this.url = u;
 		this.detections = d;
