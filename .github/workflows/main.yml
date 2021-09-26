@@ -27,4 +27,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
         with:
-          files: **/target/**/*.xml
+          files: |
+            *.xml |
+            !pom.xml
