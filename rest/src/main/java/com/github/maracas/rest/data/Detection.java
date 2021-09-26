@@ -33,7 +33,7 @@ public record Detection(
 				null
 			);
 
-		String relativeFile = Paths.get(clonePath).relativize(pos.getFile().toPath()).toString();
+		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
 		return new Detection(
 			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),

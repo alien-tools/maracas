@@ -30,7 +30,7 @@ public record BrokenDeclaration(
 			}
 		}
 
-		String relativeFile = Paths.get(clonePath).relativize(Paths.get(file)).toString();
+		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
 		return new BrokenDeclaration(
 			SpoonHelper.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),

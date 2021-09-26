@@ -70,7 +70,7 @@ class MaracasReportTests {
 	@Test
 	void testSourceLocationsDetections() {
 		assertThat(report.clientDetections().size(), is(1));
-		report.clientDetections().get(0).detections().forEach(d -> {
+		report.clientDetections().get(0).getDetections().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -87,8 +87,8 @@ class MaracasReportTests {
 	@Test
 	void testGitHubLocationsDetections() {
 		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).url(), not(emptyOrNullString()));
-		report.clientDetections().get(0).detections().forEach(d -> {
+		assertThat(report.clientDetections().get(0).getUrl(), not(emptyOrNullString()));
+		report.clientDetections().get(0).getDetections().forEach(d -> {
 			assertThat(d.url(),       not(emptyOrNullString()));
 		});
 	}
@@ -96,8 +96,8 @@ class MaracasReportTests {
 	@Test
 	void testGithubClientsArePresent() {
 		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).url(), is("tdegueul/comp-changes-client"));
-		assertThat(report.clientDetections().get(0).detections().size(), is(greaterThan(1)));
+		assertThat(report.clientDetections().get(0).getUrl(), is("tdegueul/comp-changes-client"));
+		assertThat(report.clientDetections().get(0).getDetections().size(), is(greaterThan(1)));
 	}
 
 }
