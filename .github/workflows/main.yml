@@ -17,6 +17,7 @@ jobs:
         run: mvn --batch-mode --update-snapshots -Dmaven.test.failure.ignore=true verify
         env:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          M2_HOME: /opt/hostedtoolcache/maven/3.8.2/x64
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
