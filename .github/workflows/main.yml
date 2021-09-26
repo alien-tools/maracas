@@ -24,5 +24,8 @@ jobs:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
           M2_HOME: /opt/hostedtoolcache/maven/3.8.2/x64
       - name: Publish test results
-        uses: ScaCap/action-surefire-report@v1.0.5
+        uses: ScaCap/action-surefire-report@v1
         if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
