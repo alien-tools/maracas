@@ -3,12 +3,11 @@ package com.github.maracas.rest;
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,68 +28,88 @@ public class GithubController {
 	private static final Logger logger = LogManager.getLogger(GithubController.class);
 
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
-	public PullRequestResponse analyzePullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
-		@RequestParam(required=false) String callback, @RequestHeader(required=false) String installationId, HttpServletResponse response) {
+	public ResponseEntity<PullRequestResponse> analyzePullRequest(
+		@PathVariable String owner,
+		@PathVariable String repository,
+		@PathVariable Integer prId,
+		@RequestParam(required=false) String callback,
+		@RequestHeader(required=false) String installationId)
+	{
 		try {
 			String location = github.analyzePR(owner, repository, prId, callback, installationId);
-			response.setStatus(HttpStatus.SC_ACCEPTED);
-			response.setHeader("Location", location);
-			return new PullRequestResponse("processing", null);
+			return ResponseEntity
+				.accepted()
+				.header("Location", location)
+				.body(new PullRequestResponse("processing"));
 		} catch (IOException e) {
-			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.badRequest()
+				.body(new PullRequestResponse(e.getMessage()));
 		} catch (Exception e) {
-			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new PullRequestResponse(e.getMessage()));
 		}
 	}
 
 	@GetMapping("/pr/{owner}/{repository}/{prId}")
-	public PullRequestResponse getPullRequest(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
-		HttpServletResponse response) {
+	public ResponseEntity<PullRequestResponse> getPullRequest(
+		@PathVariable String owner,
+		@PathVariable String repository,
+		@PathVariable Integer prId
+	) {
 		try {
 			// Either we have it already
 			MaracasReport report = github.getReport(owner, repository, prId);
 			if (report != null) {
-				return new PullRequestResponse("ok", report);
+				return ResponseEntity.ok(new PullRequestResponse("ok", report));
 			}
 
 			// Or we're currently computing it
 			if (github.isProcessing(owner, repository, prId)) {
-				response.setStatus(HttpStatus.SC_PROCESSING);
-				return new PullRequestResponse("processing", null);
+				return ResponseEntity
+					.status(HttpStatus.PROCESSING)
+					.body(new PullRequestResponse("processing"));
 			}
 
 			// Or it doesn't exist
-			response.setStatus(HttpStatus.SC_NOT_FOUND);
-			return new PullRequestResponse("This PR isn't being analyzed", null);
+			return ResponseEntity
+				.status(HttpStatus.NOT_FOUND)
+				.body(new PullRequestResponse("This PR isn't being analyzed"));
 		} catch (IOException e) {
-			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.badRequest()
+				.body(new PullRequestResponse(e.getMessage()));
 		} catch (Exception e) {
-			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new PullRequestResponse(e.getMessage()));
 		}
 	}
 
 	@GetMapping("/pr-sync/{owner}/{repository}/{prId}")
-	public PullRequestResponse analyzePullRequestDebug(@PathVariable String owner, @PathVariable String repository, @PathVariable Integer prId,
-		HttpServletResponse response) {
+	public ResponseEntity<PullRequestResponse> analyzePullRequestDebug(
+		@PathVariable String owner,
+		@PathVariable String repository,
+		@PathVariable Integer prId
+	) {
 		try {
 			MaracasReport report = github.analyzePRSync(owner, repository, prId);
-			return new PullRequestResponse("ok", report);
+			return ResponseEntity.ok(new PullRequestResponse("ok", report));
 		} catch (IOException e) {
-			response.setStatus(HttpStatus.SC_BAD_REQUEST);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.badRequest()
+				.body(new PullRequestResponse(e.getMessage()));
 		} catch (CloneException | BuildException | CompletionException e) {
-			response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			logger.error(e);
-			return new PullRequestResponse(e.getMessage(), null);
+			return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(new PullRequestResponse(e.getMessage()));
 		}
 	}
 }
