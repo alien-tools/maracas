@@ -47,8 +47,5 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtNewClass(CtNewClass<T> newClass) {
 		// Anonymous classes (CtNewClass) also go through (CtClass)
 		// -> don't count twice
-
-		// if (clsRef.equals(newClass.getType()))
-		//	detection(newClass, newClass.getType(), clsRef, APIUse.EXTENDS);
 	}
 }

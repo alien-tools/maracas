@@ -129,7 +129,7 @@ public class Delta {
 				brokenDeclarations.stream()
 				.map(BrokenDeclaration::getVisitor)
 				.filter(Objects::nonNull) // Temporary; FIXME
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public List<BrokenDeclaration> getBrokenDeclarations() {

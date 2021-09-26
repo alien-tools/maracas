@@ -9,6 +9,8 @@ import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class SpoonHelper {
+	private SpoonHelper() {}
+
 	public static CtElement firstLocatableParent(CtElement element) {
 		CtElement parent = element;
 		do {

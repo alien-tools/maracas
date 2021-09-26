@@ -20,9 +20,7 @@ public class Main {
 		ClientAnalyzer analyzer = version.analyzeClient(c);
 		Set<Detection> detections = version.getDetections();
 
-		detections.forEach(d -> {
-			System.out.println(d);
-		});
+		detections.forEach(System.out::println);
 
 		analyzer.writeAnnotatedClient(output);
 	}

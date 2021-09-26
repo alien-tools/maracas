@@ -8,19 +8,21 @@ import java.util.List;
  * ugly class version...
  */
 
-//public record ClientDetections(
-//	String url,
-//	List<Detection> detections,
-//	Throwable error
-//) {
-//	public ClientDetections(String url, List<Detection> detections) {
-//		this(url, detections, null);
-//	}
-//
-//	public ClientDetections(String url, Throwable error) {
-//		this(url, new ArrayList<>(), error);
-//	}
-//}
+/*
+public record ClientDetections(
+	String url,
+	List<Detection> detections,
+	Throwable error
+) {
+	public ClientDetections(String url, List<Detection> detections) {
+		this(url, detections, null);
+	}
+
+	public ClientDetections(String url, Throwable error) {
+		this(url, new ArrayList<>(), error);
+	}
+}
+*/
 
 public class ClientDetections {
 	private String url;

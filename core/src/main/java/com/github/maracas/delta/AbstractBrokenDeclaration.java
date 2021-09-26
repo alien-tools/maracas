@@ -7,7 +7,7 @@ public abstract class AbstractBrokenDeclaration implements BrokenDeclaration {
 	protected final JApiCompatibilityChange change;
 	protected CtElement sourceElement;
 
-	public AbstractBrokenDeclaration(JApiCompatibilityChange change) {
+	protected AbstractBrokenDeclaration(JApiCompatibilityChange change) {
 		this.change = change;
 	}
 

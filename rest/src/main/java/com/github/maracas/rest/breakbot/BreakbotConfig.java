@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.maracas.rest.MaracasService;
 
 public class BreakbotConfig {
 	private String mvnPom;
@@ -22,7 +21,7 @@ public class BreakbotConfig {
 	private String jarLocation;
 	private List<GithubClientConfig> clients = new ArrayList<>();
 
-	private static final Logger logger = LogManager.getLogger(MaracasService.class);
+	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
 
 	public String getMvnPom() {
 		return mvnPom;

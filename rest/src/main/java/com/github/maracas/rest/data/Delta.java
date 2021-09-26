@@ -2,7 +2,6 @@ package com.github.maracas.rest.data;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public record Delta(
 	Path jarV1,
@@ -16,7 +15,7 @@ public record Delta(
 			d.getBrokenDeclarations()
 				.stream()
 				.map(decl -> BrokenDeclaration.fromMaracasDeclaration(decl, repository, ref, clonePath))
-				.collect(Collectors.toList())
+				.toList()
 		);
 	}
 }

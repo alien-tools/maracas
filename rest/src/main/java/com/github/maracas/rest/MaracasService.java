@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,7 +73,7 @@ public class MaracasService {
 					new ClientDetections(c.repository(),
 						makeDetections(maracasDelta, clientSources).stream()
 							.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientBranch, clientPath.toAbsolutePath().toString()))
-							.collect(Collectors.toList()))
+							.toList())
 				);
 
 				logger.info("Done computing detections on {}", c.repository());

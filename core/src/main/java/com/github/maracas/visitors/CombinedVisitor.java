@@ -3,7 +3,6 @@ package com.github.maracas.visitors;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.github.maracas.delta.Detection;
 
@@ -112,7 +111,7 @@ public class CombinedVisitor extends CtScanner {
 			visitors.stream()
 			.map(BreakingChangeVisitor::getDetections)
 			.flatMap(Collection::stream)
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 	@Override
