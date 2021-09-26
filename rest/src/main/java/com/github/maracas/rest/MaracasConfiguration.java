@@ -14,13 +14,23 @@ import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 public class MaracasConfiguration {
+	/**
+	 * Attempts to build an OAuth-authenticated GitHub handler
+	 *
+	 * In normal conditions, this should come from a .github file in the classpath
+	 * In CI environments, this should come from a GITHUB_OAUTH environment variable
+	 */
 	@Bean
 	public GitHub gitHub(@Autowired ResourceLoader resourceLoader) throws IOException {
 		Resource githubRes = resourceLoader.getResource("classpath:.github");
-		try (InputStream in = githubRes.getInputStream()) {
-			Properties props = new Properties();
-			props.load(in);
-			return GitHubBuilder.fromProperties(props).build();
+		if (githubRes.exists()) {
+			try (InputStream in = githubRes.getInputStream()) {
+				Properties props = new Properties();
+				props.load(in);
+				return GitHubBuilder.fromProperties(props).build();
+			}
 		}
+
+		return GitHubBuilder.fromEnvironment().build();
 	}
 }
