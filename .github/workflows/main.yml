@@ -19,7 +19,7 @@ jobs:
         with:
           maven-version: 3.8.2
       - name: Build with Maven
-        run: mvn --batch-mode -Dmaven.test.failure.ignore=true verify
+        run: mvn --batch-mode -Dmaven.test.failure.ignore=true verify jacoco:report
         env:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
           M2_HOME: /opt/hostedtoolcache/maven/3.8.2/x64
@@ -28,4 +28,20 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Generate JaCoCo badges
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: >
+            core/target/site/jacoco/jacoco.csv
+            rest/target/site/jacoco/jacoco.csv
+      - name: Publish Core JaCoCo reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: Core JaCoCo report
+          path: core/target/site/jacoco
+      - name: Publish REST JaCoCo reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: REST JaCoCo report
+          path: rest/target/site/jacoco
