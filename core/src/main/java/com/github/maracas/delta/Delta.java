@@ -51,6 +51,10 @@ public class Delta {
 		CtModel model = launcher.buildModel();
 		CtPackage root = model.getRootPackage();
 
+		// FIXME: Ok, for some reason, @Deprecated methods (and fields? classes?)
+		// do not show up in the resulting model. This means that a @Deprecated
+		// method that gets removed can't be mapped to the proper CtElement.
+
 		Filter.filter(classes, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {
@@ -82,8 +86,10 @@ public class Delta {
 							// japicmp reports that valueOf(String)/values() are removed
 							// Ignore. FIXME
 							;
-						else
-							throw new RuntimeException("Spoon's old method cannot be found: " + jApiMethod);
+						else {
+							System.err.println("Spoon's old method cannot be found: " + jApiMethod);
+							System.err.println("\tKnown bug: is the method @Deprecated?");
+						}
 					}
 				} else {
 					// No oldMethod
