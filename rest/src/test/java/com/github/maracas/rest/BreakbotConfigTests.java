@@ -101,4 +101,28 @@ class BreakbotConfigTests {
 		assertThat(c.getJarLocation(), is("build/out.jar"));
 	}
 
+	@Test
+	void testClientWithCommitOrBranch() {
+		String s = """
+			clients:
+			  - repository: a/b
+			    sources: src
+			    sha: a3b98f
+			  - repository: a/c
+			    sha: 52f1aa
+			  - repository: b/d
+			  - repository: b/e
+			    branch: dev""";
+		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		assertThat(c.getClients(), hasSize(4));
+		assertThat(c.getClients().get(0).sha(), is("a3b98f"));
+		assertThat(c.getClients().get(0).branch(), nullValue());
+		assertThat(c.getClients().get(1).sha(), is("52f1aa"));
+		assertThat(c.getClients().get(1).branch(), nullValue());
+		assertThat(c.getClients().get(2).sha(), nullValue());
+		assertThat(c.getClients().get(2).branch(), nullValue());
+		assertThat(c.getClients().get(3).sha(), nullValue());
+		assertThat(c.getClients().get(3).branch(), is("dev"));
+	}
+
 }

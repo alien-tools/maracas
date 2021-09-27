@@ -1,16 +1,12 @@
 package com.github.maracas.rest;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.maracas.ClientAnalyzer;
@@ -24,11 +20,7 @@ import com.github.maracas.rest.data.MaracasReport;
 @Service
 public class MaracasService {
 	@Autowired
-	private GitHub github;
-	@Autowired
 	private GithubService githubService;
-	@Value("${maracas.clone-path:./clones}")
-	private String clonePath;
 
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
@@ -58,21 +50,14 @@ public class MaracasService {
 		config.getClients().parallelStream().forEach(c -> {
 			try {
 				// Clone the client
-				logger.info("Cloning client {}", c.repository());
-				GHRepository clientRepo = github.getRepository(c.repository());
-				String clientBranch = clientRepo.getDefaultBranch();
-				Path clientPath = Paths.get(clonePath)
-					.resolve(clientRepo.getOwnerName())
-					.resolve(clientRepo.getBranch(clientBranch).getSHA1());
-
-				githubService.cloneRemote(clientRepo.getHttpTransportUrl(), clientBranch, clientPath);
-
+				String branch = githubService.getBranch(c);
+				Path clientPath = githubService.cloneRepository(c);
 				Path clientSources = findSourceDirectory(clientPath, c.sources());
 
 				detections.add(
 					new ClientDetections(c.repository(),
 						makeDetections(maracasDelta, clientSources).stream()
-							.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), clientBranch, clientPath.toAbsolutePath().toString()))
+							.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), branch, clientPath.toAbsolutePath().toString()))
 							.toList())
 				);
 

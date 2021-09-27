@@ -28,7 +28,7 @@ public class CloneAndBuild implements Supplier<Path> {
 
 	@Override
 	public Path get() {
-		githubService.cloneRemote(url, ref, dest);
+		githubService.cloneRemote(url, ref, null, dest);
 		buildService.build(dest, config);
 		return buildService.locateJar(dest, config);
 	}
