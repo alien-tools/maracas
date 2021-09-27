@@ -14,6 +14,7 @@ import spoon.reflect.CtModel;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.declaration.CtElement;
 
+@Deprecated
 public class ClientAnalyzer {
 	private Delta delta;
 	private final Path client;

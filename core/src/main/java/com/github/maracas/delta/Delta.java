@@ -28,6 +28,7 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class Delta {
@@ -127,6 +128,31 @@ public class Delta {
 			@Override
 			public void visit(JApiSuperclass jApiSuperclass) {
 			}
+		});
+	}
+
+	public void populateLocations(Path sources) {
+		Launcher launcher = new Launcher();
+		launcher.addInputResource(sources.toAbsolutePath().toString());
+		CtModel model = launcher.buildModel();
+		CtPackage root = model.getRootPackage();
+
+		brokenDeclarations.forEach(decl -> {
+			CtReference bytecodeRef = decl.getReference();
+			if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
+				CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
+				decl.setSourceElement(sourceRef.getTypeDeclaration());
+			} else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
+				// FIXME: hacky; can't get a reference in the same way as the others;
+				// 			  won't work with parameters, etc.; FIX
+				String signature = String.format("%s %s#%s()", execRef.getType(), execRef.getDeclaringType(), execRef.getSimpleName());
+				CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(signature);
+				decl.setSourceElement(sourceRef.getExecutableDeclaration());
+			} else if (bytecodeRef instanceof CtFieldReference<?> fieldRef) {
+				CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
+				decl.setSourceElement(sourceRef.getFieldDeclaration());
+			} else
+				throw new RuntimeException("Shouldn't be here");
 		});
 	}
 

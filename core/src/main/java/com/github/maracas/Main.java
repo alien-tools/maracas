@@ -2,9 +2,6 @@ package com.github.maracas;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
-
-import com.github.maracas.delta.Detection;
 
 public class Main {
 	public static void main(String[] args) {
@@ -14,14 +11,16 @@ public class Main {
 		Path sources = Paths.get("../test-data/comp-changes/old/");
 		Path output = Paths.get("../test-data/comp-changes/client-commented/src");
 
-		VersionAnalyzer version = new VersionAnalyzer(v1, v2);
-		version.computeDelta();
-		version.populateLocations(sources);
-		ClientAnalyzer analyzer = version.analyzeClient(c);
-		Set<Detection> detections = version.getDetections();
+		MaracasQuery query =
+			new MaracasQuery.Builder()
+				.v1(v1.toAbsolutePath())
+				.v2(v2)
+				.sources(sources)
+				.output(output)
+				.client(c)
+				.build();
 
-		detections.forEach(System.out::println);
-
-		analyzer.writeAnnotatedClient(output);
+		MaracasResult result = new Maracas().analyze(query);
+		System.out.println(result);
 	}
 }

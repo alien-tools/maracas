@@ -29,6 +29,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+@Deprecated
 public class VersionAnalyzer {
 	private final Path v1;
 	private final Path v2;

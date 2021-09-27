@@ -5,15 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 
+import com.github.maracas.Maracas;
+import com.github.maracas.MaracasQuery;
+import com.github.maracas.MaracasResult;
 import com.github.maracas.SpoonHelper;
-import com.github.maracas.VersionAnalyzer;
 import com.github.maracas.delta.APIUse;
 import com.github.maracas.delta.Detection;
 
@@ -22,7 +24,7 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 public class CompChangesTest {
-	static Set<Detection> detections;
+	static Collection<Detection> detections;
 
 	@BeforeAll
 	static void setUp() {
@@ -30,10 +32,14 @@ public class CompChangesTest {
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path client = Paths.get("../test-data/comp-changes/client/src/");
 
-		VersionAnalyzer version = new VersionAnalyzer(v1, v2);
-		version.computeDelta();
-		version.analyzeClient(client);
-		detections = version.getDetections();
+		MaracasQuery query = new MaracasQuery.Builder()
+			.v1(v1)
+			.v2(v2)
+			.client(client)
+			.build();
+
+		MaracasResult result = new Maracas().analyze(query);
+		detections = result.getAllDetections();
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
