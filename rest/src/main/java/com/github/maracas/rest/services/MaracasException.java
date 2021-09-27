@@ -1,4 +1,4 @@
-package com.github.maracas.rest;
+package com.github.maracas.rest.services;
 
 public class MaracasException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

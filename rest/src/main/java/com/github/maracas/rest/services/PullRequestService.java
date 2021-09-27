@@ -1,4 +1,4 @@
-package com.github.maracas.rest;
+package com.github.maracas.rest.services;
 
 import java.io.File;
 import java.io.IOException;

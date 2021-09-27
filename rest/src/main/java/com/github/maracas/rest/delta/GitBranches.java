@@ -9,11 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHBranch;
 
-import com.github.maracas.rest.BuildException;
-import com.github.maracas.rest.CloneException;
-import com.github.maracas.rest.MaracasService;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.services.BuildException;
+import com.github.maracas.rest.services.CloneException;
+import com.github.maracas.rest.services.MaracasService;
 import com.github.maracas.rest.tasks.CloneAndBuild;
 
 public class GitBranches implements Diffable {

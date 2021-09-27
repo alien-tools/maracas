@@ -1,4 +1,4 @@
-package com.github.maracas.rest;
+package com.github.maracas.rest.controllers;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
@@ -18,14 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
+import com.github.maracas.rest.services.BuildException;
+import com.github.maracas.rest.services.CloneException;
+import com.github.maracas.rest.services.PullRequestService;
 
 @RestController
 @RequestMapping("/github")
-public class GithubController {
+public class PullRequestController {
 	@Autowired
 	private PullRequestService github;
 
-	private static final Logger logger = LogManager.getLogger(GithubController.class);
+	private static final Logger logger = LogManager.getLogger(PullRequestController.class);
 
 	@PostMapping("/pr/{owner}/{repository}/{prId}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequest(

@@ -3,9 +3,9 @@ package com.github.maracas.rest.tasks;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-import com.github.maracas.rest.BuildService;
-import com.github.maracas.rest.GithubService;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.rest.services.BuildService;
+import com.github.maracas.rest.services.GithubService;
 
 /**
  * Clones & builds a repository, returns the JAR
