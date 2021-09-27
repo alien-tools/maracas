@@ -39,6 +39,8 @@ public class GithubService {
 			.resolve(String.valueOf(repo.getId()))
 			.resolve(sha);
 
+		logger.info("Cloning repository {} [branch={}, sha={}] to {}",
+			config.repository(), branch, sha, dest);
 		cloneRemote(repo.getHttpTransportUrl(), branch, sha, dest);
 		return dest;
 	}
