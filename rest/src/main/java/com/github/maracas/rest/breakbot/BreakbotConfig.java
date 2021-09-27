@@ -68,4 +68,14 @@ public class BreakbotConfig {
 			return defaultConfig();
 		}
 	}
+
+	public static BreakbotConfig fromYaml(String yaml) {
+		try {
+			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			return mapper.readValue(yaml, BreakbotConfig.class);
+		} catch (IOException e) {
+			logger.warn("Couldn't parse .breakbot.yml: returning default configuration", e);
+			return defaultConfig();
+		}
+	}
 }

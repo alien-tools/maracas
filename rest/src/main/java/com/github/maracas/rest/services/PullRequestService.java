@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHPullRequest;
@@ -100,11 +101,14 @@ public class PullRequestService {
 		return analyzePR(owner, repository, prId, null, null);
 	}
 
-	public MaracasReport analyzePRSync(String owner, String repository, int prId) throws IOException {
+	public MaracasReport analyzePRSync(String owner, String repository, int prId, String breakbotYaml) throws IOException {
 		// Read PR meta
 		GHRepository repo = github.getRepository(owner + "/" + repository);
 		GHPullRequest pr = repo.getPullRequest(prId);
-		BreakbotConfig config = readBreakbotConfig(repo);
+		BreakbotConfig config =
+			StringUtils.isEmpty(breakbotYaml) ?
+				readBreakbotConfig(repo) :
+				BreakbotConfig.fromYaml(breakbotYaml);
 		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
 
 		return prDiff.diff();

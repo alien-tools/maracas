@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -94,14 +95,15 @@ public class PullRequestController {
 		}
 	}
 
-	@GetMapping("/pr-sync/{owner}/{repository}/{prId}")
+	@PostMapping("/pr-sync/{owner}/{repository}/{prId}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequestDebug(
 		@PathVariable String owner,
 		@PathVariable String repository,
-		@PathVariable Integer prId
+		@PathVariable Integer prId,
+		@RequestBody(required=false) String breakbotYaml
 	) {
 		try {
-			MaracasReport report = github.analyzePRSync(owner, repository, prId);
+			MaracasReport report = github.analyzePRSync(owner, repository, prId, breakbotYaml);
 			return ResponseEntity.ok(new PullRequestResponse("ok", report));
 		} catch (IOException e) {
 			logger.error(e);

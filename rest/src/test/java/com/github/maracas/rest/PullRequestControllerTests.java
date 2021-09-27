@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class GithubControllerTests {
+class PullRequestControllerTests {
 	@Autowired
 	private MockMvc mvc;
 
@@ -49,7 +49,7 @@ class GithubControllerTests {
 
 	@Test
 	void testSubmitAndCheckPRSync() throws Exception {
-		checkReport(mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/3")));
+		checkReport(mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/3")));
 	}
 
 	@Test
@@ -147,7 +147,7 @@ class GithubControllerTests {
 		mvc.perform(post("/github/pr/tdegueul/NOPE/3?callback=foo"))
 			.andExpect(status().isBadRequest());
 
-		mvc.perform(get("/github/pr-sync/tdegueul/NOPE/3"))
+		mvc.perform(post("/github/pr-sync/tdegueul/NOPE/3"))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -159,7 +159,7 @@ class GithubControllerTests {
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999?callback=foo"))
 			.andExpect(status().isBadRequest());
 
-		mvc.perform(get("/github/pr-sync/tdegueul/comp-changes/9999"))
+		mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/9999"))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -167,5 +167,16 @@ class GithubControllerTests {
 	void testPRExistsButNotAnalyzed() throws Exception {
 		mvc.perform(get("/github/pr/tdegueul/comp-changes/1"))
 			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void testPRWithSuppliedBreakbotConfiguration() throws Exception {
+		checkReport(mvc.perform(
+			post("/github/pr-sync/tdegueul/comp-changes/2")
+				.content("""
+					clients:
+					  - repository: tdegueul/comp-changes-client
+					""")
+		));
 	}
 }
