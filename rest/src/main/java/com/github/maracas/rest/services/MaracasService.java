@@ -3,41 +3,52 @@ package com.github.maracas.rest.services;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.github.maracas.ClientAnalyzer;
-import com.github.maracas.VersionAnalyzer;
+import com.github.maracas.Maracas;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.delta.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.MaracasReport;
+import com.google.common.base.Stopwatch;
 
 @Service
 public class MaracasService {
 	@Autowired
 	private GithubService githubService;
+	private Maracas maracas = new Maracas();
 
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
 	public Delta makeDelta(Path jar1, Path jar2, Path sources) {
-		logger.info("Computing delta {} -> {}", jar1, jar2);
+		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
-		VersionAnalyzer analyzer = new VersionAnalyzer(jar1, jar2);
-		analyzer.computeDelta();
-		analyzer.populateLocations(sources);
-		return analyzer.getDelta();
+		Stopwatch watch = Stopwatch.createStarted();
+		Delta delta = maracas.computeDelta(jar1, jar2);
+		delta.populateLocations(sources);
+
+		logger.info("Done Δ({} -> {}) in {}ms", jar1.getFileName(), jar2.getFileName(),
+			watch.elapsed(TimeUnit.MILLISECONDS));
+		return delta;
 	}
 
 	public List<Detection> makeDetections(Delta delta, Path clientSources) {
-		logger.info("Computing detections on client {}", clientSources);
-		ClientAnalyzer clientAnalyzer = new ClientAnalyzer(delta, clientSources, delta.getV1());
-		clientAnalyzer.computeDetections();
-		return clientAnalyzer.getDetections();
+		logger.info("Computing detections({}, Δ({} -> {}))", clientSources,
+			delta.getV1().getFileName(), delta.getV2().getFileName());
+
+		Stopwatch watch = Stopwatch.createStarted();
+		List<Detection> detections = maracas.computeDetections(clientSources, delta);
+
+		logger.info("Done detections({}, Δ({} -> {})) in {}ms", clientSources,
+			delta.getV1().getFileName(), delta.getV2().getFileName(),
+			watch.elapsed(TimeUnit.MILLISECONDS));
+		return detections;
 	}
 
 	public MaracasReport makeReport(String repository, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {

@@ -1,6 +1,7 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.maracas.delta.Delta;
@@ -33,13 +34,13 @@ public class Maracas {
 		Multimap<Path, Detection> clientsDetections = ArrayListMultimap.create();
 		query.clients()
 			.forEach(c -> {
-				clientsDetections.putAll(c, computeDetections(c, delta, query.v1()));
+				clientsDetections.putAll(c, computeDetections(c, delta));
 			});
 
 		return new MaracasResult(delta, clientsDetections);
 	}
 
-	private Delta computeDelta(Path v1, Path v2, List<Path> oldCP, List<Path> newCP) {
+	public Delta computeDelta(Path v1, Path v2, List<Path> oldCP, List<Path> newCP) {
 		Options defaultOptions = getJApiOptions();
 		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(defaultOptions);
 
@@ -59,10 +60,14 @@ public class Maracas {
 		return new Delta(v1, v2, classes);
 	}
 
-	private List<Detection> computeDetections(Path client, Delta delta, Path v1) {
+	public Delta computeDelta(Path v1, Path v2) {
+		return computeDelta(v1, v2, new ArrayList<>(), new ArrayList<>());
+	}
+
+	public List<Detection> computeDetections(Path client, Delta delta) {
 		Launcher launcher = new Launcher();
 		launcher.addInputResource(client.toAbsolutePath().toString());
-		String[] javaCP = { v1.toAbsolutePath().toString() };
+		String[] javaCP = { delta.getV1().toAbsolutePath().toString() };
 		launcher.getEnvironment().setSourceClasspath(javaCP);
 		CtModel model = launcher.buildModel();
 

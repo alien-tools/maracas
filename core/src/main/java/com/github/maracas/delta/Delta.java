@@ -42,7 +42,7 @@ public class Delta {
 		extractBrokenDeclarations(classes);
 	}
 
-	public void extractBrokenDeclarations(List<JApiClass> classes) {
+	private void extractBrokenDeclarations(List<JApiClass> classes) {
 		// We need to create CtReferences to v1 to map japicmp's delta
 		// to our own. It seems building an empty model with the right
 		// classpath allows us to create these references. FIXME

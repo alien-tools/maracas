@@ -14,7 +14,9 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.maracas.VersionAnalyzer;
+import com.github.maracas.Maracas;
+import com.github.maracas.MaracasQuery;
+import com.github.maracas.MaracasResult;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.Delta;
 import com.github.maracas.rest.data.Detection;
@@ -32,15 +34,18 @@ class MaracasReportTests {
 		String libGithub = "tdegueul/comp-changes";
 		String clientGithub = "tdegueul/comp-changes-client";
 
-		VersionAnalyzer analyzer = new VersionAnalyzer(v1, v2);
-		analyzer.computeDelta();
-		analyzer.analyzeClient(c1);
-		analyzer.populateLocations(sources);
+		MaracasQuery query = new MaracasQuery.Builder()
+			.v1(v1)
+			.v2(v2)
+			.sources(sources)
+			.client(c1)
+			.build();
+		MaracasResult result = new Maracas().analyze(query);
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(analyzer.getDelta(), libGithub, "main", "../test-data/comp-changes/old/"),
+			Delta.fromMaracasDelta(result.delta(), libGithub, "main", "../test-data/comp-changes/old/"),
 			Arrays.asList(new ClientDetections(clientGithub,
-				analyzer.getDetections()
+				result.allDetections()
 					.stream()
 					.map(d -> Detection.fromMaracasDetection(d, clientGithub, "main", c1.toString()))
 					.collect(Collectors.toList())
