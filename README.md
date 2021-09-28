@@ -5,8 +5,12 @@ Currently, Maracas consists of two main components:
   - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
   - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [break-bot](https://github.com/break-bot/breakbot) to analyze pull requests on GitHub and report their impact
 
-## Getting started
-One may use Maracas to compute the changes between two versions of a library as well as their impact on a particular client as follows:
+## Using Maracas
+
+### As an API
+One may use Maracas to compute the changes between two versions of a library as well as their impact on a particular client as follows.
+
+*Note that both versions of the library must be provided as binary JARs, while the client is provided as source code.*
 
 ```java
 Path v1 = Paths.get("v1.jar");
@@ -15,7 +19,7 @@ Path c =  Paths.get("/path/to/client/src/main/java");
 
 MaracasQuery query =
   new MaracasQuery.Builder()
-    .v1(v1.toAbsolutePath())
+    .v1(v1)
     .v2(v2)
     .client(c)
     .build();
@@ -23,4 +27,20 @@ MaracasQuery query =
 MaracasResult result = new Maracas().analyze(query);
 System.out.println("Changes: " + result.delta());
 System.out.println("Impact:  " + result.allDetections());
+```
+
+### From the command line
+Alternatively, one can invoke Maracas from the command line using the provided CLI.
+First, build a standalone JAR from Maracas Core, and then follow the `--help` guidelines:
+
+```bash
+cd core/
+mvn clean compile assembly:single
+java -jar target/maracas-core-<version>-jar-with-dependencies.jar --help
+```
+
+The example above can be invoked from the CLI as follows:
+
+```bash
+java -jar target/maracas-core-<version>-jar-with-dependencies.jar --old v1.jar --new v2.jar --client /path/to/client/src/main/java
 ```
