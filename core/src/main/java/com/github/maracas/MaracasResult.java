@@ -18,18 +18,4 @@ public record MaracasResult(
 	public Collection<Detection> detectionsForClient(Path client) {
 		return detections.get(client);
 	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(delta);
-		sb.append("\n");
-		detections.keys().forEach(client -> {
-			Collection<Detection> ds = detections.get(client);
-			sb.append("For " + client);
-			sb.append("\n");
-			ds.forEach(d -> sb.append("\t" + d + "\n"));
-		});
-		return sb.toString();
-	}
 }

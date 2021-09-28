@@ -25,27 +25,31 @@ public record MaracasQuery(
 		private List<Path> newClasspath = new ArrayList<>();
 
 		public Builder v1(Path p) {
-			this.v1 = p.toAbsolutePath();
+			if (p != null)
+				this.v1 = p.toAbsolutePath();
 			return this;
 		}
 
 		public Builder v2(Path p) {
-			this.v2 = p.toAbsolutePath();
+			if (p != null)
+				this.v2 = p.toAbsolutePath();
 			return this;
 		}
 
 		public Builder sources(Path p) {
-			this.sources = p.toAbsolutePath();
+			if (p != null)
+				this.sources = p.toAbsolutePath();
 			return this;
 		}
 
 		public Builder output(Path p) {
-			this.output = p.toAbsolutePath();
+			if (p != null)
+				this.output = p.toAbsolutePath();
 			return this;
 		}
 
 		public Builder client(Path p) {
-			if (!this.clients.contains(p.toAbsolutePath()))
+			if (p != null && !this.clients.contains(p.toAbsolutePath()))
 				this.clients.add(p.toAbsolutePath());
 			return this;
 		}
@@ -56,13 +60,13 @@ public record MaracasQuery(
 		}
 
 		public Builder oldClasspath(Path p) {
-			if (!this.oldClasspath.contains(p.toAbsolutePath()))
+			if (p != null && !this.oldClasspath.contains(p.toAbsolutePath()))
 				this.oldClasspath.add(p.toAbsolutePath());
 			return this;
 		}
 
 		public Builder newClasspath(Path p) {
-			if (!this.newClasspath.contains(p.toAbsolutePath()))
+			if (p != null && !this.newClasspath.contains(p.toAbsolutePath()))
 				this.newClasspath.add(p.toAbsolutePath());
 			return this;
 		}

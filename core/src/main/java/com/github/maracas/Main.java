@@ -13,7 +13,7 @@ public class Main {
 
 		MaracasQuery query =
 			new MaracasQuery.Builder()
-				.v1(v1.toAbsolutePath())
+				.v1(v1)
 				.v2(v2)
 				.sources(sources)
 				.output(output)

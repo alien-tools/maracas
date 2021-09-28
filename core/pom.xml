@@ -60,6 +60,11 @@
 			<artifactId>junit-platform-launcher</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>4.6.1</version>
+		</dependency>
 		<!-- test data -->
 		<dependency>
 			<groupId>com.github.maracas</groupId>
