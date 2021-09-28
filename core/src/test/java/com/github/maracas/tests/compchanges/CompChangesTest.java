@@ -39,7 +39,7 @@ public class CompChangesTest {
 			.build();
 
 		MaracasResult result = new Maracas().analyze(query);
-		detections = result.getAllDetections();
+		detections = result.allDetections();
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {

@@ -11,11 +11,11 @@ public record MaracasResult(
 	Delta delta,
 	Multimap<Path, Detection> detections
 ) {
-	public Collection<Detection> getAllDetections() {
+	public Collection<Detection> allDetections() {
 		return detections.values();
 	}
 
-	public Collection<Detection> getDetectionsForClient(Path client) {
+	public Collection<Detection> detectionsForClient(Path client) {
 		return detections.get(client);
 	}
 
