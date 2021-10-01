@@ -17,14 +17,13 @@ Path v1 = Paths.get("v1.jar");
 Path v2 = Paths.get("v2.jar");
 Path c =  Paths.get("/path/to/client/src/main/java");
 
-MaracasQuery query =
-  new MaracasQuery.Builder()
-    .v1(v1)
-    .v2(v2)
-    .client(c)
-    .build();
+AnalysisQuery query = AnalysisQuery.builder()
+  .oldJar(v1)
+  .newJar(v2)
+  .client(c)
+  .build();
 
-MaracasResult result = new Maracas().analyze(query);
+AnalysisResult result = new Maracas().analyze(query);
 System.out.println("Changes: " + result.delta());
 System.out.println("Impact:  " + result.allDetections());
 ```
