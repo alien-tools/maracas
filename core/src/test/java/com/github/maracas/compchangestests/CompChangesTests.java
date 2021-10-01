@@ -1,4 +1,4 @@
-package com.github.maracas.tests.compchanges;
+package com.github.maracas.compchangestests;
 
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.platform.suite.api.SelectPackages;

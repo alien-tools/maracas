@@ -1,4 +1,4 @@
-package com.github.maracas.tests.compchanges;
+package com.github.maracas.compchangestests;
 
 import static com.github.maracas.delta.APIUse.THROWS;
 import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_CHECKED_EXCEPTION;

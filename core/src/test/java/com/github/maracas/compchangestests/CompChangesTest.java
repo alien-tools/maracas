@@ -1,4 +1,4 @@
-package com.github.maracas.tests.compchanges;
+package com.github.maracas.compchangestests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
