@@ -39,15 +39,14 @@ public class MaracasCLI implements Runnable {
 	public void run() {
 		try {
 			Stopwatch watch = Stopwatch.createStarted();
-			MaracasQuery query =
-				new MaracasQuery.Builder()
-					.v1(v1)
-					.v2(v2)
-					.sources(sources)
-					.clients(clients)
-					.build();
+			AnalysisQuery query = AnalysisQuery.builder()
+				.oldJar(v1)
+				.newJar(v2)
+				.sources(sources)
+				.clients(clients)
+				.build();
 
-			MaracasResult result = new Maracas().analyze(query);
+			AnalysisResult result = new Maracas().analyze(query);
 
 			System.out.println("""
 			+------------------+

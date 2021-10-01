@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 
+import com.github.maracas.AnalysisQuery;
+import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.MaracasQuery;
-import com.github.maracas.MaracasResult;
 import com.github.maracas.SpoonHelper;
 import com.github.maracas.delta.APIUse;
 import com.github.maracas.delta.Detection;
@@ -32,13 +32,13 @@ public class CompChangesTest {
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path client = Paths.get("../test-data/comp-changes/client/src/");
 
-		MaracasQuery query = new MaracasQuery.Builder()
-			.v1(v1)
-			.v2(v2)
+		AnalysisQuery query = AnalysisQuery.builder()
+			.oldJar(v1)
+			.newJar(v2)
 			.client(client)
 			.build();
 
-		MaracasResult result = new Maracas().analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 		detections = result.allDetections();
 	}
 

@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.maracas.AnalysisQuery;
+import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.MaracasQuery;
-import com.github.maracas.MaracasResult;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.Delta;
 import com.github.maracas.rest.data.Detection;
@@ -34,13 +34,13 @@ class MaracasReportTests {
 		String libGithub = "tdegueul/comp-changes";
 		String clientGithub = "tdegueul/comp-changes-client";
 
-		MaracasQuery query = new MaracasQuery.Builder()
-			.v1(v1)
-			.v2(v2)
+		AnalysisQuery query = AnalysisQuery.builder()
+			.oldJar(v1)
+			.newJar(v2)
 			.sources(sources)
 			.client(c1)
 			.build();
-		MaracasResult result = new Maracas().analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 
 		report = new MaracasReport(
 			Delta.fromMaracasDelta(result.delta(), libGithub, "main", "../test-data/comp-changes/old/"),

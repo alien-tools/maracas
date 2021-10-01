@@ -1,7 +1,6 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.github.maracas.delta.Delta;
@@ -24,29 +23,24 @@ import spoon.Launcher;
 import spoon.reflect.CtModel;
 
 public class Maracas {
-	public MaracasResult analyze(MaracasQuery query) {
-		Delta delta = computeDelta(query.v1(), query.v2(),
-			query.oldClasspath(), query.newClasspath());
+	public AnalysisResult analyze(AnalysisQuery query) {
+		Delta delta = computeDelta(query.getOldJar(), query.getNewJar());
 
-		if (query.sources() != null)
-			delta.populateLocations(query.sources());
+		if (query.getSources() != null)
+			delta.populateLocations(query.getSources());
 
 		Multimap<Path, Detection> clientsDetections = ArrayListMultimap.create();
-		query.clients()
+		query.getClients()
 			.forEach(c -> {
 				clientsDetections.putAll(c, computeDetections(c, delta));
 			});
 
-		return new MaracasResult(delta, clientsDetections);
+		return new AnalysisResult(delta, clientsDetections);
 	}
 
-	public Delta computeDelta(Path v1, Path v2, List<Path> oldCP, List<Path> newCP) {
+	public Delta computeDelta(Path v1, Path v2) {
 		Options defaultOptions = getJApiOptions();
 		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(defaultOptions);
-
-		oldCP.forEach(p -> options.getOldClassPath().add(p.toAbsolutePath().toString()));
-		newCP.forEach(p -> options.getNewClassPath().add(p.toAbsolutePath().toString()));
-
 		JarArchiveComparator comparator = new JarArchiveComparator(options);
 
 		JApiCmpArchive oldAPI = new JApiCmpArchive(v1.toFile(), "v1");
@@ -58,10 +52,6 @@ public class Maracas {
 		filter.filter(classes);
 
 		return new Delta(v1, v2, classes);
-	}
-
-	public Delta computeDelta(Path v1, Path v2) {
-		return computeDelta(v1, v2, new ArrayList<>(), new ArrayList<>());
 	}
 
 	public List<Detection> computeDetections(Path client, Delta delta) {

@@ -7,7 +7,7 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.delta.Detection;
 import com.google.common.collect.Multimap;
 
-public record MaracasResult(
+public record AnalysisResult(
 	Delta delta,
 	Multimap<Path, Detection> detections
 ) {
