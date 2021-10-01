@@ -152,9 +152,11 @@ public class AnalysisQuery {
 		 *
 		 * @see #client(Path)
 		 */
-		public Builder clients(Iterable<Path> clients) {
-			if (clients != null)
-				clients.forEach(this::client);
+		public Builder clients(Collection<Path> clients) {
+			if (clients == null)
+				throw new IllegalArgumentException("clients is null");
+
+			clients.forEach(this::client);
 			return this;
 		}
 
