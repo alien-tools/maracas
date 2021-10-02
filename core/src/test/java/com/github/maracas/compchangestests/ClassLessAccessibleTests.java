@@ -1,14 +1,14 @@
 package com.github.maracas.compchangestests;
 
 import static com.github.maracas.detection.APIUse.*;
-import static japicmp.model.JApiCompatibilityChange.*;
+import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
 
 import org.junit.jupiter.api.Test;
 
 class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberDetections(CLASS_LESS_ACCESSIBLE, 2);
+		assertNumberDetections(CLASS_LESS_ACCESSIBLE, 38);
 	}
 
 	@Test
