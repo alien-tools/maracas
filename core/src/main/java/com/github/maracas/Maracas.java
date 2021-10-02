@@ -22,7 +22,6 @@ import japicmp.config.Options;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
-import japicmp.util.Optional;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 
@@ -70,10 +69,6 @@ public class Maracas {
 	 * @see #computeDelta(Path, Path, Options)
 	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
 	 */
-	public static Delta computeDelta(Path oldJar, Path newJar) {
-		return computeDelta(oldJar, newJar, defaultJApiOptions());
-	}
-
 	public static Delta computeDelta(Path oldJar, Path newJar, Options jApiOptions) {
 		if (!PathHelpers.isValidJar(oldJar))
 			throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
@@ -94,6 +89,13 @@ public class Maracas {
 
 		return Delta.fromJApiCmpDelta(
 			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes);
+	}
+
+	/**
+	 * @see #computeDelta(Path, Path, Options)
+	 */
+	public static Delta computeDelta(Path oldJar, Path newJar) {
+		return computeDelta(oldJar, newJar, defaultJApiOptions());
 	}
 
 	/**
@@ -135,20 +137,6 @@ public class Maracas {
 		defaultOptions.setOutputOnlyModifications(true);
 		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
 		defaultOptions.setIgnoreMissingClasses(false);
-
-		// FIXME: inherited from maracas-rascal
-		String[] excl = { "(*.)?tests(.*)?", "(*.)?test(.*)?",
-				"@org.junit.After",
-				"@org.junit.AfterClass",
-				"@org.junit.Before",
-				"@org.junit.BeforeClass",
-				"@org.junit.Ignore",
-				"@org.junit.Test",
-				"@org.junit.runner.RunWith" };
-
-		for (String e : excl) {
-			defaultOptions.addExcludeFromArgument(Optional.of(e), false);
-		}
 
 		return defaultOptions;
 	}

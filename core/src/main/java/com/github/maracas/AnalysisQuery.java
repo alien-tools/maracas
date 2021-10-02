@@ -7,6 +7,7 @@ import java.util.Collection;
 import com.github.maracas.util.PathHelpers;
 
 import japicmp.config.Options;
+import japicmp.util.Optional;
 
 /**
  * An AnalysisQuery holds the information about a library's old and new
@@ -75,7 +76,7 @@ public class AnalysisQuery {
 	/**
 	 * JApiCmp's options
 	 *
-	 * @see Options
+	 * @see japicmp.config.Options
 	 */
 	public Options getJApiOptions() {
 		return jApiOptions;
@@ -91,7 +92,7 @@ public class AnalysisQuery {
 		private Path newJar;
 		private Path sources;
 		private Collection<Path> clients = new ArrayList<>();
-		private Options jApiOptions;
+		private Options jApiOptions = Maracas.defaultJApiOptions();
 
 		/**
 		 * Use {@link AnalysisQuery#builder()}
@@ -166,6 +167,8 @@ public class AnalysisQuery {
 		/**
 		 * Includes a set of clients into the analysis.
 		 *
+		 * @return the builder
+		 * @throws IllegalArgumentException if clients is null
 		 * @see #client(Path)
 		 */
 		public Builder clients(Collection<Path> clients) {
@@ -176,11 +179,33 @@ public class AnalysisQuery {
 			return this;
 		}
 
+		/**
+		 * Set the options to pass to JApiCmp
+		 *
+		 * @param options JApiCmp's options
+		 * @return the builder
+		 * @see japicmp.config.Options
+		 */
 		public Builder jApiOptions(Options options) {
 			if (options == null)
 				throw new IllegalArgumentException("options is null");
 
 			this.jApiOptions = options;
+			return this;
+		}
+
+		/**
+		 * Excludes some part of the API from the analysis
+		 *
+		 * @param pattern The pattern to exclude ("@Annotation", "*package*", etc.)
+		 * @return the builder
+		 * @see japicmp.config.Options#addExcludeFromArgument(japicmp.util.Optional, boolean)
+		 */
+		public Builder exclude(String pattern) {
+			if (pattern == null)
+				throw new IllegalArgumentException("pattern is null");
+
+			this.jApiOptions.addExcludeFromArgument(Optional.of(pattern), false);
 			return this;
 		}
 

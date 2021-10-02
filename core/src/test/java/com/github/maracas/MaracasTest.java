@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
 
+import japicmp.config.Options;
+import japicmp.model.AccessModifier;
+
 class MaracasTest {
 	Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 	Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
@@ -74,6 +77,32 @@ class MaracasTest {
 		assertThat(res.delta(), is(notNullValue()));
 		assertThat(new ArrayList<>(res.delta().getBrokenDeclarations()),
 			everyItem(hasProperty("sourceElement", notNullValue())));
+	}
+
+	@Test
+	void analyze_QueryWithOptions_UsesOptions() {
+		Options publicOpts = Maracas.defaultJApiOptions();
+		publicOpts.setAccessModifier(AccessModifier.PUBLIC);
+
+		Options privateOpts = Maracas.defaultJApiOptions();
+		privateOpts.setAccessModifier(AccessModifier.PRIVATE);
+
+		AnalysisResult resPublic = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldJar(v1)
+				.newJar(v2)
+				.jApiOptions(publicOpts)
+				.build());
+
+		AnalysisResult resPrivate = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldJar(v1)
+				.newJar(v2)
+				.jApiOptions(privateOpts)
+				.build());
+
+		assertThat(resPublic.delta().getBrokenDeclarations().size(),
+			is(not(equalTo(resPrivate.delta().getBrokenDeclarations().size()))));
 	}
 
 	@Test

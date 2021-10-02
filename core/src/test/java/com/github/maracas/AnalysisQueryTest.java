@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
@@ -16,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.Lists;
 
 import japicmp.config.Options;
+import japicmp.filter.AnnotationClassFilter;
+import japicmp.filter.JavadocLikeBehaviorFilter;
+import japicmp.filter.JavadocLikePackageFilter;
 
 class AnalysisQueryTest {
 	AnalysisQuery.Builder builder;
@@ -27,7 +31,7 @@ class AnalysisQueryTest {
 
 	@Test
 	void builder_correctlyCreatesQuery() {
-		Options opts = Options.newDefault();
+		Options opts = Maracas.defaultJApiOptions();
 
 		AnalysisQuery query = builder
 			.oldJar(validJar)
@@ -71,6 +75,22 @@ class AnalysisQueryTest {
 		assertThat(query.getClients(), hasSize(2));
 		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
 		assertThat(query.getClients(), hasItem(equalTo(validDirectory2.toAbsolutePath())));
+	}
+
+	@Test
+	void builder_exclude_createsFilters() {
+		AnalysisQuery query = builder
+			.oldJar(validJar)
+			.newJar(validJar)
+			.exclude("@com.google.common.annotations.Beta")
+			.exclude("*unstable*")
+			.exclude("#foo()")
+			.build();
+
+			assertThat(query.getJApiOptions().getExcludes(), hasSize(3));
+			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(AnnotationClassFilter.class)));
+			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikeBehaviorFilter.class)));
+			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikePackageFilter.class)));
 	}
 
 	@Test
@@ -170,6 +190,13 @@ class AnalysisQueryTest {
 	void nullOptions_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
 			builder.jApiOptions(null)
+		);
+	}
+
+	@Test
+	void nullExclude_ThrowsException() {
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.exclude(null)
 		);
 	}
 }
