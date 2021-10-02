@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class ClassRemovedTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberDetections(CLASS_REMOVED, 9);
+		assertNumberDetections(CLASS_REMOVED, 10);
 	}
 
 	@Test
