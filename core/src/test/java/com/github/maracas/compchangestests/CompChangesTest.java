@@ -18,6 +18,7 @@ import com.github.maracas.detection.APIUse;
 import com.github.maracas.detection.Detection;
 import com.github.maracas.util.SpoonHelpers;
 
+import japicmp.config.Options;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -31,10 +32,16 @@ public class CompChangesTest {
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path client = Paths.get("../test-data/comp-changes/client/src/");
 
+		Options opts = Maracas.defaultJApiOptions();
+		opts.addExcludeFromArgument(japicmp.util.Optional.of("@main.unstableAnnon.Beta"), false);
+		opts.addExcludeFromArgument(japicmp.util.Optional.of("@main.unstableAnnon.IsUnstable"), false);
+		opts.addExcludeFromArgument(japicmp.util.Optional.of("(*.)?unstablePkg(.*)?"), false);
+
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)
 			.newJar(v2)
 			.client(client)
+			.jApiOptions(opts)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);

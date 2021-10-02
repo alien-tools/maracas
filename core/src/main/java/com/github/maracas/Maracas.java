@@ -129,7 +129,7 @@ public class Maracas {
 		return visitor.getDetections();
 	}
 
-	private static Options defaultJApiOptions() {
+	public static Options defaultJApiOptions() {
 		Options defaultOptions = Options.newDefault();
 		defaultOptions.setAccessModifier(AccessModifier.PROTECTED);
 		defaultOptions.setOutputOnlyModifications(true);
