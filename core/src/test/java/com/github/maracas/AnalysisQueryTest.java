@@ -69,94 +69,94 @@ class AnalysisQueryTest {
 
 	@Test
 	void emptyQuery_ThrowsException() {
-		assertThrows(IllegalStateException.class, () -> {
-			builder.build();
-		});
+		assertThrows(IllegalStateException.class, () ->
+			builder.build()
+		);
 	}
 
 	@Test
 	void noOldJar_ThrowsException() {
 		builder.newJar(validJar);
-		assertThrows(IllegalStateException.class, () -> {
-			builder.build();
-		});
+		assertThrows(IllegalStateException.class, () ->
+			builder.build()
+		);
 	}
 
 	@Test
 	void noNewJar_ThrowsException() {
 		builder.oldJar(validJar);
-		assertThrows(IllegalStateException.class, () -> {
-			builder.build();
-		});
+		assertThrows(IllegalStateException.class, () ->
+			builder.build()
+		);
 	}
 
 	@Test
 	void nullOldJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.oldJar(null);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.oldJar(null)
+		);
 	}
 
 	@Test
 	void nullNewJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.newJar(null);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.newJar(null)
+		);
 	}
 
 	@Test
 	void invalidOldJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.oldJar(invalidJar);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.oldJar(invalidJar)
+		);
 	}
 
 	@Test
 	void invalidNewJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.newJar(invalidJar);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.newJar(invalidJar)
+		);
 	}
 
 	@Test
 	void nullSources_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.sources(null);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.sources(null)
+		);
 	}
 
 	@Test
 	void invalidSources_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.sources(invalidDirectory);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.sources(invalidDirectory)
+		);
 	}
 
 	@Test
 	void nullClient_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.client(null);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.client(null)
+		);
 	}
 
 	@Test
 	void invalidClient_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.client(invalidDirectory);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.client(invalidDirectory)
+		);
 	}
 
 	@Test
 	void nullClients_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.clients(null);
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.clients(null)
+		);
 	}
 
 	@Test
 	void invalidClients_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			builder.clients(Collections.singleton(invalidDirectory));
-		});
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.clients(Collections.singleton(invalidDirectory))
+		);
 	}
 }

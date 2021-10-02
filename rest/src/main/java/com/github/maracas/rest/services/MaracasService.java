@@ -2,6 +2,7 @@ package com.github.maracas.rest.services;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -37,12 +38,12 @@ public class MaracasService {
 		return delta;
 	}
 
-	public List<Detection> makeDetections(Delta delta, Path clientSources) {
+	public Collection<Detection> makeDetections(Delta delta, Path clientSources) {
 		logger.info("Computing detections({}, Δ({} -> {}))", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		List<Detection> detections = Maracas.computeDetections(clientSources, delta);
+		Collection<Detection> detections = Maracas.computeDetections(clientSources, delta);
 
 		logger.info("Done detections({}, Δ({} -> {})) in {}ms", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName(),

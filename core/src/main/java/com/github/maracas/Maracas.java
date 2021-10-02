@@ -1,7 +1,10 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.github.maracas.delta.BrokenDeclaration;
@@ -10,8 +13,6 @@ import com.github.maracas.detection.Detection;
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
@@ -49,10 +50,10 @@ public class Maracas {
 			delta.populateLocations(query.getSources());
 
 		// For every client, compute the set of detections
-		Multimap<Path, Detection> clientsDetections = ArrayListMultimap.create();
+		Map<Path, Collection<Detection>> clientsDetections = new HashMap<>();
 		query.getClients()
 			.forEach(c ->
-				clientsDetections.putAll(c, computeDetections(c, delta))
+				clientsDetections.put(c, computeDetections(c, delta))
 			);
 
 		return new AnalysisResult(delta, clientsDetections);
@@ -86,7 +87,8 @@ public class Maracas {
 		OutputFilter filter = new OutputFilter(defaultOptions);
 		filter.filter(classes);
 
-		return Delta.fromJApiCmpDelta(oldJar, newJar, classes);
+		return Delta.fromJApiCmpDelta(
+			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes);
 	}
 
 	/**
@@ -99,7 +101,7 @@ public class Maracas {
 	 * @throws NullPointerException if delta is null
 	 * @throws IllegalArgumentException if client isn't a valid directory
 	 */
-	public static List<Detection> computeDetections(Path client, Delta delta) {
+	public static Collection<Detection> computeDetections(Path client, Delta delta) {
 		Objects.requireNonNull(delta);
 		if (!PathHelpers.isValidDirectory(client))
 			throw new IllegalArgumentException("client isn't a valid directory: " + client);

@@ -2,10 +2,11 @@ package com.github.maracas;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
-import com.google.common.collect.Multimap;
 
 /**
  * The result of analyzing an {@link AnalysisQuery} with Maracas.
@@ -18,15 +19,23 @@ public record AnalysisResult(
 	/**
 	 * The set of detections per analyzed client
 	 */
-	Multimap<Path, Detection> detections
+	// Guava's Multimap cannot associate an empty/null value to a key. So we're
+	// stuck with good old java.util.Map to store empty collections for clients
+	// that do not have any detection.
+	Map<Path, Collection<Detection>> detections
 ) {
+	public AnalysisResult {
+		Objects.requireNonNull(delta);
+		Objects.requireNonNull(detections);
+	}
+
 	/**
 	 * Returns all detections for all clients
 	 *
 	 * @return a collection of all detections
 	 */
 	public Collection<Detection> allDetections() {
-		return detections.values();
+		return detections.values().stream().flatMap(Collection::stream).toList();
 	}
 
 	/**
