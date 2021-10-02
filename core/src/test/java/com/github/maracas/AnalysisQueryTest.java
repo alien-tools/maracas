@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
+import japicmp.config.Options;
+
 class AnalysisQueryTest {
 	AnalysisQuery.Builder builder;
 
@@ -25,11 +27,14 @@ class AnalysisQueryTest {
 
 	@Test
 	void builder_correctlyCreatesQuery() {
+		Options opts = Options.newDefault();
+
 		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
 			.client(validDirectory)
 			.sources(validDirectory)
+			.jApiOptions(opts)
 			.build();
 
 		assertThat(query.getOldJar(), is(equalTo(validJar.toAbsolutePath())));
@@ -37,6 +42,7 @@ class AnalysisQueryTest {
 		assertThat(query.getClients(), hasSize(1));
 		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
 		assertThat(query.getSources(), is(equalTo(validDirectory.toAbsolutePath())));
+		assertThat(query.getJApiOptions(), is(equalTo(opts)));
 	}
 
 	@Test
@@ -157,6 +163,13 @@ class AnalysisQueryTest {
 	void invalidClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
 			builder.clients(Collections.singleton(invalidDirectory))
+		);
+	}
+
+	@Test
+	void nullOptions_ThrowsException() {
+		assertThrows(IllegalArgumentException.class, () ->
+			builder.jApiOptions(null)
 		);
 	}
 }
