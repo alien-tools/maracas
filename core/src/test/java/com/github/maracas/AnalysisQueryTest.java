@@ -87,7 +87,6 @@ class AnalysisQueryTest {
 			.exclude("#foo()")
 			.build();
 
-			assertThat(query.getJApiOptions().getExcludes(), hasSize(3));
 			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(AnnotationClassFilter.class)));
 			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikeBehaviorFilter.class)));
 			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikePackageFilter.class)));
