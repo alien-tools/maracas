@@ -38,7 +38,7 @@ public class CompChangesTest {
 			.client(client)
 			.build();
 
-		AnalysisResult result = new Maracas().analyze(query);
+		AnalysisResult result = Maracas.analyze(query);
 		detections = result.allDetections();
 	}
 

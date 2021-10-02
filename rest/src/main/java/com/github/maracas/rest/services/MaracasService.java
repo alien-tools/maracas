@@ -22,7 +22,6 @@ import com.google.common.base.Stopwatch;
 public class MaracasService {
 	@Autowired
 	private GithubService githubService;
-	private Maracas maracas = new Maracas();
 
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
@@ -30,7 +29,7 @@ public class MaracasService {
 		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		Delta delta = maracas.computeDelta(jar1, jar2);
+		Delta delta = Maracas.computeDelta(jar1, jar2);
 		delta.populateLocations(sources);
 
 		logger.info("Done Δ({} -> {}) in {}ms", jar1.getFileName(), jar2.getFileName(),
@@ -40,13 +39,13 @@ public class MaracasService {
 
 	public List<Detection> makeDetections(Delta delta, Path clientSources) {
 		logger.info("Computing detections({}, Δ({} -> {}))", clientSources,
-			delta.getV1().getFileName(), delta.getV2().getFileName());
+			delta.getOldJar().getFileName(), delta.getNewJar().getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		List<Detection> detections = maracas.computeDetections(clientSources, delta);
+		List<Detection> detections = Maracas.computeDetections(clientSources, delta);
 
 		logger.info("Done detections({}, Δ({} -> {})) in {}ms", clientSources,
-			delta.getV1().getFileName(), delta.getV2().getFileName(),
+			delta.getOldJar().getFileName(), delta.getNewJar().getFileName(),
 			watch.elapsed(TimeUnit.MILLISECONDS));
 		return detections;
 	}

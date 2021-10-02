@@ -40,7 +40,7 @@ class MaracasReportTests {
 			.sources(sources)
 			.client(c1)
 			.build();
-		AnalysisResult result = new Maracas().analyze(query);
+		AnalysisResult result = Maracas.analyze(query);
 
 		report = new MaracasReport(
 			Delta.fromMaracasDelta(result.delta(), libGithub, "main", "../test-data/comp-changes/old/"),

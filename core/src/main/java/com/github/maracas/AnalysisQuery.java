@@ -1,6 +1,5 @@
 package com.github.maracas;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,7 +91,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder oldJar(Path oldJar) {
-			if (!isValidJar(oldJar))
+			if (!PathHelpers.isValidJar(oldJar))
 				throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
 
 			this.oldJar = oldJar.toAbsolutePath();
@@ -107,7 +106,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder newJar(Path newJar) {
-			if (!isValidJar(newJar))
+			if (!PathHelpers.isValidJar(newJar))
 				throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
 			this.newJar = newJar.toAbsolutePath();
@@ -123,7 +122,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder sources(Path sources) {
-			if (!isValidDirectory(sources))
+			if (!PathHelpers.isValidDirectory(sources))
 				throw new IllegalArgumentException("sources isn't a valid directory: " + sources);
 
 			this.sources = sources.toAbsolutePath();
@@ -139,7 +138,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder client(Path client) {
-			if (!isValidDirectory(client))
+			if (!PathHelpers.isValidDirectory(client))
 				throw new IllegalArgumentException("client isn't a valid directory: " + client);
 
 			if (!this.clients.contains(client.toAbsolutePath()))
@@ -173,21 +172,6 @@ public class AnalysisQuery {
 		private void validate() {
 			if (oldJar == null || newJar == null)
 				throw new IllegalStateException("oldJar and newJar must be supplied");
-		}
-
-		private boolean isValidJar(Path p) {
-			return
-				p != null &&
-				Files.exists(p) &&
-				Files.isRegularFile(p) &&
-				p.getFileName().toString().endsWith(".jar");
-		}
-
-		private boolean isValidDirectory(Path p) {
-			return
-				p != null &&
-				Files.exists(p) &&
-				Files.isDirectory(p);
 		}
 	}
 }

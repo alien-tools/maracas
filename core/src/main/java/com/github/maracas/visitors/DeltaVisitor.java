@@ -1,11 +1,11 @@
 package com.github.maracas.visitors;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
 import com.github.maracas.SpoonHelper;
+import com.github.maracas.delta.JApiCmpDeltaVisitor;
 
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
@@ -14,7 +14,6 @@ import japicmp.model.JApiField;
 import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
-import japicmp.output.Filter.FilterVisitor;
 import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
@@ -23,7 +22,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class DeltaVisitor implements FilterVisitor {
+public class DeltaVisitor implements JApiCmpDeltaVisitor {
 	private final CtPackage root;
 	private final List<BreakingChangeVisitor> visitors = new ArrayList<>();
 
@@ -36,7 +35,7 @@ public class DeltaVisitor implements FilterVisitor {
 	}
 
 	@Override
-	public void visit(Iterator<JApiClass> iterator, JApiClass elem) {
+	public void visit(JApiClass elem) {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			BreakingChangeVisitor visitor = switch (c) {
@@ -56,7 +55,7 @@ public class DeltaVisitor implements FilterVisitor {
 	}
 
 	@Override
-	public void visit(Iterator<JApiMethod> iterator, JApiMethod elem) {
+	public void visit(JApiMethod elem) {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getjApiClass().getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			japicmp.util.Optional<CtMethod> oldMethodOpt = elem.getOldMethod();
@@ -95,15 +94,15 @@ public class DeltaVisitor implements FilterVisitor {
 	}
 
 	@Override
-	public void visit(Iterator<JApiConstructor> iterator, JApiConstructor elem) {
+	public void visit(JApiConstructor elem) {
 	}
 
 	@Override
-	public void visit(Iterator<JApiImplementedInterface> iterator, JApiImplementedInterface elem) {
+	public void visit(JApiImplementedInterface elem) {
 	}
 
 	@Override
-	public void visit(Iterator<JApiField> iterator, JApiField elem) {
+	public void visit(JApiField elem) {
 		CtTypeReference<?> clsRef = root.getFactory().Type().createReference(elem.getjApiClass().getFullyQualifiedName());
 		elem.getCompatibilityChanges().forEach(c -> {
 			japicmp.util.Optional<CtField> oldFieldOpt = elem.getOldFieldOptional();
@@ -139,7 +138,7 @@ public class DeltaVisitor implements FilterVisitor {
 	}
 
 	@Override
-	public void visit(Iterator<JApiAnnotation> iterator, JApiAnnotation elem) {
+	public void visit(JApiAnnotation elem) {
 	}
 
 	@Override
