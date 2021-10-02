@@ -1,12 +1,15 @@
 package com.github.maracas.rest;
 
-import static com.github.maracas.rest.TestHelpers.*;
+import static com.github.maracas.rest.TestHelpers.checkReportWithoutDetections;
+import static com.github.maracas.rest.TestHelpers.waitForPRAnalysis;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
 import java.io.IOException;

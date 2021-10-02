@@ -69,7 +69,7 @@ public class AnalysisQuery {
 	/**
 	 * AnalysisQuery's builder.
 	 *
-	 * Only {@link #oldJar} and {@link #newJar} are mandatory.
+	 * Only {@link #oldJar(Path)} and {@link #newJar(Path)} are mandatory.
 	 */
 	public static class Builder {
 		private Path oldJar;
@@ -117,7 +117,7 @@ public class AnalysisQuery {
 		/**
 		 * Sets the library's source code.
 		 *
-		 * @param oldSources Valid path to the directory containing the source code
+		 * @param sources Valid path to the directory containing the source code
 		 * of the old version of the library.
 		 * @return the builder
 		 * @throws IllegalArgumentException if the path isn't valid

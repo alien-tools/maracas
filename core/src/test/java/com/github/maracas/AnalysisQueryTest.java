@@ -1,5 +1,6 @@
 package com.github.maracas;
 
+import static com.github.maracas.TestData.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -7,24 +8,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
 class AnalysisQueryTest {
-	Path validJar = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-	Path invalidJar = Paths.get("void.jar");
-	Path validDirectory = Paths.get("src/main/java");
-	Path validDirectory2 = Paths.get("src/test/java");
-	Path invalidDirectory = Paths.get("void/");
+	AnalysisQuery.Builder builder;
+
+	@BeforeEach
+	void setUp() {
+		builder = AnalysisQuery.builder();
+	}
 
 	@Test
 	void builder_correctlyCreatesQuery() {
-		AnalysisQuery query = AnalysisQuery.builder()
+		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
 			.client(validDirectory)
@@ -40,7 +41,7 @@ class AnalysisQueryTest {
 
 	@Test
 	void builder_multipleClients() {
-		AnalysisQuery query = AnalysisQuery.builder()
+		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
 			.client(validDirectory)
@@ -55,7 +56,7 @@ class AnalysisQueryTest {
 
 	@Test
 	void builder_collectionOfClients() {
-		AnalysisQuery query = AnalysisQuery.builder()
+		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
 			.clients(Lists.newArrayList(validDirectory, validDirectory2, validDirectory))
@@ -69,91 +70,93 @@ class AnalysisQueryTest {
 	@Test
 	void emptyQuery_ThrowsException() {
 		assertThrows(IllegalStateException.class, () -> {
-			AnalysisQuery.builder().build();
+			builder.build();
 		});
 	}
 
 	@Test
 	void noOldJar_ThrowsException() {
+		builder.newJar(validJar);
 		assertThrows(IllegalStateException.class, () -> {
-			AnalysisQuery.builder().newJar(validJar).build();
+			builder.build();
 		});
 	}
 
 	@Test
 	void noNewJar_ThrowsException() {
+		builder.oldJar(validJar);
 		assertThrows(IllegalStateException.class, () -> {
-			AnalysisQuery.builder().oldJar(validJar).build();
+			builder.build();
 		});
 	}
 
 	@Test
 	void nullOldJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().oldJar(null);
+			builder.oldJar(null);
 		});
 	}
 
 	@Test
 	void nullNewJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().newJar(null);
+			builder.newJar(null);
 		});
 	}
 
 	@Test
 	void invalidOldJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().oldJar(invalidJar);
+			builder.oldJar(invalidJar);
 		});
 	}
 
 	@Test
 	void invalidNewJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().newJar(invalidJar);
+			builder.newJar(invalidJar);
 		});
 	}
 
 	@Test
 	void nullSources_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().sources(null);
+			builder.sources(null);
 		});
 	}
 
 	@Test
 	void invalidSources_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().sources(invalidDirectory);
+			builder.sources(invalidDirectory);
 		});
 	}
 
 	@Test
 	void nullClient_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().client(null);
+			builder.client(null);
 		});
 	}
 
 	@Test
 	void invalidClient_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().client(invalidDirectory);
+			builder.client(invalidDirectory);
 		});
 	}
 
 	@Test
 	void nullClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().clients(null);
+			builder.clients(null);
 		});
 	}
 
 	@Test
 	void invalidClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			AnalysisQuery.builder().clients(Collections.singleton(invalidDirectory));
+			builder.clients(Collections.singleton(invalidDirectory));
 		});
 	}
 }
