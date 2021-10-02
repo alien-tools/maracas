@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import com.github.maracas.delta.Delta;
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.Detection;
 import com.google.common.collect.Multimap;
 
 /**

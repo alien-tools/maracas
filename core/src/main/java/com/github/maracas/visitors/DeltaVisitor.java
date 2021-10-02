@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.maracas.SpoonHelper;
 import com.github.maracas.delta.JApiCmpDeltaVisitor;
+import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
@@ -65,7 +65,7 @@ public class DeltaVisitor implements JApiCmpDeltaVisitor {
 				Optional<CtExecutableReference<?>> mRefOpt =
 					clsRef.getDeclaredExecutables()
 					.stream()
-					.filter(m -> SpoonHelper.matchingSignatures(m, oldMethod))
+					.filter(m -> SpoonHelpers.matchingSignatures(m, oldMethod))
 					.findFirst();
 
 				if (mRefOpt.isPresent()) {

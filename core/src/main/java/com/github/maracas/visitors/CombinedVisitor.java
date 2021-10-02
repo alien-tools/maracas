@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
 
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.Detection;
 
 import spoon.reflect.code.CtAnnotationFieldAccess;
 import spoon.reflect.code.CtArrayRead;

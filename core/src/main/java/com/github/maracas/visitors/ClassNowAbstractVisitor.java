@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.delta.APIUse;
+import com.github.maracas.detection.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtConstructorCall;

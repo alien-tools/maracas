@@ -3,7 +3,7 @@ package com.github.maracas.visitors;
 import java.util.Optional;
 import java.util.Set;
 
-import com.github.maracas.delta.APIUse;
+import com.github.maracas.detection.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtCatch;

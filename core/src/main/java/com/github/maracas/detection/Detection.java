@@ -1,4 +1,4 @@
-package com.github.maracas.delta;
+package com.github.maracas.detection;
 
 import java.util.Objects;
 

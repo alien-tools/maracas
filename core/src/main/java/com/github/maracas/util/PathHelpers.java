@@ -1,4 +1,4 @@
-package com.github.maracas;
+package com.github.maracas.util;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

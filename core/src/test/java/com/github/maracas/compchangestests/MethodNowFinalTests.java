@@ -1,6 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.delta.APIUse.METHOD_OVERRIDE;
+import static com.github.maracas.detection.APIUse.METHOD_OVERRIDE;
 import static japicmp.model.JApiCompatibilityChange.METHOD_NOW_FINAL;
 
 import org.junit.jupiter.api.Test;

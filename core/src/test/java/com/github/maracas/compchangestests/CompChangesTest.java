@@ -15,9 +15,9 @@ import org.junit.jupiter.api.BeforeAll;
 import com.github.maracas.AnalysisQuery;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.SpoonHelper;
-import com.github.maracas.delta.APIUse;
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.APIUse;
+import com.github.maracas.detection.Detection;
+import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;
@@ -50,7 +50,7 @@ public class CompChangesTest {
 				if (use != d.use())
 					return false;
 
-				SourcePosition pos = SpoonHelper.firstLocatableParent(d.element()).getPosition();
+				SourcePosition pos = SpoonHelpers.firstLocatableParent(d.element()).getPosition();
 				if (pos instanceof NoSourcePosition)
 					return false;
 				if (!file.equals(pos.getFile().getName().toString()))

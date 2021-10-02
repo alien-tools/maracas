@@ -2,7 +2,7 @@ package com.github.maracas.rest.data;
 
 import java.nio.file.Paths;
 
-import com.github.maracas.SpoonHelper;
+import com.github.maracas.util.SpoonHelpers;
 
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -32,7 +32,7 @@ public record BrokenDeclaration(
 
 		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
 		return new BrokenDeclaration(
-			SpoonHelper.fullyQualifiedName(decl.getReference()),
+			SpoonHelpers.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),
 			relativeFile,
 			startLine,

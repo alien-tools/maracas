@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.github.maracas.SpoonHelper;
+import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 
 import japicmp.model.JApiAnnotation;
@@ -74,7 +74,7 @@ public class Delta {
 					Optional<CtExecutableReference<?>> mRefOpt =
 						clsRef.getDeclaredExecutables()
 						.stream()
-						.filter(m -> SpoonHelper.matchingSignatures(m, oldMethod))
+						.filter(m -> SpoonHelpers.matchingSignatures(m, oldMethod))
 						.findFirst();
 
 					if (mRefOpt.isPresent()) {

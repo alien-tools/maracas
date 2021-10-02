@@ -1,4 +1,4 @@
-package com.github.maracas;
+package com.github.maracas.util;
 
 import javassist.CtMethod;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -8,8 +8,8 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class SpoonHelper {
-	private SpoonHelper() {}
+public class SpoonHelpers {
+	private SpoonHelpers() {}
 
 	public static CtElement firstLocatableParent(CtElement element) {
 		CtElement parent = element;

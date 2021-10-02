@@ -1,6 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.delta.APIUse.FIELD_ACCESS;
+import static com.github.maracas.detection.APIUse.FIELD_ACCESS;
 import static japicmp.model.JApiCompatibilityChange.FIELD_NOW_FINAL;
 
 import org.junit.jupiter.api.Test;

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.Detection;
 import com.google.common.base.Stopwatch;
 
 import picocli.CommandLine;

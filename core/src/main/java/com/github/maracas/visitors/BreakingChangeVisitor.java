@@ -3,9 +3,9 @@ package com.github.maracas.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.SpoonHelper;
-import com.github.maracas.delta.APIUse;
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.APIUse;
+import com.github.maracas.detection.Detection;
+import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -30,7 +30,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 		// => just point the first locatable parent element
 		CtElement locatableElement =
 			element.getPosition() instanceof NoSourcePosition ?
-				SpoonHelper.firstLocatableParent(element) :
+				SpoonHelpers.firstLocatableParent(element) :
 				element;
 
 		Detection d = new Detection(

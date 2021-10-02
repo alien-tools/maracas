@@ -6,7 +6,8 @@ import java.util.Objects;
 
 import com.github.maracas.delta.BrokenDeclaration;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.Detection;
+import com.github.maracas.util.PathHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.collect.ArrayListMultimap;
@@ -35,6 +36,7 @@ public class Maracas {
 	 *
 	 * @param query The query to analyze
 	 * @return the resulting {@link AnalysisResult} with delta and detections
+	 * @throws NullPointerException if query is null
 	 */
 	public static AnalysisResult analyze(AnalysisQuery query) {
 		Objects.requireNonNull(query);
@@ -64,7 +66,7 @@ public class Maracas {
 	 * @param newJar The library's new JAR
 	 * @return a new delta model based on JapiCmp's results
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
-	 * @throws NullPointerException if oldJar or newJar is null
+	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
 	 */
 	public static Delta computeDelta(Path oldJar, Path newJar) {
 		if (!PathHelpers.isValidJar(oldJar))
@@ -94,6 +96,8 @@ public class Maracas {
 	 * @param client Valid path to the client's source code to analyze
 	 * @param delta The delta model
 	 * @return the corresponding list of {@link Detection}
+	 * @throws NullPointerException if delta is null
+	 * @throws IllegalArgumentException if client isn't a valid directory
 	 */
 	public static List<Detection> computeDetections(Path client, Delta delta) {
 		Objects.requireNonNull(delta);

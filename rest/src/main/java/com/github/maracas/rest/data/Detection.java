@@ -2,7 +2,7 @@ package com.github.maracas.rest.data;
 
 import java.nio.file.Paths;
 
-import com.github.maracas.SpoonHelper;
+import com.github.maracas.util.SpoonHelpers;
 
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -18,14 +18,14 @@ public record Detection(
 	int endLine,
 	String url
 ) {
-	public static Detection fromMaracasDetection(com.github.maracas.delta.Detection d, String repository, String ref, String clonePath) {
+	public static Detection fromMaracasDetection(com.github.maracas.detection.Detection d, String repository, String ref, String clonePath) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)
 			return new Detection(
 				d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 				d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
-				SpoonHelper.fullyQualifiedName(d.source()),
+				SpoonHelpers.fullyQualifiedName(d.source()),
 				d.use().name(),
 				"",
 				-1,
@@ -37,7 +37,7 @@ public record Detection(
 		return new Detection(
 			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
-			SpoonHelper.fullyQualifiedName(d.source()),
+			SpoonHelpers.fullyQualifiedName(d.source()),
 			d.use().name(),
 			relativeFile,
 			pos.getLine(),

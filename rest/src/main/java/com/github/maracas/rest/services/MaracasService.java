@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.github.maracas.Maracas;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.delta.Detection;
+import com.github.maracas.detection.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.MaracasReport;

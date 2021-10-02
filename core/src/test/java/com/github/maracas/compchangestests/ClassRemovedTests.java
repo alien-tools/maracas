@@ -1,9 +1,9 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.delta.APIUse.EXTENDS;
-import static com.github.maracas.delta.APIUse.IMPLEMENTS;
-import static com.github.maracas.delta.APIUse.IMPORT;
-import static com.github.maracas.delta.APIUse.TYPE_DEPENDENCY;
+import static com.github.maracas.detection.APIUse.EXTENDS;
+import static com.github.maracas.detection.APIUse.IMPLEMENTS;
+import static com.github.maracas.detection.APIUse.IMPORT;
+import static com.github.maracas.detection.APIUse.TYPE_DEPENDENCY;
 import static japicmp.model.JApiCompatibilityChange.CLASS_REMOVED;
 
 import org.junit.jupiter.api.Test;

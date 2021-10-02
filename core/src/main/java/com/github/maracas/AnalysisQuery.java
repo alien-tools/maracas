@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.github.maracas.util.PathHelpers;
+
 /**
  * An AnalysisQuery holds the information about a library's old and new
  * versions (JARs) and the clients (source code) to analyze.
