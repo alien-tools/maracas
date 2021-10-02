@@ -3,7 +3,6 @@ package com.github.maracas.visitors;
 import com.github.maracas.detection.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
-import spoon.reflect.path.CtRole;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -19,19 +18,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
-			CtRole role = reference.getRoleInParent();
-			APIUse use = switch (role) {
-				case CAST, DECLARING_TYPE, TYPE, ARGUMENT_TYPE, ACCESSED_TYPE, TYPE_ARGUMENT, THROWN, MULTI_TYPE ->
-					APIUse.TYPE_DEPENDENCY;
-				case SUPER_TYPE ->
-					APIUse.EXTENDS;
-				case INTERFACE ->
-					APIUse.IMPLEMENTS;
-				case ANNOTATION_TYPE ->
-					APIUse.ANNOTATION;
-				default ->
-					throw new RuntimeException("Unmanaged role " + role);
-			};
+			APIUse use = getAPIUseByRole(reference);
 
 			detection(reference.getParent(), reference, clsRef, use);
 		}

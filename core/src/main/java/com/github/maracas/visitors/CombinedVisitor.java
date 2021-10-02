@@ -2,7 +2,6 @@ package com.github.maracas.visitors;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.List;
 
 import com.github.maracas.detection.Detection;
 
@@ -100,13 +99,13 @@ import spoon.reflect.visitor.CtScanner;
  * visitors when visiting each node.
  */
 public class CombinedVisitor extends CtScanner {
-	private final List<BreakingChangeVisitor> visitors;
+	private final Collection<BreakingChangeVisitor> visitors;
 
-	public CombinedVisitor(List<BreakingChangeVisitor> visitors) {
+	public CombinedVisitor(Collection<BreakingChangeVisitor> visitors) {
 		this.visitors = visitors;
 	}
 
-	public List<Detection> getDetections() {
+	public Collection<Detection> getDetections() {
 		return
 			visitors.stream()
 			.map(BreakingChangeVisitor::getDetections)

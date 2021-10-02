@@ -115,6 +115,10 @@ public class Maracas {
 		List<BreakingChangeVisitor> visitors = delta.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
 
+		// FIXME: Only way I found to visit CompilationUnits and Imports in the model
+		// This is probably not the right way.
+		// We still need to visit the root package afterwards.
+		visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
 		visitor.scan(model.getRootPackage());
 
 		return visitor.getDetections();

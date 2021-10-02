@@ -1,9 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.detection.APIUse.EXTENDS;
-import static com.github.maracas.detection.APIUse.IMPLEMENTS;
-import static com.github.maracas.detection.APIUse.IMPORT;
-import static com.github.maracas.detection.APIUse.TYPE_DEPENDENCY;
+import static com.github.maracas.detection.APIUse.*;
 import static japicmp.model.JApiCompatibilityChange.CLASS_REMOVED;
 
 import org.junit.jupiter.api.Test;
@@ -11,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class ClassRemovedTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberDetections(CLASS_REMOVED, 8);
+		assertNumberDetections(CLASS_REMOVED, 9);
 	}
 
 	@Test
@@ -34,14 +31,19 @@ class ClassRemovedTests extends CompChangesTest {
 		assertDetection("ClassRemovedImp.java", 5, CLASS_REMOVED, IMPLEMENTS);
 	}
 
-//	@Test
-//	void testImpMethod() {
-//		assertDetection("ClassRemovedImp.java", 8, CLASS_REMOVED, METHOD_OVERRIDE);
-//	}
+	@Test
+	void testImpMethod() {
+		assertDetection("ClassRemovedImp.java", 8, CLASS_REMOVED, METHOD_OVERRIDE);
+	}
 
 	@Test
 	void testTDImport() {
 		assertDetection("ClassRemovedTD.java", 3, CLASS_REMOVED, IMPORT);
+	}
+
+	@Test
+	void testTDImport2() {
+		assertDetection("ClassRemovedTD.java", 4, CLASS_REMOVED, IMPORT);
 	}
 
 	@Test

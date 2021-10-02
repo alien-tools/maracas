@@ -6,7 +6,6 @@ import com.github.maracas.util.SpoonHelpers;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.path.CtRole;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -21,25 +20,10 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		this.newAccessModifier = newAccessModifier;
 	}
 
-	// FIXME: import errors aren't supported
 	@Override
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
-			CtRole role = reference.getRoleInParent();
-			APIUse use = switch (role) {
-				// FIXME: try to distinguish between regular access to a type,
-				// and access to a type by instantiation (new)
-				case CAST, DECLARING_TYPE, TYPE, ARGUMENT_TYPE, ACCESSED_TYPE, TYPE_ARGUMENT, THROWN, MULTI_TYPE ->
-					APIUse.TYPE_DEPENDENCY;
-				case SUPER_TYPE ->
-					APIUse.EXTENDS;
-				case INTERFACE ->
-					APIUse.IMPLEMENTS;
-				case ANNOTATION_TYPE ->
-					APIUse.ANNOTATION;
-				default ->
-					throw new RuntimeException("Unmanaged role " + role);
-			};
+			APIUse use = getAPIUseByRole(reference);
 
 			String enclosingPkg = SpoonHelpers.getEnclosingPkgName(reference);
 			String expectedPkg = SpoonHelpers.getEnclosingPkgName(clsRef.getTypeDeclaration());
