@@ -7,11 +7,9 @@ import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
 import org.junit.jupiter.api.Test;
 
 class ClassNowFinalTests extends CompChangesTest {
-	// TODO: japicmp reports a CLASS_NOW_FINAL when a class goes from Class to Enum.
-	//       Weird behavior => fix that upstream?
 	@Test
 	void testNoMore() {
-		assertNumberDetections(CLASS_NOW_FINAL, 8);
+		assertNumberDetections(CLASS_NOW_FINAL, 9);
 	}
 
 	@Test
@@ -52,5 +50,12 @@ class ClassNowFinalTests extends CompChangesTest {
 	@Test
 	void testAnonymousSubAbsMethod() {
 		assertDetection("ClassNowFinalAnonymousSub.java", 15, CLASS_NOW_FINAL, METHOD_OVERRIDE);
+	}
+
+	// A bit of a corner case: a type goes from enum to class; this is reported
+	// as a CLASS_NOW_FINAL since subclasses cannot extend the type anymore
+	@Test
+	void testExtendAnEnum() {
+		assertDetection("ClassTypeChangedC2EExt.java", 5, CLASS_NOW_FINAL, EXTENDS);
 	}
 }

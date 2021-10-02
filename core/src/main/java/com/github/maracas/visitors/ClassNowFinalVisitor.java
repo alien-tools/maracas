@@ -14,6 +14,9 @@ import spoon.reflect.reference.CtTypeReference;
  * Detections of CLASS_NOW_FINAL are:
  *	- Classes (regular and anonymous) extending the now-final class
  *	- Methods @Override-ing a method of the now-final class
+ *
+ * Note that JApiCmp reports a CLASS_NOW_FINAL on types that go from {@code class}
+ * to {@code enum}.
  */
 public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
