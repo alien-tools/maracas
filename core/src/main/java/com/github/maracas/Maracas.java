@@ -43,7 +43,7 @@ public class Maracas {
 		Objects.requireNonNull(query);
 
 		// Compute the delta model between old and new JARs
-		Delta delta = computeDelta(query.getOldJar(), query.getNewJar());
+		Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getJApiOptions());
 
 		// If we get the library's sources, populate the delta's source code locations
 		if (query.getSources() != null)
@@ -67,16 +67,21 @@ public class Maracas {
 	 * @param newJar The library's new JAR
 	 * @return a new delta model based on JapiCmp's results
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
+	 * @see #computeDelta(Path, Path, Options)
 	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
 	 */
 	public static Delta computeDelta(Path oldJar, Path newJar) {
+		return computeDelta(oldJar, newJar, defaultJApiOptions());
+	}
+
+	public static Delta computeDelta(Path oldJar, Path newJar, Options jApiOptions) {
 		if (!PathHelpers.isValidJar(oldJar))
 			throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
 		if (!PathHelpers.isValidJar(newJar))
 			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
-		Options defaultOptions = getJApiOptions();
-		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(defaultOptions);
+		Options opts = jApiOptions != null ? jApiOptions : defaultJApiOptions();
+		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(opts);
 		JarArchiveComparator comparator = new JarArchiveComparator(options);
 
 		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
@@ -84,7 +89,7 @@ public class Maracas {
 
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 
-		OutputFilter filter = new OutputFilter(defaultOptions);
+		OutputFilter filter = new OutputFilter(opts);
 		filter.filter(classes);
 
 		return Delta.fromJApiCmpDelta(
@@ -124,7 +129,7 @@ public class Maracas {
 		return visitor.getDetections();
 	}
 
-	private static Options getJApiOptions() {
+	private static Options defaultJApiOptions() {
 		Options defaultOptions = Options.newDefault();
 		defaultOptions.setAccessModifier(AccessModifier.PROTECTED);
 		defaultOptions.setOutputOnlyModifications(true);

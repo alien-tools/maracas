@@ -6,6 +6,8 @@ import java.util.Collection;
 
 import com.github.maracas.util.PathHelpers;
 
+import japicmp.config.Options;
+
 /**
  * An AnalysisQuery holds the information about a library's old and new
  * versions (JARs) and the clients (source code) to analyze.
@@ -17,17 +19,20 @@ public class AnalysisQuery {
 	private final Path newJar;
 	private final Path sources;
 	private final Collection<Path> clients;
+	private final Options jApiOptions;
 
 	/**
 	 * Use the dedicated {@link Builder}
 	 *
 	 * @see #builder()
 	 */
-	private AnalysisQuery(Path oldJar, Path newJar, Path sources, Collection<Path> clients) {
+	private AnalysisQuery(Path oldJar, Path newJar, Path sources,
+		Collection<Path> clients, Options jApiOptions) {
 		this.oldJar = oldJar;
 		this.newJar = newJar;
 		this.sources = sources;
 		this.clients = clients;
+		this.jApiOptions = jApiOptions;
 	}
 
 	/**
@@ -68,6 +73,15 @@ public class AnalysisQuery {
 	}
 
 	/**
+	 * JApiCmp's options
+	 *
+	 * @see Options
+	 */
+	public Options getJApiOptions() {
+		return jApiOptions;
+	}
+
+	/**
 	 * AnalysisQuery's builder.
 	 *
 	 * Only {@link #oldJar(Path)} and {@link #newJar(Path)} are mandatory.
@@ -77,6 +91,7 @@ public class AnalysisQuery {
 		private Path newJar;
 		private Path sources;
 		private Collection<Path> clients = new ArrayList<>();
+		private Options jApiOptions;
 
 		/**
 		 * Use {@link AnalysisQuery#builder()}
@@ -161,6 +176,14 @@ public class AnalysisQuery {
 			return this;
 		}
 
+		public Builder jApiOptions(Options options) {
+			if (options == null)
+				throw new IllegalArgumentException("options is null");
+
+			this.jApiOptions = options;
+			return this;
+		}
+
 		/**
 		 * Builds the {@link AnalysisQuery} object and returns it.
 		 *
@@ -168,7 +191,7 @@ public class AnalysisQuery {
 		 */
 		public AnalysisQuery build() {
 			validate();
-			return new AnalysisQuery(oldJar, newJar, sources, clients);
+			return new AnalysisQuery(oldJar, newJar, sources, clients, jApiOptions);
 		}
 
 		private void validate() {
