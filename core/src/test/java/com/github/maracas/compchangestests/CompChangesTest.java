@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 
@@ -69,7 +68,7 @@ public class CompChangesTest {
 	}
 
 	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
-		List<Detection> ds = detections.stream().filter(d -> d.change() == change).collect(Collectors.toList());
+		List<Detection> ds = detections.stream().filter(d -> d.change() == change).toList();
 
 		assertEquals(n, ds.size(), ds.toString());
 	}

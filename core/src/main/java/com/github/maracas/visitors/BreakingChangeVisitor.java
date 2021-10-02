@@ -24,10 +24,13 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	}
 
 	protected void detection(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
-		// We may encounter detections on synthetic/implicit code elements
-		// (e.g., default constructors, super() calls, etc.) that do not have
-		// position information since they're absent from source code.
-		// => just point the first locatable parent element
+		// We don't want to create detections for implicit elements: they do not
+		// exist in the source code of the client anyway
+		if (element.isImplicit())
+			return;
+
+		// In case we don't get a source code position for the element, we default
+		// to the first parent that can be located
 		CtElement locatableElement =
 			element.getPosition() instanceof NoSourcePosition ?
 				SpoonHelpers.firstLocatableParent(element) :

@@ -22,6 +22,11 @@ class ClassRemovedTests extends CompChangesTest {
 	}
 
 	@Test
+	void testExtExtendsTypeDep() {
+		assertDetection("ClassRemovedExt.java", 5, CLASS_REMOVED, TYPE_DEPENDENCY);
+	}
+
+	@Test
 	void testImpImport() {
 		assertDetection("ClassRemovedImp.java", 3, CLASS_REMOVED, IMPORT);
 	}
