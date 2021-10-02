@@ -1,6 +1,7 @@
 package com.github.maracas.visitors;
 
 import com.github.maracas.detection.APIUse;
+import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
@@ -40,8 +41,8 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 					throw new RuntimeException("Unmanaged role " + role);
 			};
 
-			String enclosingPkg = getEnclosingPkgName(reference);
-			String expectedPkg = getEnclosingPkgName(clsRef.getTypeDeclaration());
+			String enclosingPkg = SpoonHelpers.getEnclosingPkgName(reference);
+			String expectedPkg = SpoonHelpers.getEnclosingPkgName(clsRef.getTypeDeclaration());
 
 			switch (newAccessModifier) {
 				// Private always breaks

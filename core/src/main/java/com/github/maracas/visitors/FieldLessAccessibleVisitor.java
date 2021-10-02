@@ -1,6 +1,7 @@
 package com.github.maracas.visitors;
 
 import com.github.maracas.detection.APIUse;
+import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
@@ -40,8 +41,8 @@ public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 
 	private <T> void visitCtFieldAccess(CtFieldAccess<T> fieldAccess) {
 		if (fRef.equals(fieldAccess.getVariable())) {
-			String enclosingPkg = getEnclosingPkgName(fieldAccess);
-			String expectedPkg = getEnclosingPkgName(fRef.getFieldDeclaration());
+			String enclosingPkg = SpoonHelpers.getEnclosingPkgName(fieldAccess);
+			String expectedPkg = SpoonHelpers.getEnclosingPkgName(fRef.getFieldDeclaration());
 
 			switch (newAccessModifier) {
 				// Private always breaks

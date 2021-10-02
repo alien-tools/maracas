@@ -3,6 +3,7 @@ package com.github.maracas.util;
 import javassist.CtMethod;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
@@ -35,5 +36,13 @@ public class SpoonHelpers {
 			fqn = fRef.getDeclaringType().getQualifiedName().concat(".").concat(fRef.getSimpleName());
 
 		return fqn;
+	}
+
+	public static String getEnclosingPkgName(CtElement e) {
+		CtPackage enclosing = e.getParent(CtPackage.class);
+		return
+			enclosing != null ?
+				enclosing.getQualifiedName() :
+				"";
 	}
 }
