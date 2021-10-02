@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import spoon.reflect.cu.position.NoSourcePosition;
 
 public class CompChangesTest {
 	static Collection<Detection> detections;
+	static Collection<Detection> found;
 
 	@BeforeAll
 	static void setUp() {
@@ -46,6 +48,7 @@ public class CompChangesTest {
 
 		AnalysisResult result = Maracas.analyze(query);
 		detections = result.allDetections();
+		found = new ArrayList<>();
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
@@ -72,11 +75,17 @@ public class CompChangesTest {
 			String.format("No detection found in %s:%d [%s] [%s]",
 				file, line, change, use)
 		);
+
+		// Store the ones we found
+		found.add(find.get());
 	}
 
 	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
 		List<Detection> ds = detections.stream().filter(d -> d.change() == change).toList();
+		List<Detection> extra = ds.stream()
+			.filter(d -> !found.contains(d))
+			.toList();
 
-		assertEquals(n, ds.size(), ds.toString());
+		assertEquals(n, ds.size(), extra.toString());
 	}
 }

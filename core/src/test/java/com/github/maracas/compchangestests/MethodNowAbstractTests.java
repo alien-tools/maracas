@@ -8,12 +8,9 @@ import static japicmp.model.JApiCompatibilityChange.METHOD_NOW_ABSTRACT;
 import org.junit.jupiter.api.Test;
 
 class MethodNowAbstractTests extends CompChangesTest {
-	// TODO: when a method goes from static (with body) to non-static (abstract)
-	//       in an interface, japicmp reports both a METHOD_NO_LONGER_STATIC and
-	//       METHOD_NOW_ABSTRACT
 	@Test
 	void testNoMore() {
-		assertNumberDetections(METHOD_NOW_ABSTRACT, 12);
+		assertNumberDetections(METHOD_NOW_ABSTRACT, 14);
 	}
 
 	@Test
@@ -74,5 +71,15 @@ class MethodNowAbstractTests extends CompChangesTest {
 	@Test
 	void testMIinstantiateNowAbstractIntfSubAnonymous() {
 		assertDetection("MethodNowAbstractMI.java", 82, METHOD_NOW_ABSTRACT, IMPLEMENTS);
+	}
+
+	@Test
+	void testStaticToAbstractImplementation() {
+		assertDetection("MethodNoLongerStaticImp.java", 5, METHOD_NOW_ABSTRACT, IMPLEMENTS);
+	}
+
+	@Test
+	void testStaticToAbstractInvocation() {
+		assertDetection("MethodNoLongerStaticImp.java", 8, METHOD_NOW_ABSTRACT, METHOD_INVOCATION);
 	}
 }
