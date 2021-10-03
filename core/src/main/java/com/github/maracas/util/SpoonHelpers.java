@@ -43,6 +43,6 @@ public class SpoonHelpers {
 		return
 			enclosing != null ?
 				enclosing.getQualifiedName() :
-				"";
+				CtPackage.TOP_LEVEL_PACKAGE_NAME;
 	}
 }
