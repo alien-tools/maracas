@@ -6,8 +6,6 @@ import com.github.maracas.util.SpoonHelpers;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
@@ -50,6 +48,10 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		}
 	}
 
+	/**
+	 * Uncomment if we want to include detections for every access to a field
+	 * or invocation of a method that is declared by the no-more-visible class.
+	 *
 	@Override
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
@@ -61,4 +63,5 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		if (clsRef.equals(reference.getDeclaringType()))
 			detection(reference.getParent(), reference.getExecutableDeclaration(), clsRef, APIUse.METHOD_INVOCATION);
 	}
+	*/
 }

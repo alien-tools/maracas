@@ -1,24 +1,13 @@
 package com.github.maracas.visitors;
 
-import java.util.Optional;
-
 import com.github.maracas.detection.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Generic type reference visitor. It creates a detection for every reference
- * to the supplied {code clsRef}:
- *   - Every type reference to it
- *   - Every reference to a field that it declares
- *   - Every reference to an executable that it declares
- *   - Every method that overrides one of its methods
- *
- * FIXME: do we really want that, or should we be dumber?
+ * to the supplied {code clsRef}.
  */
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	protected final CtTypeReference<?> clsRef;
@@ -37,6 +26,12 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 		}
 	}
 
+	/*
+	 * Uncomment in case we also want to detect:
+	 *   - Every reference to a field that it declares
+   *   - Every reference to an executable that it declares
+   *   - Every method that overrides one of its methods
+   *
 	@Override
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
@@ -62,4 +57,5 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 				detection(m, superMethod.get(), clsRef, APIUse.METHOD_OVERRIDE);
 		}
 	}
+	*/
 }
