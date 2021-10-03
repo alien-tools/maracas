@@ -3,13 +3,12 @@ package com.github.maracas.compchangestests;
 import static com.github.maracas.detection.APIUse.FIELD_ACCESS;
 import static japicmp.model.JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class FieldLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberDetections(FIELD_LESS_ACCESSIBLE, 19);
+		assertNumberDetections(FIELD_LESS_ACCESSIBLE, 21);
 	}
 
 	@Test
@@ -107,13 +106,11 @@ class FieldLessAccessibleTests extends CompChangesTest {
 		assertDetection("FieldLessAccessibleMI.java", 10, FIELD_LESS_ACCESSIBLE, FIELD_ACCESS);
 	}
 
-	@Disabled("japicmp doesn't report FIELD_LESS_ACCESSIBLE for fields going from package private to private")
 	@Test
 	void testSamePkgPackPriv2Priv() {
 		assertDetection("FieldLessAccessibleMI.java", 13, FIELD_LESS_ACCESSIBLE, FIELD_ACCESS);
 	}
 
-	@Disabled("japicmp doesn't report FIELD_LESS_ACCESSIBLE for fields going from package private to private")
 	@Test
 	void testSamePkgSuperPackPriv2Priv() {
 		assertDetection("FieldLessAccessibleMI.java", 16, FIELD_LESS_ACCESSIBLE, FIELD_ACCESS);

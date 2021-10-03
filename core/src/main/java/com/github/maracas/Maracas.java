@@ -133,7 +133,7 @@ public class Maracas {
 
 	public static Options defaultJApiOptions() {
 		Options defaultOptions = Options.newDefault();
-		defaultOptions.setAccessModifier(AccessModifier.PROTECTED);
+		defaultOptions.setAccessModifier(AccessModifier.PRIVATE);
 		defaultOptions.setOutputOnlyModifications(true);
 		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
 		defaultOptions.setIgnoreMissingClasses(false);
