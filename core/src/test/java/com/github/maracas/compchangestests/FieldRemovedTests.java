@@ -6,11 +6,9 @@ import static japicmp.model.JApiCompatibilityChange.FIELD_REMOVED;
 import org.junit.jupiter.api.Test;
 
 class FieldRemovedTests extends CompChangesTest {
-	// We're just checking the cases related to FIELD_REMOVED directly,
-	// not those caused by other removals
 	@Test
 	void testNoMore() {
-		assertNumberDetections(FIELD_REMOVED, 10);
+		assertNumberDetections(FIELD_REMOVED, 16);
 	}
 
 	@Test
@@ -61,5 +59,37 @@ class FieldRemovedTests extends CompChangesTest {
 	@Test
 	void testAccessIntfRemovedQualified() {
 		assertDetection("FieldRemovedImp.java", 12, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	// FIELD_REMOVED detected because the containing classes are removed
+	// or because it was removed from a super class
+	@Test
+	void testAccessFieldRemovedInSuper1() {
+		assertDetection("FieldRemovedInSuperclassExt.java", 8, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	@Test
+	void testAccessFieldRemovedInSuper2() {
+		assertDetection("FieldRemovedInSuperclassExt.java", 12, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	@Test
+	void testAccessFieldRemovedInSuperSub1() {
+		assertDetection("SFieldRemovedInSuperclassExt.java", 8, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	@Test
+	void testAccessFieldRemovedInSuperSub2() {
+		assertDetection("SFieldRemovedInSuperclassExt.java", 12, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	@Test
+	void testAccessFieldRemovedInSuperFA1() {
+		assertDetection("FieldRemovedInSuperclassFA.java", 10, FIELD_REMOVED, FIELD_ACCESS);
+	}
+
+	@Test
+	void testAccessFieldRemovedInSuperFA2() {
+		assertDetection("FieldRemovedInSuperclassFA.java", 15, FIELD_REMOVED, FIELD_ACCESS);
 	}
 }

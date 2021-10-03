@@ -96,6 +96,6 @@ public class CompChangesTest {
 			.filter(d -> !found.contains(d))
 			.toList();
 
-		assertEquals(n, ds.size(), extra.toString());
+		assertEquals(n, ds.size(), ds.toString());
 	}
 }
