@@ -17,15 +17,20 @@ Path v1 = Paths.get("v1.jar");
 Path v2 = Paths.get("v2.jar");
 Path c =  Paths.get("/path/to/client/src/main/java");
 
+// Using a query/result
 AnalysisQuery query = AnalysisQuery.builder()
   .oldJar(v1)
   .newJar(v2)
   .client(c)
   .build();
 
-AnalysisResult result = new Maracas().analyze(query);
-System.out.println("Changes: " + result.delta());
-System.out.println("Impact:  " + result.allDetections());
+AnalysisResult result = Maracas.analyze(query);
+Delta delta = result.delta();
+Collection<Detection> detections = result.allDetections();
+
+// Programmatically
+Delta delta = Maracas.computeDelta(v1, v2);
+Collection<Detection> detections = Maracas.computeDetections(c, delta);
 ```
 
 ### From the command line
