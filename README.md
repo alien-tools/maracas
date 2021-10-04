@@ -45,6 +45,11 @@ Collection<Detection> detections = result.allDetections();
 // Programmatically
 Delta delta = Maracas.computeDelta(v1, v2);
 Collection<Detection> detections = Maracas.computeDetections(c, delta);
+
+// Delta models are built from JARs and lack source code locations.
+// To map breaking changes to precise locations in source code,
+// feed the delta with the library's source code:
+delta.populateLocations(Paths.get("/path/to/v1/src/main/java"));
 ```
 
 ### From the command line
