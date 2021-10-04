@@ -7,6 +7,20 @@ Currently, Maracas consists of two main components:
 
 ## Using Maracas
 
+### Dependency
+
+`maracas-core` is deployed on GitHub Packages.
+First, configure [Maven](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry) or [Gradle](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry) to work with GitHub Package.
+Then, declare the following dependency:
+
+```xml
+<dependency>
+  <groupId>com.github.maracas</groupId>
+  <artifactId>maracas-core</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+
 ### As an API
 One may use Maracas to compute the changes between two versions of a library as well as their impact on a particular client as follows.
 
