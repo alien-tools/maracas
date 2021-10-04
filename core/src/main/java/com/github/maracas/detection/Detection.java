@@ -8,11 +8,34 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.reference.CtReference;
 
-public record Detection (
+/**
+ * A detection is a source code location in client code that is impacted
+ * by a broken declaration.
+ */
+public record Detection(
+	/**
+	 * The impacted {@link CtElement} in the client's AST
+	 */
 	CtElement element,
+
+	/**
+	 * The {@link CtElement} in the library's code that is being used by the {@link #element}
+	 */
 	CtElement usedApiElement,
+
+	/**
+	 * The original broken declaration in the library's code
+	 */
 	CtReference source,
+
+	/**
+	 * The kind of use relationship between the {@link #element} and {@link #usedApiElement}
+	 */
 	APIUse use,
+
+	/**
+	 * The kind of breaking change impacting the broken declaration {@link #source}
+	 */
 	JApiCompatibilityChange change
 ) {
 	@Override

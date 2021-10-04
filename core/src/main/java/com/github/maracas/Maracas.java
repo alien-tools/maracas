@@ -119,7 +119,7 @@ public class Maracas {
 		launcher.getEnvironment().setSourceClasspath(javaCP);
 		CtModel model = launcher.buildModel();
 
-		List<BreakingChangeVisitor> visitors = delta.getVisitors();
+		Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
 
 		// FIXME: Only way I found to visit CompilationUnits and Imports in the model

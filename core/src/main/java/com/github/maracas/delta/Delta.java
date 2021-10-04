@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 
@@ -29,18 +30,47 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * A delta model lists the breaking changes between two versions of a library,
+ * represented as a collection of {@link BrokenDeclaration}.
+ */
 public class Delta {
+	/**
+	 * The library's old JAR
+	 */
 	private final Path oldJar;
+	/**
+	 * The library's new JAR
+	 */
 	private final Path newJar;
+	/**
+	 * The list of {@link BrokenDeclaration} extracted from japicmp's classes
+	 */
 	private final Collection<BrokenDeclaration> brokenDeclarations;
 
+	/**
+	 * @see #fromJApiCmpDelta(Path, Path, List)
+	 */
 	private Delta(Path oldJar, Path newJar, Collection<BrokenDeclaration> decls) {
 		this.oldJar = oldJar;
 		this.newJar = newJar;
 		this.brokenDeclarations = decls;
 	}
 
+	/**
+	 * Builds a delta model from the list of changes extracted by japicmp
+	 *
+	 * @param oldJar the library's old JAR
+	 * @param newJar the library's new JAR
+	 * @param classes the list of changes extracted using
+	 *        {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
+	 * @return a corresponding new delta model
+	 */
 	public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes) {
+		Objects.requireNonNull(oldJar);
+		Objects.requireNonNull(newJar);
+		Objects.requireNonNull(classes);
+
 		Collection<BrokenDeclaration> brokenDeclarations = new ArrayList<>();
 
 		// We need to create CtReferences to v1 to map japicmp's delta
@@ -133,7 +163,17 @@ public class Delta {
 		return new Delta(oldJar, newJar, brokenDeclarations);
 	}
 
+	/**
+	 * Delta models do not natively include source code locations. Invoking
+	 * this method with the old library's source code populates the source code
+	 * location for every breaking change.
+	 *
+	 * @param sources a {@link Path} to the old library's source code
+	 */
 	public void populateLocations(Path sources) {
+		if (PathHelpers.isValidDirectory(sources))
+			throw new IllegalArgumentException("sources isn't a valid directory");
+
 		Launcher launcher = new Launcher();
 		launcher.addInputResource(sources.toAbsolutePath().toString());
 		CtModel model = launcher.buildModel();
@@ -158,7 +198,12 @@ public class Delta {
 		});
 	}
 
-	public List<BreakingChangeVisitor> getVisitors() {
+	/**
+	 * Returns a list of {@link BreakingChangeVisitor}, one per {@link BrokenDeclaration}
+	 * in the current delta model. Each visitor is responsible for inferring
+	 * the set of detections corresponding to the breaking change in client code.
+	 */
+	public Collection<BreakingChangeVisitor> getVisitors() {
 		return
 				brokenDeclarations.stream()
 				.map(BrokenDeclaration::getVisitor)
@@ -166,14 +211,23 @@ public class Delta {
 				.toList();
 	}
 
+	/**
+	 * Returns the list of {@link BrokenDeclaration in the current delta model
+	 */
 	public Collection<BrokenDeclaration> getBrokenDeclarations() {
 		return brokenDeclarations;
 	}
 
+	/**
+	 * Returns the {@link Path} to the library's old JAR of the current delta
+	 */
 	public Path getOldJar() {
 		return oldJar;
 	}
 
+	/**
+	 * Returns the {@link Path} to the library's new JAR of the current delta
+	 */
 	public Path getNewJar() {
 		return newJar;
 	}
@@ -181,7 +235,7 @@ public class Delta {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Δ(" + oldJar + " -> " + newJar + ")\n");
+		sb.append("Δ(" + oldJar.getFileName() + " -> " + newJar.getFileName() + ")\n");
 		sb.append(
 			brokenDeclarations.stream()
 			.map(bd -> """
