@@ -171,7 +171,7 @@ public class Delta {
 	 * @param sources a {@link Path} to the old library's source code
 	 */
 	public void populateLocations(Path sources) {
-		if (PathHelpers.isValidDirectory(sources))
+		if (!PathHelpers.isValidDirectory(sources))
 			throw new IllegalArgumentException("sources isn't a valid directory");
 
 		Launcher launcher = new Launcher();
