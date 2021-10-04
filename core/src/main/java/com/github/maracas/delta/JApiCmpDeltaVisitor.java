@@ -16,7 +16,7 @@ import japicmp.output.Filter.FilterVisitor;
 /**
  * japicmp's visitors are awkwardly named and structured.
  * JApiCmpDeltaVisitor is just a facade for japicmp's visitors
- * getting rid of the Iterators<> and "filter" names.
+ * getting rid of the {@literal Iterator<>}s and "filter" names.
  *
  * @see FilterVisitor
  */

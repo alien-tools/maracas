@@ -26,7 +26,8 @@ import spoon.reflect.reference.CtTypeReference;
  * 	- There must be a cleaner way than checking all possible usage contexts,
  * 		but I can't find it yet
  * 	- japicmp doesn't report a FIELD_TYPE_CHANGED when type parameters change,
- * 		e.g.: List<A> to List<B> (ofc it does for e.g. List<A> to Collection<A>)
+ * 		e.g.: {@literal List<A>} to {@literal List<B>} (ofc it does for e.g.
+ * 	  {@literal List<A>} to {@literal Collection<A>})
  */
 public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;

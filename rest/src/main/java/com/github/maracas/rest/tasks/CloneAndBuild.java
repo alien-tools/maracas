@@ -8,7 +8,7 @@ import com.github.maracas.rest.services.BuildService;
 import com.github.maracas.rest.services.GithubService;
 
 /**
- * Clones & builds a repository, returns the JAR
+ * Clones &amp; builds a repository, returns the JAR
  */
 public class CloneAndBuild implements Supplier<Path> {
 	private final String url;
