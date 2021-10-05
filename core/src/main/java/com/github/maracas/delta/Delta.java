@@ -182,8 +182,14 @@ public class Delta {
 		brokenDeclarations.forEach(decl -> {
 			CtReference bytecodeRef = decl.getReference();
 			if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
-				CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
-				decl.setSourceElement(sourceRef.getTypeDeclaration());
+				// FIXME: Issue with anonymous class in the
+				// https://github.com/break-bot/spoon-before-bc/pull/2 example
+				if (typeRef.getTypeDeclaration() == null) {
+					System.err.println("Null type for " + typeRef + " [" + decl + "]");
+				} else {
+					CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
+					decl.setSourceElement(sourceRef.getTypeDeclaration());
+				}
 			} else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
 				// FIXME: hacky; can't get a reference in the same way as the others;
 				// 			  won't work with parameters, etc.; FIX
