@@ -1,16 +1,20 @@
 package com.github.maracas.util;
 
 import javassist.CtBehavior;
+import spoon.reflect.code.CtIf;
+import spoon.reflect.code.CtLoop;
+import spoon.reflect.code.CtThrow;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class SpoonHelpers {
-	
+
 	private SpoonHelpers() {}
 
 	public static CtElement firstLocatableParent(CtElement element) {
@@ -64,5 +68,21 @@ public class SpoonHelpers {
 			enclosing != null ?
 				enclosing.getQualifiedName() :
 				CtPackage.TOP_LEVEL_PACKAGE_NAME;
+	}
+
+	// Oof
+	public static CtTypeReference<?> inferExpectedType(CtElement e) {
+		if (e instanceof CtTypedElement<?> elem)
+			return elem.getType();
+		else if (e instanceof CtLoop)
+			return e.getFactory().Type().booleanPrimitiveType();
+		else if (e instanceof CtIf)
+			return e.getFactory().Type().booleanPrimitiveType();
+		else if (e instanceof CtThrow thrw)
+			return thrw.getThrownExpression().getType();
+
+		// FIXME: CtSwitch not supported yet
+
+		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
 	}
 }

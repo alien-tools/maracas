@@ -4,9 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class PathHelpers {
-	private PathHelpers() {
-
-	}
+	
+	private PathHelpers() {}
 
 	/**
 	 * Checks whether {@code p} is a non-null {@link Path} to an existing JAR file

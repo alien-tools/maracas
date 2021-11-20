@@ -57,6 +57,8 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 	
 	@Override
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
+		// FIXME: some cases do not throw a compilation error: 
+		// super() refers to the Object type constructor 
 		if (mRef.equals(invocation.getExecutable())) {
 			detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 		}
