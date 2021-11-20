@@ -91,7 +91,7 @@ public class AnalysisQuery {
 		private Path oldJar;
 		private Path newJar;
 		private Path sources;
-		private Collection<Path> clients = new ArrayList<>();
+		private final Collection<Path> clients = new ArrayList<>();
 		private Options jApiOptions = Maracas.defaultJApiOptions();
 
 		/**

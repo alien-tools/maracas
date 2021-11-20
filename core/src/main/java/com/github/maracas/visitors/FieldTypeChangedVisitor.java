@@ -1,5 +1,6 @@
 package com.github.maracas.visitors;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.github.maracas.detection.APIUse;
@@ -119,17 +120,6 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 		else if (expected.isClass() || expected.isInterface())
 			return false;
 
-		// If we have classes/interfaces, check subtyping. Otherwise if given is
-		// not a class/interface, check for boxing
-//		else if (expected.isClass() || expected.isInterface()) {
-//			System.out.println("Checking boxing of " + expected + " and " + given);
-//			if (given.isClass() || given.isInterface())
-//				return given.isSubtypeOf(expected);
-//
-//			System.out.println("Checking boxing of " + expected + " and " + given);
-//			return Objects.equals(expected.box(), given.box());
-//		}
-
 		throw new RuntimeException(
 			"Unhandled type conversion case (" + expected + " <: " + given + ")");
 	}
@@ -153,7 +143,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 		if (givenName.equals("long"))
 			return Set.of("float", "double").contains(expectedName);
 		if (givenName.equals("float"))
-			return Set.of("double").contains(expectedName);
+			return Objects.equals("double", expectedName);
 
 		return false;
 	}

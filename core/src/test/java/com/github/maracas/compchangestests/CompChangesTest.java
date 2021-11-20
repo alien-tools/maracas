@@ -68,7 +68,7 @@ public class CompChangesTest {
 				SourcePosition pos = SpoonHelpers.firstLocatableParent(d.element()).getPosition();
 				if (pos instanceof NoSourcePosition)
 					return false;
-				if (!file.equals(pos.getFile().getName().toString()))
+				if (!file.equals(pos.getFile().getName()))
 					return false;
 				if (line != pos.getLine())
 					return false;

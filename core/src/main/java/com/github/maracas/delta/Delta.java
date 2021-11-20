@@ -116,8 +116,9 @@ public class Delta {
 							// When an enum is transformed into anything else,
 							// japicmp reports that valueOf(String)/values() are removed
 							// Ignore. FIXME
+						{
 							;
-						else {
+						} else {
 							System.err.println("Spoon's old method cannot be found: " + jApiMethod);
 							System.err.println("\tKnown bug: is the method @Deprecated?");
 						}
@@ -241,7 +242,7 @@ public class Delta {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Δ(" + oldJar.getFileName() + " -> " + newJar.getFileName() + ")\n");
+		sb.append("Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()));
 		sb.append(
 			brokenDeclarations.stream()
 			.map(bd -> """

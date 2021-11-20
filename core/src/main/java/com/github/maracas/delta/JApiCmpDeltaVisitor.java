@@ -21,15 +21,15 @@ import japicmp.output.Filter.FilterVisitor;
  * @see FilterVisitor
  */
 public interface JApiCmpDeltaVisitor {
-	public void visit(JApiClass jApiClass);
-	public void visit(JApiMethod jApiMethod);
-	public void visit(JApiConstructor jApiCons);
-	public void visit(JApiImplementedInterface jApiImpl);
-	public void visit(JApiField jApiField);
-	public void visit(JApiAnnotation jApiAnnotation);
-	public void visit(JApiSuperclass jApiSuper);
+	void visit(JApiClass jApiClass);
+	void visit(JApiMethod jApiMethod);
+	void visit(JApiConstructor jApiCons);
+	void visit(JApiImplementedInterface jApiImpl);
+	void visit(JApiField jApiField);
+	void visit(JApiAnnotation jApiAnnotation);
+	void visit(JApiSuperclass jApiSuper);
 
-	public static void visit(List<JApiClass> classes, JApiCmpDeltaVisitor visitor) {
+	static void visit(List<JApiClass> classes, JApiCmpDeltaVisitor visitor) {
 		Filter.filter(classes, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {

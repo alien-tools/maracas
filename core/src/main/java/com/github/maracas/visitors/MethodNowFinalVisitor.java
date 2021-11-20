@@ -28,7 +28,6 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 				.filter(superM -> mRef.equals(superM.getReference()))
 				.findAny();
 
-		if (superMethod.isPresent())
-			detection(m, superMethod.get(), mRef, APIUse.METHOD_OVERRIDE);
+		superMethod.ifPresent(ctMethod -> detection(m, ctMethod, mRef, APIUse.METHOD_OVERRIDE));
 	}
 }

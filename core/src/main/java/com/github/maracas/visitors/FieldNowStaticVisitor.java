@@ -11,10 +11,7 @@ import spoon.reflect.reference.CtFieldReference;
  * We still need to implement detections for binary incompatibilities
  */
 public class FieldNowStaticVisitor extends BreakingChangeVisitor {
-	private final CtFieldReference<?> fRef;
-
 	public FieldNowStaticVisitor(CtFieldReference<?> fRef) {
 		super(JApiCompatibilityChange.FIELD_NOW_STATIC);
-		this.fRef = fRef;
 	}
 }

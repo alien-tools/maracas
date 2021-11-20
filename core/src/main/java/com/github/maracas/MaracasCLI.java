@@ -29,7 +29,7 @@ public class MaracasCLI implements Runnable {
 
 	@Option(names = {"-c", "--client"}, arity="0..*",
 		description = "Directory containing the client's source code")
-	private List<Path> clients = new ArrayList<>();
+	private final List<Path> clients = new ArrayList<>();
 
 	@Option(names = {"-s", "--sources"},
 		description = "Directory containing the old library's source code")
