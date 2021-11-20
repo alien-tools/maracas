@@ -1,5 +1,6 @@
 package com.github.maracas.rest.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +27,7 @@ public record ClientDetections(
 
 public class ClientDetections {
 	private String url;
-	private List<Detection> detections;
+	private List<Detection> detections = new ArrayList<>();
 	private Throwable error;
 
 	public ClientDetections() {
