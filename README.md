@@ -57,13 +57,32 @@ Alternatively, one can invoke Maracas from the command line using the provided C
 First, build a standalone JAR from Maracas Core, and then follow the `--help` guidelines:
 
 ```bash
-cd core/
-mvn clean compile assembly:single
-java -jar target/maracas-core-<version>-jar-with-dependencies.jar --help
+$ cd core/
+$ mvn clean compile assembly:single
+$ java -jar target/maracas-core-<version>-jar-with-dependencies.jar --help
 ```
 
 The example above can be invoked from the CLI as follows:
 
 ```bash
-java -jar target/maracas-core-<version>-jar-with-dependencies.jar --old v1.jar --new v2.jar --client /path/to/client/src/main/java
+$ java -jar target/maracas-core-<version>-jar-with-dependencies.jar --old v1.jar --new v2.jar --client /path/to/client/src/main/java
+```
+
+## Deploying Maracas REST
+
+### Configuration
+As Maracas REST needs to interact with the GitHub REST API, one must first configure a [personal token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) to be used.
+To do so, a file named `.github` must be placed in the `rest/src/main/resources/` directory with the following content:
+
+```bash
+$ cat rest/src/main/resources/.github
+oauth=<GITHUB_TOKEN>
+```
+
+### Execution
+The preferred way to run the Maracas REST server is through Docker.
+Use the convenience script `docker-run.sh` to start the REST server:
+```bash
+$ cd rest/
+$ ./docker-run.sh
 ```
