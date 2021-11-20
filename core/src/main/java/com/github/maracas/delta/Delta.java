@@ -19,6 +19,7 @@ import japicmp.model.JApiField;
 import japicmp.model.JApiImplementedInterface;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiSuperclass;
+import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import spoon.Launcher;
@@ -145,6 +146,25 @@ public class Delta {
 
 			@Override
 			public void visit(JApiConstructor jApiConstructor) {
+				CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiConstructor.getjApiClass().getFullyQualifiedName());
+				var oldConsOpt = jApiConstructor.getOldConstructor();
+				
+				if (oldConsOpt.isPresent()) {
+					CtConstructor oldCons = oldConsOpt.get();
+					Optional<CtExecutableReference<?>> cRefOpt = 
+						clsRef.getDeclaredExecutables()
+						.stream()
+						.filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
+						.findFirst();
+					
+					if (cRefOpt.isPresent()) {
+						jApiConstructor.getCompatibilityChanges().forEach(c ->
+							brokenDeclarations.add(new BrokenMethod(jApiConstructor, cRefOpt.get(), c))
+						);
+					} else {
+						// No old constructor
+					}
+				}
 			}
 
 			@Override
