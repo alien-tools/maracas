@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHPullRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,7 @@ public class MaracasService {
 		return detections;
 	}
 
-	public MaracasReport makeReport(String repository, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
+	public MaracasReport makeReport(GHPullRequest pr, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
 		Path sources = findSourceDirectory(basePath, null);
 		Delta maracasDelta = makeDelta(jar1, jar2, sources);
@@ -83,8 +84,7 @@ public class MaracasService {
 		return new MaracasReport(
 			com.github.maracas.rest.data.Delta.fromMaracasDelta(
 				maracasDelta,
-				repository,
-				ref,
+				pr,
 				basePath.toAbsolutePath().toString()
 			),
 			detections

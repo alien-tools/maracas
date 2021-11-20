@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 
 import com.github.maracas.util.SpoonHelpers;
 
+import org.kohsuke.github.GHPullRequest;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 
@@ -13,9 +14,10 @@ public record BrokenDeclaration(
 	String path,
 	int startLine,
 	int endLine,
-	String url
+	String fileUrl,
+	String diffUrl
 ) {
-	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BrokenDeclaration decl, String repository, String ref, String clonePath) {
+	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BrokenDeclaration decl, GHPullRequest pr, String clonePath) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -37,7 +39,8 @@ public record BrokenDeclaration(
 			relativeFile,
 			startLine,
 			endLine,
-			repository != null ? GitHubUtils.buildGitHubUrl(repository, ref, relativeFile, startLine, endLine) : null
+			GitHubUtils.buildGitHubFileUrl(pr.getRepository().getFullName(), pr.getBase().getRef(), relativeFile, startLine, endLine),
+			GitHubUtils.buildGitHubDiffUrl(pr.getRepository().getFullName(), pr.getNumber(), relativeFile, startLine)
 		);
 	}
 }

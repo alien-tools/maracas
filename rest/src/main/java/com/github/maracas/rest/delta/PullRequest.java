@@ -53,10 +53,8 @@ public class PullRequest implements Diffable {
 			CompletableFuture.allOf(baseFuture, headFuture).join();
 			Path j1 = baseFuture.get();
 			Path j2 = headFuture.get();
-			String repository = base.getRepository().getFullName();
-			String ref = base.getSha();
 
-			return maracasService.makeReport(repository, ref, basePath, j1, j2, config);
+			return maracasService.makeReport(pr, basePath, j1, j2, config);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();

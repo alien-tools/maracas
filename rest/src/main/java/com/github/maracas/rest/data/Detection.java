@@ -42,7 +42,7 @@ public record Detection(
 			relativeFile,
 			pos.getLine(),
 			pos.getEndLine(),
-			repository != null ? GitHubUtils.buildGitHubUrl(repository, ref, relativeFile, pos.getLine(), pos.getEndLine()) : null
+			GitHubUtils.buildGitHubFileUrl(repository, ref, relativeFile, pos.getLine(), pos.getEndLine())
 		);
 	}
 }
