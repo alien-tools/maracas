@@ -10,9 +10,9 @@ import spoon.reflect.reference.CtTypeReference;
  * types. It is of special help when dealing with widening,
  * narrowing, boxing, unboxing, and subtyping cases.
  */
-public class TypeCompatibilityHelpers {
+public class SpoonTypeHelpers {
 
-	private TypeCompatibilityHelpers() {}
+	private SpoonTypeHelpers() {}
 
 	/**
 	 * Couldn't find a built-in utility to check all cases.

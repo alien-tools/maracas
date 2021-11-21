@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.github.maracas.detection.APIUse;
 import com.github.maracas.util.SpoonHelpers;
-import com.github.maracas.util.TypeCompatibilityHelpers;
+import com.github.maracas.util.SpoonTypeHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtAssignment;
@@ -55,7 +55,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 				typeRefOpt = Optional.empty();
 			}
 
-			if (typeRefOpt.isPresent() && !TypeCompatibilityHelpers.isAssignableFrom(typeRefOpt.get(), newType)) {
+			if (typeRefOpt.isPresent() && !SpoonTypeHelpers.isAssignableFrom(typeRefOpt.get(), newType)) {
 				detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 			}
 		}
@@ -66,7 +66,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 		if (mRef.getExecutableDeclaration() instanceof CtMethod<?> method) {
 			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(method);
 
-			if (m.isOverriding(method) && !TypeCompatibilityHelpers.isAssignableFrom(newType, expectedType)) {
+			if (m.isOverriding(method) && !SpoonTypeHelpers.isAssignableFrom(newType, expectedType)) {
 				detection(m, method, mRef, APIUse.METHOD_OVERRIDE);
 			}
 		} else {

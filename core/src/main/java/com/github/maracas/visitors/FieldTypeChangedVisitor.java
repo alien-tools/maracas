@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.github.maracas.detection.APIUse;
 import com.github.maracas.util.SpoonHelpers;
-import com.github.maracas.util.TypeCompatibilityHelpers;
+import com.github.maracas.util.SpoonTypeHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtAssignment;
@@ -46,7 +46,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 		if (fRef.equals(fieldRead.getVariable())) {
 			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(fieldRead.getParent());
 
-			if (!TypeCompatibilityHelpers.isAssignableFrom(expectedType, newType))
+			if (!SpoonTypeHelpers.isAssignableFrom(expectedType, newType))
 				detection(fieldRead, fieldRead.getVariable(), fRef, APIUse.FIELD_ACCESS);
 		}
 	}
@@ -58,7 +58,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 			CtAssignment<?, ?> enclosing = (CtAssignment<?, ?>) fieldWrite.getParent();
 			CtTypeReference<?> assignedType = enclosing.getType();
 
-			if (!TypeCompatibilityHelpers.isAssignableFrom(newType, assignedType))
+			if (!SpoonTypeHelpers.isAssignableFrom(newType, assignedType))
 				detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
 		}
 	}
