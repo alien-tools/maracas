@@ -4,8 +4,8 @@ ENV MAVEN_HOME=/usr/share/maven
 ENV M2_HOME=/usr/share/maven
 
 RUN addgroup -S spring && adduser -S spring -G spring \
-  && mkdir /clones /reports \
-  && chown spring:spring /clones /reports \
+  && mkdir -p /data/clones /data/reports /data/logs \
+  && chown spring:spring /data/clones /data/reports /data/logs \
   && apk --no-cache add ca-certificates openssl &&  update-ca-certificates
 
 RUN cd /tmp \
@@ -24,4 +24,3 @@ ARG JAR_FILE=target/maracas-rest-*-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "/app.jar"]
-

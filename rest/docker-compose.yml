@@ -1,0 +1,11 @@
+services:
+  maracas:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - maracas-data:/data
+
+volumes:
+  maracas-data:
+
