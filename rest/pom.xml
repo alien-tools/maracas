@@ -15,7 +15,7 @@
 	<name>Maracas REST API</name>
 
 	<properties>
-		<spring.version>2.5.0</spring.version>
+		<spring.version>2.6.0</spring.version>
 	</properties>
 
 	<build>
@@ -38,6 +38,13 @@
 				<version>${maven.deploy.version}</version>
 				<configuration>
 					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<!-- Can't use @Suite yet (?), so @Tag will do -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>slow</excludedGroups>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -104,6 +111,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-suite-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-suite-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
