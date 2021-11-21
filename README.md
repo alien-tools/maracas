@@ -80,9 +80,10 @@ oauth=<GITHUB_TOKEN>
 ```
 
 ### Execution
-The preferred way to run the Maracas REST server is through Docker.
-Use the convenience script `docker-run.sh` to start the REST server:
+The preferred way to run the Maracas REST server is using Docker:
 ```bash
 $ cd rest/
-$ ./docker-run.sh
+$ docker-compose up
 ```
+
+The REST server listens on port `8080`. Its documentation is exposed at `http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config`.
