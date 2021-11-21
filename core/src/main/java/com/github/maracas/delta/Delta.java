@@ -100,6 +100,8 @@ public class Delta {
 			public void visit(JApiMethod jApiMethod) {
 				CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiMethod.getjApiClass().getFullyQualifiedName());
 				var oldMethodOpt = jApiMethod.getOldMethod();
+				var newMethodOpt = jApiMethod.getNewMethod();
+				
 				if (oldMethodOpt.isPresent()) {
 					CtMethod oldMethod = oldMethodOpt.get();
 					Optional<CtExecutableReference<?>> mRefOpt =
@@ -123,8 +125,18 @@ public class Delta {
 							System.err.println("\tKnown bug: is the method @Deprecated?");
 						}
 					}
+				} else if (newMethodOpt.isPresent()) {
+					// Added method introducing a breaking change.
+					CtMethod newMethod = newMethodOpt.get();
+					
+					// FIXME: we miss the information about the newly added method
+					if (!(newMethod.getName().equals("values") || newMethod.getName().equals("valueOf"))) {
+						jApiMethod.getCompatibilityChanges().forEach(c ->
+							brokenDeclarations.add(new BrokenClass(jApiMethod.getjApiClass(), clsRef, c))
+						);
+					}
 				} else {
-					// No oldMethod
+					throw new RuntimeException("The JApiCmp delta model is corrupted.");
 				}
 			}
 

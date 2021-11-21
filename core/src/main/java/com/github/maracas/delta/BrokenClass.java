@@ -7,6 +7,7 @@ import com.github.maracas.visitors.ClassNowAbstractVisitor;
 import com.github.maracas.visitors.ClassNowCheckedExceptionVisitor;
 import com.github.maracas.visitors.ClassNowFinalVisitor;
 import com.github.maracas.visitors.ClassRemovedVisitor;
+import com.github.maracas.visitors.MethodAddedToInterfaceVisitor;
 
 import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
@@ -39,6 +40,7 @@ public class BrokenClass extends AbstractBrokenDeclaration {
 				case CLASS_NOW_CHECKED_EXCEPTION -> new ClassNowCheckedExceptionVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
 				case CLASS_REMOVED               -> new ClassRemovedVisitor(clsRef);
+				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
 				default -> null;
 			};
 	}

@@ -2,7 +2,6 @@ package com.github.maracas.delta;
 
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.ConstructorRemovedVisitor;
-import com.github.maracas.visitors.FieldTypeChangedVisitor;
 import com.github.maracas.visitors.MethodNowAbstractVisitor;
 import com.github.maracas.visitors.MethodNowFinalVisitor;
 import com.github.maracas.visitors.MethodRemovedVisitor;
@@ -17,12 +16,12 @@ import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * A broken method is a special case of a broken declaration 
+ * A broken method is a special case of a broken declaration
  * that pinpoints methods in the library's code impacted
  * by a breaking change.
  */
 public class BrokenMethod extends AbstractBrokenDeclaration {
-	
+
 	private final JApiBehavior jApiMethod;
 	private final CtExecutableReference<?> mRef;
 

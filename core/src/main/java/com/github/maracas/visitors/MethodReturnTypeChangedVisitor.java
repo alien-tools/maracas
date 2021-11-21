@@ -1,8 +1,6 @@
 package com.github.maracas.visitors;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import com.github.maracas.detection.APIUse;
 import com.github.maracas.util.SpoonHelpers;
@@ -10,7 +8,6 @@ import com.github.maracas.util.TypeCompatibilityHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtElement;
@@ -60,7 +57,6 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 
 			if (typeRefOpt.isPresent() && !TypeCompatibilityHelpers.isAssignableFrom(typeRefOpt.get(), newType)) {
 				detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
-				return;
 			}
 		}
 	}
