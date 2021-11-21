@@ -16,4 +16,13 @@ public class MethodReturnTypeChangedMI {
 		return m.methodReturnTypeChangedList();
 	}
 	
+	public void numericClientCast() {
+		MethodReturnTypeChanged m = new MethodReturnTypeChanged();
+		long res = (long) m.methodReturnTypeChangedNumeric();
+	}
+	
+	public void listClientCast() {
+		MethodReturnTypeChanged m = new MethodReturnTypeChanged();
+		ArrayList res = (ArrayList) m.methodReturnTypeChangedList();
+	}
 }
