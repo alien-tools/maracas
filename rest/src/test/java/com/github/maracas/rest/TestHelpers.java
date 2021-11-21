@@ -17,21 +17,25 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class TestHelpers {
-	public static void checkReport(ResultActions res) throws Exception {
-		res
+	public static ResultActions checkReportIsValid(ResultActions res) throws Exception {
+		return res
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.message", is("ok")))
-			.andExpect(jsonPath("$.report.delta.brokenDeclarations", not(empty())))
+			.andExpect(jsonPath("$.message", is("ok")));
+	}
+
+	public static ResultActions checkReportHasDelta(ResultActions res) throws Exception {
+		return checkReportIsValid(res)
+			.andExpect(jsonPath("$.report.delta.brokenDeclarations", not(empty())));
+	}
+
+	public static ResultActions checkReportHasDetections(ResultActions res) throws Exception {
+		return checkReportHasDelta(res)
 			.andExpect(jsonPath("$.report.clientDetections", not(empty())));
 	}
 
-	public static void checkReportWithoutDetections(ResultActions res) throws Exception {
-		res
-			.andExpect(status().isOk())
-			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.message", is("ok")))
-			.andExpect(jsonPath("$.report.delta.brokenDeclarations", not(empty())))
+	public static ResultActions checkReportHasNoDetection(ResultActions res) throws Exception {
+		return checkReportHasDelta(res)
 			.andExpect(jsonPath("$.report.clientDetections", is(empty())));
 	}
 

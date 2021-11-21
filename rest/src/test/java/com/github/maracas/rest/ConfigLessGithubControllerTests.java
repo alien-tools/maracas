@@ -1,7 +1,6 @@
 package com.github.maracas.rest;
 
-import static com.github.maracas.rest.TestHelpers.checkReportWithoutDetections;
-import static com.github.maracas.rest.TestHelpers.waitForPRAnalysis;
+import static com.github.maracas.rest.TestHelpers.*;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -69,7 +68,7 @@ class ConfigLessGithubControllerTests {
 				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
 			ResultActions res = waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3");
-			checkReportWithoutDetections(res);
+			checkReportHasNoDetection(res);
 
 			mockServer.verify(
 				request()

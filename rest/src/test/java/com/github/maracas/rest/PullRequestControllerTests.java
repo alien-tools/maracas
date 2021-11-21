@@ -1,7 +1,6 @@
 package com.github.maracas.rest;
 
-import static com.github.maracas.rest.TestHelpers.checkReport;
-import static com.github.maracas.rest.TestHelpers.waitForPRAnalysis;
+import static com.github.maracas.rest.TestHelpers.*;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -49,7 +48,7 @@ class PullRequestControllerTests {
 
 	@Test
 	void testSubmitAndCheckPRSync() throws Exception {
-		checkReport(mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/3")));
+		checkReportHasDetections(mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/3")));
 	}
 
 	@Test
@@ -60,7 +59,7 @@ class PullRequestControllerTests {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-		checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+		checkReportHasDetections(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 	}
 
 	@Test
@@ -88,7 +87,7 @@ class PullRequestControllerTests {
 				.andExpect(status().isProcessing())
 				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-			checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+			checkReportHasDetections(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 
 			mockServer.verify(
 				request()
@@ -126,7 +125,7 @@ class PullRequestControllerTests {
 				.andExpect(status().isProcessing())
 				.andExpect(content().json("{'message': 'processing', 'report': null}"));
 
-			checkReport(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
+			checkReportHasDetections(waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3"));
 
 			mockServer.verify(
 				request()
@@ -171,7 +170,7 @@ class PullRequestControllerTests {
 
 	@Test
 	void testPRWithSuppliedBreakbotConfiguration() throws Exception {
-		checkReport(mvc.perform(
+		checkReportHasDetections(mvc.perform(
 			post("/github/pr-sync/tdegueul/comp-changes/2")
 				.content("""
 					clients:
