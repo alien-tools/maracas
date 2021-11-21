@@ -1,8 +1,6 @@
 package com.github.maracas.rest;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -37,6 +35,16 @@ public class TestHelpers {
 	public static ResultActions checkReportHasNoDetection(ResultActions res) throws Exception {
 		return checkReportHasDelta(res)
 			.andExpect(jsonPath("$.report.clientDetections", is(empty())));
+	}
+
+	public static ResultActions checkReportHasError(ResultActions res) throws Exception {
+		return checkReportIsValid(res)
+			.andExpect(jsonPath("$.message", not(empty())));
+	}
+
+	public static ResultActions checkReportHasClientError(ResultActions res) throws Exception {
+		return checkReportIsValid(res)
+			.andExpect(jsonPath("$.report.clientDetections[*].error", contains(not(emptyOrNullString()))));
 	}
 
 	// Sigh

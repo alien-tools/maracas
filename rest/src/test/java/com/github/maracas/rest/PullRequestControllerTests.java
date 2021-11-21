@@ -1,6 +1,7 @@
 package com.github.maracas.rest;
 
 import static com.github.maracas.rest.TestHelpers.*;
+import static org.hamcrest.Matchers.*;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -9,14 +10,13 @@ import static org.mockserver.model.NottableString.string;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -174,8 +174,30 @@ class PullRequestControllerTests {
 			post("/github/pr-sync/tdegueul/comp-changes/2")
 				.content("""
 					clients:
-					  - repository: tdegueul/comp-changes-client
-					""")
+					  - repository: tdegueul/comp-changes-client""")
 		));
+	}
+
+	@Test
+	void testPRWithBuggyBuildConfiguration() throws Exception {
+		mvc.perform(
+				post("/github/pr-sync/tdegueul/comp-changes/2")
+						.content("""
+							build:
+							  pom: unknown.xml""")
+		)
+			.andExpect(status().isInternalServerError()) // FIXME: Well, shouldn't be a 500 though
+			.andExpect(jsonPath("$.message", containsString("unknown.xml")));
+	}
+
+	@Test
+	void testPRWithBuggyClientConfiguration() throws Exception {
+		checkReportHasClientError(mvc.perform(
+				post("/github/pr-sync/tdegueul/comp-changes/2")
+						.content("""
+							clients:
+							  - repository: unknown/repository""")
+		))
+			.andExpect(jsonPath("$.report.clientDetections[0].error", containsString("Couldn't analyze client")));
 	}
 }

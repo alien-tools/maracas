@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 public record MaracasReport(
 	Delta delta,
 	List<ClientDetections> clientDetections,
+	@JsonSerialize(using = ToStringSerializer.class)
 	Throwable error
 ) {
 	public MaracasReport(Delta delta, List<ClientDetections> clientDetections) {

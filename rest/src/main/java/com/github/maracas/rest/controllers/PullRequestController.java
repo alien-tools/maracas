@@ -1,27 +1,16 @@
 package com.github.maracas.rest.controllers;
 
-import java.io.IOException;
-import java.util.concurrent.CompletionException;
-
+import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequestResponse;
+import com.github.maracas.rest.services.PullRequestService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PullRequestResponse;
-import com.github.maracas.rest.services.BuildException;
-import com.github.maracas.rest.services.CloneException;
-import com.github.maracas.rest.services.PullRequestService;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/github")
@@ -50,11 +39,11 @@ public class PullRequestController {
 			return ResponseEntity
 				.badRequest()
 				.body(new PullRequestResponse(e.getMessage()));
-		} catch (Exception e) {
-			logger.error(e);
+		} catch (Throwable t) {
+			logger.error(t);
 			return ResponseEntity
 				.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(new PullRequestResponse(e.getMessage()));
+				.body(new PullRequestResponse(t.getMessage()));
 		}
 	}
 
@@ -87,11 +76,11 @@ public class PullRequestController {
 			return ResponseEntity
 				.badRequest()
 				.body(new PullRequestResponse(e.getMessage()));
-		} catch (Exception e) {
-			logger.error(e);
+		} catch (Throwable t) {
+			logger.error(t);
 			return ResponseEntity
 				.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(new PullRequestResponse(e.getMessage()));
+				.body(new PullRequestResponse(t.getMessage()));
 		}
 	}
 
@@ -110,11 +99,11 @@ public class PullRequestController {
 			return ResponseEntity
 				.badRequest()
 				.body(new PullRequestResponse(e.getMessage()));
-		} catch (CloneException | BuildException | CompletionException e) {
-			logger.error(e);
+		} catch (Throwable t) {
+			logger.error(t);
 			return ResponseEntity
 				.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(new PullRequestResponse(e.getMessage()));
+				.body(new PullRequestResponse(t.getMessage()));
 		}
 	}
 }

@@ -1,5 +1,8 @@
 package com.github.maracas.rest.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +30,8 @@ public record ClientDetections(
 
 public class ClientDetections {
 	private String url;
-	private List<Detection> detections = new ArrayList<>();
+	private List<Detection> detections;
+	@JsonSerialize(using = ToStringSerializer.class)
 	private Throwable error;
 
 	public ClientDetections() {
@@ -44,9 +48,7 @@ public class ClientDetections {
 		this(u, d, null);
 	}
 
-	public ClientDetections(String u, Throwable t) {
-		this(u, null, t);
-	}
+	public ClientDetections(String u, Throwable t) { this(u, new ArrayList<>(), t); }
 
 	public String getUrl() { return url; }
 	public List<Detection> getDetections() { return detections; }
