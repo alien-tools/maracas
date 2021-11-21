@@ -33,7 +33,7 @@ public class PullRequestService {
 	@Autowired
 	private MaracasService maracasService;
 
-	private Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
+	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
 
 	@Value("${maracas.clone-path:./clones}")

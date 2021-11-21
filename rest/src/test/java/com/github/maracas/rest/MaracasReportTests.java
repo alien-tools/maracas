@@ -7,11 +7,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Properties;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,13 +26,10 @@ import com.github.maracas.rest.data.MaracasReport;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -66,7 +62,7 @@ class MaracasReportTests {
 
 			report = new MaracasReport(
 				Delta.fromMaracasDelta(result.delta(), pr, "../test-data/comp-changes/old/"),
-				Arrays.asList(new ClientDetections(clientGithub,
+				List.of(new ClientDetections(clientGithub,
 					result.allDetections()
 						.stream()
 						.map(d -> Detection.fromMaracasDetection(d, clientGithub, "main", c1.toString()))

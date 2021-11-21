@@ -43,7 +43,7 @@ public class TestHelpers {
 				do {
 					res = mvc.perform(get(uri));
 					Thread.sleep(1000);
-				} while(res != null && res.andReturn().getResponse().getStatus() != HttpStatus.SC_OK);
+				} while(res.andReturn().getResponse().getStatus() != HttpStatus.SC_OK);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
