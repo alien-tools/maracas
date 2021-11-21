@@ -1,5 +1,19 @@
 package com.github.maracas.rest.services;
 
+import com.github.maracas.rest.breakbot.Breakbot;
+import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.delta.PullRequest;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,27 +23,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.github.maracas.rest.breakbot.Breakbot;
-import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.delta.PullRequest;
-
 @Service
 public class PullRequestService {
 	@Autowired
-	private GitHub github;
+	private GitHubService githubService;
 	@Autowired
 	private MaracasService maracasService;
 
@@ -49,10 +46,9 @@ public class PullRequestService {
 		Paths.get(reportPath).toFile().mkdirs();
 	}
 
-	public String analyzePR(String owner, String repository, int prId, String callback, String installationId) throws IOException {
-		// Read PR meta
-		GHRepository repo = github.getRepository(owner + "/" + repository);
-		GHPullRequest pr = repo.getPullRequest(prId);
+	public String analyzePR(String owner, String repository, int prId, String callback, String installationId) {
+		GHRepository repo = githubService.getRepository(owner, repository);
+		GHPullRequest pr = githubService.getPullRequest(owner, repository, prId);
 		String prHead = pr.getHead().getSha();
 		BreakbotConfig config = readBreakbotConfig(repo);
 		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
@@ -69,27 +65,24 @@ public class PullRequestService {
 			logger.info("Starting the analysis of {}", uid);
 
 			CompletableFuture<Void> future =
-				prDiff.diffAsync()
-				.thenAccept(report -> {
-					logger.info("Done analyzing {}", uid);
-					jobs.remove(uid);
+					prDiff.diffAsync()
+							.thenAccept(report -> {
+								logger.info("Done analyzing {}", uid);
+								jobs.remove(uid);
 
-					if (report.error() == null) {
-						try {
-							logger.info("Serializing {}", reportFile);
-							reportFile.getParentFile().mkdirs();
-							report.writeJson(reportFile);
+								try {
+									logger.info("Serializing {}", reportFile);
+									reportFile.getParentFile().mkdirs();
+									report.writeJson(reportFile);
 
-							if (callback != null) {
-								Breakbot bb = new Breakbot(new URI(callback), installationId);
-								bb.sendPullRequestResponse(report);
-							}
-						} catch (Exception e) {
-							logger.error(e);
-						}
-					} else
-						logger.error(report.error());
-				});
+									if (callback != null) {
+										Breakbot bb = new Breakbot(new URI(callback), installationId);
+										bb.sendPullRequestResponse(report);
+									}
+								} catch (Exception e) {
+									logger.error(e);
+								}
+							});
 
 			jobs.put(uid, future);
 		}
@@ -97,14 +90,13 @@ public class PullRequestService {
 		return reportLocation;
 	}
 
-	public String analyzePR(String owner, String repository, int prId) throws IOException {
+	public String analyzePR(String owner, String repository, int prId) {
 		return analyzePR(owner, repository, prId, null, null);
 	}
 
-	public MaracasReport analyzePRSync(String owner, String repository, int prId, String breakbotYaml) throws IOException {
-		// Read PR meta
-		GHRepository repo = github.getRepository(owner + "/" + repository);
-		GHPullRequest pr = repo.getPullRequest(prId);
+	public MaracasReport analyzePRSync(String owner, String repository, int prId, String breakbotYaml) {
+		GHRepository repo = githubService.getRepository(owner, repository);
+		GHPullRequest pr = githubService.getPullRequest(repo, prId);
 		BreakbotConfig config =
 			StringUtils.isEmpty(breakbotYaml) ?
 				readBreakbotConfig(repo) :
@@ -127,9 +119,8 @@ public class PullRequestService {
 		return null;
 	}
 
-	public MaracasReport getReport(String owner, String repository, int id) throws IOException {
-		GHRepository repo = github.getRepository(owner + "/" + repository);
-		GHPullRequest pr = repo.getPullRequest(id);
+	public MaracasReport getReport(String owner, String repository, int id) {
+		GHPullRequest pr = githubService.getPullRequest(owner, repository, id);
 		String head = pr.getHead().getSha();
 
 		return getReport(owner, repository, id, head);
@@ -139,9 +130,8 @@ public class PullRequestService {
 		return jobs.containsKey(prUid(owner, repository, id, head));
 	}
 
-	public boolean isProcessing(String owner, String repository, int id) throws IOException {
-		GHRepository repo = github.getRepository(owner + "/" + repository);
-		GHPullRequest pr = repo.getPullRequest(id);
+	public boolean isProcessing(String owner, String repository, int id) {
+		GHPullRequest pr = githubService.getPullRequest(owner, repository, id);
 		String head = pr.getHead().getSha();
 
 		return isProcessing(owner, repository, id, head);

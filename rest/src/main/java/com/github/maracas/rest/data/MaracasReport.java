@@ -10,18 +10,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 public record MaracasReport(
 	Delta delta,
-	List<ClientDetections> clientDetections,
-	@JsonSerialize(using = ToStringSerializer.class)
-	Throwable error
+	List<ClientDetections> clientDetections
 ) {
-	public MaracasReport(Delta delta, List<ClientDetections> clientDetections) {
-		this(delta, clientDetections, null);
-	}
-
-	public MaracasReport(Throwable error) {
-		this(null, null, error);
-	}
-
 	public static MaracasReport fromJson(File json) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		return objectMapper.readValue(json, MaracasReport.class);

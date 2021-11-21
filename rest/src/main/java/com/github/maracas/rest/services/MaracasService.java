@@ -23,7 +23,7 @@ import com.google.common.base.Stopwatch;
 @Service
 public class MaracasService {
 	@Autowired
-	private GithubService githubService;
+	private GitHubService githubService;
 
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
@@ -62,7 +62,7 @@ public class MaracasService {
 		config.getClients().parallelStream().forEach(c -> {
 			try {
 				// Clone the client
-				String branch = githubService.getBranch(c);
+				String branch = githubService.getBranchName(c);
 				Path clientPath = githubService.cloneRepository(c);
 				Path clientSources = findSourceDirectory(clientPath, c.sources());
 

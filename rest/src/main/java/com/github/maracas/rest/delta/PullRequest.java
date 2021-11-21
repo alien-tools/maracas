@@ -3,6 +3,7 @@ package com.github.maracas.rest.delta;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
@@ -58,9 +59,7 @@ public class PullRequest implements Diffable {
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
-			return new MaracasReport(e);
-		} catch (BuildException | CloneException e) {
-			return new MaracasReport(e);
+			return null;
 		}
 	}
 }

@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.services.BuildService;
-import com.github.maracas.rest.services.GithubService;
+import com.github.maracas.rest.services.GitHubService;
 
 /**
  * Clones &amp; builds a repository, returns the JAR
@@ -16,7 +16,7 @@ public class CloneAndBuild implements Supplier<Path> {
 	private final Path dest;
 	private final BreakbotConfig config;
 
-	private final GithubService githubService = new GithubService();
+	private final GitHubService githubService = new GitHubService();
 	private final BuildService buildService = new BuildService();
 
 	public CloneAndBuild(String url, String ref, Path dest, BreakbotConfig config) {

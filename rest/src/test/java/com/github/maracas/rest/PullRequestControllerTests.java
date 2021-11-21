@@ -141,25 +141,31 @@ class PullRequestControllerTests {
 	@Test
 	void testUnknownRepository() throws Exception {
 		mvc.perform(post("/github/pr/tdegueul/NOPE/3"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch repository tdegueul/NOPE")));
 
 		mvc.perform(post("/github/pr/tdegueul/NOPE/3?callback=foo"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch repository tdegueul/NOPE")));
 
 		mvc.perform(post("/github/pr-sync/tdegueul/NOPE/3"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch repository tdegueul/NOPE")));
 	}
 
 	@Test
 	void testUnknownPR() throws Exception {
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository tdegueul/comp-changes")));
 
 		mvc.perform(post("/github/pr/tdegueul/comp-changes/9999?callback=foo"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository tdegueul/comp-changes")));
 
 		mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/9999"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository tdegueul/comp-changes")));
 	}
 
 	@Test
@@ -187,7 +193,7 @@ class PullRequestControllerTests {
 							  pom: unknown.xml""")
 		)
 			.andExpect(status().isInternalServerError()) // FIXME: Well, shouldn't be a 500 though
-			.andExpect(jsonPath("$.message", containsString("unknown.xml")));
+			.andExpect(jsonPath("$.message", containsString("BuildException")));
 	}
 
 	@Test
