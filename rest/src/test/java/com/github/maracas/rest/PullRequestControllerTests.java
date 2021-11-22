@@ -14,9 +14,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.rest.data.BrokenDeclaration;
+import com.github.maracas.rest.data.PullRequestResponse;
 import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -27,6 +31,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,6 +40,8 @@ import org.springframework.test.web.servlet.MockMvc;
 class PullRequestControllerTests {
 	@Autowired
 	private MockMvc mvc;
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@Value("${maracas.clone-path}")
 	private String clonePath;
@@ -205,5 +213,29 @@ class PullRequestControllerTests {
 							  - repository: unknown/repository""")
 		))
 			.andExpect(jsonPath("$.report.clientDetections[0].error", containsString("Couldn't analyze client")));
+	}
+
+	@Test
+	void testPRWithExcludeCriteria() throws Exception {
+		String config = """
+			excludes:
+			  - '@main.unstableAnnon.Beta'
+			  - '*test*'
+			  - '*tests*'
+			  - '*unstablePkg*'""";
+
+		PullRequestResponse response = objectMapper.readValue(
+			checkReportHasDelta(mvc.perform(post("/github/pr-sync/tdegueul/comp-changes/2").content(config)))
+				.andReturn().getResponse().getContentAsString(),
+			PullRequestResponse.class);
+
+		Collection<String> brokenDecls =
+			response.report().delta().brokenDeclarations().stream().
+			map(BrokenDeclaration::declaration).toList();
+
+		assertThat(brokenDecls, not(hasItem(containsString("test"))));
+		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
+		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));
+		assertThat(brokenDecls, not(hasItem(containsString("main.unstableAnnon.classRemoved.ClassRemoved"))));
 	}
 }

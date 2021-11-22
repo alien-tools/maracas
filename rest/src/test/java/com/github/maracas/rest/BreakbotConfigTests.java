@@ -1,10 +1,7 @@
 package com.github.maracas.rest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 import java.nio.charset.Charset;
 
@@ -125,4 +122,15 @@ class BreakbotConfigTests {
 		assertThat(c.getClients().get(3).branch(), is("dev"));
 	}
 
+	@Test
+	void testWithExcludes() {
+		String s = """
+			excludes:
+			  # '@' and '*' cannot start a YAML token, we have to quote
+			  - '@Beta'
+			  - '*internal*'""";
+		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		assertThat(c.getExcludes(), hasSize(2));
+		assertThat(c.getExcludes(), hasItems("@Beta", "*internal*"));
+	}
 }

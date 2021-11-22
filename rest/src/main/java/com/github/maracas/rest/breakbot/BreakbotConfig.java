@@ -19,6 +19,7 @@ public class BreakbotConfig {
 	private List<String> mvnGoals = new ArrayList<>();
 	private List<String> mvnProperties = new ArrayList<>();
 	private String jarLocation;
+	private List<String> excludes = new ArrayList<>();
 	private final List<GithubRepositoryConfig> clients = new ArrayList<>();
 
 	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
@@ -38,6 +39,8 @@ public class BreakbotConfig {
 	public String getJarLocation() {
 		return jarLocation;
 	}
+
+	public List<String> getExcludes() { return excludes; }
 
 	public List<GithubRepositoryConfig> getClients() {
 		return clients;

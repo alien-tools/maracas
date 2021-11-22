@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import japicmp.config.Options;
+import japicmp.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHPullRequest;
@@ -27,11 +29,14 @@ public class MaracasService {
 
 	private static final Logger logger = LogManager.getLogger(MaracasService.class);
 
-	public Delta makeDelta(Path jar1, Path jar2, Path sources) {
+	public Delta makeDelta(Path jar1, Path jar2, Path sources, BreakbotConfig config) {
 		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
+		Options japiOptions = Maracas.defaultJApiOptions();
+		config.getExcludes().forEach(excl -> japiOptions.addExcludeFromArgument(Optional.of(excl), false));
+
 		Stopwatch watch = Stopwatch.createStarted();
-		Delta delta = Maracas.computeDelta(jar1, jar2);
+		Delta delta = Maracas.computeDelta(jar1, jar2, japiOptions);
 		delta.populateLocations(sources);
 
 		logger.info("Done Δ({} -> {}) in {}ms", jar1.getFileName(), jar2.getFileName(),
@@ -55,7 +60,7 @@ public class MaracasService {
 	public MaracasReport makeReport(GHPullRequest pr, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
 		Path sources = findSourceDirectory(basePath, null);
-		Delta maracasDelta = makeDelta(jar1, jar2, sources);
+		Delta maracasDelta = makeDelta(jar1, jar2, sources, config);
 
 		// Compute detections per client
 		List<ClientDetections> detections = new ArrayList<>();
