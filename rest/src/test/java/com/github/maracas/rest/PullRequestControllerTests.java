@@ -2,7 +2,6 @@ package com.github.maracas.rest;
 
 import static com.github.maracas.rest.TestHelpers.*;
 import static org.hamcrest.Matchers.*;
-import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.NottableString.not;
@@ -31,6 +30,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 
@@ -75,7 +77,7 @@ class PullRequestControllerTests {
 		int port = 8080;
 		String callback = "http://localhost:" + port + "/breakbot/pr/tdegueul/comp-changes/3";
 
-		try (ClientAndServer mockServer = startClientAndServer(port)) {
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(port)) {
 			mockServer.when(
 				request().withPath("/breakbot/pr/tdegueul/comp-changes/3")
 			).respond(
@@ -113,7 +115,7 @@ class PullRequestControllerTests {
 		int port = 8080;
 		String callback = "http://localhost:" + port + "/breakbot/pr/tdegueul/comp-changes/3";
 
-		try (ClientAndServer mockServer = startClientAndServer(port)) {
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(port)) {
 			mockServer.when(
 				request().withPath("/breakbot/pr/tdegueul/comp-changes/3")
 			).respond(
@@ -237,5 +239,69 @@ class PullRequestControllerTests {
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));
 		assertThat(brokenDecls, not(hasItem(containsString("main.unstableAnnon.classRemoved.ClassRemoved"))));
+	}
+
+	private PullRequestResponse analyzePRPush(String owner, String repository, int prId) {
+		try {
+			int mockPort = 8080;
+			int installationId = 123456789;
+			String callback = String.format("http://localhost:%d/breakbot/pr/%s/%s/%d", mockPort, owner, repository, prId);
+
+			try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+				// Start a mock server that waits for our callback request
+				mockServer.when(
+						request().withPath(String.format("/breakbot/pr/%s/%s/%d", owner, repository, prId))
+				).respond(
+						response().withBody("received")
+				);
+
+				// Check whether our analysis request is properly received
+				mvc.perform(
+								post(String.format("/github/pr/%s/%s/%d?callback=%s", owner, repository, prId, callback))
+										.header("installationId", installationId)
+						)
+						.andExpect(status().isAccepted())
+						.andExpect(header().stringValues("Location",
+								String.format("/github/pr/%s/%s/%d", owner, repository, prId)))
+						.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+						.andExpect(jsonPath("$.message", is("processing")));
+
+				// Check whether the analysis is ongoing
+				mvc.perform(get("/github/pr/%s/%s/%d", owner, repository, prId))
+						.andExpect(status().isProcessing())
+						.andExpect(jsonPath("$.message", is("processing")));
+
+				// Wait for the analysis to finish
+				ResultActions result = waitForPRAnalysis(mvc, String.format("/github/pr/%s/%s/%d", owner, repository, prId));
+
+				// Check whether our mock server got the callback
+				mockServer.verify(
+						request()
+								.withPath(String.format("/breakbot/pr/%s/%s/%d", owner, repository, prId))
+								.withMethod("POST")
+								.withHeader("installationId", String.valueOf(installationId))
+								.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
+						exactly(1)
+				);
+
+				return objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), PullRequestResponse.class);
+			}
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private PullRequestResponse analyzePRSync(String owner, String repository, int prId) {
+		return analyzePRSync(owner, repository, prId, null);
+	}
+
+	private PullRequestResponse analyzePRSync(String owner, String repository, int prId, String config) {
+		try {
+			ResultActions result = mvc.perform(post(String.format("/github/pr-sync/%s/%s/%d")).content(config));
+			checkReportIsValid(result);
+			return objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), PullRequestResponse.class);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }
