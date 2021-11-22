@@ -3,11 +3,16 @@ package com.github.maracas.rest;
 import com.github.maracas.rest.data.BrokenDeclaration;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
+import org.mockserver.integration.ClientAndServer;
 
 import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +50,43 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().clientDetections().size(), equalTo(1));
 		assertThat(res.report().clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
+	}
+
+	@Test
+	void testAnalyzePRPushWithErrorsCallback() throws Exception {
+		String owner = "this-does-not-exist";
+		String repository = "this-does-not-exist";
+		int prId = 9999;
+
+		int mockPort = 8080;
+		int installationId = 123456789;
+		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
+
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+			// Start a mock server that waits for our callback request
+			mockServer.when(
+				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+			).respond(
+				response().withBody("received")
+			);
+
+			// Check whether our analysis request is properly received
+			mvc.perform(
+					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
+						.header("installationId", installationId)
+				)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message", is("Couldn't fetch repository this-does-not-exist/this-does-not-exist")));
+
+			// Check whether our mock server got the error callback
+			mockServer.verify(
+				request()
+					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+					.withMethod("POST")
+					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", report: null}")),
+				exactly(1)
+			);
+		}
 	}
 
 	@Test

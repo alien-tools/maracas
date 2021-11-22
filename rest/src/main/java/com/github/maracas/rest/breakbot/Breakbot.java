@@ -22,7 +22,7 @@ public class Breakbot {
 		this.installationId = installationId;
 	}
 
-	public boolean sendPullRequestResponse(MaracasReport d) {
+	public boolean sendPullRequestResponse(PullRequestResponse pr) {
 		try {
 			RestTemplate rest = new RestTemplate();
 
@@ -32,7 +32,6 @@ public class Breakbot {
 			if (installationId != null && !installationId.isEmpty())
 				headers.set("installationId", installationId);
 
-			PullRequestResponse pr = new PullRequestResponse("ok", d);
 			HttpEntity<String> request = new HttpEntity<>(pr.toJson(), headers);
 			String res = rest.postForObject(callbackUri, request, String.class);
 

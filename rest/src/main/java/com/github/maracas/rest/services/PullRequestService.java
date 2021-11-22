@@ -3,6 +3,7 @@ package com.github.maracas.rest.services;
 import com.github.maracas.rest.breakbot.Breakbot;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.delta.PullRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -59,8 +60,6 @@ public class PullRequestService {
 		// If we're already on it, no need to compute it twice
 		if (jobs.containsKey(uid))
 			logger.info("{} is already being analyzed", uid);
-		else if (reportFile.exists())
-			logger.info("{} has already been analyzed: {}", uid, reportFile);
 		else {
 			logger.info("Starting the analysis of {}", uid);
 
@@ -77,7 +76,7 @@ public class PullRequestService {
 
 									if (callback != null) {
 										Breakbot bb = new Breakbot(new URI(callback), installationId);
-										bb.sendPullRequestResponse(report);
+										bb.sendPullRequestResponse(new PullRequestResponse("ok", report));
 									}
 								} catch (Exception e) {
 									logger.error(e);
