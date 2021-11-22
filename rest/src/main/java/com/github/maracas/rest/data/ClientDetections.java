@@ -34,8 +34,8 @@ public class ClientDetections {
 	@JsonSerialize(using = ToStringSerializer.class)
 	private Throwable error;
 
-	public ClientDetections() {
-
+	public ClientDetections(String u) {
+		this.url = u;
 	}
 
 	public ClientDetections(String u, List<Detection> d, Throwable t) {

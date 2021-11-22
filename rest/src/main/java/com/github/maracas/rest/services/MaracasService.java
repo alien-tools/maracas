@@ -64,27 +64,36 @@ public class MaracasService {
 
 		// Compute detections per client
 		List<ClientDetections> detections = new ArrayList<>();
-		config.getClients().parallelStream().forEach(c -> {
-			try {
-				// Clone the client
-				String branch = githubService.getBranchName(c);
-				Path clientPath = githubService.cloneRepository(c);
-				Path clientSources = findSourceDirectory(clientPath, c.sources());
 
-				detections.add(
-					new ClientDetections(c.repository(),
-						makeDetections(maracasDelta, clientSources).stream()
-							.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), branch, clientPath.toAbsolutePath().toString()))
-							.toList())
-				);
+		// No need to compute anything if there's no BC
+		if (maracasDelta.getBrokenDeclarations().isEmpty())
+			detections.addAll(
+				config.getClients().stream()
+					.map(c -> new ClientDetections(c.repository()))
+					.toList()
+			);
+		else
+			config.getClients().parallelStream().forEach(c -> {
+				try {
+					// Clone the client
+					String branch = githubService.getBranchName(c);
+					Path clientPath = githubService.cloneRepository(c);
+					Path clientSources = findSourceDirectory(clientPath, c.sources());
 
-				logger.info("Done computing detections on {}", c.repository());
-			} catch (Exception e) {
-				logger.error(e);
-				detections.add(new ClientDetections(c.repository(),
-					new MaracasException("Couldn't analyze client " + c.repository(), e)));
-			}
-		});
+					detections.add(
+						new ClientDetections(c.repository(),
+							makeDetections(maracasDelta, clientSources).stream()
+								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), branch, clientPath.toAbsolutePath().toString()))
+								.toList())
+					);
+
+					logger.info("Done computing detections on {}", c.repository());
+				} catch (Exception e) {
+					logger.error(e);
+					detections.add(new ClientDetections(c.repository(),
+						new MaracasException("Couldn't analyze client " + c.repository(), e)));
+				}
+			});
 
 		return new MaracasReport(
 			com.github.maracas.rest.data.Delta.fromMaracasDelta(
