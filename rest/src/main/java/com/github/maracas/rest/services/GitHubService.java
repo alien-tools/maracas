@@ -56,7 +56,7 @@ public class GitHubService {
 			return github.getRepository(fullName);
 		} catch (IOException e) {
 			throw new GitHubException(
-					String.format("Couldn't fetch repository %s", fullName),
+					"Couldn't fetch repository %s".formatted(fullName),
 					e);
 		}
 	}
@@ -67,7 +67,7 @@ public class GitHubService {
 			return repo.getPullRequest(prId);
 		} catch (IOException e) {
 			throw new GitHubException(
-					String.format("Couldn't fetch PR %d from repository %s/%s", prId, owner, repository),
+					"Couldn't fetch PR %d from repository %s/%s".formatted(prId, owner, repository),
 					e);
 		}
 	}
@@ -77,7 +77,7 @@ public class GitHubService {
 			return repository.getPullRequest(prId);
 		} catch (IOException e) {
 			throw new GitHubException(
-					String.format("Couldn't fetch PR %d from repository %s", prId, repository.getFullName()),
+					"Couldn't fetch PR %d from repository %s".formatted(prId, repository.getFullName()),
 					e);
 		}
 	}
@@ -94,7 +94,7 @@ public class GitHubService {
 			return repository.getBranch(name);
 		} catch (IOException e) {
 			throw new GitHubException(
-					String.format("Couldn't fetch branch %s from repository %s", name, repository.getFullName()),
+					"Couldn't fetch branch %s from repository %s".formatted(name, repository.getFullName()),
 					e);
 		}
 	}

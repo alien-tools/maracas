@@ -1,21 +1,5 @@
 package com.github.maracas.rest;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyOrNullString;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import com.github.maracas.AnalysisQuery;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
@@ -23,6 +7,8 @@ import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.Delta;
 import com.github.maracas.rest.data.Detection;
 import com.github.maracas.rest.data.MaracasReport;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -30,6 +16,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,8 +40,7 @@ class MaracasReportTests {
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path c1 = Paths.get("../test-data/comp-changes/client/src");
 		Path sources = Paths.get("../test-data/comp-changes/old/src");
-		String libGithub = "tdegueul/comp-changes";
-		String clientGithub = "tdegueul/comp-changes-client";
+		String clientGithub = "alien-tools/comp-changes-client";
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)
@@ -57,7 +51,7 @@ class MaracasReportTests {
 		AnalysisResult result = Maracas.analyze(query);
 
 		try {
-			GHRepository repo = github.getRepository("tdegueul/comp-changes");
+			GHRepository repo = github.getRepository("alien-tools/comp-changes");
 			GHPullRequest pr = repo.getPullRequest(2);
 
 			report = new MaracasReport(
@@ -115,15 +109,13 @@ class MaracasReportTests {
 	void testGitHubLocationsDetections() {
 		assertThat(report.clientDetections().size(), is(1));
 		assertThat(report.clientDetections().get(0).getUrl(), not(emptyOrNullString()));
-		report.clientDetections().get(0).getDetections().forEach(d -> {
-			assertThat(d.url(),       not(emptyOrNullString()));
-		});
+		report.clientDetections().get(0).getDetections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
 	void testGithubClientsArePresent() {
 		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).getUrl(), is("tdegueul/comp-changes-client"));
+		assertThat(report.clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
 		assertThat(report.clientDetections().get(0).getDetections().size(), is(greaterThan(1)));
 	}
 

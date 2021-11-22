@@ -54,7 +54,7 @@ public class PullRequestService {
 		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
 		String uid = prUid(owner, repository, prId, prHead);
 		File reportFile = reportFile(owner, repository, prId, prHead);
-		String reportLocation = String.format("/github/pr/%s/%s/%s", owner, repository, prId);
+		String reportLocation = "/github/pr/%s/%s/%s".formatted(owner, repository, prId);
 
 		// If we're already on it, no need to compute it twice
 		if (jobs.containsKey(uid))

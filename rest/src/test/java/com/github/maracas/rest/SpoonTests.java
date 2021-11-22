@@ -1,47 +1,24 @@
 package com.github.maracas.rest;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
+import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @Tag("slow")
-class SpoonTests {
-	@Autowired
-	private MockMvc mvc;
+class SpoonTests extends AbstractControllerTest {
 	@Autowired
 	private GitHub github;
-
-	@Value("${maracas.clone-path}")
-	private String clonePath;
-	@Value("${maracas.report-path}")
-	private String reportPath;
-
-	@AfterEach
-	public void cleanData() throws IOException {
-		FileUtils.deleteDirectory(new File(clonePath));
-		FileUtils.deleteDirectory(new File(reportPath));
-	}
 
 	/**
 	 * Checks the latest 5 PRs affecting Java code on INRIA/spoon
@@ -49,20 +26,20 @@ class SpoonTests {
 	@Test
 	void testLatest5PRs() throws Exception {
 		List<GHPullRequest> javaPRs =
-				github.getRepository("INRIA/spoon")
-						.getPullRequests(GHIssueState.OPEN)
-						.stream()
-						.filter(pr -> {
-							try {
-								return pr.listFiles().toList().stream().anyMatch(file -> file.getFilename().endsWith(".java"));
-							} catch (IOException e) {
-								return false;
-							}
-						})
-						.limit(5)
-						.toList();
+			github.getRepository("INRIA/spoon")
+				.getPullRequests(GHIssueState.OPEN)
+				.stream()
+				.filter(pr -> {
+					try {
+						return pr.listFiles().toList().stream().anyMatch(file -> file.getFilename().endsWith(".java"));
+					} catch (IOException e) {
+						return false;
+					}
+				})
+				.limit(5)
+				.toList();
 
-		String bbYaml = """
+		String bbConfig = """
 			build:
 			  properties: skipTests skipDepClean assembly.skipAssembly
 			clients:
@@ -84,8 +61,11 @@ class SpoonTests {
 			  - repository: SpoonLabs/spooet
 			  - repository: KTH/spork""";
 
-		for (GHPullRequest pr : javaPRs)
-			mvc.perform(post("/github/pr-sync/INRIA/spoon/" + pr.getNumber()).content(bbYaml))
-					.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+		for (GHPullRequest pr : javaPRs) {
+			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));
+			assertThat(res.message(), is("ok"));
+			assertThat(res.report(), is(notNullValue()));
+			assertThat(res.report().delta(), is(notNullValue()));
+		}
 	}
 }

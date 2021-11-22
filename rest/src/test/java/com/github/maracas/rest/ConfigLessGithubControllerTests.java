@@ -1,82 +1,20 @@
 package com.github.maracas.rest;
 
-import static com.github.maracas.rest.TestHelpers.*;
-import static org.mockserver.integration.ClientAndServer.startClientAndServer;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.verify.VerificationTimes.exactly;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeEach;
+import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
-import org.mockserver.integration.ClientAndServer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
 @TestPropertySource(properties = {"maracas.breakbot-file=.not-found"})
-class ConfigLessGithubControllerTests {
-	@Autowired
-	private MockMvc mvc;
-
-	@Value("${maracas.clone-path}")
-	private String clonePath;
-	@Value("${maracas.report-path}")
-	private String reportPath;
-
-	@BeforeEach
-	public void cleanData() throws IOException {
-		FileUtils.deleteDirectory(new File(clonePath));
-		FileUtils.deleteDirectory(new File(reportPath));
-	}
-
+class ConfigLessGithubControllerTests extends AbstractControllerTest {
 	@Test
-	void testSubmitPRPushConfigLess() throws Exception {
-		int port = 8080;
-		String callback = "http://localhost:" + port + "/breakbot/pr/tdegueul/comp-changes/3";
-
-		try (ClientAndServer mockServer = startClientAndServer(port)) {
-			mockServer.when(
-				request().withPath("/breakbot/pr/tdegueul/comp-changes/3")
-			).respond(
-				response().withBody("received")
-			);
-
-			mvc.perform(
-				post("/github/pr/tdegueul/comp-changes/3?callback=" + callback)
-				.header("installationId", 123456789)
-			)
-				.andExpect(status().isAccepted())
-				.andExpect(header().stringValues("Location", "/github/pr/tdegueul/comp-changes/3"))
-				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(content().json("{'message': 'processing', 'report': null}"));
-
-			ResultActions res = waitForPRAnalysis(mvc, "/github/pr/tdegueul/comp-changes/3");
-			checkReportHasNoDetection(res);
-
-			mockServer.verify(
-				request()
-					.withPath("/breakbot/pr/tdegueul/comp-changes/3")
-					.withMethod("POST")
-					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
-				exactly(1)
-			);
-		}
+	void testAnalyzePRPushConfigLess() throws Exception {
+		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
+		assertThat(res.message(), is("ok"));
+		assertThat(res.report(), is(notNullValue()));
+		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().clientDetections(), empty());
 	}
 }

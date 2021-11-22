@@ -99,7 +99,7 @@ public class BuildService {
 			Model model = reader.read(in);
 			String aid = model.getArtifactId();
 			String vid = model.getVersion();
-			Path jar = target.resolve(String.format("%s-%s.jar", aid, vid));
+			Path jar = target.resolve("%s-%s.jar".formatted(aid, vid));
 
 			if (!jar.toFile().exists())
 				throw new BuildException("Couldn't find the JAR " + jar);

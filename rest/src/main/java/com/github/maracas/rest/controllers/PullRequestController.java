@@ -61,7 +61,7 @@ public class PullRequestController {
 	}
 
 	@PostMapping("/pr-sync/{owner}/{repository}/{prId}")
-	public ResponseEntity<PullRequestResponse> analyzePullRequestDebug(
+	public ResponseEntity<PullRequestResponse> analyzePullRequestSync(
 		@PathVariable String owner,
 		@PathVariable String repository,
 		@PathVariable Integer prId,

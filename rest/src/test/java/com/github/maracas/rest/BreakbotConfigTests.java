@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 
 class BreakbotConfigTests {
-
 	@Test
 	void testEmpty() {
 		String s = """
