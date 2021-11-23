@@ -1,6 +1,7 @@
 package com.github.maracas.rest.controllers;
 
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequest;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.*;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +31,7 @@ public class PullRequestController {
 		@RequestBody(required=false) String breakbotYaml
 	) {
 		try {
-			String location = prService.analyzePR(owner, repository, prId, callback, installationId, breakbotYaml);
+			String location = prService.analyzePR(new PullRequest(owner, repository, prId), callback, installationId, breakbotYaml);
 			return ResponseEntity
 				.accepted()
 				.header("Location", location)
@@ -50,14 +51,16 @@ public class PullRequestController {
 		@PathVariable String repository,
 		@PathVariable Integer prId
 	) {
+		PullRequest pr = new PullRequest(owner, repository, prId);
+
 		// Either we have it already
-		MaracasReport report = prService.getReport(owner, repository, prId);
+		MaracasReport report = prService.getReport(pr);
 		if (report != null) {
 			return ResponseEntity.ok(new PullRequestResponse("ok", report));
 		}
 
 		// Or we're currently computing it
-		if (prService.isProcessing(owner, repository, prId)) {
+		if (prService.isProcessing(pr)) {
 			return ResponseEntity
 				.status(HttpStatus.PROCESSING)
 				.body(new PullRequestResponse("processing"));
@@ -76,7 +79,7 @@ public class PullRequestController {
 		@PathVariable Integer prId,
 		@RequestBody(required=false) String breakbotYaml
 	) {
-		MaracasReport report = prService.analyzePRSync(owner, repository, prId, breakbotYaml);
+		MaracasReport report = prService.analyzePRSync(new PullRequest(owner, repository, prId), breakbotYaml);
 		return ResponseEntity.ok(new PullRequestResponse("ok", report));
 	}
 

@@ -2,13 +2,13 @@ package com.github.maracas.rest.services;
 
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequest;
 import com.github.maracas.rest.data.PullRequestResponse;
-import com.github.maracas.rest.delta.PullRequest;
+import com.github.maracas.rest.delta.PullRequestDiff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,9 +16,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -40,8 +37,6 @@ public class PullRequestService {
 	private String clonePath;
 	@Value("${maracas.report-path:./reports}")
 	private String reportPath;
-	@Value("${maracas.breakbot-file:.breakbot.yml}")
-	private String breakbotFile;
 
 	@PostConstruct
 	public void initialize() {
@@ -49,18 +44,16 @@ public class PullRequestService {
 		Paths.get(reportPath).toFile().mkdirs();
 	}
 
-	public String analyzePR(String owner, String repository, int prId, String callback, String installationId, String breakbotYaml) {
-		GHRepository repo = githubService.getRepository(owner, repository);
-		GHPullRequest pr = githubService.getPullRequest(owner, repository, prId);
-		String prHead = pr.getHead().getSha();
+	public String analyzePR(PullRequest pr, String callback, String installationId, String breakbotYaml) {
 		BreakbotConfig config =
 			StringUtils.isEmpty(breakbotYaml) ?
-				readBreakbotConfig(repo) :
+					githubService.readBreakbotConfig(pr) :
 				BreakbotConfig.fromYaml(breakbotYaml);
-		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
-		String uid = prUid(owner, repository, prId, prHead);
-		File reportFile = reportFile(owner, repository, prId, prHead);
-		String reportLocation = "/github/pr/%s/%s/%s".formatted(owner, repository, prId);
+		GHPullRequest ghPr = githubService.getPullRequest(pr);
+		PullRequestDiff prDiff = new PullRequestDiff(pr, ghPr, config, clonePath, maracasService);
+		String uid = prUid(pr);
+		File reportFile = reportFile(pr);
+		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.owner(), pr.repository(), pr.id());
 
 		// If we're already on it, no need to compute it twice
 		if (jobs.containsKey(uid))
@@ -100,21 +93,20 @@ public class PullRequestService {
 		return reportLocation;
 	}
 
-	public MaracasReport analyzePRSync(String owner, String repository, int prId, String breakbotYaml) {
-		GHRepository repo = githubService.getRepository(owner, repository);
-		GHPullRequest pr = githubService.getPullRequest(repo, prId);
+	public MaracasReport analyzePRSync(PullRequest pr, String breakbotYaml) {
 		BreakbotConfig config =
-			StringUtils.isEmpty(breakbotYaml) ?
-				readBreakbotConfig(repo) :
-				BreakbotConfig.fromYaml(breakbotYaml);
-		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
+				StringUtils.isEmpty(breakbotYaml) ?
+						githubService.readBreakbotConfig(pr) :
+						BreakbotConfig.fromYaml(breakbotYaml);
+		GHPullRequest ghPr = githubService.getPullRequest(pr);
+		PullRequestDiff prDiff = new PullRequestDiff(pr, ghPr, config, clonePath, maracasService);
 
 		return prDiff.diff();
 	}
 
-	public MaracasReport getReport(String owner, String repository, int id, String head) {
+	public MaracasReport getReport(PullRequest pr) {
 		try {
-			File reportFile = reportFile(owner, repository, id, head);
+			File reportFile = reportFile(pr);
 			if (reportFile.exists() && reportFile.length() > 0) {
 				return MaracasReport.fromJson(reportFile);
 			}
@@ -125,42 +117,18 @@ public class PullRequestService {
 		return null;
 	}
 
-	public MaracasReport getReport(String owner, String repository, int id) {
-		GHPullRequest pr = githubService.getPullRequest(owner, repository, id);
-		String head = pr.getHead().getSha();
-
-		return getReport(owner, repository, id, head);
+	public boolean isProcessing(PullRequest pr) {
+		return jobs.containsKey(prUid(pr));
 	}
 
-	public boolean isProcessing(String owner, String repository, int id, String head) {
-		return jobs.containsKey(prUid(owner, repository, id, head));
+	private String prUid(PullRequest pr) {
+		String head = githubService.getHead(pr);
+		return pr.owner() + "-" + pr.repository() + "-" + pr.id() + "-" + head;
 	}
 
-	public boolean isProcessing(String owner, String repository, int id) {
-		GHPullRequest pr = githubService.getPullRequest(owner, repository, id);
-		String head = pr.getHead().getSha();
-
-		return isProcessing(owner, repository, id, head);
-	}
-
-	private BreakbotConfig readBreakbotConfig(GHRepository repo) {
-		try (InputStream configIn = repo.getFileContent(breakbotFile).read()) {
-			BreakbotConfig res = BreakbotConfig.fromYaml(configIn);
-			if (res != null)
-				return res;
-		} catch (@SuppressWarnings("unused") IOException e) {
-			// shh
-		}
-
-		return BreakbotConfig.defaultConfig();
-	}
-
-	private String prUid(String repository, String user, int id, String head) {
-		return repository + "-" + user + "-" + id + "-" + head;
-	}
-
-	private File reportFile(String owner, String repository, int id, String head) {
-		return Paths.get(reportPath).resolve(owner).resolve(repository)
-			.resolve(id + "-" + head + ".json").toFile();
+	private File reportFile(PullRequest pr) {
+		String head = githubService.getHead(pr);
+		return Paths.get(reportPath).resolve(pr.owner()).resolve(pr.repository())
+			.resolve(pr.id() + "-" + head + ".json").toFile();
 	}
 }

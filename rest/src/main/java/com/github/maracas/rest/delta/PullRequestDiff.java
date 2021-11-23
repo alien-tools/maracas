@@ -1,33 +1,32 @@
 package com.github.maracas.rest.delta;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-
+import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequest;
+import com.github.maracas.rest.services.MaracasService;
+import com.github.maracas.rest.tasks.CloneAndBuild;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHPullRequest;
 
-import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.services.BuildException;
-import com.github.maracas.rest.services.CloneException;
-import com.github.maracas.rest.services.MaracasService;
-import com.github.maracas.rest.tasks.CloneAndBuild;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-public class PullRequest implements Diffable {
+public class PullRequestDiff implements Diffable {
 	private final MaracasService maracasService;
 	private final BreakbotConfig config;
-	private final GHPullRequest pr;
+	private final PullRequest pr;
+	private final GHPullRequest ghPr;
 	private final String clonePath;
-	private static final Logger logger = LogManager.getLogger(PullRequest.class);
+	private static final Logger logger = LogManager.getLogger(PullRequestDiff.class);
 
-	public PullRequest(GHPullRequest pr, BreakbotConfig config, String clonePath, MaracasService maracasService) {
+	public PullRequestDiff(PullRequest pr, GHPullRequest ghPr, BreakbotConfig config, String clonePath, MaracasService maracasService) {
 		this.config = config;
 		this.pr = pr;
+		this.ghPr = ghPr;
 		this.clonePath = clonePath;
 		this.maracasService = maracasService;
 	}
@@ -35,8 +34,8 @@ public class PullRequest implements Diffable {
 	@Override
 	public MaracasReport diff() {
 		try {
-			GHCommitPointer base = pr.getBase();
-			GHCommitPointer head = pr.getHead();
+			GHCommitPointer base = ghPr.getBase();
+			GHCommitPointer head = ghPr.getHead();
 			Path basePath = Paths.get(clonePath)
 				.resolve(String.valueOf(base.getRepository().getId()))
 				.resolve(base.getSha());
@@ -55,7 +54,7 @@ public class PullRequest implements Diffable {
 			Path j1 = baseFuture.get();
 			Path j2 = headFuture.get();
 
-			return maracasService.makeReport(pr, basePath, j1, j2, config);
+			return maracasService.makeReport(pr, base.getRef(), basePath, j1, j2, config);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();

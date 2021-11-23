@@ -1,5 +1,14 @@
 package com.github.maracas.rest.services;
 
+import com.github.maracas.rest.breakbot.BreakbotConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.shared.invoker.*;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,26 +18,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.springframework.stereotype.Service;
-
-import com.github.maracas.rest.breakbot.BreakbotConfig;
-
 @Service
 public class BuildService {
 	private static final Logger logger = LogManager.getLogger(BuildService.class);
 
-	public void build(Path dest, BreakbotConfig config) {
+	public void build(Path dest, BreakbotConfig.Build config) {
 		File pom =
 			config.getMvnPom() != null ?
 				dest.resolve(config.getMvnPom()).toFile() :
@@ -76,7 +70,7 @@ public class BuildService {
 		} else logger.info("{} has already been built. Skipping.", dest);
 	}
 
-	public Path locateJar(Path dest, BreakbotConfig config) {
+	public Path locateJar(Path dest, BreakbotConfig.Build config) {
 		if (config.getJarLocation() != null) {
 			Path customLocation = dest.resolve(config.getJarLocation());
 			if (customLocation.toFile().exists())

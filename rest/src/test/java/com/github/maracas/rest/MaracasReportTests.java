@@ -3,21 +3,15 @@ package com.github.maracas.rest;
 import com.github.maracas.AnalysisQuery;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.rest.data.ClientDetections;
-import com.github.maracas.rest.data.Delta;
-import com.github.maracas.rest.data.Detection;
-import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -40,7 +34,6 @@ class MaracasReportTests {
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 		Path c1 = Paths.get("../test-data/comp-changes/client/src");
 		Path sources = Paths.get("../test-data/comp-changes/old/src");
-		String clientGithub = "alien-tools/comp-changes-client";
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)
@@ -50,22 +43,15 @@ class MaracasReportTests {
 			.build();
 		AnalysisResult result = Maracas.analyze(query);
 
-		try {
-			GHRepository repo = github.getRepository("alien-tools/comp-changes");
-			GHPullRequest pr = repo.getPullRequest(2);
-
-			report = new MaracasReport(
-				Delta.fromMaracasDelta(result.delta(), pr, "../test-data/comp-changes/old/"),
-				List.of(new ClientDetections(clientGithub,
-					result.allDetections()
-						.stream()
-						.map(d -> Detection.fromMaracasDetection(d, clientGithub, "main", c1.toString()))
-						.collect(Collectors.toList())
-				))
-			);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		report = new MaracasReport(
+			Delta.fromMaracasDelta(result.delta(), new PullRequest("alien-tools", "comp-changes", 2), "main", "../test-data/comp-changes/old/"),
+			List.of(new ClientDetections("alien-tools/comp-changes-client",
+				result.allDetections()
+					.stream()
+					.map(d -> Detection.fromMaracasDetection(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
+					.collect(Collectors.toList())
+			))
+		);
 	}
 
 	@Test

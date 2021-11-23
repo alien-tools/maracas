@@ -1,14 +1,13 @@
 package com.github.maracas.rest;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
-import java.nio.charset.Charset;
-
+import com.github.maracas.rest.breakbot.BreakbotConfig;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
-import com.github.maracas.rest.breakbot.BreakbotConfig;
+import java.nio.charset.Charset;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 class BreakbotConfigTests {
 	@Test
@@ -60,12 +59,12 @@ class BreakbotConfigTests {
 			  goals: package
 			  properties: skipTests""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
-		assertThat(c.getMvnPom(), is("anotherpom.xml"));
-		assertThat(c.getMvnGoals(), hasSize(1));
-		assertThat(c.getMvnGoals().get(0), is("package"));
-		assertThat(c.getMvnProperties(), hasSize(1));
-		assertThat(c.getMvnProperties().get(0), is("skipTests"));
-		assertThat(c.getJarLocation(), nullValue());
+		assertThat(c.getBuild().getMvnPom(), is("anotherpom.xml"));
+		assertThat(c.getBuild().getMvnGoals(), hasSize(1));
+		assertThat(c.getBuild().getMvnGoals().get(0), is("package"));
+		assertThat(c.getBuild().getMvnProperties(), hasSize(1));
+		assertThat(c.getBuild().getMvnProperties().get(0), is("skipTests"));
+		assertThat(c.getBuild().getJarLocation(), nullValue());
 	}
 
 	@Test
@@ -74,10 +73,10 @@ class BreakbotConfigTests {
 			build:
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
-		assertThat(c.getJarLocation(), is("build/out.jar"));
-		assertThat(c.getMvnPom(), nullValue());
-		assertThat(c.getMvnGoals(), is(empty()));
-		assertThat(c.getMvnProperties(), is(empty()));
+		assertThat(c.getBuild().getJarLocation(), is("build/out.jar"));
+		assertThat(c.getBuild().getMvnPom(), nullValue());
+		assertThat(c.getBuild().getMvnGoals(), is(empty()));
+		assertThat(c.getBuild().getMvnProperties(), is(empty()));
 	}
 
 	@Test
@@ -89,12 +88,12 @@ class BreakbotConfigTests {
 			  properties: skipTests
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
-		assertThat(c.getMvnPom(), is("anotherpom.xml"));
-		assertThat(c.getMvnGoals(), hasSize(1));
-		assertThat(c.getMvnGoals().get(0), is("package"));
-		assertThat(c.getMvnProperties(), hasSize(1));
-		assertThat(c.getMvnProperties().get(0), is("skipTests"));
-		assertThat(c.getJarLocation(), is("build/out.jar"));
+		assertThat(c.getBuild().getMvnPom(), is("anotherpom.xml"));
+		assertThat(c.getBuild().getMvnGoals(), hasSize(1));
+		assertThat(c.getBuild().getMvnGoals().get(0), is("package"));
+		assertThat(c.getBuild().getMvnProperties(), hasSize(1));
+		assertThat(c.getBuild().getMvnProperties().get(0), is("skipTests"));
+		assertThat(c.getBuild().getJarLocation(), is("build/out.jar"));
 	}
 
 	@Test

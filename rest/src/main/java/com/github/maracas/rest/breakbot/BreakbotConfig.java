@@ -14,47 +14,43 @@ import java.util.List;
 import java.util.Map;
 
 public class BreakbotConfig {
-	private String mvnPom;
-	private List<String> mvnGoals = new ArrayList<>();
-	private List<String> mvnProperties = new ArrayList<>();
-	private String jarLocation;
+	public static class Build {
+		String mvnPom;
+		List<String> mvnGoals = new ArrayList<>();
+		List<String> mvnProperties = new ArrayList<>();
+		String jarLocation;
+
+		public String getMvnPom() { return mvnPom; }
+		public void setMvnPom(String p) { mvnPom = p; }
+		public List<String> getMvnGoals() { return mvnGoals; }
+		public void setMvnGoals(List<String> g) { mvnGoals = g; }
+		public List<String> getMvnProperties() { return mvnProperties; }
+		public void setMvnProperties(List<String> p) { mvnProperties = p; }
+		public String getJarLocation() { return jarLocation; }
+	}
+
+	private Build build = new Build();
 	private final List<String> excludes = new ArrayList<>();
 	private final List<GithubRepositoryConfig> clients = new ArrayList<>();
 
 	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
 
-	public String getMvnPom() {
-		return mvnPom;
-	}
-
-	public List<String> getMvnGoals() {
-		return mvnGoals;
-	}
-
-	public List<String> getMvnProperties() {
-		return mvnProperties;
-	}
-
-	public String getJarLocation() {
-		return jarLocation;
-	}
-
+	public Build getBuild() { return build; }
 	public List<String> getExcludes() { return excludes; }
-
 	public List<GithubRepositoryConfig> getClients() {
 		return clients;
 	}
 
 	@JsonProperty("build")
-	private void unpackBuild(Map<String, String> build) {
-		if (build.containsKey("pom"))
-			mvnPom = build.get("pom");
-		if (build.containsKey("goals"))
-			mvnGoals = Arrays.asList(build.get("goals").split(" "));
-		if (build.containsKey("properties"))
-			mvnProperties = Arrays.asList(build.get("properties").split(" "));
-		if (build.containsKey("jar"))
-			jarLocation = build.get("jar");
+	private void unpackBuild(Map<String, String> buildProps) {
+		if (buildProps.containsKey("pom"))
+			build.mvnPom = buildProps.get("pom");
+		if (buildProps.containsKey("goals"))
+			build.mvnGoals = Arrays.asList(buildProps.get("goals").split(" "));
+		if (buildProps.containsKey("properties"))
+			build.mvnProperties = Arrays.asList(buildProps.get("properties").split(" "));
+		if (buildProps.containsKey("jar"))
+			build.jarLocation = buildProps.get("jar");
 	}
 
 	public static BreakbotConfig defaultConfig() {

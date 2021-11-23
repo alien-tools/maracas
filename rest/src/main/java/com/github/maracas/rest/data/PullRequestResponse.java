@@ -1,8 +1,8 @@
 package com.github.maracas.rest.data;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 
 public record PullRequestResponse(
 	String message,

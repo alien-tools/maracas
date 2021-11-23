@@ -1,26 +1,25 @@
 package com.github.maracas.rest.services;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import japicmp.config.Options;
-import japicmp.util.Optional;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHPullRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.github.maracas.Maracas;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientDetections;
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequest;
 import com.google.common.base.Stopwatch;
+import japicmp.config.Options;
+import japicmp.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class MaracasService {
@@ -57,7 +56,7 @@ public class MaracasService {
 		return detections;
 	}
 
-	public MaracasReport makeReport(GHPullRequest pr, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
+	public MaracasReport makeReport(PullRequest pr, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
 		Path sources = findSourceDirectory(basePath, null);
 		Delta maracasDelta = makeDelta(jar1, jar2, sources, config);
@@ -83,7 +82,8 @@ public class MaracasService {
 					detections.add(
 						new ClientDetections(c.repository(),
 							makeDetections(maracasDelta, clientSources).stream()
-								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.repository(), branch, clientPath.toAbsolutePath().toString()))
+								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.owner(), c.repository(),
+										branch, clientPath.toAbsolutePath().toString()))
 								.toList())
 					);
 
@@ -99,6 +99,7 @@ public class MaracasService {
 			com.github.maracas.rest.data.Delta.fromMaracasDelta(
 				maracasDelta,
 				pr,
+				ref,
 				basePath.toAbsolutePath().toString()
 			),
 			detections

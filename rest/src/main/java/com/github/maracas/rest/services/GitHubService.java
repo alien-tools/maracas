@@ -1,10 +1,8 @@
 package com.github.maracas.rest.services;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-
+import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.rest.breakbot.GithubRepositoryConfig;
+import com.github.maracas.rest.data.PullRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,12 +17,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.github.maracas.rest.breakbot.GithubRepositoryConfig;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 
 @Service
 public class GitHubService {
 	@Autowired
 	private GitHub github;
+	@Value("${maracas.breakbot-file:.breakbot.yml}")
+	private String breakbotFile;
 	@Value("${maracas.clone-path:./clones}")
 	private String clonePath;
 
@@ -47,8 +51,20 @@ public class GitHubService {
 		return dest;
 	}
 
-	public GHRepository getRepository(String owner, String repository) {
-		return getRepository(owner + "/" + repository);
+	public BreakbotConfig readBreakbotConfig(PullRequest pr) {
+		try (InputStream configIn = getRepository(pr).getFileContent(breakbotFile).read()) {
+			BreakbotConfig res = BreakbotConfig.fromYaml(configIn);
+			if (res != null)
+				return res;
+		} catch (@SuppressWarnings("unused") IOException e) {
+			logger.error(e);
+		}
+
+		return BreakbotConfig.defaultConfig();
+	}
+
+	public GHRepository getRepository(PullRequest pr) {
+		return getRepository(pr.owner() + "/" + pr.repository());
 	}
 
 	public GHRepository getRepository(String fullName) {
@@ -61,25 +77,19 @@ public class GitHubService {
 		}
 	}
 
-	public GHPullRequest getPullRequest(String owner, String repository, int prId) {
+	public GHPullRequest getPullRequest(PullRequest pr) {
 		try {
-			GHRepository repo = getRepository(owner, repository);
-			return repo.getPullRequest(prId);
+			GHRepository repo = getRepository(pr);
+			return repo.getPullRequest(pr.id());
 		} catch (IOException e) {
 			throw new GitHubException(
-					"Couldn't fetch PR %d from repository %s/%s".formatted(prId, owner, repository),
+					"Couldn't fetch PR %d from repository %s/%s".formatted(pr.id(), pr.owner(), pr.repository()),
 					e);
 		}
 	}
 
-	public GHPullRequest getPullRequest(GHRepository repository, int prId) {
-		try {
-			return repository.getPullRequest(prId);
-		} catch (IOException e) {
-			throw new GitHubException(
-					"Couldn't fetch PR %d from repository %s".formatted(prId, repository.getFullName()),
-					e);
-		}
+	public String getHead(PullRequest pr) {
+		return getPullRequest(pr).getHead().getSha();
 	}
 
 	public String getBranchName(GithubRepositoryConfig config) {

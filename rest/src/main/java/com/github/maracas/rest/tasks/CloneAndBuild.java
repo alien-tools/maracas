@@ -1,11 +1,11 @@
 package com.github.maracas.rest.tasks;
 
-import java.nio.file.Path;
-import java.util.function.Supplier;
-
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.services.BuildService;
 import com.github.maracas.rest.services.GitHubService;
+
+import java.nio.file.Path;
+import java.util.function.Supplier;
 
 /**
  * Clones &amp; builds a repository, returns the JAR
@@ -29,7 +29,7 @@ public class CloneAndBuild implements Supplier<Path> {
 	@Override
 	public Path get() {
 		githubService.cloneRemote(url, ref, null, dest);
-		buildService.build(dest, config);
-		return buildService.locateJar(dest, config);
+		buildService.build(dest, config.getBuild());
+		return buildService.locateJar(dest, config.getBuild());
 	}
 }
