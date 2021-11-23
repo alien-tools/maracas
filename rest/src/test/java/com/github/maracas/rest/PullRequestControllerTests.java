@@ -26,8 +26,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
-		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientReports().size(), equalTo(1));
+		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -37,8 +37,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
-		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientReports().size(), equalTo(1));
+		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -48,8 +48,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
-		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientReports().size(), equalTo(1));
+		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -99,8 +99,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
-		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).url(), is("tdegueul/comp-changes-client"));
+		assertThat(res.report().clientReports().size(), equalTo(1));
+		assertThat(res.report().clientReports().get(0).url(), is("tdegueul/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -210,7 +210,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  - repository: unknown/repository""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
-			.andExpect(jsonPath("$.report.clientDetections[0].error", containsString("Couldn't analyze client")));
+			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't analyze client")));
 	}
 
 	@Test

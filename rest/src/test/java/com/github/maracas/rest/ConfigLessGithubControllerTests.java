@@ -15,6 +15,6 @@ class ConfigLessGithubControllerTests extends AbstractControllerTest {
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
-		assertThat(res.report().clientDetections(), empty());
+		assertThat(res.report().clientReports(), empty());
 	}
 }

@@ -75,8 +75,8 @@ class MaracasReportTests {
 
 	@Test
 	void testSourceLocationsDetections() {
-		assertThat(report.clientDetections().size(), is(1));
-		report.clientDetections().get(0).detections().forEach(d -> {
+		assertThat(report.clientReports().size(), is(1));
+		report.clientReports().get(0).detections().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -93,16 +93,16 @@ class MaracasReportTests {
 
 	@Test
 	void testGitHubLocationsDetections() {
-		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).url(), not(emptyOrNullString()));
-		report.clientDetections().get(0).detections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
+		assertThat(report.clientReports().size(), is(1));
+		assertThat(report.clientReports().get(0).url(), not(emptyOrNullString()));
+		report.clientReports().get(0).detections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
 	void testGithubClientsArePresent() {
-		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.clientDetections().get(0).detections().size(), is(greaterThan(1)));
+		assertThat(report.clientReports().size(), is(1));
+		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(report.clientReports().get(0).detections().size(), is(greaterThan(1)));
 	}
 
 }
