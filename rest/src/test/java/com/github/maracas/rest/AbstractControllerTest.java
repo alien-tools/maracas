@@ -147,8 +147,8 @@ public class AbstractControllerTest {
 		}
 	}
 
-	protected static ResultActions checkReportIsValid(ResultActions res) throws Exception {
-		return res
+	protected static void checkReportIsValid(ResultActions res) throws Exception {
+		res
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.message", is("ok")));

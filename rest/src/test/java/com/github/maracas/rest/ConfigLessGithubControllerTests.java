@@ -10,7 +10,7 @@ import static org.hamcrest.Matchers.*;
 @TestPropertySource(properties = {"maracas.breakbot-file=.not-found"})
 class ConfigLessGithubControllerTests extends AbstractControllerTest {
 	@Test
-	void testAnalyzePRPushConfigLess() throws Exception {
+	void testAnalyzePRPushConfigLess() {
 		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));

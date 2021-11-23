@@ -1,6 +1,5 @@
 package com.github.maracas.rest.breakbot;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.logging.log4j.LogManager;
@@ -8,53 +7,47 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-public class BreakbotConfig {
-	public static class Build {
-		String mvnPom;
-		List<String> mvnGoals = new ArrayList<>();
-		List<String> mvnProperties = new ArrayList<>();
-		String jarLocation;
-
-		public String getMvnPom() { return mvnPom; }
-		public void setMvnPom(String p) { mvnPom = p; }
-		public List<String> getMvnGoals() { return mvnGoals; }
-		public void setMvnGoals(List<String> g) { mvnGoals = g; }
-		public List<String> getMvnProperties() { return mvnProperties; }
-		public void setMvnProperties(List<String> p) { mvnProperties = p; }
-		public String getJarLocation() { return jarLocation; }
+public record BreakbotConfig(
+	List<String> excludes,
+	Build build,
+	List<GitHubRepository> clients
+) {
+	public record Build(
+		String pom,
+		List<String> goals,
+		List<String> properties,
+		String jar
+	) {
+		public Build(String pom, List<String> goals, List<String> properties, String jar) {
+			this.pom = pom != null ? pom : "pom.xml";
+			this.goals  = goals != null && !goals.isEmpty() ? goals : List.of("package");
+			this.properties = properties != null && !properties.isEmpty() ? properties : List.of("skipTests");
+			this.jar = jar;
+		}
 	}
 
-	private Build build = new Build();
-	private final List<String> excludes = new ArrayList<>();
-	private final List<GithubRepositoryConfig> clients = new ArrayList<>();
+	public record GitHubRepository(
+		String repository,
+		String sources,
+		String branch,
+		String sha
+	) {
+
+	}
+
+	public BreakbotConfig(List<String> excludes, Build build, List<GitHubRepository> clients) {
+		this.excludes = excludes != null ? excludes : Collections.emptyList();
+		this.build = build != null ? build : new Build(null, null, null, null);
+		this.clients = clients != null ? clients : Collections.emptyList();
+	}
 
 	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
 
-	public Build getBuild() { return build; }
-	public List<String> getExcludes() { return excludes; }
-	public List<GithubRepositoryConfig> getClients() {
-		return clients;
-	}
-
-	@JsonProperty("build")
-	private void unpackBuild(Map<String, String> buildProps) {
-		if (buildProps.containsKey("pom"))
-			build.mvnPom = buildProps.get("pom");
-		if (buildProps.containsKey("goals"))
-			build.mvnGoals = Arrays.asList(buildProps.get("goals").split(" "));
-		if (buildProps.containsKey("properties"))
-			build.mvnProperties = Arrays.asList(buildProps.get("properties").split(" "));
-		if (buildProps.containsKey("jar"))
-			build.jarLocation = buildProps.get("jar");
-	}
-
 	public static BreakbotConfig defaultConfig() {
-		return new BreakbotConfig();
+		return new BreakbotConfig(null, null, null);
 	}
 
 	public static BreakbotConfig fromYaml(InputStream in) {

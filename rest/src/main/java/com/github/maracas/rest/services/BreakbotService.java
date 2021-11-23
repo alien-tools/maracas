@@ -15,7 +15,7 @@ import java.net.URI;
 public class BreakbotService {
 	private static final Logger logger = LogManager.getLogger(BreakbotService.class);
 
-	public boolean sendPullRequestResponse(PullRequestResponse pr, String callback, String installationId) {
+	public void sendPullRequestResponse(PullRequestResponse pr, String callback, String installationId) {
 		try {
 			URI callbackUri = new URI(callback);
 			RestTemplate rest = new RestTemplate();
@@ -30,10 +30,8 @@ public class BreakbotService {
 			String res = rest.postForObject(callbackUri, request, String.class);
 
 			logger.info("Sent delta back to BreakBot ({}): {}", callbackUri, res);
-			return true;
 		} catch (Exception e) {
 			logger.error(e);
-			return false;
 		}
 	}
 }

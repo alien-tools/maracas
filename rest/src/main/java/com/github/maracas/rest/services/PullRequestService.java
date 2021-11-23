@@ -146,8 +146,8 @@ public class PullRequestService {
 
 	private Path cloneAndBuild(String url, String ref, Path dest, BreakbotConfig config) {
 		githubService.cloneRemote(url, ref, null, dest);
-		buildService.build(dest, config.getBuild());
-		return buildService.locateJar(dest, config.getBuild());
+		buildService.build(dest, config.build());
+		return buildService.locateJar(dest, config.build());
 	}
 
 	private void serializeReport(MaracasReport report, File reportFile) {

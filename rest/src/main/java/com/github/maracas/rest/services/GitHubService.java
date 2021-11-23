@@ -1,7 +1,6 @@
 package com.github.maracas.rest.services;
 
 import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.breakbot.GithubRepositoryConfig;
 import com.github.maracas.rest.data.PullRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +33,7 @@ public class GitHubService {
 
 	private static final Logger logger = LogManager.getLogger(GitHubService.class);
 
-	public Path cloneRepository(GithubRepositoryConfig config) {
+	public Path cloneRepository(BreakbotConfig.GitHubRepository config) {
 		GHRepository repo = getRepository(config.repository());
 
 		String branch = getBranchName(config);
@@ -92,7 +91,7 @@ public class GitHubService {
 		return getPullRequest(pr).getHead().getSha();
 	}
 
-	public String getBranchName(GithubRepositoryConfig config) {
+	public String getBranchName(BreakbotConfig.GitHubRepository config) {
 		GHRepository repo = getRepository(config.repository());
 		String defaultBranch = repo.getDefaultBranch();
 

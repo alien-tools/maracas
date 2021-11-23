@@ -14,7 +14,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -23,28 +22,16 @@ public class BuildService {
 	private static final Logger logger = LogManager.getLogger(BuildService.class);
 
 	public void build(Path dest, BreakbotConfig.Build config) {
-		File pom =
-			config.getMvnPom() != null ?
-				dest.resolve(config.getMvnPom()).toFile() :
-				dest.resolve("pom.xml").toFile();
-
-		Path target =
-			config.getMvnPom() != null ?
-				dest.resolve(config.getMvnPom()).getParent().resolve("target") :
-				dest.resolve("target");
+		File pom = dest.resolve(config.pom()).toFile();
+		Path target = dest.resolve(config.pom()).getParent().resolve("target");
 
 		if (!pom.exists())
 			throw new BuildException("The pom file " + pom + " could not be found in " + dest);
 
 		if (!target.toFile().exists()) {
 			Properties properties = new Properties();
-			config.getMvnProperties().forEach(p -> properties.put(p, "true"));
-			properties.put("skipTests", "true");
-
-			List<String> mvnGoals =
-				!config.getMvnGoals().isEmpty() ?
-					config.getMvnGoals() :
-					Collections.singletonList("package");
+			config.properties().forEach(p -> properties.put(p, "true"));
+			List<String> mvnGoals = config.goals();
 
 	    InvocationRequest request = new DefaultInvocationRequest();
 	    request.setPomFile(pom);
@@ -71,22 +58,16 @@ public class BuildService {
 	}
 
 	public Path locateJar(Path dest, BreakbotConfig.Build config) {
-		if (config.getJarLocation() != null) {
-			Path customLocation = dest.resolve(config.getJarLocation());
+		if (config.jar() != null) {
+			Path customLocation = dest.resolve(config.jar());
 			if (customLocation.toFile().exists())
 				return customLocation;
 			throw new BuildException("Couldn't find the JAR " + customLocation);
 		}
 
 		// Otherwise just look for the default location
-		File pom =
-			config.getMvnPom() != null ?
-				dest.resolve(config.getMvnPom()).toFile() :
-				dest.resolve("pom.xml").toFile();
-		Path target =
-			config.getMvnPom() != null ?
-				dest.resolve(config.getMvnPom()).getParent().resolve("target") :
-				dest.resolve("target");
+		File pom = dest.resolve(config.pom()).toFile();
+		Path target = dest.resolve(config.pom()).getParent().resolve("target");
 
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pom)) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public record ClientDetections(
 	}
 
 	public ClientDetections(String url, Throwable error) {
-		this(url, new ArrayList<>(), error);
+		this(url, Collections.emptyList(), error);
 	}
 }
 */
@@ -39,7 +40,7 @@ public class ClientDetections {
 	}
 
 	public static ClientDetections empty(String u) {
-		return new ClientDetections(u, new ArrayList<>(), null);
+		return new ClientDetections(u, Collections.emptyList(), null);
 	}
 
 	public static ClientDetections success(String u, List<Detection> d) {
@@ -47,7 +48,7 @@ public class ClientDetections {
 	}
 
 	public static ClientDetections error(String u, Throwable t) {
-		return new ClientDetections(u, new ArrayList<>(), t);
+		return new ClientDetections(u, Collections.emptyList(), t);
 	}
 
 	private ClientDetections(String u, List<Detection> d, Throwable t) {

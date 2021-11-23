@@ -32,7 +32,7 @@ public class MaracasService {
 		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
 		Options japiOptions = Maracas.defaultJApiOptions();
-		config.getExcludes().forEach(excl -> japiOptions.addExcludeFromArgument(Optional.of(excl), false));
+		config.excludes().forEach(excl -> japiOptions.addExcludeFromArgument(Optional.of(excl), false));
 
 		Stopwatch watch = Stopwatch.createStarted();
 		Delta delta = Maracas.computeDelta(jar1, jar2, japiOptions);
@@ -67,22 +67,23 @@ public class MaracasService {
 		// No need to compute anything if there's no BC
 		if (maracasDelta.getBrokenDeclarations().isEmpty())
 			detections.addAll(
-				config.getClients().stream()
+				config.clients().stream()
 					.map(c -> ClientDetections.empty(c.repository()))
 					.toList()
 			);
 		else
-			config.getClients().parallelStream().forEach(c -> {
+			config.clients().parallelStream().forEach(c -> {
 				try {
 					// Clone the client
 					String branch = githubService.getBranchName(c);
 					Path clientPath = githubService.cloneRepository(c);
 					Path clientSources = findSourceDirectory(clientPath, c.sources());
+					String[] fields = c.repository().split("/");
 
 					detections.add(
 						ClientDetections.success(c.repository(),
 							makeDetections(maracasDelta, clientSources).stream()
-								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.owner(), c.repository(),
+								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, fields[0], fields[1],
 										branch, clientPath.toAbsolutePath().toString()))
 								.toList())
 					);
