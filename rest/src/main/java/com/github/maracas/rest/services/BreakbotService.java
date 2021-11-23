@@ -1,29 +1,23 @@
-package com.github.maracas.rest.breakbot;
+package com.github.maracas.rest.services;
 
-import java.net.URI;
-
+import com.github.maracas.rest.data.PullRequestResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PullRequestResponse;
+import java.net.URI;
 
-public class Breakbot {
-	private final URI callbackUri;
-	private final String installationId;
-	private static final Logger logger = LogManager.getLogger(Breakbot.class);
+@Service
+public class BreakbotService {
+	private static final Logger logger = LogManager.getLogger(BreakbotService.class);
 
-	public Breakbot(URI callbackUri, String installationId) {
-		this.callbackUri = callbackUri;
-		this.installationId = installationId;
-	}
-
-	public boolean sendPullRequestResponse(PullRequestResponse pr) {
+	public boolean sendPullRequestResponse(PullRequestResponse pr, String callback, String installationId) {
 		try {
+			URI callbackUri = new URI(callback);
 			RestTemplate rest = new RestTemplate();
 
 			HttpHeaders headers = new HttpHeaders();

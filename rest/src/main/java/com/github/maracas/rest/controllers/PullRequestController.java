@@ -1,6 +1,5 @@
 package com.github.maracas.rest.controllers;
 
-import com.github.maracas.rest.breakbot.Breakbot;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.*;
@@ -11,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.print.attribute.URISyntax;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -21,6 +18,8 @@ import java.net.URISyntaxException;
 public class PullRequestController {
 	@Autowired
 	private PullRequestService prService;
+	@Autowired
+	private BreakbotService breakbotService;
 
 	private static final Logger logger = LogManager.getLogger(PullRequestController.class);
 
@@ -30,10 +29,11 @@ public class PullRequestController {
 		@PathVariable String repository,
 		@PathVariable Integer prId,
 		@RequestParam(required=false) String callback,
-		@RequestHeader(required=false) String installationId
+		@RequestHeader(required=false) String installationId,
+		@RequestBody(required=false) String breakbotYaml
 	) {
 		try {
-			String location = prService.analyzePR(owner, repository, prId, callback, installationId);
+			String location = prService.analyzePR(owner, repository, prId, callback, installationId, breakbotYaml);
 			return ResponseEntity
 				.accepted()
 				.header("Location", location)
@@ -41,14 +41,8 @@ public class PullRequestController {
 		} catch (Throwable t) {
 			// We *always* need to invoke the callback (if any) with the results, errors included.
 			// We rethrow the exception to let the exception handlers return the proper message.
-			if (callback != null) {
-				try {
-					Breakbot bb = new Breakbot(new URI(callback), installationId);
-					bb.sendPullRequestResponse(new PullRequestResponse(t.getMessage()));
-				} catch (URISyntaxException e) {
-					logger.error(e);
-				}
-			}
+			if (callback != null)
+				breakbotService.sendPullRequestResponse(new PullRequestResponse(t.getMessage()), callback, installationId);
 			throw t;
 		}
 	}

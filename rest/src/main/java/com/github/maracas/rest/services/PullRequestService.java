@@ -1,6 +1,5 @@
 package com.github.maracas.rest.services;
 
-import com.github.maracas.rest.breakbot.Breakbot;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
@@ -19,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +30,8 @@ public class PullRequestService {
 	private GitHubService githubService;
 	@Autowired
 	private MaracasService maracasService;
+	@Autowired
+	private BreakbotService breakbotService;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -47,11 +49,14 @@ public class PullRequestService {
 		Paths.get(reportPath).toFile().mkdirs();
 	}
 
-	public String analyzePR(String owner, String repository, int prId, String callback, String installationId) {
+	public String analyzePR(String owner, String repository, int prId, String callback, String installationId, String breakbotYaml) {
 		GHRepository repo = githubService.getRepository(owner, repository);
 		GHPullRequest pr = githubService.getPullRequest(owner, repository, prId);
 		String prHead = pr.getHead().getSha();
-		BreakbotConfig config = readBreakbotConfig(repo);
+		BreakbotConfig config =
+			StringUtils.isEmpty(breakbotYaml) ?
+				readBreakbotConfig(repo) :
+				BreakbotConfig.fromYaml(breakbotYaml);
 		PullRequest prDiff = new PullRequest(pr, config, clonePath, maracasService);
 		String uid = prUid(owner, repository, prId, prHead);
 		File reportFile = reportFile(owner, repository, prId, prHead);
@@ -65,32 +70,34 @@ public class PullRequestService {
 
 			CompletableFuture<Void> future =
 					prDiff.diffAsync()
-							.thenAccept(report -> {
-								logger.info("Done analyzing {}", uid);
-								jobs.remove(uid);
+						.exceptionally(ex -> {
+							logger.error("Error analyzing " + uid, ex);
+							if (callback != null)
+								breakbotService.sendPullRequestResponse(new PullRequestResponse(ex.getCause().getMessage()), callback, installationId);
+							return null;
+						})
+						.thenAccept(report -> {
+							jobs.remove(uid);
 
+							if (report != null) {
+								logger.info("Done analyzing {}", uid);
 								try {
 									logger.info("Serializing {}", reportFile);
 									reportFile.getParentFile().mkdirs();
 									report.writeJson(reportFile);
 
-									if (callback != null) {
-										Breakbot bb = new Breakbot(new URI(callback), installationId);
-										bb.sendPullRequestResponse(new PullRequestResponse("ok", report));
-									}
-								} catch (Exception e) {
+									if (callback != null)
+										breakbotService.sendPullRequestResponse(new PullRequestResponse("ok", report), callback, installationId);
+								} catch (IOException e) {
 									logger.error(e);
 								}
-							});
+							}
+						});
 
 			jobs.put(uid, future);
 		}
 
 		return reportLocation;
-	}
-
-	public String analyzePR(String owner, String repository, int prId) {
-		return analyzePR(owner, repository, prId, null, null);
 	}
 
 	public MaracasReport analyzePRSync(String owner, String repository, int prId, String breakbotYaml) {
