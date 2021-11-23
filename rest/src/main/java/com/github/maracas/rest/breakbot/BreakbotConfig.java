@@ -1,5 +1,11 @@
 package com.github.maracas.rest.breakbot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -7,19 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 public class BreakbotConfig {
 	private String mvnPom;
 	private List<String> mvnGoals = new ArrayList<>();
 	private List<String> mvnProperties = new ArrayList<>();
 	private String jarLocation;
-	private List<String> excludes = new ArrayList<>();
+	private final List<String> excludes = new ArrayList<>();
 	private final List<GithubRepositoryConfig> clients = new ArrayList<>();
 
 	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);

@@ -10,9 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 @RestController
 @RequestMapping("/github")
 public class PullRequestController {
@@ -83,36 +80,22 @@ public class PullRequestController {
 		return ResponseEntity.ok(new PullRequestResponse("ok", report));
 	}
 
-	@ExceptionHandler(BuildException.class)
-	public ResponseEntity<PullRequestResponse> handleBuildException(BuildException e) {
-		logger.error(e);
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.body(new PullRequestResponse(e.getMessage()));
-	}
-
-	@ExceptionHandler(CloneException.class)
-	public ResponseEntity<PullRequestResponse> handleCloneException(CloneException e) {
-		logger.error(e);
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.body(new PullRequestResponse(e.getMessage()));
-	}
-
-	@ExceptionHandler(MaracasException.class)
-	public ResponseEntity<PullRequestResponse> handleMaracasException(MaracasException e) {
+	@ExceptionHandler({BuildException.class, CloneException.class, MaracasException.class})
+	public ResponseEntity<PullRequestResponse> handleInternalExceptions(BuildException e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(new PullRequestResponse(e.getMessage()));
 	}
 
 	@ExceptionHandler(GitHubException.class)
-	public ResponseEntity<PullRequestResponse> handleGitHubException(GitHubException e) {
+	public ResponseEntity<PullRequestResponse> handleGitHubExceptions(GitHubException e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(new PullRequestResponse(e.getMessage()));
 	}
 
 	@ExceptionHandler(Throwable.class)
-	public ResponseEntity<PullRequestResponse> handleThrowable(Throwable t) {
+	public ResponseEntity<PullRequestResponse> handleThrowables(Throwable t) {
 		logger.error("Uncaught throwable", t);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(new PullRequestResponse(t.getMessage()));
