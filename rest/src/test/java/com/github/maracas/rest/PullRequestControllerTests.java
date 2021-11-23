@@ -188,7 +188,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			// Wait for the analysis to finish
 			//ResultActions result = waitForPRAnalysis(mvc, "/github/pr/%s/%s/%d".formatted(owner, repository, prId));
 
-			Thread.sleep(2000);
+			Thread.sleep(5000);
 
 			// Check whether our mock server got the error callback
 			mockServer.verify(

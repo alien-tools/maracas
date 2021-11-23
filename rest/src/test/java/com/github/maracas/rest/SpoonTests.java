@@ -41,7 +41,7 @@ class SpoonTests extends AbstractControllerTest {
 
 		String bbConfig = """
 			build:
-			  properties: skipTests skipDepClean assembly.skipAssembly
+			  properties: [skipTests, skipDepClean, assembly.skipAssembly]
 			clients:
 			  - repository: SpoonLabs/flacoco
 			  - repository: SpoonLabs/coming
