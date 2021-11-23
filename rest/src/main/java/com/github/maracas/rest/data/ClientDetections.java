@@ -34,25 +34,27 @@ public class ClientDetections {
 	@JsonSerialize(using = ToStringSerializer.class)
 	private Throwable error;
 
-	public ClientDetections() {
+	private ClientDetections() {
 
 	}
 
-	public ClientDetections(String u) {
-		this.url = u;
+	public static ClientDetections empty(String u) {
+		return new ClientDetections(u, new ArrayList<>(), null);
 	}
 
-	public ClientDetections(String u, List<Detection> d, Throwable t) {
+	public static ClientDetections success(String u, List<Detection> d) {
+		return new ClientDetections(u, d, null);
+	}
+
+	public static ClientDetections error(String u, Throwable t) {
+		return new ClientDetections(u, new ArrayList<>(), t);
+	}
+
+	private ClientDetections(String u, List<Detection> d, Throwable t) {
 		this.url = u;
 		this.detections = d;
 		this.error = t;
 	}
-
-	public ClientDetections(String u, List<Detection> d) {
-		this(u, d, null);
-	}
-
-	public ClientDetections(String u, Throwable t) { this(u, new ArrayList<>(), t); }
 
 	public String getUrl() { return url; }
 	public List<Detection> getDetections() { return detections; }

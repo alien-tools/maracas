@@ -68,7 +68,7 @@ public class MaracasService {
 		if (maracasDelta.getBrokenDeclarations().isEmpty())
 			detections.addAll(
 				config.getClients().stream()
-					.map(c -> new ClientDetections(c.repository()))
+					.map(c -> ClientDetections.empty(c.repository()))
 					.toList()
 			);
 		else
@@ -80,7 +80,7 @@ public class MaracasService {
 					Path clientSources = findSourceDirectory(clientPath, c.sources());
 
 					detections.add(
-						new ClientDetections(c.repository(),
+						ClientDetections.success(c.repository(),
 							makeDetections(maracasDelta, clientSources).stream()
 								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, c.owner(), c.repository(),
 										branch, clientPath.toAbsolutePath().toString()))
@@ -90,7 +90,7 @@ public class MaracasService {
 					logger.info("Done computing detections on {}", c.repository());
 				} catch (Exception e) {
 					logger.error(e);
-					detections.add(new ClientDetections(c.repository(),
+					detections.add(ClientDetections.error(c.repository(),
 						new MaracasException("Couldn't analyze client " + c.repository(), e)));
 				}
 			});

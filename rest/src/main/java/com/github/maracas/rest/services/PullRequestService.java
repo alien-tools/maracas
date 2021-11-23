@@ -4,10 +4,10 @@ import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequest;
 import com.github.maracas.rest.data.PullRequestResponse;
-import com.github.maracas.rest.delta.PullRequestDiff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHPullRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,10 +16,12 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class PullRequestService {
@@ -29,6 +31,8 @@ public class PullRequestService {
 	private MaracasService maracasService;
 	@Autowired
 	private BreakbotService breakbotService;
+	@Autowired
+	private BuildService buildService;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -49,8 +53,6 @@ public class PullRequestService {
 			StringUtils.isEmpty(breakbotYaml) ?
 					githubService.readBreakbotConfig(pr) :
 				BreakbotConfig.fromYaml(breakbotYaml);
-		GHPullRequest ghPr = githubService.getPullRequest(pr);
-		PullRequestDiff prDiff = new PullRequestDiff(pr, ghPr, config, clonePath, maracasService);
 		String uid = prUid(pr);
 		File reportFile = reportFile(pr);
 		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.owner(), pr.repository(), pr.id());
@@ -62,30 +64,24 @@ public class PullRequestService {
 			logger.info("Starting the analysis of {}", uid);
 
 			CompletableFuture<Void> future =
-					prDiff.diffAsync()
-						.exceptionally(ex -> {
+				CompletableFuture
+					.supplyAsync(() -> diff(pr, config))
+					.handle((report, ex) -> {
+						jobs.remove(uid);
+
+						if (ex != null) {
 							logger.error("Error analyzing " + uid, ex);
-							if (callback != null)
-								breakbotService.sendPullRequestResponse(new PullRequestResponse(ex.getCause().getMessage()), callback, installationId);
-							return null;
-						})
-						.thenAccept(report -> {
-							jobs.remove(uid);
+							return new PullRequestResponse(ex.getCause().getMessage());
+						}
 
-							if (report != null) {
-								logger.info("Done analyzing {}", uid);
-								try {
-									logger.info("Serializing {}", reportFile);
-									reportFile.getParentFile().mkdirs();
-									report.writeJson(reportFile);
-
-									if (callback != null)
-										breakbotService.sendPullRequestResponse(new PullRequestResponse("ok", report), callback, installationId);
-								} catch (IOException e) {
-									logger.error(e);
-								}
-							}
-						});
+						logger.info("Done analyzing {}", uid);
+						serializeReport(report, reportFile);
+						return new PullRequestResponse("ok", report);
+					})
+					.thenAccept(response -> {
+						if (callback != null)
+							breakbotService.sendPullRequestResponse(response, callback, installationId);
+					});
 
 			jobs.put(uid, future);
 		}
@@ -98,10 +94,7 @@ public class PullRequestService {
 				StringUtils.isEmpty(breakbotYaml) ?
 						githubService.readBreakbotConfig(pr) :
 						BreakbotConfig.fromYaml(breakbotYaml);
-		GHPullRequest ghPr = githubService.getPullRequest(pr);
-		PullRequestDiff prDiff = new PullRequestDiff(pr, ghPr, config, clonePath, maracasService);
-
-		return prDiff.diff();
+		return diff(pr, config);
 	}
 
 	public MaracasReport getReport(PullRequest pr) {
@@ -119,6 +112,52 @@ public class PullRequestService {
 
 	public boolean isProcessing(PullRequest pr) {
 		return jobs.containsKey(prUid(pr));
+	}
+
+	private MaracasReport diff(PullRequest pr, BreakbotConfig config) {
+		GHPullRequest ghPr = githubService.getPullRequest(pr);
+		try {
+			GHCommitPointer base = ghPr.getBase();
+			GHCommitPointer head = ghPr.getHead();
+			Path basePath = Paths.get(clonePath)
+					.resolve(String.valueOf(base.getRepository().getId()))
+					.resolve(base.getSha());
+			Path headPath = Paths.get(clonePath)
+					.resolve(String.valueOf(base.getRepository().getId()))
+					.resolve(head.getSha());
+
+			// Clone and build both repos
+			CompletableFuture<Path> baseFuture = CompletableFuture.supplyAsync(
+				() -> cloneAndBuild(base.getRepository().getHttpTransportUrl(), base.getRef(), basePath, config));
+			CompletableFuture<Path> headFuture = CompletableFuture.supplyAsync(
+				() -> cloneAndBuild(head.getRepository().getHttpTransportUrl(), head.getRef(), headPath, config));
+
+			CompletableFuture.allOf(baseFuture, headFuture).join();
+			Path j1 = baseFuture.get();
+			Path j2 = headFuture.get();
+
+			return maracasService.makeReport(pr, base.getRef(), basePath, j1, j2, config);
+		} catch (ExecutionException | InterruptedException e) {
+			logger.error(e);
+			Thread.currentThread().interrupt();
+			return null;
+		}
+	}
+
+	private Path cloneAndBuild(String url, String ref, Path dest, BreakbotConfig config) {
+		githubService.cloneRemote(url, ref, null, dest);
+		buildService.build(dest, config.getBuild());
+		return buildService.locateJar(dest, config.getBuild());
+	}
+
+	private void serializeReport(MaracasReport report, File reportFile) {
+		try {
+			logger.info("Serializing {}", reportFile);
+			reportFile.getParentFile().mkdirs();
+			report.writeJson(reportFile);
+		} catch (IOException e) {
+			logger.error(e);
+		}
 	}
 
 	private String prUid(PullRequest pr) {
