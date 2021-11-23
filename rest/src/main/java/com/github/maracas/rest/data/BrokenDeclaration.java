@@ -1,5 +1,6 @@
 package com.github.maracas.rest.data;
 
+import com.github.maracas.rest.util.GitHubUtils;
 import com.github.maracas.util.SpoonHelpers;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
