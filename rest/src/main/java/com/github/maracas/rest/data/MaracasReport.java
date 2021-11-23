@@ -9,12 +9,12 @@ import java.util.List;
 
 public record MaracasReport(
 	Delta delta,
-	List<ClientDetections> clientDetections
+	List<ClientReport> clientDetections
 ) {
 	public Collection<Detection> allDetections() {
 		return
 			clientDetections.stream()
-				.map(ClientDetections::getDetections)
+				.map(ClientReport::detections)
 				.flatMap(Collection::stream)
 				.toList();
 	}

@@ -4,7 +4,7 @@ import com.github.maracas.Maracas;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.data.ClientDetections;
+import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequest;
 import com.google.common.base.Stopwatch;
@@ -62,13 +62,13 @@ public class MaracasService {
 		Delta maracasDelta = makeDelta(jar1, jar2, sources, config);
 
 		// Compute detections per client
-		List<ClientDetections> detections = new ArrayList<>();
+		List<ClientReport> detections = new ArrayList<>();
 
 		// No need to compute anything if there's no BC
 		if (maracasDelta.getBrokenDeclarations().isEmpty())
 			detections.addAll(
 				config.clients().stream()
-					.map(c -> ClientDetections.empty(c.repository()))
+					.map(c -> ClientReport.empty(c.repository()))
 					.toList()
 			);
 		else
@@ -81,7 +81,7 @@ public class MaracasService {
 					String[] fields = c.repository().split("/");
 
 					detections.add(
-						ClientDetections.success(c.repository(),
+						ClientReport.success(c.repository(),
 							makeDetections(maracasDelta, clientSources).stream()
 								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, fields[0], fields[1],
 										branch, clientPath.toAbsolutePath().toString()))
@@ -91,7 +91,7 @@ public class MaracasService {
 					logger.info("Done computing detections on {}", c.repository());
 				} catch (Exception e) {
 					logger.error(e);
-					detections.add(ClientDetections.error(c.repository(),
+					detections.add(ClientReport.error(c.repository(),
 						new MaracasException("Couldn't analyze client " + c.repository(), e)));
 				}
 			});

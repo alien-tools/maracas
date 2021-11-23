@@ -45,7 +45,7 @@ class MaracasReportTests {
 
 		report = new MaracasReport(
 			Delta.fromMaracasDelta(result.delta(), new PullRequest("alien-tools", "comp-changes", 2), "main", "../test-data/comp-changes/old/"),
-			List.of(ClientDetections.success("alien-tools/comp-changes-client",
+			List.of(ClientReport.success("alien-tools/comp-changes-client",
 				result.allDetections()
 					.stream()
 					.map(d -> Detection.fromMaracasDetection(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
@@ -76,7 +76,7 @@ class MaracasReportTests {
 	@Test
 	void testSourceLocationsDetections() {
 		assertThat(report.clientDetections().size(), is(1));
-		report.clientDetections().get(0).getDetections().forEach(d -> {
+		report.clientDetections().get(0).detections().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -94,15 +94,15 @@ class MaracasReportTests {
 	@Test
 	void testGitHubLocationsDetections() {
 		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).getUrl(), not(emptyOrNullString()));
-		report.clientDetections().get(0).getDetections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
+		assertThat(report.clientDetections().get(0).url(), not(emptyOrNullString()));
+		report.clientDetections().get(0).detections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
 	void testGithubClientsArePresent() {
 		assertThat(report.clientDetections().size(), is(1));
-		assertThat(report.clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
-		assertThat(report.clientDetections().get(0).getDetections().size(), is(greaterThan(1)));
+		assertThat(report.clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(report.clientDetections().get(0).detections().size(), is(greaterThan(1)));
 	}
 
 }

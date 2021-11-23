@@ -27,7 +27,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
 		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -38,7 +38,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
 		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -49,7 +49,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
 		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).getUrl(), is("alien-tools/comp-changes-client"));
+		assertThat(res.report().clientDetections().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
@@ -100,7 +100,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
 		assertThat(res.report().clientDetections().size(), equalTo(1));
-		assertThat(res.report().clientDetections().get(0).getUrl(), is("tdegueul/comp-changes-client"));
+		assertThat(res.report().clientDetections().get(0).url(), is("tdegueul/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
 	}
 
