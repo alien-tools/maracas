@@ -2,11 +2,13 @@ package com.github.maracas.rest.breakbot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,13 +40,13 @@ public record BreakbotConfig(
 
 	}
 
+	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
+
 	public BreakbotConfig(List<String> excludes, Build build, List<GitHubRepository> clients) {
 		this.excludes = excludes != null ? excludes : Collections.emptyList();
 		this.build = build != null ? build : new Build(null, null, null, null);
 		this.clients = clients != null ? clients : Collections.emptyList();
 	}
-
-	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
 
 	public static BreakbotConfig defaultConfig() {
 		return new BreakbotConfig(null, null, null);
@@ -55,18 +57,11 @@ public record BreakbotConfig(
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 			return mapper.readValue(in, BreakbotConfig.class);
 		} catch (IOException e) {
-			logger.warn("Couldn't parse .breakbot.yml: returning default configuration", e);
-			return defaultConfig();
+			throw new BreakbotException("Couldn't parse .breakbot.yml: ", e);
 		}
 	}
 
 	public static BreakbotConfig fromYaml(String yaml) {
-		try {
-			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-			return mapper.readValue(yaml, BreakbotConfig.class);
-		} catch (IOException e) {
-			logger.warn("Couldn't parse .breakbot.yml: returning default configuration", e);
-			return defaultConfig();
-		}
+		return fromYaml(IOUtils.toInputStream(yaml, Charset.defaultCharset()));
 	}
 }

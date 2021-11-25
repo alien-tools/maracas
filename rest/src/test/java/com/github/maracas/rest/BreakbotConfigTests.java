@@ -1,10 +1,9 @@
 package com.github.maracas.rest;
 
 import com.github.maracas.rest.breakbot.BreakbotConfig;
-import org.apache.commons.io.IOUtils;
+import com.github.maracas.rest.breakbot.BreakbotException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.nio.charset.Charset;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -12,8 +11,7 @@ import static org.hamcrest.Matchers.*;
 class BreakbotConfigTests {
 	@Test
 	void testDefaultConfiguration() {
-		String s = "";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
 		assertThat(c.build().pom(), is("pom.xml"));
 		assertThat(c.build().goals(), both(hasSize(1)).and(contains("package")));
@@ -23,11 +21,17 @@ class BreakbotConfigTests {
 	}
 
 	@Test
+	void testInvalidConfiguration() {
+		String s = "nope";
+		Assertions.assertThrows(BreakbotException.class, () -> BreakbotConfig.fromYaml(s));
+	}
+
+	@Test
 	void testOneClient() {
 		String s = """
 			clients:
 			  - repository: a/b""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.clients(), hasSize(1));
 
 		BreakbotConfig.GitHubRepository r = c.clients().get(0);
@@ -44,7 +48,7 @@ class BreakbotConfigTests {
 			  - repository: a/b
 			  - repository: a/c
 			  - repository: b/d""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.clients(), hasSize(3));
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
@@ -73,7 +77,7 @@ class BreakbotConfigTests {
 			  - repository: a/b
 			    sources: src
 			  - repository: a/c""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.clients(), hasSize(2));
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
@@ -96,7 +100,7 @@ class BreakbotConfigTests {
 			  pom: anotherpom.xml
 			  goals: [a, b]
 			  properties: [skipTests, skipDepClean]""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().pom(), is("anotherpom.xml"));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
 		assertThat(c.build().properties(), allOf(iterableWithSize(2), hasItem("skipTests"), hasItem("skipDepClean")));
@@ -108,7 +112,7 @@ class BreakbotConfigTests {
 		String s = """
 			build:
 			  jar: build/out.jar""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().pom(), is("pom.xml"));
 		assertThat(c.build().goals(), hasItem("package"));
 		assertThat(c.build().properties(), hasItem("skipTests"));
@@ -123,7 +127,7 @@ class BreakbotConfigTests {
 			  goals: [custom]
 			  properties: [prop]
 			  jar: build/out.jar""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().pom(), is("anotherpom.xml"));
 		assertThat(c.build().goals(), allOf(iterableWithSize(1), hasItem("custom")));
 		assertThat(c.build().properties(), allOf(iterableWithSize(1), hasItem("prop")));
@@ -142,7 +146,7 @@ class BreakbotConfigTests {
 			  - repository: b/d
 			  - repository: b/e
 			    branch: dev""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.clients(), hasSize(4));
 		assertThat(c.clients().get(0).sha(), is("a3b98f"));
 		assertThat(c.clients().get(0).branch(), nullValue());
@@ -161,7 +165,7 @@ class BreakbotConfigTests {
 			  # '@' and '*' cannot start a YAML token, we have to quote
 			  - '@Beta'
 			  - '*internal*'""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(IOUtils.toInputStream(s, Charset.defaultCharset()));
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.excludes(), hasSize(2));
 		assertThat(c.excludes(), hasItems("@Beta", "*internal*"));
 	}

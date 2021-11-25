@@ -185,9 +185,6 @@ class PullRequestControllerTests extends AbstractControllerTest {
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message", is("processing")));
 
-			// Wait for the analysis to finish
-			//ResultActions result = waitForPRAnalysis(mvc, "/github/pr/%s/%s/%d".formatted(owner, repository, prId));
-
 			Thread.sleep(5000);
 
 			// Check whether our mock server got the error callback
@@ -211,6 +208,59 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
 			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't analyze client")));
+	}
+
+	@Test
+	void testPRWithInvalidBreakbotFile() throws Exception {
+		String bbConfig = "nope";
+
+		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message", containsString("Couldn't parse .breakbot.yml")));
+	}
+
+	@Test
+	void testPRPushWithInvalidBreakbotFile() throws Exception {
+		String owner = "alien-tools";
+		String repository = "comp-changes";
+		int prId = 2;
+		String bbConfig = "nope";
+
+		int mockPort = 8080;
+		int installationId = 123456789;
+		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
+
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+			// Start a mock server that waits for our callback request
+			mockServer.when(
+				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+			).respond(
+				response().withBody("received")
+			);
+
+			// Check whether our analysis request is properly received
+			mvc.perform(
+					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
+						.header("installationId", installationId)
+						.content(bbConfig)
+				)
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message", containsString("Couldn't parse .breakbot.yml")));
+
+			Thread.sleep(5000);
+
+			// Check whether our mock server got the error callback
+			mockServer.verify(
+				request()
+					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+					.withMethod("POST")
+					.withHeader("installationId", String.valueOf(installationId))
+					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
+					.withBody(subString("Couldn't parse .breakbot.yml")),
+				exactly(1)
+			);
+		}
 	}
 
 	@Test

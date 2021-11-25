@@ -1,5 +1,6 @@
 package com.github.maracas.rest.controllers;
 
+import com.github.maracas.rest.breakbot.BreakbotException;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequest;
 import com.github.maracas.rest.data.PullRequestResponse;
@@ -90,8 +91,8 @@ public class PullRequestController {
 			.body(new PullRequestResponse(e.getMessage()));
 	}
 
-	@ExceptionHandler(GitHubException.class)
-	public ResponseEntity<PullRequestResponse> handleGitHubExceptions(GitHubException e) {
+	@ExceptionHandler({GitHubException.class, BreakbotException.class})
+	public ResponseEntity<PullRequestResponse> handleGitHubExceptions(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(new PullRequestResponse(e.getMessage()));
