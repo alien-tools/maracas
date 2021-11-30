@@ -1,5 +1,6 @@
 package com.github.maracas.rest.breakbot;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.io.IOUtils;
@@ -12,6 +13,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record BreakbotConfig(
 	List<String> excludes,
 	Build build,

@@ -169,4 +169,18 @@ class BreakbotConfigTests {
 		assertThat(c.excludes(), hasSize(2));
 		assertThat(c.excludes(), hasItems("@Beta", "*internal*"));
 	}
+
+	@Test
+	void testIgnoreUnknownProperties() {
+		String s = """
+			a: b
+			excludes:
+			  # '@' and '*' cannot start a YAML token, we have to quote
+			  - '@Beta'
+			  - '*internal*'
+			b: c""";
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
+		assertThat(c.excludes(), hasSize(2));
+		assertThat(c.excludes(), hasItems("@Beta", "*internal*"));
+	}
 }
