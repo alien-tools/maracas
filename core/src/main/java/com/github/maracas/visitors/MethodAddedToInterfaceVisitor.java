@@ -1,5 +1,6 @@
 package com.github.maracas.visitors;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,39 +31,50 @@ public class MethodAddedToInterfaceVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtClass(CtClass<T> cls) {
-		if (!cls.isInterface() && !cls.isAbstract() && hasTransInterface(cls.getReference())) {
-			detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
+		if (!cls.isAbstract()) {
+			CtTypeReference<?> typeRef = cls.getReference();
+			Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
+			Set<CtTypeReference<?>> superCls = new HashSet<>(Arrays.asList(typeRef.getSuperclass()));
+
+			if (isSubtype(interfaces)) {
+				detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
+			}
+			
+			if (isSubtype(superCls)) {
+				detection(cls, cls, clsRef, APIUse.EXTENDS);
+			}
 		}
 	}
-
+	
 	/**
-	 * Verifies if a given type has the clsRef as a transitive
-	 * interface.
-	 * @param typeRef  given type
-	 * @return         <code>true</code> if the type has the
-	 *                 transitive interface given by clsRef;
-	 *                 <code>false</code> otherwise.
+	 * Verifies if a set of type references are subtypes of the clsRef.
+	 * @param superRefs set of type references
+	 * @return          <code>true</code> if any of the types is a 
+	 *                  subtype of the clsRef;
+	 *                  <code>false</code> otherwise.
 	 */
-	private boolean hasTransInterface(CtTypeReference<?> typeRef) {
-		Set<CtTypeReference<?>> clsSupers = new HashSet<>(typeRef.getSuperInterfaces());
-		CtTypeReference<?> clsSuper = typeRef.getSuperclass();
-		if (clsSuper != null) {
-			clsSupers.add(clsSuper);
-		}
-
-		boolean hasInter = false;
-		for (CtTypeReference<?> sup : clsSupers) {
-			if (clsRef.equals(sup)) {
+	private boolean isSubtype(Set<CtTypeReference<?>> superRefs) {	
+		for (CtTypeReference<?> superRef : superRefs) {
+			if (superRef == null) {
+				return false;
+			}
+			if (superRef.equals(clsRef)) {
 				return true;
 			}
-
-			hasInter = hasInter || hasTransInterface(sup);
-			if (hasInter) {
-				break;
+			
+			if ((superRef.getTypeDeclaration().isAbstract() || superRef.isInterface()) 
+				&& superRef.isSubtypeOf(clsRef)) {
+				// FIXME: interfaces extending other interfaces are not considered 
+				// by the isSubtypeOf() method
+				Set<CtTypeReference<?>> clsSupers = new HashSet<>(superRef.getSuperInterfaces());
+				clsSupers.add(superRef.getSuperclass());
+				return isSubtype(clsSupers);
+			} else {
+				return false;
 			}
 		}
-
-		return hasInter;
+		
+		return false;
 	}
 }
 
