@@ -1,5 +1,6 @@
 package com.github.maracas.util;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import spoon.reflect.reference.CtArrayTypeReference;
@@ -97,6 +98,38 @@ public class SpoonTypeHelpers {
 		if (givenName.equals("float"))
 			return Set.of("double").contains(expectedName);
 
+		return false;
+	}
+	
+	/**
+	 * Verifies if a set of type references are subtypes of the clsRef.
+	 * @param superRefs set of type references
+	 * @param typeRef   reference super type 
+	 * @return          <code>true</code> if any of the types is a 
+	 *                  subtype of the clsRef;
+	 *                  <code>false</code> otherwise.
+	 */
+	public static boolean isSubtype(Set<CtTypeReference<?>> superRefs, CtTypeReference<?> typeRef) {	
+		for (CtTypeReference<?> superRef : superRefs) {
+			if (superRef == null) {
+				return false;
+			}
+			if (superRef.equals(typeRef)) {
+				return true;
+			}
+			
+			if ((superRef.getTypeDeclaration().isAbstract() || superRef.isInterface()) 
+				&& superRef.isSubtypeOf(typeRef)) {
+				// FIXME: interfaces extending other interfaces are not considered 
+				// by the isSubtypeOf() method
+				Set<CtTypeReference<?>> clsSupers = new HashSet<>(superRef.getSuperInterfaces());
+				clsSupers.add(superRef.getSuperclass());
+				return isSubtype(clsSupers, typeRef);
+			} else {
+				return false;
+			}
+		}
+		
 		return false;
 	}
 }
