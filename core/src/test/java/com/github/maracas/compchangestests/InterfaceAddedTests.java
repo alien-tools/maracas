@@ -11,6 +11,7 @@ public class InterfaceAddedTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
 		assertNumberDetections(INTERFACE_ADDED, 8);
+		// FIXME: Check other cases
 	}
 	
 	@Test
