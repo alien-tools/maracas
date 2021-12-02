@@ -1,6 +1,5 @@
 package com.github.maracas.delta;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,15 +12,18 @@ import com.github.maracas.visitors.ClassNowFinalVisitor;
 import com.github.maracas.visitors.ClassRemovedVisitor;
 import com.github.maracas.visitors.InterfaceAddedVisitor;
 import com.github.maracas.visitors.MethodAddedToInterfaceVisitor;
+import com.github.maracas.visitors.SuperclassAddedVisitor;
 
 import japicmp.model.JApiChangeStatus;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
-import japicmp.model.JApiImplementedInterface;
+import japicmp.model.JApiSuperclass;
+import japicmp.util.Optional;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class BrokenClass extends AbstractBrokenDeclaration {
+	
 	private final JApiClass jApiCls;
 	private final CtTypeReference<?> clsRef;
 
@@ -55,13 +57,15 @@ public class BrokenClass extends AbstractBrokenDeclaration {
 					yield new InterfaceAddedVisitor(clsRef, intersRef);
 				}
 				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
-//				case SUPERCLASS_ADDED            -> {
-//					Set<CtTypeReference<?>> intersRef = jApiCls.getSuperclass().stream()
-//						.filter(i -> i.getChangeStatus().equals(JApiChangeStatus.NEW))
-//						.map(i -> clsRef.getFactory().Type().createReference(i.getFullyQualifiedName()))
-//						.collect(Collectors.toSet());
-//					yield new InterfaceAddedVisitor(clsRef, intersRef);
-//				}
+				case SUPERCLASS_ADDED            -> {
+					JApiSuperclass superclass = jApiCls.getSuperclass();
+					if (superclass != null) {
+						CtTypeReference<?> superRef = clsRef.getFactory().Type().createReference(superclass.getSuperclassNew());
+						yield new SuperclassAddedVisitor(clsRef, superRef);
+					} else {
+						yield null;
+					}			
+				}
 				default -> null;
 			};
 	}
