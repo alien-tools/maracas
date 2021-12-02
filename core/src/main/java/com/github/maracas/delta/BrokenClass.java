@@ -55,6 +55,13 @@ public class BrokenClass extends AbstractBrokenDeclaration {
 					yield new InterfaceAddedVisitor(clsRef, intersRef);
 				}
 				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
+//				case SUPERCLASS_ADDED            -> {
+//					Set<CtTypeReference<?>> intersRef = jApiCls.getSuperclass().stream()
+//						.filter(i -> i.getChangeStatus().equals(JApiChangeStatus.NEW))
+//						.map(i -> clsRef.getFactory().Type().createReference(i.getFullyQualifiedName()))
+//						.collect(Collectors.toSet());
+//					yield new InterfaceAddedVisitor(clsRef, intersRef);
+//				}
 				default -> null;
 			};
 	}

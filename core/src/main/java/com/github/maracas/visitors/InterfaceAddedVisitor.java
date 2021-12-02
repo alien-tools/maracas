@@ -30,18 +30,16 @@ public class InterfaceAddedVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtClass(CtClass<T> cls) {
 		if (!cls.isAbstract()) {
-			for (CtTypeReference<?> interRef : intersRef) {
-				CtTypeReference<?> typeRef = cls.getReference();
-				Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
-				Set<CtTypeReference<?>> superCls = new HashSet<>(Arrays.asList(typeRef.getSuperclass()));
+			CtTypeReference<?> typeRef = cls.getReference();
+			Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
+			Set<CtTypeReference<?>> superCls = new HashSet<>(Arrays.asList(typeRef.getSuperclass()));
 
-				if (SpoonTypeHelpers.isSubtype(interfaces, interRef)) {
-					detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
-				}
-				
-				if (SpoonTypeHelpers.isSubtype(superCls, interRef)) {
-					detection(cls, cls, clsRef, APIUse.EXTENDS);
-				}
+			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef)) {
+				detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
+			}
+			
+			if (SpoonTypeHelpers.isSubtype(superCls, clsRef)) {
+				detection(cls, cls, clsRef, APIUse.EXTENDS);
 			}
 		}
 	}

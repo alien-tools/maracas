@@ -189,6 +189,11 @@ public class Delta {
 
 			@Override
 			public void visit(JApiSuperclass jApiSuperclass) {
+				JApiClass jApiClass = jApiSuperclass.getJApiClassOwning();
+				CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
+				jApiSuperclass.getCompatibilityChanges().forEach(c ->
+					brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
+				);
 			}
 		});
 
