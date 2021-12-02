@@ -1,5 +1,9 @@
 package com.github.maracas.delta;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.github.maracas.visitors.AnnotationDeprecatedAddedVisitor;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.ClassLessAccessibleVisitor;
@@ -7,10 +11,13 @@ import com.github.maracas.visitors.ClassNowAbstractVisitor;
 import com.github.maracas.visitors.ClassNowCheckedExceptionVisitor;
 import com.github.maracas.visitors.ClassNowFinalVisitor;
 import com.github.maracas.visitors.ClassRemovedVisitor;
+import com.github.maracas.visitors.InterfaceAddedVisitor;
 import com.github.maracas.visitors.MethodAddedToInterfaceVisitor;
 
+import japicmp.model.JApiChangeStatus;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
+import japicmp.model.JApiImplementedInterface;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -40,6 +47,13 @@ public class BrokenClass extends AbstractBrokenDeclaration {
 				case CLASS_NOW_CHECKED_EXCEPTION -> new ClassNowCheckedExceptionVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
 				case CLASS_REMOVED               -> new ClassRemovedVisitor(clsRef);
+				case INTERFACE_ADDED             -> {
+					Set<CtTypeReference<?>> intersRef = jApiCls.getInterfaces().stream()
+						.filter(i -> i.getChangeStatus().equals(JApiChangeStatus.NEW))
+						.map(i -> clsRef.getFactory().Type().createReference(i.getFullyQualifiedName()))
+						.collect(Collectors.toSet());
+					yield new InterfaceAddedVisitor(clsRef, intersRef);
+				}
 				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
 				default -> null;
 			};
