@@ -228,10 +228,7 @@ public class Delta {
 					decl.setSourceElement(sourceRef.getTypeDeclaration());
 				}
 			} else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
-				// FIXME: hacky; can't get a reference in the same way as the others;
-				// 			  won't work with parameters, etc.; FIX
-				String signature = String.format("%s %s#%s()", execRef.getType(), execRef.getDeclaringType(), execRef.getSimpleName());
-				CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(signature);
+				CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(execRef.getExecutableDeclaration());
 				decl.setSourceElement(sourceRef.getExecutableDeclaration());
 			} else if (bytecodeRef instanceof CtFieldReference<?> fieldRef) {
 				CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
