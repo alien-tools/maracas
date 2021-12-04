@@ -10,6 +10,8 @@ import spoon.reflect.code.CtSuperAccess;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Collection;
+
 /**
  * Visitor in charge of gathering all constructor
  * removed issues in client code.
@@ -45,14 +47,13 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtNewClass(CtNewClass<T> anonymClass) {
 		CtTypeReference<?> superclass = anonymClass.getAnonymousClass().getSuperclass();
 
-		if (superclass != null) {
-			superclass.getAllExecutables().forEach(c -> {
-				if (mRef.equals(c)) {
-					detection(anonymClass, c, mRef, APIUse.INSTANTIATION);
-					return;
-				}
-			});
-		}
+		if (superclass != null)
+			superclass.getDeclaredExecutables()
+				.stream()
+				.filter(exec -> mRef.equals(exec))
+				.forEach(exec ->
+					detection(anonymClass, exec, mRef, APIUse.INSTANTIATION)
+				);
 	}
 	
 	@Override
