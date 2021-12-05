@@ -16,10 +16,10 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Visitor in charge of gathering all method return
- * type changed issues in client code.
- * <p>
- * METHOD_RETURN_TYPE_CHANGED detected cases:
+ * Visitor in charge of gathering all method return type changed issues in 
+ * client code.
+ * 
+ * <p>METHOD_RETURN_TYPE_CHANGED detected cases:
  * <ul>
  * <li> Invocation of the method in an assignment.
  * <li> Invocation of the method in a return statement.

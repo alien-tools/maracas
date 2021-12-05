@@ -11,6 +11,14 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * Visitor in charge of gathering all supertype added issues in client code.
+ * 
+ * <p>INTERFACE_ADDED and SUPERCLASS_ADDED detected cases:
+ * <ul>
+ * <li> Classes extending the affected type.
+ *      Example: <pre>public class C extends SuperC {}</pre>
+ */
 public class SupertypeAddedVisitor extends BreakingChangeVisitor {
 	
 	protected final CtTypeReference<?> clsRef;

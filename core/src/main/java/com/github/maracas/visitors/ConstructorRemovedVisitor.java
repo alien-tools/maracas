@@ -13,15 +13,15 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.Collection;
 
 /**
- * Visitor in charge of gathering all constructor
- * removed issues in client code.
- * <p>
- * CONSTRUCTOR_REMOVED detected cases:
+ * Visitor in charge of gathering all constructor removed issues 
+ * in client code.
+ * 
+ * <p>CONSTRUCTOR_REMOVED detected cases:
  * <ul>
  * <li> Any call to the removed constructor.
  *      Example: <pre>new TypeName();</pre>
- * <li> Call to the removed constructor when creating
- *      an anonymous class.
+ * <li> Call to the removed constructor when creating an anonymous 
+ *      class.
  *      Example: <pre>new AnonymClass() { }</pre>
  * <li> Invocation to super() constructor.
  *      Example: <pre>super()</pre>

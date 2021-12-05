@@ -10,6 +10,14 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * Visitor in charge of gathering all supertype removed issues in client code.
+ * 
+ * <p>INTERFACE_REMOVED and SUPERCLASS_REMOVED detected cases:
+ * <ul>
+ * <li> Methods overriding methods declared within the supertype.
+ *      Example: <pre>@Override<b>public void m() { return; }</pre>
+ */
 public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
 	protected final CtTypeReference<?> clsRef;

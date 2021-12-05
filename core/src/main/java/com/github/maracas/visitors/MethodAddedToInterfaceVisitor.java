@@ -13,10 +13,10 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Visitor in charge of gathering all method added to interface
- * issues in client code.
- * <p>
- * METHOD_ADDED_TO_INTERFACE detected cases:
+ * Visitor in charge of gathering all method added to interface issues in 
+ * client code.
+ * 
+ * <p>METHOD_ADDED_TO_INTERFACE detected cases:
  * <ul>
  * <li> Concrete classes directly implementing the interface.
  * <li> Concrete classes transitively implementing the interface.
