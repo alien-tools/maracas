@@ -9,7 +9,7 @@ public class SuperclassRemovedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberDetections(SUPERCLASS_REMOVED, 8);
+		assertNumberDetections(SUPERCLASS_REMOVED, 4);
 		// FIXME: Check other cases
 	}
 	
