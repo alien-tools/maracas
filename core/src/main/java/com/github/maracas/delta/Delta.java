@@ -94,6 +94,10 @@ public class Delta {
 				jApiClass.getCompatibilityChanges().forEach(c ->
 					brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
 				);
+				
+				jApiClass.getInterfaces().forEach(i -> {
+					visit(jApiClass, i);
+				});
 			}
 
 			@Override
@@ -181,6 +185,8 @@ public class Delta {
 
 			@Override
 			public void visit(JApiImplementedInterface jApiImplementedInterface) {
+				// Using visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface)
+				// FIXME: is there a way to get the JApiClass from the interface?
 			}
 
 			@Override
@@ -194,6 +200,13 @@ public class Delta {
 				 jApiSuperclass.getCompatibilityChanges().forEach(c ->
 					 brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
 				 );
+			}
+			
+			public void visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface) {
+				CtTypeReference<?> interRef = root.getFactory().Type().createReference(jApiImplementedInterface.getFullyQualifiedName());
+				jApiImplementedInterface.getCompatibilityChanges().forEach(c -> 
+					brokenDeclarations.add(new BrokenClass(jApiClass, interRef, c))
+				);
 			}
 		});
 
