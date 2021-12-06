@@ -49,7 +49,7 @@ public class BrokenField extends AbstractBrokenDeclaration {
 						yield null;
 					}
 				}
-				default -> null;
+				default -> null; // FIXME: should eventually disappear
 			};
 	}
 }

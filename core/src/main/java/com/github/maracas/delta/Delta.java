@@ -1,24 +1,9 @@
 package com.github.maracas.delta;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
-
-import japicmp.model.JApiAnnotation;
-import japicmp.model.JApiClass;
-import japicmp.model.JApiConstructor;
-import japicmp.model.JApiField;
-import japicmp.model.JApiImplementedInterface;
-import japicmp.model.JApiMethod;
-import japicmp.model.JApiSuperclass;
+import japicmp.model.*;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
@@ -30,6 +15,10 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A delta model lists the breaking changes between two versions of a library,
@@ -94,10 +83,10 @@ public class Delta {
 				jApiClass.getCompatibilityChanges().forEach(c ->
 					brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
 				);
-				
-				jApiClass.getInterfaces().forEach(i -> {
-					visit(jApiClass, i);
-				});
+
+				jApiClass.getInterfaces().forEach(i ->
+					visit(jApiClass, i)
+				);
 			}
 
 			@Override
@@ -105,7 +94,7 @@ public class Delta {
 				CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiMethod.getjApiClass().getFullyQualifiedName());
 				var oldMethodOpt = jApiMethod.getOldMethod();
 				var newMethodOpt = jApiMethod.getNewMethod();
-				
+
 				if (oldMethodOpt.isPresent()) {
 					CtMethod oldMethod = oldMethodOpt.get();
 					Optional<CtExecutableReference<?>> mRefOpt =
@@ -132,7 +121,7 @@ public class Delta {
 				} else if (newMethodOpt.isPresent()) {
 					// Added method introducing a breaking change.
 					CtMethod newMethod = newMethodOpt.get();
-					
+
 					// FIXME: we miss the information about the newly added method
 					if (!(newMethod.getName().equals("values") || newMethod.getName().equals("valueOf"))) {
 						jApiMethod.getCompatibilityChanges().forEach(c ->
@@ -164,15 +153,15 @@ public class Delta {
 			public void visit(JApiConstructor jApiConstructor) {
 				CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiConstructor.getjApiClass().getFullyQualifiedName());
 				var oldConsOpt = jApiConstructor.getOldConstructor();
-				
+
 				if (oldConsOpt.isPresent()) {
 					CtConstructor oldCons = oldConsOpt.get();
-					Optional<CtExecutableReference<?>> cRefOpt = 
+					Optional<CtExecutableReference<?>> cRefOpt =
 						clsRef.getDeclaredExecutables()
 						.stream()
 						.filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
 						.findFirst();
-					
+
 					if (cRefOpt.isPresent()) {
 						jApiConstructor.getCompatibilityChanges().forEach(c ->
 							brokenDeclarations.add(new BrokenMethod(jApiConstructor, cRefOpt.get(), c))
@@ -201,10 +190,10 @@ public class Delta {
 					 brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
 				 );
 			}
-			
+
 			public void visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface) {
 				CtTypeReference<?> interRef = root.getFactory().Type().createReference(jApiImplementedInterface.getFullyQualifiedName());
-				jApiImplementedInterface.getCompatibilityChanges().forEach(c -> 
+				jApiImplementedInterface.getCompatibilityChanges().forEach(c ->
 					brokenDeclarations.add(new BrokenClass(jApiClass, interRef, c))
 				);
 			}
