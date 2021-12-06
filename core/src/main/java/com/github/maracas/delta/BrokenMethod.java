@@ -21,7 +21,6 @@ import spoon.reflect.reference.CtTypeReference;
  * by a breaking change.
  */
 public class BrokenMethod extends AbstractBrokenDeclaration {
-
 	private final JApiBehavior jApiMethod;
 	private final CtExecutableReference<?> mRef;
 
@@ -53,7 +52,7 @@ public class BrokenMethod extends AbstractBrokenDeclaration {
 						yield null;
 					}
 				}
-				default -> null;
+				default -> null; // FIXME: should eventually disappear
 			};
 	}
 }

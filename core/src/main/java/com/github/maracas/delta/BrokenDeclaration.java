@@ -14,28 +14,28 @@ public interface BrokenDeclaration {
 	/**
 	 * Returns a {@link CtReference} pointer to the impacted declaration
 	 */
-	public CtReference getReference();
+	CtReference getReference();
 
 	/**
 	 * Returns a the kind of breaking change, as specified in {@link JApiCompatibilityChange}
 	 */
-	public JApiCompatibilityChange getChange();
+	JApiCompatibilityChange getChange();
 
 	/**
 	 * Returns the {@link BreakingChangeVisitor} responsible for detecting the
 	 * impact this broken declaration has on client code
 	 */
-	public BreakingChangeVisitor getVisitor();
+	BreakingChangeVisitor getVisitor();
 
 	/**
 	 * Returns the {@link CtElement} in the library's source code corresponding
 	 * to the broken declaration's {@link #getReference()}, if any.
 	 */
-	public CtElement getSourceElement();
+	CtElement getSourceElement();
 
 	/**
 	 * Sets the the {@link CtElement} in the library's source code associated with
 	 * the declaration's {@link #getReference()}
 	 */
-	public void setSourceElement(CtElement element);
+	void setSourceElement(CtElement element);
 }
