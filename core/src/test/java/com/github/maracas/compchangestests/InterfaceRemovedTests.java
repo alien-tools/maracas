@@ -9,7 +9,7 @@ public class InterfaceRemovedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberDetections(INTERFACE_REMOVED, 8);
+		assertNumberDetections(INTERFACE_REMOVED, 0);
 		// FIXME: Check other cases
 	}
 	
