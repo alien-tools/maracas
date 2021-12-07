@@ -26,7 +26,7 @@ import java.util.Collections;
 public class GitHubService {
 	@Autowired
 	private GitHub github;
-	@Value("${maracas.breakbot-file:.breakbot.yml}")
+	@Value("${maracas.breakbot-file:.github/breakbot.yml}")
 	private String breakbotFile;
 	@Value("${maracas.clone-path:./clones}")
 	private String clonePath;

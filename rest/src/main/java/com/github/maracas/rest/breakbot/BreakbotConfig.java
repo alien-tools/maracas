@@ -59,7 +59,7 @@ public record BreakbotConfig(
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 			return mapper.readValue(in, BreakbotConfig.class);
 		} catch (IOException e) {
-			throw new BreakbotException("Couldn't parse .breakbot.yml: ", e);
+			throw new BreakbotException("Couldn't parse .github/breakbot.yml: ", e);
 		}
 	}
 

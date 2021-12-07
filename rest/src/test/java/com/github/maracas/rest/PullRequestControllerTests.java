@@ -216,7 +216,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message", containsString("Couldn't parse .breakbot.yml")));
+			.andExpect(jsonPath("$.message", containsString("Couldn't parse .github/breakbot.yml")));
 	}
 
 	@Test
@@ -246,7 +246,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 				)
 				.andExpect(status().isBadRequest())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.message", containsString("Couldn't parse .breakbot.yml")));
+				.andExpect(jsonPath("$.message", containsString("Couldn't parse .github/breakbot.yml")));
 
 			Thread.sleep(5000);
 
@@ -257,7 +257,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("Couldn't parse .breakbot.yml")),
+					.withBody(subString("Couldn't parse .github/breakbot.yml")),
 				exactly(1)
 			);
 		}
