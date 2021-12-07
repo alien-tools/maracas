@@ -13,6 +13,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -65,9 +66,21 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
     @Override
     public <T> void visitCtInvocation(CtInvocation<T> invocation) {
-        CtExecutableReference<?> methRef = invocation.getExecutable();
-        if (superMethods.contains(methRef))
-            detection(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+        CtTypeReference<?> typeRef = ((CtType<?>) invocation.getParent(CtType.class)).getReference();
+        if (typeRef.isSubtypeOf(clsRef)) {
+            CtExecutableReference<?> methRef = invocation.getExecutable();
+
+            if (superMethods.contains(methRef))
+                detection(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+        }
+
+        // FIXME: cases where a static access is performed via the supertype
+        // must not be registered as a detection.
+
+        // var target = invocation.getTarget();
+        // if (methRef.isStatic() && target instanceof CtTypeAccess<?>
+        // && supertypes.contains(((CtTypeAccess<?>) target).getAccessedType()))
+        //    return;
     }
 
     @Override
