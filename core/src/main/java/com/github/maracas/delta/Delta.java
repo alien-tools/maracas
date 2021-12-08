@@ -114,7 +114,7 @@ public class Delta {
                         .filter(m -> SpoonHelpers.matchingSignatures(m, oldMethod))
                         .findFirst();
 
-                    if (mRefOpt.isPresent()) {
+                    if (mRefOpt.isPresent() && mRefOpt.get().getPosition().isValidPosition()) {
                         jApiMethod.getCompatibilityChanges().forEach(c ->
                             brokenDeclarations.add(new BrokenMethod(jApiMethod, mRefOpt.get(), c))
                         );
@@ -125,8 +125,9 @@ public class Delta {
                             // Ignore. FIXME
                             ;
                         } else {
-                            System.err.println("Spoon's old method cannot be found: " + jApiMethod);
-                            System.err.println("\tKnown bug: is the method @Deprecated?");
+                            // FIXME: Commenting following lines to avoid verbose log
+                            // System.err.println("Spoon's old method cannot be found: " + jApiMethod);
+                            // System.err.println("\tKnown bug: is the method @Deprecated?");
                         }
                     }
                 } else if (newMethodOpt.isPresent()) {
@@ -139,6 +140,7 @@ public class Delta {
                             brokenDeclarations.add(new BrokenClass(jApiMethod.getjApiClass(), clsRef, c))
                         );
                     }
+
                 } else {
                     throw new RuntimeException("The JApiCmp delta model is corrupted.");
                 }
@@ -173,7 +175,10 @@ public class Delta {
                         .filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
                         .findFirst();
 
-                    if (cRefOpt.isPresent()) {
+                    // TODO: report bug in Spoon. Implicit constructor states that
+                    // the opposite when calling isImplicit() method. Using getPosition()
+                    // isValid() instead.
+                    if (cRefOpt.isPresent() && cRefOpt.get().getPosition().isValidPosition()) {
                         jApiConstructor.getCompatibilityChanges().forEach(c ->
                             brokenDeclarations.add(new BrokenMethod(jApiConstructor, cRefOpt.get(), c))
                         );
