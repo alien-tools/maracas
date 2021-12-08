@@ -38,7 +38,7 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 		CtTypeReference<?> accessedType = fieldAccess.getVariable().getDeclaringType();
 		CtTypeReference<?> refType = fRef.getDeclaringType();
 
-		if (
+		if (accessedType != null &&
 			accessedType.isSubtypeOf(refType) &&
 			// Not a big fan of the simpleName comparison, but it should be safe and
 			// the line below refuses to match
