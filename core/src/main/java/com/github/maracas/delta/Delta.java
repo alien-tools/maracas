@@ -114,7 +114,7 @@ public class Delta {
                         .filter(m -> SpoonHelpers.matchingSignatures(m, oldMethod))
                         .findFirst();
 
-                    if (mRefOpt.isPresent() && mRefOpt.get().getPosition().isValidPosition()) {
+                    if (mRefOpt.isPresent()) {
                         jApiMethod.getCompatibilityChanges().forEach(c ->
                             brokenDeclarations.add(new BrokenMethod(jApiMethod, mRefOpt.get(), c))
                         );
@@ -178,7 +178,7 @@ public class Delta {
                     // TODO: report bug in Spoon. Implicit constructor states that
                     // the opposite when calling isImplicit() method. Using getPosition()
                     // isValid() instead.
-                    if (cRefOpt.isPresent() && cRefOpt.get().getPosition().isValidPosition()) {
+                    if (cRefOpt.isPresent()) {
                         jApiConstructor.getCompatibilityChanges().forEach(c ->
                             brokenDeclarations.add(new BrokenMethod(jApiConstructor, cRefOpt.get(), c))
                         );
