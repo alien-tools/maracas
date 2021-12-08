@@ -104,6 +104,8 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
     }
 
     private <T> void visitExpAssignment(CtExpression<T> assignExpr) {
+        // FIXME: when dealing with interfaces this issue is not reported
+        // as a compilation error.
         if (assignExpr != null) {
             Set<CtTypeReference<?>> casts = new HashSet<CtTypeReference<?>>(assignExpr.getTypeCasts());
             CtTypeReference<?> typeRef = assignExpr.getType();
