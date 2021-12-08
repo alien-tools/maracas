@@ -1,6 +1,7 @@
 package com.github.maracas.compchangestests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -50,45 +51,33 @@ public class CompChangesTest {
 	}
 
 	public static void assertDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
-		Optional<Detection> find =
-			detections.stream().filter(d -> {
-				if (change != d.change())
-					return false;
-				if (use != d.use())
-					return false;
-				if (elem != null) {
-					String elemString =
-						d.element() instanceof CtNamedElement namedElement ?
-							namedElement.getSimpleName() :
-								d.element().toString();
-					if (!Objects.equal(elem, elemString))
-						return false;
-				}
+	    Optional<Detection> find = findDetection(file, line, elem, change, use);
+        assertTrue(
+            find.isPresent(),
+            String.format("No detection found in %s:%d [%s] [%s]",
+                file, line, change, use)
+            );
 
-				SourcePosition pos = SpoonHelpers.firstLocatableParent(d.element()).getPosition();
-				if (pos instanceof NoSourcePosition)
-					return false;
-				if (!file.equals(pos.getFile().getName()))
-					return false;
-				if (line != pos.getLine())
-					return false;
-
-				return true;
-			}).findAny();
-
-		assertTrue(
-			find.isPresent(),
-			String.format("No detection found in %s:%d [%s] [%s]",
-				file, line, change, use)
-		);
-
-		// Store the ones we found
-		found.add(find.get());
+        // Store the ones we found
+        found.add(find.get());
 	}
 
 	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
 		assertDetection(file, line, null, change, use);
 	}
+
+	public static void assertNoDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
+        Optional<Detection> find = findDetection(file, line, elem, change, use);
+        assertFalse(
+            find.isPresent(),
+            String.format("Detection found in %s:%d [%s] [%s]",
+                file, line, change, use)
+            );
+    }
+
+    public static void assertNoDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
+        assertNoDetection(file, line, null, change, use);
+    }
 
 	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
 		List<Detection> ds = detections.stream().filter(d -> d.change() == change).toList();
@@ -98,4 +87,32 @@ public class CompChangesTest {
 
 		assertEquals(n, ds.size(), ds.toString());
 	}
+
+	private static Optional<Detection> findDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
+        return
+            detections.stream().filter(d -> {
+                if (change != d.change())
+                    return false;
+                if (use != d.use())
+                    return false;
+                if (elem != null) {
+                    String elemString =
+                        d.element() instanceof CtNamedElement namedElement ?
+                            namedElement.getSimpleName() :
+                                d.element().toString();
+                    if (!Objects.equal(elem, elemString))
+                        return false;
+                }
+
+                SourcePosition pos = SpoonHelpers.firstLocatableParent(d.element()).getPosition();
+                if (pos instanceof NoSourcePosition)
+                    return false;
+                if (!file.equals(pos.getFile().getName()))
+                    return false;
+                if (line != pos.getLine())
+                    return false;
+
+                return true;
+            }).findAny();
+    }
 }
