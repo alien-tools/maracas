@@ -1,6 +1,7 @@
 package com.github.maracas.util;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import spoon.reflect.reference.CtArrayTypeReference;
@@ -20,9 +21,12 @@ public class SpoonTypeHelpers {
      * This implementation most likely messes up.
      */
     public static boolean isAssignableFrom(CtTypeReference<?> expected, CtTypeReference<?> given) {
+        if (expected.equals(given))
+            return true;
+
         // We can pass a subtype => only succeeds if given and expected are classes
         // or interfaces, and given <: expected
-        if (expected.equals(given) || given.isSubtypeOf(expected))
+        if (given.isSubtypeOf(expected))
             return true;
 
         // If we expect a primitive, either we can widen the given primitive,
@@ -54,17 +58,6 @@ public class SpoonTypeHelpers {
         else if (expected.isClass() || expected.isInterface())
             return false;
 
-        // If we have classes/interfaces, check subtyping. Otherwise if given is
-        // not a class/interface, check for boxing
-        //			else if (expected.isClass() || expected.isInterface()) {
-        //				System.out.println("Checking boxing of " + expected + " and " + given);
-        //				if (given.isClass() || given.isInterface())
-        //					return given.isSubtypeOf(expected);
-        //
-        //				System.out.println("Checking boxing of " + expected + " and " + given);
-        //				return Objects.equals(expected.box(), given.box());
-        //			}
-
         throw new RuntimeException(
             "Unhandled type conversion case (" + expected + " <: " + given + ")");
     }
@@ -87,16 +80,19 @@ public class SpoonTypeHelpers {
         if (expectedName.equals(givenName))
             return true;
 
+        // https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.2
         if (givenName.equals("byte"))
             return Set.of("short", "int", "long", "float", "double").contains(expectedName);
-        if (givenName.equals("short") || givenName.equals("char"))
+        if (givenName.equals("short"))
+            return Set.of("int", "long", "float", "double").contains(expectedName);
+        if (givenName.equals("char"))
             return Set.of("int", "long", "float", "double").contains(expectedName);
         if (givenName.equals("int"))
             return Set.of("long", "float", "double").contains(expectedName);
         if (givenName.equals("long"))
             return Set.of("float", "double").contains(expectedName);
         if (givenName.equals("float"))
-            return Set.of("double").contains(expectedName);
+            return Objects.equals("double", expectedName);
 
         return false;
     }
