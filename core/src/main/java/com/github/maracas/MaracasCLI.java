@@ -42,11 +42,12 @@ public class MaracasCLI implements Runnable {
 			AnalysisQuery query = AnalysisQuery.builder()
 				.oldJar(v1)
 				.newJar(v2)
-				.sources(sources)
 				.clients(clients)
 				.build();
-
 			AnalysisResult result = Maracas.analyze(query);
+
+			if (sources != null)
+				result.delta().populateLocations(sources);
 
 			System.out.println("""
 			+------------------+
