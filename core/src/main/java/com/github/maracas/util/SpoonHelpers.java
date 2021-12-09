@@ -19,25 +19,31 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.List;
 
 public class SpoonHelpers {
 
 	private SpoonHelpers() {}
 
-	public static CtModel buildSpoonModel(Path sources, Path cp) {
-		// Spoon will prioritize the JVM's classpath over our own
-		// custom classpath in case of conflict. Not what we want,
-		// so we use a custom child-first classloader instead.
-		// cf. https://github.com/INRIA/spoon/issues/3789
+	public static CtModel buildSpoonModel(Path clientSources, Path libraryJar) {
 		Launcher launcher = new Launcher();
-		//String[] javaCp = { cp.toAbsolutePath().toString() };
-		//launcher.getEnvironment().setSourceClasspath(javaCp);
-		ClassLoader cl = new ParentLastURLClassLoader(List.of("file:" + cp.toAbsolutePath().toString()));
-		launcher.getEnvironment().setInputClassLoader(cl);
 
-		if (sources != null)
-			launcher.addInputResource(sources.toAbsolutePath().toString());
+		try {
+			// Spoon will prioritize the JVM's classpath over our own
+			// custom classpath in case of conflict. Not what we want,
+			// so we use a custom child-first classloader instead.
+			// cf. https://github.com/INRIA/spoon/issues/3789
+			//String[] javaCp = { cp.toAbsolutePath().toString() };
+			//launcher.getEnvironment().setSourceClasspath(javaCp);
+
+			URL[] cp = { new URL("file:" + libraryJar.toAbsolutePath()) };
+			ClassLoader cl = new ParentLastURLClassLoader(cp);
+			launcher.getEnvironment().setInputClassLoader(cl);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+
+		if (clientSources != null)
+			launcher.addInputResource(clientSources.toAbsolutePath().toString());
 
 		return launcher.buildModel();
 	}
@@ -119,7 +125,7 @@ public class SpoonHelpers {
 	 *
 	 * For those not familiar with class loading trickery, be wary
 	 */
-	private static class ParentLastURLClassLoader extends ClassLoader {
+	private static class ParentLastURLClassLoader extends URLClassLoader {
 		private ChildURLClassLoader childClassLoader;
 
 		/**
@@ -164,17 +170,8 @@ public class SpoonHelpers {
 			}
 		}
 
-		public ParentLastURLClassLoader(List<String> classpath) {
-			super(Thread.currentThread().getContextClassLoader());
-
-			URL[] urls = new URL[classpath.size()];
-			for (int i = 0; i < classpath.size(); i++)
-				try {
-					urls[i] = new URL(classpath.get(i));
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				}
-
+		public ParentLastURLClassLoader(URL[] urls) {
+			super(urls, Thread.currentThread().getContextClassLoader());
 			childClassLoader = new ChildURLClassLoader(urls, new FindClassClassLoader(this.getParent()));
 		}
 
