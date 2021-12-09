@@ -1,17 +1,8 @@
 package com.github.maracas.delta;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
-
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -30,6 +21,14 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * A delta model lists the breaking changes between two versions of a library,
@@ -77,10 +76,7 @@ public class Delta {
         // We need to create CtReferences to v1 to map japicmp's delta
         // to our own. Building an empty model with the right
         // classpath allows us to create these references.
-        Launcher launcher = new Launcher();
-        String[] javaCp = { oldJar.toAbsolutePath().toString() };
-        launcher.getEnvironment().setSourceClasspath(javaCp);
-        CtModel model = launcher.buildModel();
+        CtModel model = SpoonHelpers.buildSpoonModel(null, oldJar);
         CtPackage root = model.getRootPackage();
 
         // FIXME: Ok, for some reason, @Deprecated methods (and fields? classes?)

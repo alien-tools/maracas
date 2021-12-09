@@ -1,19 +1,12 @@
 package com.github.maracas;
 
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import com.github.maracas.delta.BrokenDeclaration;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
 import com.github.maracas.util.PathHelpers;
+import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
-
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
@@ -22,8 +15,14 @@ import japicmp.config.Options;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
-import spoon.Launcher;
 import spoon.reflect.CtModel;
+
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class Maracas {
 	// Just use the static methods
@@ -113,11 +112,7 @@ public class Maracas {
 		if (!PathHelpers.isValidDirectory(client))
 			throw new IllegalArgumentException("client isn't a valid directory: " + client);
 
-		Launcher launcher = new Launcher();
-		launcher.addInputResource(client.toAbsolutePath().toString());
-		String[] javaCP = { delta.getOldJar().toAbsolutePath().toString() };
-		launcher.getEnvironment().setSourceClasspath(javaCP);
-		CtModel model = launcher.buildModel();
+		CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
 
 		Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
