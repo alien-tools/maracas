@@ -1,5 +1,17 @@
 package com.github.maracas;
 
+import com.github.maracas.delta.Delta;
+import com.github.maracas.detection.Detection;
+import japicmp.config.Options;
+import japicmp.model.AccessModifier;
+import org.junit.jupiter.api.Test;
+import spoon.reflect.cu.position.NoSourcePosition;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
@@ -8,32 +20,12 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.junit.jupiter.api.Test;
-
-import com.github.maracas.delta.Delta;
-import com.github.maracas.detection.Detection;
-
-import japicmp.config.Options;
-import japicmp.model.AccessModifier;
-
 class MaracasTest {
 	Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 	Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
 	Path client = Paths.get("../test-data/comp-changes/client/src/");
 	Path client2 = Paths.get("../test-data/comp-changes/old/src/");
 	Path sources = Paths.get("../test-data/comp-changes/old/src/");
-
-	@Test
-	void analyze_aNullQuery_throwsException() {
-		assertThrows(NullPointerException.class, () ->
-			Maracas.analyze(null)
-		);
-	}
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoDetection() {
@@ -45,7 +37,10 @@ class MaracasTest {
 
 		assertThat(res.delta(), is(notNullValue()));
 		assertThat(new ArrayList<>(res.delta().getBrokenDeclarations()),
-			everyItem(hasProperty("sourceElement", nullValue())));
+			everyItem(allOf(
+				hasProperty("reference", is(notNullValue())),
+				hasProperty("sourceElement", is(nullValue()))
+			)));
 		assertThat(res.allDetections(), is(empty()));
 	}
 
@@ -75,8 +70,8 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(new ArrayList<>(res.delta().getBrokenDeclarations()),
-			everyItem(hasProperty("sourceElement", notNullValue())));
+		assertThat(res.delta().getBrokenDeclarations(),
+			everyItem(hasProperty("sourceElement", is(notNullValue()))));
 	}
 
 	@Test
@@ -106,6 +101,52 @@ class MaracasTest {
 	}
 
 	@Test
+	void computeDelta_isValid() {
+		Delta d = Maracas.computeDelta(v1, v2);
+
+		assertThat(d, is(notNullValue()));
+		assertThat(d.getOldJar(), is(equalTo(v1.toAbsolutePath())));
+		assertThat(d.getNewJar(), is(equalTo(v2.toAbsolutePath())));
+		assertThat(d.getBrokenDeclarations(), everyItem(allOf(
+			hasProperty("reference", is(notNullValue())),
+			// TODO: uncomment once all visitors are implemented
+			//hasProperty("visitor", is(notNullValue()))
+			hasProperty("sourceElement", is(nullValue()))
+		)));
+
+		d.populateLocations(sources);
+		assertThat(d.getBrokenDeclarations(), everyItem(
+			hasProperty("sourceElement", allOf(
+				is(notNullValue()),
+				hasProperty("position", is(not(instanceOf(NoSourcePosition.class))))
+			)
+		)));
+	}
+
+	@Test
+	void computeDetections_isValid() {
+		Delta delta = Maracas.computeDelta(v1, v2);
+		Collection<Detection> ds = Maracas.computeDetections(client, delta);
+
+		assertThat(ds, is(not(empty())));
+		// No hasProperty() on records :(
+		ds.forEach(d -> {
+			assertThat(d.element(), allOf(
+				is(notNullValue()),
+				hasProperty("position", is(not(instanceOf(NoSourcePosition.class))))));
+			assertThat(d.usedApiElement(), is(notNullValue()));
+			assertThat(d.source(), is(notNullValue()));
+		});
+	}
+
+	@Test
+	void analyze_aNullQuery_throwsException() {
+		assertThrows(NullPointerException.class, () ->
+			Maracas.analyze(null)
+		);
+	}
+
+	@Test
 	void computeDelta_invalidPaths_throwsException() {
 		assertThrows(IllegalArgumentException.class, () ->
 			Maracas.computeDelta(v1, null)
@@ -125,15 +166,6 @@ class MaracasTest {
 	}
 
 	@Test
-	void computeDelta_isValid() {
-		Delta d = Maracas.computeDelta(v1, v2);
-
-		assertThat(d, is(notNullValue()));
-		assertThat(d.getOldJar(), is(equalTo(v1.toAbsolutePath())));
-		assertThat(d.getNewJar(), is(equalTo(v2.toAbsolutePath())));
-	}
-
-	@Test
 	void computeDetections_invalidPaths_throwsException() {
 		Delta d = Maracas.computeDelta(v1, v2);
 		assertThrows(IllegalArgumentException.class, () ->
@@ -150,14 +182,6 @@ class MaracasTest {
 		assertThrows(NullPointerException.class, () ->
 			Maracas.computeDetections(v1, null)
 		);
-	}
-
-	@Test
-	void computeDetections_isValid() {
-		Delta d = Maracas.computeDelta(v1, v2);
-		Collection<Detection> ds = Maracas.computeDetections(client, d);
-
-		assertThat(ds, is(not(empty())));
 	}
 
 }
