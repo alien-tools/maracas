@@ -9,7 +9,6 @@ import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -36,7 +35,7 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(new ArrayList<>(res.delta().getBrokenDeclarations()),
+		assertThat(res.delta().getBrokenDeclarations(),
 			everyItem(allOf(
 				hasProperty("reference", is(notNullValue())),
 				hasProperty("sourceElement", is(nullValue()))
