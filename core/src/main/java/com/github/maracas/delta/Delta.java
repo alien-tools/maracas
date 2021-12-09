@@ -296,9 +296,11 @@ public class Delta {
                 [%s]
                 Reference: %s
                 Source: %s %s
-                """.formatted(bd.getChange(), bd.getReference(),
+                """.formatted(
+                    bd.getChange(),
+                    bd.getReference(),
                     bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement(),
-                        bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : null)
+                    bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : "<no source>")
                 ).collect(Collectors.joining())
             );
         return sb.toString();
