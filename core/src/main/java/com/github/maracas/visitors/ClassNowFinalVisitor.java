@@ -2,7 +2,7 @@ package com.github.maracas.visitors;
 
 import java.util.Optional;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtNewClass;

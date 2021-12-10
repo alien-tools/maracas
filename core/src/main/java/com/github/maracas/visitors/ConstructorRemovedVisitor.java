@@ -10,7 +10,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 
 /**
  * Visitor in charge of gathering all constructor removed issues 

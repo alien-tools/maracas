@@ -1,6 +1,6 @@
 package com.github.maracas;
 
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.Delta;
 
 import japicmp.config.Options;

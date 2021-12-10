@@ -1,7 +1,7 @@
 package com.github.maracas;
 
-import com.github.maracas.brokenuse.APIUse;
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 
 import japicmp.model.JApiCompatibilityChange;

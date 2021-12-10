@@ -16,8 +16,8 @@ import org.junit.jupiter.api.BeforeAll;
 import com.github.maracas.AnalysisQuery;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.brokenuse.APIUse;
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.google.common.base.Objects;
 

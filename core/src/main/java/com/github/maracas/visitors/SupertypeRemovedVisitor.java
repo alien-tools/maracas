@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtAssignment;

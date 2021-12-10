@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.util.PathHelpers;

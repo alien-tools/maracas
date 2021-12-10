@@ -3,8 +3,8 @@ package com.github.maracas.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.brokenuse.APIUse;
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.JApiCompatibilityChange;

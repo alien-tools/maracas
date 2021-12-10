@@ -2,7 +2,7 @@ package com.github.maracas.visitors;
 
 import java.util.Optional;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.util.SpoonTypeHelpers;
 

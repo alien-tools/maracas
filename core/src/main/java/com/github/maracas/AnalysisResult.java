@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.Delta;
 
 /**

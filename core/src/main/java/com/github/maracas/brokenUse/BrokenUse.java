@@ -1,4 +1,4 @@
-package com.github.maracas.brokenuse;
+package com.github.maracas.brokenUse;
 
 import java.util.Objects;
 

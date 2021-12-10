@@ -3,7 +3,7 @@ package com.github.maracas.visitors;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.BrokenUse;
 
 import spoon.reflect.code.CtAnnotationFieldAccess;
 import spoon.reflect.code.CtArrayRead;

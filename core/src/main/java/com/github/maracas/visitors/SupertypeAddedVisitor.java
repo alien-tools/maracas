@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;

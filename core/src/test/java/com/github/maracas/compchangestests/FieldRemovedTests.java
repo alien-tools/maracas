@@ -1,6 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
+import static com.github.maracas.brokenUse.APIUse.FIELD_ACCESS;
 import static japicmp.model.JApiCompatibilityChange.FIELD_REMOVED;
 
 import org.junit.jupiter.api.Test;

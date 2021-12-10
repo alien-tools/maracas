@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenUse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.util.SpoonTypeHelpers;
 
