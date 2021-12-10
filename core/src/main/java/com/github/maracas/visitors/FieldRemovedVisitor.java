@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
@@ -9,7 +9,7 @@ import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.reference.CtFieldReference;
 
 /**
- * Detections of FIELD_REMOVED are:
+ * Broken uses of FIELD_REMOVED are:
  *	- Any reference to the now-removed field
  */
 public class FieldRemovedVisitor extends BreakingChangeVisitor {
@@ -32,6 +32,6 @@ public class FieldRemovedVisitor extends BreakingChangeVisitor {
 
 	private <T> void visitCtFieldAccess(CtFieldAccess<T> fieldAccess) {
 		if (fRef.equals(fieldAccess.getVariable()))
-			detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+			brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
 }

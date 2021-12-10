@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
@@ -11,7 +11,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Detections of FIELD_NO_LONGER_STATIC are:
+ * Broken uses of FIELD_NO_LONGER_STATIC are:
  *	- Attempting to access a no-longer-static field in a static way
  */
 public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
@@ -48,7 +48,7 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 			//Objects.equal(fieldAccess.getVariable().getFieldDeclaration(), fRef.getFieldDeclaration())
 			isStaticAccess(fieldAccess)
 		)
-			detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+			brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
 
 	private <T> boolean isStaticAccess(CtFieldAccess<T> fieldAccess) {

@@ -1,13 +1,13 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Detections of CLASS_NOW_ABSTRACT are:
+ * Broken uses of CLASS_NOW_ABSTRACT are:
  *	- Instantiations of the now-abstract class
  *
  * Note: In JApiCmp, types that go from {@code class} to {@code interface} are impacted
@@ -25,6 +25,6 @@ public class ClassNowAbstractVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtConstructorCall(CtConstructorCall<T> ctConstructorCall) {
 		if (clsRef.equals(ctConstructorCall.getType()))
-				detection(ctConstructorCall, ctConstructorCall.getType(), clsRef, APIUse.INSTANTIATION);
+				brokenUse(ctConstructorCall, ctConstructorCall.getType(), clsRef, APIUse.INSTANTIATION);
 	}
 }

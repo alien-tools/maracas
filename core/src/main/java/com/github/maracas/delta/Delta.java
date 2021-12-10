@@ -256,7 +256,7 @@ public class Delta {
     /**
      * Returns a list of {@link BreakingChangeVisitor}, one per {@link BreakingChange}
      * in the current delta model. Each visitor is responsible for inferring
-     * the set of detections corresponding to the breaking change in client code.
+     * the set of broken uses in client code impacted by the breaking change.
      */
     public Collection<BreakingChangeVisitor> getVisitors() {
         return

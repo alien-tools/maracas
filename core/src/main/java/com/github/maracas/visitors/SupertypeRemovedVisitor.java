@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtAssignment;
@@ -60,7 +60,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
             CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
 
             if (declRef == null && superFields.contains(fieldRef.getSimpleName()))
-                detection(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
+                brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
         }
     }
 
@@ -71,11 +71,11 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
             CtExecutableReference<?> methRef = invocation.getExecutable();
 
             if (superMethods.contains(methRef))
-                detection(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+                brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
         }
 
         // FIXME: cases where a static access is performed via the supertype
-        // must not be registered as a detection.
+        // must not be registered as a broken use.
 
         // var target = invocation.getTarget();
         // if (methRef.isStatic() && target instanceof CtTypeAccess<?>
@@ -89,7 +89,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
             CtExecutableReference<?> superMeth = m.getReference().getOverridingExecutable();
 
             if (superMeth != null && superMethods.contains(superMeth))
-                detection(m, superMeth, clsRef, APIUse.METHOD_OVERRIDE);
+                brokenUse(m, superMeth, clsRef, APIUse.METHOD_OVERRIDE);
         }
     }
 
@@ -112,7 +112,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
             for (CtTypeReference<?> cast : casts) {
                 if (supertypes.contains(cast) && typeRef.isSubtypeOf(clsRef))
-                    detection(assignExpr, cast, clsRef, APIUse.TYPE_DEPENDENCY);
+                    brokenUse(assignExpr, cast, clsRef, APIUse.TYPE_DEPENDENCY);
             }
         }
     }

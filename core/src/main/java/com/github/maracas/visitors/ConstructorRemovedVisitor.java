@@ -1,7 +1,5 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
-
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtInvocation;
@@ -11,6 +9,8 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
+
+import com.github.maracas.brokenuse.APIUse;
 
 /**
  * Visitor in charge of gathering all constructor removed issues 
@@ -39,7 +39,7 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtConstructorCall(CtConstructorCall<T> consCall) {
 		if (mRef.equals(consCall.getExecutable())) {
-			detection(consCall, consCall.getExecutable(), mRef, APIUse.INSTANTIATION);
+			brokenUse(consCall, consCall.getExecutable(), mRef, APIUse.INSTANTIATION);
 		}
 	}
 
@@ -52,7 +52,7 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 				.stream()
 				.filter(exec -> mRef.equals(exec))
 				.forEach(exec ->
-					detection(anonymClass, exec, mRef, APIUse.INSTANTIATION)
+					brokenUse(anonymClass, exec, mRef, APIUse.INSTANTIATION)
 				);
 	}
 	
@@ -60,7 +60,7 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
 		// Every invocation of a constructor refers to super()
 		if (mRef.equals(invocation.getExecutable())) {
-			detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
+			brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 		}
 		// FIXME: some cases do not throw a compilation error: 
 		// super() refers to the Object type constructor 

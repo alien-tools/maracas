@@ -1,12 +1,12 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Generic type reference visitor. It creates a detection for every reference
+ * Generic type reference visitor. It creates a broken use for every reference
  * to the supplied {code clsRef}.
  */
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
@@ -22,7 +22,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 		if (clsRef.equals(reference)) {
 			APIUse use = getAPIUseByRole(reference);
 
-			detection(reference.getParent(), reference, clsRef, use);
+			brokenUse(reference.getParent(), reference, clsRef, use);
 		}
 	}
 
@@ -35,13 +35,13 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
-			detection(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
+			brokenUse(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
 	}
 
 	@Override
 	public <T> void visitCtExecutableReference(CtExecutableReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))
-			detection(reference.getParent(), reference.getExecutableDeclaration(), clsRef, APIUse.METHOD_INVOCATION);
+			brokenUse(reference.getParent(), reference.getExecutableDeclaration(), clsRef, APIUse.METHOD_INVOCATION);
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 					.findAny();
 
 			if (superMethod.isPresent())
-				detection(m, superMethod.get(), clsRef, APIUse.METHOD_OVERRIDE);
+				brokenUse(m, superMethod.get(), clsRef, APIUse.METHOD_OVERRIDE);
 		}
 	}
 	*/

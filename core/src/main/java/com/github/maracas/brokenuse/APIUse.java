@@ -1,4 +1,4 @@
-package com.github.maracas.detection;
+package com.github.maracas.brokenuse;
 
 /**
  * Represents how a particular element in source code is using a declaration

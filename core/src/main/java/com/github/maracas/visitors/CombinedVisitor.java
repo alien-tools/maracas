@@ -3,7 +3,7 @@ package com.github.maracas.visitors;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import com.github.maracas.detection.Detection;
+import com.github.maracas.brokenuse.BrokenUse;
 
 import spoon.reflect.code.CtAnnotationFieldAccess;
 import spoon.reflect.code.CtArrayRead;
@@ -105,10 +105,10 @@ public class CombinedVisitor extends CtScanner {
 		this.visitors = visitors;
 	}
 
-	public Collection<Detection> getDetections() {
+	public Collection<BrokenUse> getBrokenUses() {
 		return
 			visitors.stream()
-			.map(BreakingChangeVisitor::getDetections)
+			.map(BreakingChangeVisitor::getBrokenUses)
 			.flatMap(Collection::stream)
 			.toList();
 	}

@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.AccessModifier;
@@ -12,7 +12,7 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtFieldReference;
 
 /**
- * Detections of FIELD_LESS_ACCESSIBLE are:
+ * Broken uses of FIELD_LESS_ACCESSIBLE are:
  *	- Any access to a now-private field
  *	- Any access to a now-package-private field outside the package
  *	- Any access to a now-protected field outside its subtype hierarchy or package
@@ -47,18 +47,18 @@ public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 			switch (newAccessModifier) {
 				// Private always breaks
 				case PRIVATE:
-					detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+					brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
 				// Package-private breaks if packages do not match
 				case PACKAGE_PROTECTED:
 					if (!enclosingPkg.equals(expectedPkg))
-						detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+						brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
 				// Protected fails if not a subtype and packages do not match
 				case PROTECTED:
 					if (!fieldAccess.getParent(CtType.class).isSubtypeOf(fRef.getDeclaringType()) &&
 						!enclosingPkg.equals(expectedPkg))
-						detection(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+						brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 					break;
 				default:
 					// Can't happen

@@ -1,8 +1,8 @@
 package com.github.maracas.rest.services;
 
 import com.github.maracas.Maracas;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.detection.Detection;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.MaracasReport;
@@ -43,12 +43,12 @@ public class MaracasService {
 		return delta;
 	}
 
-	public Collection<Detection> makeDetections(Delta delta, Path clientSources) {
+	public Collection<BrokenUse> makeDetections(Delta delta, Path clientSources) {
 		logger.info("Computing detections({}, Δ({} -> {}))", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		Collection<Detection> detections = Maracas.computeDetections(clientSources, delta);
+		Collection<BrokenUse> detections = Maracas.computeBrokenUses(clientSources, delta);
 
 		logger.info("Done detections({}, Δ({} -> {})) in {}ms", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName(),

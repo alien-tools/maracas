@@ -54,7 +54,7 @@ class MaracasReportTests {
 		report = new MaracasReport(
 			Delta.fromMaracasDelta(result.delta(), new PullRequest("alien-tools", "comp-changes", 2), "main", "../test-data/comp-changes/old/"),
 			List.of(ClientReport.success("alien-tools/comp-changes-client",
-				result.allDetections()
+				result.allBrokenUses()
 					.stream()
 					.map(d -> Detection.fromMaracasDetection(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
 					.collect(Collectors.toList())

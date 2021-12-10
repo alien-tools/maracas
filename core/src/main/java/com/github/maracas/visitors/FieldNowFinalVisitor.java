@@ -1,13 +1,13 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.reference.CtFieldReference;
 
 /**
- * Detections of FIELD_NOW_FINAL are:
+ * Broken uses of FIELD_NOW_FINAL are:
  *	- Attempting to write-access a now-final field
  */
 public class FieldNowFinalVisitor extends BreakingChangeVisitor {
@@ -21,6 +21,6 @@ public class FieldNowFinalVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtFieldWrite(CtFieldWrite<T> fieldWrite) {
 		if (fRef.equals(fieldWrite.getVariable()))
-			detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
+			brokenUse(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}
 }

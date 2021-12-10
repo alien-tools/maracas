@@ -3,7 +3,7 @@ package com.github.maracas.visitors;
 import java.util.Optional;
 import java.util.Set;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtCatch;
@@ -13,7 +13,7 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Detections of CLASS_NOW_CHECKED_EXCEPTION are:
+ * Broken uses of CLASS_NOW_CHECKED_EXCEPTION are:
  *	- All expression throwing the now-checked-exception or one of its subtypes unless:
  *    - It is caught locally
  *    - The enclosing method declares the exception
@@ -60,7 +60,7 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 				isDeclared = true;
 
 			if (!isCaught && !isDeclared)
-				detection(throwStatement, throwStatement.getThrownExpression().getType(), clsRef, APIUse.THROWS);
+				brokenUse(throwStatement, throwStatement.getThrownExpression().getType(), clsRef, APIUse.THROWS);
 		}
 	}
 }

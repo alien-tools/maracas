@@ -1,12 +1,20 @@
 package com.github.maracas;
 
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.detection.Detection;
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
+
 import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
@@ -16,13 +24,6 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
 import spoon.reflect.CtModel;
-
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class Maracas {
 	// Just use the static methods
@@ -34,7 +35,7 @@ public class Maracas {
 	 * Analyzes the given {@code query}
 	 *
 	 * @param query The query to analyze
-	 * @return the resulting {@link AnalysisResult} with delta and detections
+	 * @return the resulting {@link AnalysisResult} with delta and broken uses
 	 * @throws NullPointerException if query is null
 	 */
 	public static AnalysisResult analyze(AnalysisQuery query) {
@@ -47,14 +48,14 @@ public class Maracas {
 		if (query.getSources() != null)
 			delta.populateLocations(query.getSources());
 
-		// For every client, compute the set of detections
-		Map<Path, Collection<Detection>> clientsDetections = new HashMap<>();
+		// For every client, compute the set of broken uses
+		Map<Path, Collection<BrokenUse>> clientsBrokenUses = new HashMap<>();
 		query.getClients()
 			.forEach(c ->
-				clientsDetections.put(c, computeDetections(c, delta))
+				clientsBrokenUses.put(c, computeBrokenUses(c, delta))
 			);
 
-		return new AnalysisResult(delta, clientsDetections);
+		return new AnalysisResult(delta, clientsBrokenUses);
 	}
 
 	/**
@@ -99,15 +100,15 @@ public class Maracas {
 
 	/**
 	 * Computes the impact the {@code delta} model has on {@code client} and
-	 * returns the corresponding list of {@link Detection}
+	 * returns the corresponding list of {@link BrokenUse}
 	 *
 	 * @param client Valid path to the client's source code to analyze
 	 * @param delta The delta model
-	 * @return the corresponding list of {@link Detection}
+	 * @return the corresponding list of {@link BrokenUse}
 	 * @throws NullPointerException if delta is null
 	 * @throws IllegalArgumentException if client isn't a valid directory
 	 */
-	public static Collection<Detection> computeDetections(Path client, Delta delta) {
+	public static Collection<BrokenUse> computeBrokenUses(Path client, Delta delta) {
 		Objects.requireNonNull(delta);
 		if (!PathHelpers.isValidDirectory(client))
 			throw new IllegalArgumentException("client isn't a valid directory: " + client);
@@ -123,7 +124,7 @@ public class Maracas {
 		visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
 		visitor.scan(model.getRootPackage());
 
-		return visitor.getDetections();
+		return visitor.getBrokenUses();
 	}
 
 	public static Options defaultJApiOptions() {

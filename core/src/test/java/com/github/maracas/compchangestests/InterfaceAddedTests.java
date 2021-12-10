@@ -1,7 +1,7 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.detection.APIUse.EXTENDS;
-import static com.github.maracas.detection.APIUse.IMPLEMENTS;
+import static com.github.maracas.brokenuse.APIUse.EXTENDS;
+import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
 import static japicmp.model.JApiCompatibilityChange.INTERFACE_ADDED;
 
 import org.junit.jupiter.api.Test;
@@ -10,22 +10,22 @@ public class InterfaceAddedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberDetections(INTERFACE_ADDED, 8);
+		assertNumberBrokenUses(INTERFACE_ADDED, 8);
 		// FIXME: Check other cases
 	}
 	
 	@Test
 	void testExtendsAbsClass() {
-		assertDetection("InterfaceAddedExtAbs.java", 5, INTERFACE_ADDED, EXTENDS);
+		assertBrokenUse("InterfaceAddedExtAbs.java", 5, INTERFACE_ADDED, EXTENDS);
 	}
 	
 	@Test
 	void testImplementsInter() {
-		assertDetection("InterfaceAddedImp.java", 5, INTERFACE_ADDED, IMPLEMENTS);
+		assertBrokenUse("InterfaceAddedImp.java", 5, INTERFACE_ADDED, IMPLEMENTS);
 	}
 	
 	@Test
 	void testImplementsMultiInter() {
-		assertDetection("InterfaceAddedImpMulti.java", 5, INTERFACE_ADDED, IMPLEMENTS);
+		assertBrokenUse("InterfaceAddedImpMulti.java", 5, INTERFACE_ADDED, IMPLEMENTS);
 	}
 }

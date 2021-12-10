@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.util.SpoonTypeHelpers;
 
@@ -17,7 +17,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Detections of FIELD_TYPE_CHANGED are:
+ * Broken uses of FIELD_TYPE_CHANGED are:
  * 	- Type-incompatible uses of the changed field in an expression, i.e. anywhere
  * 	where we expect a value of a specific type and might now get a different one
  *
@@ -44,7 +44,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(fieldRead.getParent());
 
 			if (!SpoonTypeHelpers.isAssignableFrom(expectedType, newType))
-				detection(fieldRead, fieldRead.getVariable(), fRef, APIUse.FIELD_ACCESS);
+				brokenUse(fieldRead, fieldRead.getVariable(), fRef, APIUse.FIELD_ACCESS);
 		}
 	}
 
@@ -56,7 +56,7 @@ public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
 			CtTypeReference<?> assignedType = enclosing.getType();
 
 			if (!SpoonTypeHelpers.isAssignableFrom(newType, assignedType))
-				detection(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
+				brokenUse(fieldWrite, fieldWrite.getVariable(), fRef, APIUse.FIELD_ACCESS);
 		}
 	}
 

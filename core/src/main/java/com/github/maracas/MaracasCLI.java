@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.github.maracas.detection.Detection;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.google.common.base.Stopwatch;
 
 import picocli.CommandLine;
@@ -58,13 +58,13 @@ public class MaracasCLI implements Runnable {
 
 			System.out.println("""
 			+------------+
-			+ DETECTIONS +
+			+ BROKEN USES +
 			+------------+
 			""");
 			System.out.println(
-				result.allDetections()
+				result.allBrokenUses()
 					.stream()
-					.map(Detection::toString)
+					.map(BrokenUse::toString)
 					.collect(Collectors.joining("\n"))
 			);
 			System.out.println("Done in " + watch.elapsed(TimeUnit.SECONDS) + "s.");

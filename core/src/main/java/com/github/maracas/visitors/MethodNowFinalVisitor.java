@@ -2,14 +2,14 @@ package com.github.maracas.visitors;
 
 import java.util.Optional;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 
 /**
- * Detections of METHOD_NOW_FINAL are:
+ * Broken uses of METHOD_NOW_FINAL are:
  *	- Methods overriding the now-final method (with or w/o explicit @Override)
  */
 public class MethodNowFinalVisitor extends BreakingChangeVisitor {
@@ -28,6 +28,6 @@ public class MethodNowFinalVisitor extends BreakingChangeVisitor {
 				.filter(superM -> mRef.equals(superM.getReference()))
 				.findAny();
 
-		superMethod.ifPresent(ctMethod -> detection(m, ctMethod, mRef, APIUse.METHOD_OVERRIDE));
+		superMethod.ifPresent(ctMethod -> brokenUse(m, ctMethod, mRef, APIUse.METHOD_OVERRIDE));
 	}
 }

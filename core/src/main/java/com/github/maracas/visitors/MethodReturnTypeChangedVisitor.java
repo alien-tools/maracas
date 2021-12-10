@@ -2,7 +2,7 @@ package com.github.maracas.visitors;
 
 import java.util.Optional;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.util.SpoonTypeHelpers;
 
@@ -56,7 +56,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 			}
 
 			if (typeRefOpt.isPresent() && !SpoonTypeHelpers.isAssignableFrom(typeRefOpt.get(), newType)) {
-				detection(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
+				brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 			}
 		}
 	}
@@ -67,7 +67,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(method);
 
 			if (m.isOverriding(method) && !SpoonTypeHelpers.isAssignableFrom(newType, expectedType)) {
-				detection(m, method, mRef, APIUse.METHOD_OVERRIDE);
+				brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
 			}
 		} else {
 			throw new RuntimeException(String.format("%s should be a method.", mRef.getSimpleName()));

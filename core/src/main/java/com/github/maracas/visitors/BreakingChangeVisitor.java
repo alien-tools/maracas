@@ -3,8 +3,8 @@ package com.github.maracas.visitors;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.detection.APIUse;
-import com.github.maracas.detection.Detection;
+import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
 
 import japicmp.model.JApiCompatibilityChange;
@@ -16,15 +16,15 @@ import spoon.reflect.visitor.CtAbstractVisitor;
 
 public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	private final JApiCompatibilityChange change;
-	private final Set<Detection> detections = new HashSet<>();
+	private final Set<BrokenUse> brokenUses = new HashSet<>();
 
 	protected BreakingChangeVisitor(JApiCompatibilityChange change) {
 		super();
 		this.change = change;
 	}
 
-	protected void detection(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
-		// We don't want to create detections for implicit elements: they do not
+	protected void brokenUse(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
+		// We don't want to create broken uses for implicit elements: they do not
 		// exist in the source code of the client anyway
 		if (element.isImplicit())
 			return;
@@ -36,7 +36,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 				SpoonHelpers.firstLocatableParent(element) :
 				element;
 
-		Detection d = new Detection(
+		BrokenUse d = new BrokenUse(
 			locatableElement,
 			usedApiElement,
 			source,
@@ -44,7 +44,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 			change
 		);
 
-		detections.add(d);
+		brokenUses.add(d);
 	}
 
 	public APIUse getAPIUseByRole(CtElement element) {
@@ -69,7 +69,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 		};
 	}
 
-	public Set<Detection> getDetections() {
-		return detections;
+	public Set<BrokenUse> getBrokenUses() {
+		return brokenUses;
 	}
 }

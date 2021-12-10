@@ -19,6 +19,6 @@ public class Main {
 
 		AnalysisResult result = Maracas.analyze(query);
 		System.out.println("Changes: " + result.delta());
-		System.out.println("Impact:  " + result.allDetections());
+		System.out.println("Impact:  " + result.allBrokenUses());
 	}
 }

@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;
@@ -34,11 +34,11 @@ public class SupertypeAddedVisitor extends BreakingChangeVisitor {
 			Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
 
 			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef))
-				detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
+				brokenUse(cls, cls, clsRef, APIUse.IMPLEMENTS);
 
 			if (typeRef.getSuperclass() != null)
 				if (SpoonTypeHelpers.isSubtype(Set.of(typeRef.getSuperclass()), clsRef))
-					detection(cls, cls, clsRef, APIUse.EXTENDS);
+					brokenUse(cls, cls, clsRef, APIUse.EXTENDS);
 		}
 	}
 }

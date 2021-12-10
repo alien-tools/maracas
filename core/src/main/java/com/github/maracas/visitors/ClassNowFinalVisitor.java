@@ -2,7 +2,7 @@ package com.github.maracas.visitors;
 
 import java.util.Optional;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtNewClass;
@@ -11,7 +11,7 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Detections of CLASS_NOW_FINAL are:
+ * Broken uses of CLASS_NOW_FINAL are:
  *	- Classes (regular and anonymous) extending the now-final class
  *	- Methods @Override-ing a method of the now-final class
  *
@@ -29,7 +29,7 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtClass(CtClass<T> ctClass) {
 		if (clsRef.equals(ctClass.getSuperclass()))
-			detection(ctClass, ctClass.getSuperclass(), clsRef, APIUse.EXTENDS);
+			brokenUse(ctClass, ctClass.getSuperclass(), clsRef, APIUse.EXTENDS);
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 					.filter(superM -> clsRef.equals(superM.getDeclaringType().getReference()))
 					.findAny();
 
-			superMethod.ifPresent(ctMethod -> detection(m, ctMethod, clsRef, APIUse.METHOD_OVERRIDE));
+			superMethod.ifPresent(ctMethod -> brokenUse(m, ctMethod, clsRef, APIUse.METHOD_OVERRIDE));
 		}
 	}
 

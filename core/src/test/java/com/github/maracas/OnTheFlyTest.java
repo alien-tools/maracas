@@ -1,8 +1,9 @@
 package com.github.maracas;
 
+import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
-import com.github.maracas.detection.APIUse;
-import com.github.maracas.detection.Detection;
+
 import japicmp.model.JApiCompatibilityChange;
 import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,10 +26,10 @@ class OnTheFlyTest {
 			""");
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
-		assertThat(res.allDetections(), hasSize(1));
+		assertThat(res.allBrokenUses(), hasSize(1));
 
 		BreakingChange bc = res.delta().getBreakingChanges().stream().findFirst().get();
-		Detection d = res.allDetections().stream().findFirst().get();
+		BrokenUse d = res.allBrokenUses().stream().findFirst().get();
 
 		assertThat(bc.getChange(), equalTo(JApiCompatibilityChange.METHOD_REMOVED));
 		assertThat(d.use(), equalTo(APIUse.METHOD_INVOCATION));

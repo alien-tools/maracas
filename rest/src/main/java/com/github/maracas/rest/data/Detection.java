@@ -18,7 +18,7 @@ public record Detection(
 	int endLine,
 	String url
 ) {
-	public static Detection fromMaracasDetection(com.github.maracas.detection.Detection d, String owner, String repository, String ref, String clonePath) {
+	public static Detection fromMaracasDetection(com.github.maracas.brokenuse.BrokenUse d, String owner, String repository, String ref, String clonePath) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)

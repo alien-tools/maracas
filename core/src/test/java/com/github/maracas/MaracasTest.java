@@ -1,7 +1,8 @@
 package com.github.maracas;
 
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.detection.Detection;
+
 import japicmp.config.Options;
 import japicmp.model.AccessModifier;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class MaracasTest {
 	Path sources = Paths.get("../test-data/comp-changes/old/src/");
 
 	@Test
-	void analyze_QueryWithoutClient_hasNoDetection() {
+	void analyze_QueryWithoutClient_hasNoBrokenUse() {
 		AnalysisResult res = Maracas.analyze(
 			AnalysisQuery.builder()
 				.oldJar(v1)
@@ -40,11 +41,11 @@ class MaracasTest {
 				hasProperty("reference", is(notNullValue())),
 				hasProperty("sourceElement", is(nullValue()))
 			)));
-		assertThat(res.allDetections(), is(empty()));
+		assertThat(res.allBrokenUses(), is(empty()));
 	}
 
 	@Test
-	void analyze_QueryWithTwoClients_hasTwoClientDetections() {
+	void analyze_QueryWithTwoClients_hasTwoClientBrokenUses() {
 		AnalysisResult res = Maracas.analyze(
 			AnalysisQuery.builder()
 				.oldJar(v1)
@@ -54,9 +55,9 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(res.detections().keySet(), hasSize(2));
-		assertThat(res.detections(), hasKey(client.toAbsolutePath()));
-		assertThat(res.detections(), hasKey(client2.toAbsolutePath()));
+		assertThat(res.brokenUses().keySet(), hasSize(2));
+		assertThat(res.brokenUses(), hasKey(client.toAbsolutePath()));
+		assertThat(res.brokenUses(), hasKey(client2.toAbsolutePath()));
 	}
 
 	@Test
@@ -123,9 +124,9 @@ class MaracasTest {
 	}
 
 	@Test
-	void computeDetections_isValid() {
+	void computeBrokenUses_isValid() {
 		Delta delta = Maracas.computeDelta(v1, v2);
-		Collection<Detection> ds = Maracas.computeDetections(client, delta);
+		Collection<BrokenUse> ds = Maracas.computeBrokenUses(client, delta);
 
 		assertThat(ds, is(not(empty())));
 		// No hasProperty() on records :(
@@ -165,21 +166,21 @@ class MaracasTest {
 	}
 
 	@Test
-	void computeDetections_invalidPaths_throwsException() {
+	void computeBrokenUses_invalidPaths_throwsException() {
 		Delta d = Maracas.computeDelta(v1, v2);
 		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDetections(TestData.invalidDirectory, d)
+			Maracas.computeBrokenUses(TestData.invalidDirectory, d)
 		);
 
 		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDetections(null, d)
+			Maracas.computeBrokenUses(null, d)
 		);
 	}
 
 	@Test
-	void computeDetections_nullDelta_throwsException() {
+	void computeBrokenUses_nullDelta_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDetections(v1, null)
+			Maracas.computeBrokenUses(v1, null)
 		);
 	}
 

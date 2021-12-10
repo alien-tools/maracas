@@ -1,4 +1,4 @@
-package com.github.maracas.detection;
+package com.github.maracas.brokenuse;
 
 import java.util.Objects;
 
@@ -9,10 +9,10 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.reference.CtReference;
 
 /**
- * A detection is a source code location in client code that is impacted
+ * A broken use is a source code location in client code that is impacted
  * by a breaking change.
  */
-public record Detection(
+public record BrokenUse(
 	/**
 	 * The impacted {@link CtElement} in the client's AST
 	 */
@@ -34,7 +34,7 @@ public record Detection(
 	APIUse use,
 
 	/**
-	 * The kind of breaking change impacting the breaking change {@link #source}
+	 * The kind of breaking change {@link #source}
 	 */
 	JApiCompatibilityChange change
 ) {
@@ -71,7 +71,7 @@ public record Detection(
 			return false;
 		if (getClass() != that.getClass())
 			return false;
-		Detection other = (Detection) that;
+		BrokenUse other = (BrokenUse) that;
 		return
 			Objects.equals(element, other.element) &&
 			// CtElement::equals/hashCode() do not check the position

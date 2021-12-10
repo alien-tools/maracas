@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.detection.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.util.SpoonTypeHelpers;
 
@@ -39,11 +39,11 @@ public class MethodAddedToInterfaceVisitor extends BreakingChangeVisitor {
 			Set<CtTypeReference<?>> superCls = new HashSet<>(Arrays.asList(typeRef.getSuperclass()));
 
 			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef)) {
-				detection(cls, cls, clsRef, APIUse.IMPLEMENTS);
+				brokenUse(cls, cls, clsRef, APIUse.IMPLEMENTS);
 			}
 			
 			if (SpoonTypeHelpers.isSubtype(superCls, clsRef)) {
-				detection(cls, cls, clsRef, APIUse.EXTENDS);
+				brokenUse(cls, cls, clsRef, APIUse.EXTENDS);
 			}
 		}
 	}

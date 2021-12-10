@@ -16,8 +16,8 @@ import org.junit.jupiter.api.BeforeAll;
 import com.github.maracas.AnalysisQuery;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
-import com.github.maracas.detection.APIUse;
-import com.github.maracas.detection.Detection;
+import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
 import com.google.common.base.Objects;
 
@@ -27,8 +27,8 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
 public class CompChangesTest {
-	static Collection<Detection> detections;
-	static Collection<Detection> found;
+	static Collection<BrokenUse> brokenUses;
+	static Collection<BrokenUse> found;
 
 	@BeforeAll
 	static void setUp() {
@@ -46,15 +46,15 @@ public class CompChangesTest {
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
-		detections = result.allDetections();
+		brokenUses = result.allBrokenUses();
 		found = new ArrayList<>();
 	}
 
-	public static void assertDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
-	    Optional<Detection> find = findDetection(file, line, elem, change, use);
+	public static void assertBrokenUse(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
+	    Optional<BrokenUse> find = findBrokenUse(file, line, elem, change, use);
         assertTrue(
             find.isPresent(),
-            String.format("No detection found in %s:%d [%s] [%s]",
+            String.format("No broken use found in %s:%d [%s] [%s]",
                 file, line, change, use)
             );
 
@@ -62,35 +62,35 @@ public class CompChangesTest {
         found.add(find.get());
 	}
 
-	public static void assertDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
-		assertDetection(file, line, null, change, use);
+	public static void assertBrokenUse(String file, int line, JApiCompatibilityChange change, APIUse use) {
+		assertBrokenUse(file, line, null, change, use);
 	}
 
-	public static void assertNoDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
-        Optional<Detection> find = findDetection(file, line, elem, change, use);
+	public static void assertNoBrokenUse(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
+        Optional<BrokenUse> find = findBrokenUse(file, line, elem, change, use);
         assertFalse(
             find.isPresent(),
-            String.format("Detection found in %s:%d [%s] [%s]",
+            String.format("Broken use found in %s:%d [%s] [%s]",
                 file, line, change, use)
             );
     }
 
-    public static void assertNoDetection(String file, int line, JApiCompatibilityChange change, APIUse use) {
-        assertNoDetection(file, line, null, change, use);
+    public static void assertNoBrokenUse(String file, int line, JApiCompatibilityChange change, APIUse use) {
+        assertNoBrokenUse(file, line, null, change, use);
     }
 
-	public static void assertNumberDetections(JApiCompatibilityChange change, int n) {
-		List<Detection> ds = detections.stream().filter(d -> d.change() == change).toList();
-		List<Detection> extra = ds.stream()
+	public static void assertNumberBrokenUses(JApiCompatibilityChange change, int n) {
+		List<BrokenUse> ds = brokenUses.stream().filter(d -> d.change() == change).toList();
+		List<BrokenUse> extra = ds.stream()
 			.filter(d -> !found.contains(d))
 			.toList();
 
 		assertEquals(n, ds.size(), ds.toString());
 	}
 
-	private static Optional<Detection> findDetection(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
+	private static Optional<BrokenUse> findBrokenUse(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
         return
-            detections.stream().filter(d -> {
+            brokenUses.stream().filter(d -> {
                 if (change != d.change())
                     return false;
                 if (use != d.use())
