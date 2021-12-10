@@ -8,7 +8,7 @@ import spoon.reflect.declaration.CtNamedElement;
 
 import java.nio.file.Paths;
 
-public record Detection(
+public record BrokenUse(
 	String elem,
 	String used,
 	String src,
@@ -18,11 +18,11 @@ public record Detection(
 	int endLine,
 	String url
 ) {
-	public static Detection fromMaracasDetection(com.github.maracas.brokenuse.BrokenUse d, String owner, String repository, String ref, String clonePath) {
+	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenuse.BrokenUse d, String owner, String repository, String ref, String clonePath) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)
-			return new Detection(
+			return new BrokenUse(
 				d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 				d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
 				SpoonHelpers.fullyQualifiedName(d.source()),
@@ -34,7 +34,7 @@ public record Detection(
 			);
 
 		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
-		return new Detection(
+		return new BrokenUse(
 			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
 			SpoonHelpers.fullyQualifiedName(d.source()),

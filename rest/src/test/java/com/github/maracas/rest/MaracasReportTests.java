@@ -24,7 +24,7 @@ import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.Delta;
-import com.github.maracas.rest.data.Detection;
+import com.github.maracas.rest.data.BrokenUse;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequest;
 
@@ -56,7 +56,7 @@ class MaracasReportTests {
 			List.of(ClientReport.success("alien-tools/comp-changes-client",
 				result.allBrokenUses()
 					.stream()
-					.map(d -> Detection.fromMaracasDetection(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
+					.map(d -> BrokenUse.fromMaracasBrokenUse(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
 					.collect(Collectors.toList())
 			))
 		);
@@ -88,9 +88,9 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testSourceLocationsDetections() {
+	void testSourceLocationsBrokenUses() {
 		assertThat(report.clientReports().size(), is(1));
-		report.clientReports().get(0).detections().forEach(d -> {
+		report.clientReports().get(0).brokenUses().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -106,17 +106,17 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testGitHubLocationsDetections() {
+	void testGitHubLocationsBrokenUses() {
 		assertThat(report.clientReports().size(), is(1));
 		assertThat(report.clientReports().get(0).url(), not(emptyOrNullString()));
-		report.clientReports().get(0).detections().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
+		report.clientReports().get(0).brokenUses().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
 	void testGithubClientsArePresent() {
 		assertThat(report.clientReports().size(), is(1));
 		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.clientReports().get(0).detections().size(), is(greaterThan(1)));
+		assertThat(report.clientReports().get(0).brokenUses().size(), is(greaterThan(1)));
 	}
 
 }

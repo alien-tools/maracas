@@ -28,7 +28,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(res.report().allDetections().size(), greaterThan(0));
+		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
 	}
 
 	@Test
@@ -39,7 +39,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(res.report().allDetections().size(), greaterThan(0));
+		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
 	}
 
 	@Test
@@ -50,7 +50,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(res.report().allDetections().size(), greaterThan(0));
+		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
 	}
 
 	@Test
@@ -101,7 +101,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("tdegueul/comp-changes-client"));
-		assertThat(res.report().allDetections().size(), greaterThan(0));
+		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
 	}
 
 	@Test

@@ -8,7 +8,7 @@ import java.util.List;
 
 public record ClientReport(
 	String url,
-	List<Detection> detections,
+	List<BrokenUse> brokenUses,
 	@JsonSerialize(using = ToStringSerializer.class)
 	Throwable error
 ) {
@@ -16,7 +16,7 @@ public record ClientReport(
 		return new ClientReport(u, Collections.emptyList(), null);
 	}
 
-	public static ClientReport success(String u, List<Detection> d) {
+	public static ClientReport success(String u, List<BrokenUse> d) {
 		return new ClientReport(u, d, null);
 	}
 

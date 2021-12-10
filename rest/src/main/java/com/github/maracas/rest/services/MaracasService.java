@@ -1,5 +1,16 @@
 package com.github.maracas.rest.services;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.github.maracas.Maracas;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.Delta;
@@ -8,18 +19,9 @@ import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequest;
 import com.google.common.base.Stopwatch;
+
 import japicmp.config.Options;
 import japicmp.util.Optional;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class MaracasService {
@@ -43,17 +45,17 @@ public class MaracasService {
 		return delta;
 	}
 
-	public Collection<BrokenUse> makeDetections(Delta delta, Path clientSources) {
-		logger.info("Computing detections({}, Δ({} -> {}))", clientSources,
+	public Collection<BrokenUse> makeBrokenUses(Delta delta, Path clientSources) {
+		logger.info("Computing brokenUses({}, Δ({} -> {}))", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		Collection<BrokenUse> detections = Maracas.computeBrokenUses(clientSources, delta);
+		Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(clientSources, delta);
 
-		logger.info("Done detections({}, Δ({} -> {})) in {}ms", clientSources,
+		logger.info("Done brokenUses({}, Δ({} -> {})) in {}ms", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName(),
 			watch.elapsed(TimeUnit.MILLISECONDS));
-		return detections;
+		return brokenUses;
 	}
 
 	public MaracasReport makeReport(PullRequest pr, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
@@ -61,12 +63,12 @@ public class MaracasService {
 		Path sources = findSourceDirectory(basePath, null);
 		Delta maracasDelta = makeDelta(jar1, jar2, sources, config);
 
-		// Compute detections per client
-		List<ClientReport> detections = new ArrayList<>();
+		// Compute broken uses per client
+		List<ClientReport> brokenUses = new ArrayList<>();
 
 		// No need to compute anything if there's no BC
 		if (maracasDelta.getBreakingChanges().isEmpty())
-			detections.addAll(
+			brokenUses.addAll(
 				config.clients().stream()
 					.map(c -> ClientReport.empty(c.repository()))
 					.toList()
@@ -80,18 +82,18 @@ public class MaracasService {
 					Path clientSources = findSourceDirectory(clientPath, c.sources());
 					String[] fields = c.repository().split("/");
 
-					detections.add(
+					brokenUses.add(
 						ClientReport.success(c.repository(),
-							makeDetections(maracasDelta, clientSources).stream()
-								.map(d -> com.github.maracas.rest.data.Detection.fromMaracasDetection(d, fields[0], fields[1],
+							makeBrokenUses(maracasDelta, clientSources).stream()
+								.map(d -> com.github.maracas.rest.data.BrokenUse.fromMaracasBrokenUse(d, fields[0], fields[1],
 										branch, clientPath.toAbsolutePath().toString()))
 								.toList())
 					);
 
-					logger.info("Done computing detections on {}", c.repository());
+					logger.info("Done computing broken uses on {}", c.repository());
 				} catch (Exception e) {
 					logger.error(e);
-					detections.add(ClientReport.error(c.repository(),
+					brokenUses.add(ClientReport.error(c.repository(),
 						new MaracasException("Couldn't analyze client " + c.repository(), e)));
 				}
 			});
@@ -103,7 +105,7 @@ public class MaracasService {
 				ref,
 				basePath.toAbsolutePath().toString()
 			),
-			detections
+			brokenUses
 		);
 	}
 

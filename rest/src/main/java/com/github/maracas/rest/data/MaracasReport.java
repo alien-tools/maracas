@@ -11,10 +11,10 @@ public record MaracasReport(
 	Delta delta,
 	List<ClientReport> clientReports
 ) {
-	public Collection<Detection> allDetections() {
+	public Collection<BrokenUse> allBrokenUses() {
 		return
 			clientReports.stream()
-				.map(ClientReport::detections)
+				.map(ClientReport::brokenUses)
 				.flatMap(Collection::stream)
 				.toList();
 	}
