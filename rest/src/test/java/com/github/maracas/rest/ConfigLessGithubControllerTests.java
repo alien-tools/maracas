@@ -14,7 +14,7 @@ class ConfigLessGithubControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports(), empty());
 	}
 }

@@ -1,6 +1,6 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.BrokenDeclaration;
+import com.github.maracas.rest.data.BreakingChange;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -25,7 +25,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 3));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
@@ -36,7 +36,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "comp-changes", 3));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
@@ -47,7 +47,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
@@ -98,7 +98,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 3, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().delta().brokenDeclarations(), not(empty()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("tdegueul/comp-changes-client"));
 		assertThat(res.report().allDetections().size(), greaterThan(0));
@@ -275,8 +275,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse response = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 2, bbConfig));
 
 		Collection<String> brokenDecls =
-			response.report().delta().brokenDeclarations().stream().
-			map(BrokenDeclaration::declaration).toList();
+			response.report().delta().breakingChanges().stream().
+			map(BreakingChange::declaration).toList();
 		assertThat(brokenDecls, not(hasItem(containsString("test"))));
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));

@@ -6,7 +6,7 @@ import java.util.List;
 public record Delta(
 	Path jarV1,
 	Path jarV2,
-	List<BrokenDeclaration> brokenDeclarations
+	List<BreakingChange> breakingChanges
 ) {
 	public static Delta fromMaracasDelta(com.github.maracas.delta.Delta d, PullRequest pr, String ref, String clonePath) {
 		return new Delta(
@@ -14,7 +14,7 @@ public record Delta(
 			d.getNewJar(),
 			d.getBreakingChanges()
 				.stream()
-				.map(decl -> BrokenDeclaration.fromMaracasDeclaration(decl, pr, ref, clonePath))
+				.map(bc -> BreakingChange.fromMaracasBreakingChange(bc, pr, ref, clonePath))
 				.toList()
 		);
 	}

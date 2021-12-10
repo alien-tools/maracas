@@ -7,7 +7,7 @@ import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.nio.file.Paths;
 
-public record BrokenDeclaration(
+public record BreakingChange(
 	String declaration,
 	String change,
 	String path,
@@ -16,7 +16,7 @@ public record BrokenDeclaration(
 	String fileUrl,
 	String diffUrl
 ) {
-	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BreakingChange decl, PullRequest pr, String ref, String clonePath) {
+	public static BreakingChange fromMaracasBreakingChange(com.github.maracas.delta.BreakingChange decl, PullRequest pr, String ref, String clonePath) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -32,7 +32,7 @@ public record BrokenDeclaration(
 		}
 
 		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
-		return new BrokenDeclaration(
+		return new BreakingChange(
 			SpoonHelpers.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),
 			relativeFile,

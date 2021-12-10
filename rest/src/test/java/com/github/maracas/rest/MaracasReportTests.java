@@ -1,9 +1,16 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.AnalysisQuery;
-import com.github.maracas.AnalysisResult;
-import com.github.maracas.Maracas;
-import com.github.maracas.rest.data.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;
@@ -12,13 +19,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import com.github.maracas.AnalysisQuery;
+import com.github.maracas.AnalysisResult;
+import com.github.maracas.Maracas;
+import com.github.maracas.rest.data.ClientReport;
+import com.github.maracas.rest.data.Delta;
+import com.github.maracas.rest.data.Detection;
+import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PullRequest;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -58,7 +66,7 @@ class MaracasReportTests {
 	void testSourceLocationsDelta() {
 		// Hamcrest's hasProperty doesn't work with records yet
 		//assertThat(
-		//	report.delta().brokenDeclarations(),
+		//	report.delta().breakingChanges(),
 		//	everyItem(allOf(
 		//		hasProperty("path", not(emptyString())),
 		//		hasProperty("startLine", not(equalTo(-1))),
@@ -66,7 +74,13 @@ class MaracasReportTests {
 		//	))
 		//);
 
-		report.delta().brokenDeclarations().forEach(d -> {
+	    report.delta().breakingChanges().forEach(d -> {
+	        if (d.startLine() < 0) {
+	            System.out.println(d);
+	        }
+        });
+
+		report.delta().breakingChanges().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -85,7 +99,7 @@ class MaracasReportTests {
 
 	@Test
 	void testGitHubLocationsDelta() {
-		report.delta().brokenDeclarations().forEach(d -> {
+		report.delta().breakingChanges().forEach(d -> {
 			assertThat(d.fileUrl(), not(emptyOrNullString()));
 			assertThat(d.diffUrl(), not(emptyOrNullString()));
 		});
