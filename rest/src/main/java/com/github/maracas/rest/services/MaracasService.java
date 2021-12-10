@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.github.maracas.Maracas;
-import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientReport;
