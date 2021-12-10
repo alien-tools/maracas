@@ -40,11 +40,11 @@ AnalysisQuery query = AnalysisQuery.builder()
 
 AnalysisResult result = Maracas.analyze(query);
 Delta delta = result.delta();
-Collection<Detection> detections = result.allDetections();
+Collection<BrokenUse> brokenUses = result.allBrokenUses();
 
 // Programmatically
 Delta delta = Maracas.computeDelta(v1, v2);
-Collection<Detection> detections = Maracas.computeDetections(c, delta);
+Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(c, delta);
 
 // Delta models are built from JARs and lack source code locations.
 // To map breaking changes to precise locations in source code,
