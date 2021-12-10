@@ -12,7 +12,7 @@ public record Delta(
 		return new Delta(
 			d.getOldJar(),
 			d.getNewJar(),
-			d.getBrokenDeclarations()
+			d.getBreakingChanges()
 				.stream()
 				.map(decl -> BrokenDeclaration.fromMaracasDeclaration(decl, pr, ref, clonePath))
 				.toList()

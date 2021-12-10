@@ -1,8 +1,17 @@
 package com.github.maracas.delta;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
+
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -22,17 +31,9 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 /**
  * A delta model lists the breaking changes between two versions of a library,
- * represented as a collection of {@link BrokenDeclaration}.
+ * represented as a collection of {@link BreakingChange}.
  */
 public class Delta {
     /**
@@ -44,17 +45,17 @@ public class Delta {
      */
     private final Path newJar;
     /**
-     * The list of {@link BrokenDeclaration} extracted from japicmp's classes
+     * The list of {@link BreakingChange} extracted from japicmp's classes
      */
-    private final Collection<BrokenDeclaration> brokenDeclarations;
+    private final Collection<BreakingChange> breakingChanges;
 
     /**
      * @see #fromJApiCmpDelta(Path, Path, List)
      */
-    private Delta(Path oldJar, Path newJar, Collection<BrokenDeclaration> decls) {
+    private Delta(Path oldJar, Path newJar, Collection<BreakingChange> breakingChanges) {
         this.oldJar = oldJar;
         this.newJar = newJar;
-        this.brokenDeclarations = decls;
+        this.breakingChanges = breakingChanges;
     }
 
     /**
@@ -71,7 +72,7 @@ public class Delta {
         Objects.requireNonNull(newJar);
         Objects.requireNonNull(classes);
 
-        Collection<BrokenDeclaration> brokenDeclarations = new ArrayList<>();
+        Collection<BreakingChange> breakingChanges = new ArrayList<>();
 
         // We need to create CtReferences to v1 to map japicmp's delta
         // to our own. Building an empty model with the right
@@ -88,7 +89,7 @@ public class Delta {
             public void visit(JApiClass jApiClass) {
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
                 jApiClass.getCompatibilityChanges().forEach(c ->
-                    brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
+                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
                 );
 
                 jApiClass.getInterfaces().forEach(i ->
@@ -112,7 +113,7 @@ public class Delta {
 
                     if (mRefOpt.isPresent()) {
                         jApiMethod.getCompatibilityChanges().forEach(c ->
-                            brokenDeclarations.add(new BrokenMethod(jApiMethod, mRefOpt.get(), c))
+                            breakingChanges.add(new MethodBreakingChange(jApiMethod, mRefOpt.get(), c))
                         );
                     } else {
                         if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf")) {
@@ -133,7 +134,7 @@ public class Delta {
                     // FIXME: we miss the information about the newly added method
                     if (!(newMethod.getName().equals("values") || newMethod.getName().equals("valueOf"))) {
                         jApiMethod.getCompatibilityChanges().forEach(c ->
-                            brokenDeclarations.add(new BrokenClass(jApiMethod.getjApiClass(), clsRef, c))
+                            breakingChanges.add(new ClassBreakingChange(jApiMethod.getjApiClass(), clsRef, c))
                         );
                     }
 
@@ -151,7 +152,7 @@ public class Delta {
                     CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
 
                     jApiField.getCompatibilityChanges().forEach(c ->
-                        brokenDeclarations.add(new BrokenField(jApiField, fRef, c))
+                        breakingChanges.add(new FieldBreakingChange(jApiField, fRef, c))
                     );
                 } else {
                     // No oldField
@@ -176,7 +177,7 @@ public class Delta {
                     // isValid() instead.
                     if (cRefOpt.isPresent()) {
                         jApiConstructor.getCompatibilityChanges().forEach(c ->
-                            brokenDeclarations.add(new BrokenMethod(jApiConstructor, cRefOpt.get(), c))
+                            breakingChanges.add(new MethodBreakingChange(jApiConstructor, cRefOpt.get(), c))
                         );
                     } else {
                         // No old constructor
@@ -199,19 +200,19 @@ public class Delta {
                 JApiClass jApiClass = jApiSuperclass.getJApiClassOwning();
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
                 jApiSuperclass.getCompatibilityChanges().forEach(c ->
-                    brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
+                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
                 );
             }
 
             public void visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface) {
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
                 jApiImplementedInterface.getCompatibilityChanges().forEach(c ->
-                    brokenDeclarations.add(new BrokenClass(jApiClass, clsRef, c))
+                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
                 );
             }
         });
 
-        return new Delta(oldJar, newJar, brokenDeclarations);
+        return new Delta(oldJar, newJar, breakingChanges);
     }
 
     /**
@@ -230,7 +231,7 @@ public class Delta {
         CtModel model = launcher.buildModel();
         CtPackage root = model.getRootPackage();
 
-        brokenDeclarations.forEach(decl -> {
+        breakingChanges.forEach(decl -> {
             CtReference bytecodeRef = decl.getReference();
             if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
                 // FIXME: Issue with anonymous class in the
@@ -253,23 +254,23 @@ public class Delta {
     }
 
     /**
-     * Returns a list of {@link BreakingChangeVisitor}, one per {@link BrokenDeclaration}
+     * Returns a list of {@link BreakingChangeVisitor}, one per {@link BreakingChange}
      * in the current delta model. Each visitor is responsible for inferring
      * the set of detections corresponding to the breaking change in client code.
      */
     public Collection<BreakingChangeVisitor> getVisitors() {
         return
-            brokenDeclarations.stream()
-            .map(BrokenDeclaration::getVisitor)
+            breakingChanges.stream()
+            .map(BreakingChange::getVisitor)
             .filter(Objects::nonNull) // Temporary; FIXME
             .toList();
     }
 
     /**
-     * Returns the list of {@link BrokenDeclaration in the current delta model
+     * Returns the list of {@link BreakingChange in the current delta model
      */
-    public Collection<BrokenDeclaration> getBrokenDeclarations() {
-        return brokenDeclarations;
+    public Collection<BreakingChange> getBreakingChanges() {
+        return breakingChanges;
     }
 
     /**
@@ -291,7 +292,7 @@ public class Delta {
         StringBuilder sb = new StringBuilder();
         sb.append("Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()));
         sb.append(
-            brokenDeclarations.stream()
+            breakingChanges.stream()
             .map(bd -> """
                 [%s]
                 Reference: %s

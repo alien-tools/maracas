@@ -16,15 +16,14 @@ import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * A broken method is a special case of a broken declaration
- * that pinpoints methods in the library's code impacted
- * by a breaking change.
+ * A method breaking change is a special case of a breaking change that pinpoints
+ * methods in the library's code impacted by a breaking change.
  */
-public class BrokenMethod extends AbstractBrokenDeclaration {
+public class MethodBreakingChange extends AbstractBreakingChange {
 	private final JApiBehavior jApiMethod;
 	private final CtExecutableReference<?> mRef;
 
-	public BrokenMethod(JApiBehavior method, CtExecutableReference<?> mRef, JApiCompatibilityChange change) {
+	public MethodBreakingChange(JApiBehavior method, CtExecutableReference<?> mRef, JApiCompatibilityChange change) {
 		super(change);
 		this.jApiMethod = method;
 		this.mRef = mRef;

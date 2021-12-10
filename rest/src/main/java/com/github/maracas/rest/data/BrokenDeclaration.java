@@ -16,7 +16,7 @@ public record BrokenDeclaration(
 	String fileUrl,
 	String diffUrl
 ) {
-	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BrokenDeclaration decl, PullRequest pr, String ref, String clonePath) {
+	public static BrokenDeclaration fromMaracasDeclaration(com.github.maracas.delta.BreakingChange decl, PullRequest pr, String ref, String clonePath) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;

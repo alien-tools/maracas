@@ -7,10 +7,10 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtReference;
 
 /**
- * A broken declaration is a declaration in the library's code impacted
- * by a breaking change.
+ * A breaking change is a change in a library's declaration that potentially
+ * breaks client code.
  */
-public interface BrokenDeclaration {
+public interface BreakingChange {
 	/**
 	 * Returns a {@link CtReference} pointer to the impacted declaration
 	 */
@@ -23,13 +23,13 @@ public interface BrokenDeclaration {
 
 	/**
 	 * Returns the {@link BreakingChangeVisitor} responsible for detecting the
-	 * impact this broken declaration has on client code
+	 * impact this breaking change has on client code
 	 */
 	BreakingChangeVisitor getVisitor();
 
 	/**
 	 * Returns the {@link CtElement} in the library's source code corresponding
-	 * to the broken declaration's {@link #getReference()}, if any.
+	 * to the breaking change's {@link #getReference()}, if any.
 	 */
 	CtElement getSourceElement();
 

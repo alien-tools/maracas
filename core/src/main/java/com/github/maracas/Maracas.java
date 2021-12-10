@@ -1,6 +1,6 @@
 package com.github.maracas;
 
-import com.github.maracas.delta.BrokenDeclaration;
+import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.detection.Detection;
 import com.github.maracas.util.PathHelpers;
@@ -59,7 +59,7 @@ public class Maracas {
 
 	/**
 	 * Compares the library's old and new JARs and returns a delta model
-	 * containing all {@link BrokenDeclaration} between them, based on JApiCmp.
+	 * containing all {@link BreakingChange} between them, based on JApiCmp.
 	 *
 	 * @param oldJar The library's old JAR
 	 * @param newJar The library's new JAR

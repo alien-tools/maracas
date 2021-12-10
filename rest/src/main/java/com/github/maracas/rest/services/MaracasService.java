@@ -65,7 +65,7 @@ public class MaracasService {
 		List<ClientReport> detections = new ArrayList<>();
 
 		// No need to compute anything if there's no BC
-		if (maracasDelta.getBrokenDeclarations().isEmpty())
+		if (maracasDelta.getBreakingChanges().isEmpty())
 			detections.addAll(
 				config.clients().stream()
 					.map(c -> ClientReport.empty(c.repository()))

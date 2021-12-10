@@ -3,11 +3,11 @@ package com.github.maracas.delta;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;
 
-public abstract class AbstractBrokenDeclaration implements BrokenDeclaration {
+public abstract class AbstractBreakingChange implements BreakingChange {
 	protected final JApiCompatibilityChange change;
 	protected CtElement sourceElement;
 
-	protected AbstractBrokenDeclaration(JApiCompatibilityChange change) {
+	protected AbstractBreakingChange(JApiCompatibilityChange change) {
 		this.change = change;
 	}
 

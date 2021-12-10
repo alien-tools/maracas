@@ -1,7 +1,8 @@
 package com.github.maracas.detection;
 
 /**
- * Represents how a particular element in source code is using a broken declaration.
+ * Represents how a particular element in source code is using a declaration
+ * impacted by a breaking change.
  * <br>
  * e.g.:
  * <ul>

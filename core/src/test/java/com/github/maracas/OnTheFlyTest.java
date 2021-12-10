@@ -1,6 +1,6 @@
 package com.github.maracas;
 
-import com.github.maracas.delta.BrokenDeclaration;
+import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.detection.APIUse;
 import com.github.maracas.detection.Detection;
 import japicmp.model.JApiCompatibilityChange;
@@ -24,13 +24,13 @@ class OnTheFlyTest {
 				}
 			""");
 
-		assertThat(res.delta().getBrokenDeclarations(), hasSize(1));
+		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.allDetections(), hasSize(1));
 
-		BrokenDeclaration decl = res.delta().getBrokenDeclarations().stream().findFirst().get();
+		BreakingChange bc = res.delta().getBreakingChanges().stream().findFirst().get();
 		Detection d = res.allDetections().stream().findFirst().get();
 
-		assertThat(decl.getChange(), equalTo(JApiCompatibilityChange.METHOD_REMOVED));
+		assertThat(bc.getChange(), equalTo(JApiCompatibilityChange.METHOD_REMOVED));
 		assertThat(d.use(), equalTo(APIUse.METHOD_INVOCATION));
 	}
 }

@@ -11,11 +11,11 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class BrokenClass extends AbstractBrokenDeclaration {
+public class ClassBreakingChange extends AbstractBreakingChange {
 	private final JApiClass jApiCls;
 	private final CtTypeReference<?> clsRef;
 
-	public BrokenClass(JApiClass cls, CtTypeReference<?> clsRef, JApiCompatibilityChange change) {
+	public ClassBreakingChange(JApiClass cls, CtTypeReference<?> clsRef, JApiCompatibilityChange change) {
 		super(change);
 		this.jApiCls = cls;
 		this.clsRef = clsRef;

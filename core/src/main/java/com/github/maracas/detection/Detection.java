@@ -10,7 +10,7 @@ import spoon.reflect.reference.CtReference;
 
 /**
  * A detection is a source code location in client code that is impacted
- * by a broken declaration.
+ * by a breaking change.
  */
 public record Detection(
 	/**
@@ -24,7 +24,7 @@ public record Detection(
 	CtElement usedApiElement,
 
 	/**
-	 * The original broken declaration in the library's code
+	 * The original breaking change in the library's code
 	 */
 	CtReference source,
 
@@ -34,7 +34,7 @@ public record Detection(
 	APIUse use,
 
 	/**
-	 * The kind of breaking change impacting the broken declaration {@link #source}
+	 * The kind of breaking change impacting the breaking change {@link #source}
 	 */
 	JApiCompatibilityChange change
 ) {

@@ -35,7 +35,7 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(res.delta().getBrokenDeclarations(),
+		assertThat(res.delta().getBreakingChanges(),
 			everyItem(allOf(
 				hasProperty("reference", is(notNullValue())),
 				hasProperty("sourceElement", is(nullValue()))
@@ -69,7 +69,7 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(res.delta().getBrokenDeclarations(),
+		assertThat(res.delta().getBreakingChanges(),
 			everyItem(hasProperty("sourceElement", is(notNullValue()))));
 	}
 
@@ -95,8 +95,8 @@ class MaracasTest {
 				.jApiOptions(privateOpts)
 				.build());
 
-		assertThat(resPublic.delta().getBrokenDeclarations().size(),
-			is(not(equalTo(resPrivate.delta().getBrokenDeclarations().size()))));
+		assertThat(resPublic.delta().getBreakingChanges().size(),
+			is(not(equalTo(resPrivate.delta().getBreakingChanges().size()))));
 	}
 
 	@Test
@@ -106,7 +106,7 @@ class MaracasTest {
 		assertThat(d, is(notNullValue()));
 		assertThat(d.getOldJar(), is(equalTo(v1.toAbsolutePath())));
 		assertThat(d.getNewJar(), is(equalTo(v2.toAbsolutePath())));
-		assertThat(d.getBrokenDeclarations(), everyItem(allOf(
+		assertThat(d.getBreakingChanges(), everyItem(allOf(
 			hasProperty("reference", is(notNullValue())),
 			// TODO: uncomment once all visitors are implemented
 			//hasProperty("visitor", is(notNullValue()))
@@ -114,7 +114,7 @@ class MaracasTest {
 		)));
 
 		d.populateLocations(sources);
-		assertThat(d.getBrokenDeclarations(), everyItem(
+		assertThat(d.getBreakingChanges(), everyItem(
 			hasProperty("sourceElement", allOf(
 				is(notNullValue()),
 				hasProperty("position", is(not(instanceOf(NoSourcePosition.class))))

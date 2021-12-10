@@ -56,7 +56,7 @@ class PopularLibrariesTest {
   void assertIsValid(Delta d) {
     assertThat(d, is(notNullValue()));
     assertThat(d, is(notNullValue()));
-    assertThat(d.getBrokenDeclarations(), everyItem(allOf(
+    assertThat(d.getBreakingChanges(), everyItem(allOf(
       hasProperty("reference", is(notNullValue())),
       // TODO: uncomment once all visitors are implemented
       //hasProperty("visitor", is(notNullValue()))
