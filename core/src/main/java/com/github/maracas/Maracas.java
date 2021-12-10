@@ -1,12 +1,5 @@
 package com.github.maracas;
 
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
@@ -14,8 +7,6 @@ import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
-
-import japicmp.cli.JApiCli.ClassPathMode;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
@@ -24,6 +15,13 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
 import japicmp.output.OutputFilter;
 import spoon.reflect.CtModel;
+
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class Maracas {
 	// Just use the static methods
@@ -131,8 +129,7 @@ public class Maracas {
 		Options defaultOptions = Options.newDefault();
 		defaultOptions.setAccessModifier(AccessModifier.PRIVATE);
 		defaultOptions.setOutputOnlyModifications(true);
-		defaultOptions.setClassPathMode(ClassPathMode.TWO_SEPARATE_CLASSPATHS);
-		defaultOptions.setIgnoreMissingClasses(false);
+		defaultOptions.setIgnoreMissingClasses(true);
 
 		return defaultOptions;
 	}
