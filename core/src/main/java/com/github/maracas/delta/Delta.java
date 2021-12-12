@@ -3,6 +3,7 @@ package com.github.maracas.delta;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -251,6 +252,17 @@ public class Delta {
             } else
                 throw new RuntimeException("Shouldn't be here");
         });
+
+        // FIXME: Once the spoon issue (#4348) with implicit elements is solved
+        // remove this code. Check already implemented in BreakingChangeVisitor::brokenUse
+        for (Iterator<BreakingChange> iter = breakingChanges.iterator(); iter.hasNext();) {
+            BreakingChange bc = iter.next();
+
+            // Remove breaking changes whose position cannot be resolved
+            // (probably implicit).
+            if (!bc.getSourceElement().getPosition().isValidPosition())
+                iter.remove();
+        }
     }
 
     /**
