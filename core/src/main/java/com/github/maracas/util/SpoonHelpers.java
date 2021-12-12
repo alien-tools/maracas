@@ -1,24 +1,28 @@
 package com.github.maracas.util;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+
 import javassist.CtBehavior;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtThrow;
+import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
 
 public class SpoonHelpers {
 
@@ -115,6 +119,29 @@ public class SpoonHelpers {
 		// FIXME: CtSwitch not supported yet
 
 		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
+	}
+
+	/**
+	 * Verifies if a Spoon CtElement is implicit. References a specific
+	 * implementation of the isImplicit() Spoon method given the type of
+	 * declaration the input element represents.
+	 * @param elem the CtElement to verify
+	 * @return     <code>true</code> if the element is implicit;
+	 *             <code>false</code> otherwise.
+	 */
+	public static boolean isImplicit(CtElement elem) {
+	    if (elem instanceof CtConstructor<?> cons)
+	        return cons.isImplicit();
+	    else if (elem instanceof CtField<?> field)
+	        return field.isImplicit();
+	    else if (elem instanceof CtMethod<?> meth)
+	        return meth.isImplicit();
+	    else if (elem instanceof CtTypeAccess<?> typeAcc)
+	        return typeAcc.isImplicit();
+	    // Default to CtElement isImplicit() method. Other cases might be
+	    // missing.
+	    else
+	        return elem.isImplicit();
 	}
 
 	/**

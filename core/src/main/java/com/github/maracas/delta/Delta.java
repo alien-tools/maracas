@@ -173,9 +173,6 @@ public class Delta {
                         .filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
                         .findFirst();
 
-                    // TODO: report bug in Spoon. Implicit constructor states that
-                    // the opposite when calling isImplicit() method. Using getPosition()
-                    // isValid() instead.
                     if (cRefOpt.isPresent()) {
                         jApiConstructor.getCompatibilityChanges().forEach(c ->
                             breakingChanges.add(new MethodBreakingChange(jApiConstructor, cRefOpt.get(), c))
@@ -253,14 +250,10 @@ public class Delta {
                 throw new RuntimeException("Shouldn't be here");
         });
 
-        // FIXME: Once the spoon issue (#4348) with implicit elements is solved
-        // remove this code. Check already implemented in BreakingChangeVisitor::brokenUse
+        // Remove breaking changes with an implicit source element.
         for (Iterator<BreakingChange> iter = breakingChanges.iterator(); iter.hasNext();) {
             BreakingChange bc = iter.next();
-
-            // Remove breaking changes whose position cannot be resolved
-            // (probably implicit).
-            if (!bc.getSourceElement().getPosition().isValidPosition())
+            if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
                 iter.remove();
         }
     }
