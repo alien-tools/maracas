@@ -1,0 +1,20 @@
+I"�<h2 id="what-is-maracas">What Is Maracas?</h2>
+<p>Maracas is a source code and bytecode analysis framework⁠—written in Java with the help of Spoon—designed to analyze how Java libraries evolve and how their evolution impact their clients.
+Maracas is built atop JApiCmp, a static analysis tool that computes the delta between two JAR (Java ARchive) files of a Java project.
+Thanks to JApiCmp, Maracas computes the list of breaking changes introduced between two versions of a library, and⁠—with the help of Spoon⁠—detects broken uses on client code.</p>
+
+<h2 id="related-projects">Related Projects</h2>
+<p>Below, we list some relevant projects that are being used by Maracas.</p>
+<ul>
+  <li><a href="https://github.com/siom79/japicmp">JApiCmp</a></li>
+  <li><a href="https://github.com/INRIA/spoon">Spoon</a></li>
+</ul>
+
+<h2 id="contributors">Contributors</h2>
+
+<ul>
+  <li>Thomas Degueule</li>
+  <li>Jean-Rémy Falleri</li>
+  <li>Lina Ochoa Venegas</li>
+</ul>
+:ET

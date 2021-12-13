@@ -1,0 +1,17 @@
+I"<h2 id="what-is-maracas">What Is Maracas?</h2>
+<p>Maracas is a source code and bytecode analysis framework⁠—written in Java with the help of Spoon—designed to analyze how Java libraries evolve and how their evolution impact their clients.</p>
+
+<h2 id="related-projects">Related Projects</h2>
+<ul>
+  <li><a href="">JApiCmp</a></li>
+  <li><a href="">Spoon</a></li>
+</ul>
+
+<h2 id="contributors">Contributors</h2>
+
+<ul>
+  <li>Thomas Degueule</li>
+  <li>Jean-Rémy Falleri</li>
+  <li>Lina Ochoa Venegas</li>
+</ul>
+:ET
