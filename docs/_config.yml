@@ -1,7 +1,7 @@
 # Setup
 title:               Maracas
 tagline:             'Analyzing the impact of libraries evolution'
-baseurl:             ''
+baseurl:             '/maracas'
 paginate:            5
 permalink:           pretty
 
