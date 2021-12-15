@@ -8,18 +8,20 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 
 /**
- * Broken uses of METHOD_REMOVED are:
- *	- Any reference to the now-removed method (invocation, override)
- */
-/**
  * Visitor in charge of gathering method removed issues in client code.
  *
- * <p>METHOD_REMOVED detected cases:
+ * The visitor detects the following cases:
  * <ul>
- * <li> Invocations to the now-removed method.
- *      Example: <pre>var a = method();</pre>
- * <li> Methods overriding the now-removed method.
- *      Example: <pre>@Override<b>public void method() { return; }</pre>
+ * <li> Invocations to the now-removed method. Example:
+ *      <pre>
+ *      var a = method();
+ *      </pre>
+ * <li> Methods overriding the now-removed method. Example:
+ *      <pre>
+ *      &#64;Override
+ *      public void method() { return; }
+ *      </pre>
+ * </ul>
  */
 public class MethodRemovedVisitor extends BreakingChangeVisitor {
     /**

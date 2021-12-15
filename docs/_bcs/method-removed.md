@@ -9,6 +9,8 @@ A method is removed from its owning class.
 ## Broken Use
 Hereafter, we list the broken uses that are currently detected by Maracas.
 
+---
+
 ### 1. Invocations to the now-removed method
 #### Example
 Method `add()` is removed from the class `Math` in the library project.
@@ -42,6 +44,7 @@ public class Calculator {
 }
 ```
 
+---
 
 ### 2. Methods overriding the now-removed method
 #### Example:
@@ -65,7 +68,7 @@ public interface Math {
 
 **Broken use in the client code:**
 ```java
-public class MathImpl {
+public class MathImpl implements Math {
   // Broken use due to a method removed change
   @Override
   public void power(int base, int power) {
