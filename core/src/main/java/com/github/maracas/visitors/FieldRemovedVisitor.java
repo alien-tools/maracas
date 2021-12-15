@@ -31,6 +31,7 @@ public class FieldRemovedVisitor extends BreakingChangeVisitor {
 
 	/**
 	 * Creates a FieldRemovedVisitor instance.
+	 *
 	 * @param fRef the now-removed field
 	 */
 	public FieldRemovedVisitor(CtFieldReference<?> fRef) {
@@ -49,8 +50,9 @@ public class FieldRemovedVisitor extends BreakingChangeVisitor {
 	}
 
 	/**
-	 * Visits a field access element and add a new broken use to the broken uses
-	 * set if needed.
+	 * Visits a field access element and adds a new broken use if the accessed
+	 * field corresponds to the now-removed field.
+	 *
 	 * @param <T>         type of the field
 	 * @param fieldAccess field access
 	 */

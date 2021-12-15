@@ -30,7 +30,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 
 	/**
 	 * Creates a BreakingChangeVisitor instance.
-	 * <p>
+	 *
 	 * The constructor first invokes the constructor of the superclass.
 	 * @see   <a href="https://javadoc.io/static/fr.inria.gforge.spoon/spoon-core/7.3.0/spoon/reflect/visitor/CtAbstractVisitor.html">
 	 *        spoon.reflect.visitor.CtAbstractVisitor</a>

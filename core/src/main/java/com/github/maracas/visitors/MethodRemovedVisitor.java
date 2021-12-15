@@ -31,6 +31,7 @@ public class MethodRemovedVisitor extends BreakingChangeVisitor {
 
 	/**
 	 * Creates a MethodRemovedVisitor instance.
+	 *
 	 * @param mRef the now-removed method
 	 */
 	public MethodRemovedVisitor(CtExecutableReference<?> mRef) {

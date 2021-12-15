@@ -30,12 +30,12 @@ Hereafter, we list the **broken uses** that are currently detected by Maracas.
 #### Example
 
 The method `displayPerson()`—defined in the `PeopleInfo` class in a client project—accesses the `name` field.
-Then, a broken use is reported pointing to the field access statement.
+Then, a broken use is reported pointing to the field access expression.
 
 ```java
 public class PeopleInfo {
   public void displayPerson(Person person) {
-    // Broken use due to Sa field removed change
+    // Broken use reported here
     String personName = person.name;
     System.out.println(personName);
   }
@@ -47,12 +47,12 @@ public class PeopleInfo {
 ### 2. Write accesses of the now-removed field <a name="case-2"></a>
 #### Example
 The method `addLastname()`—defined in the `PeopleInfo` class in a client project—accesses the `name` field.
-Then, a broken use is reported pointing to the field access statement.
+Then, a broken use is reported pointing to the field access expression.
 
 ```java
 public class PeopleInfo {
   public void addLastname(Person person, String lastname) {
-    // Broken use due to a field removed change
+    // Broken use reported here
     person.name += " " + lastname;
   }
 

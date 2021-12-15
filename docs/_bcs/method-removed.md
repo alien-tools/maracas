@@ -30,12 +30,12 @@ Hereafter, we list the **broken uses** that are currently detected by Maracas.
 ### 1. Invocations to the now-removed method <a name="case-1"></a>
 #### Example
 Method `displayPower()`—defined in the `Calculator` class in a client project—invokes an implementation of the now-removed method.
-Then, a broken use is reported pointing to the invocation statement.
+Then, a broken use is reported pointing to the method invocation expression.
 
 ```java
 public class Calculator {
   public void displayPower(int base, int power) {
-    // Broken use due to a method removed change
+    // Broken use reported here
     Math math = new MathImpl();
     int result = math.power(base, power);
     System.out.println(result);
@@ -52,7 +52,7 @@ Then, a broken use is reported pointing to the client method declaration.
 
 ```java
 public class MathImpl implements Math {
-  // Broken use due to a method removed change
+  // Broken use reported here
   @Override
   public void power(int base, int power) {
     int result = 1;
