@@ -9,12 +9,30 @@ import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.reference.CtFieldReference;
 
 /**
- * Broken uses of FIELD_REMOVED are:
- *	- Any reference to the now-removed field
+ * Visitor in charge of gathering field removed issues in client code.
+ *
+ * The visitor detects the following cases:
+ * <ul>
+ * <li> Read accesses of the now-removed field. Example:
+ *      <pre>
+ *      var a = field;
+ *      </pre>
+ * <li> Write accesses of the now-removed field. Example:
+ *      <pre>
+ *      self.field = 10;
+ *      </pre>
+ * </ul>
  */
 public class FieldRemovedVisitor extends BreakingChangeVisitor {
+    /**
+     * Spoon reference to the removed field.
+     */
 	private final CtFieldReference<?> fRef;
 
+	/**
+	 * Creates a FieldRemovedVisitor instance.
+	 * @param fRef the now-removed field
+	 */
 	public FieldRemovedVisitor(CtFieldReference<?> fRef) {
 		super(JApiCompatibilityChange.FIELD_REMOVED);
 		this.fRef = fRef;
@@ -30,6 +48,12 @@ public class FieldRemovedVisitor extends BreakingChangeVisitor {
 		visitCtFieldAccess(fieldWrite);
 	}
 
+	/**
+	 * Visits a field access element and add a new broken use to the broken uses
+	 * set if needed.
+	 * @param <T>         type of the field
+	 * @param fieldAccess field access
+	 */
 	private <T> void visitCtFieldAccess(CtFieldAccess<T> fieldAccess) {
 		if (fRef.equals(fieldAccess.getVariable()))
 			brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);

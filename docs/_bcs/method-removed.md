@@ -3,16 +3,14 @@ layout: bc
 title: Method Removed
 ---
 
-## Description
-A method is removed from its owning class.
+> A method is removed from its owning class.
 
-## Broken Use
-Hereafter, we list the broken uses that are currently detected by Maracas.
+Hereafter, we list the **broken uses** that are currently detected by Maracas:
 
 ---
 
-### 1. Invocations to the now-removed method
-#### Example
+## 1. Invocations to the now-removed method
+### Example
 Method `add()` is removed from the class `Math` in the library project.
 Method `displayAddition()`—defined in the `Calculator` class in a client project—invokes the now-removed method.
 Then, a broken use is reported pointing to the invocation statement.
@@ -46,8 +44,8 @@ public class Calculator {
 
 ---
 
-### 2. Methods overriding the now-removed method
-#### Example:
+## 2. Methods overriding the now-removed method
+### Example
 Method `power()` is removed from the interface `Math` in the library project.
 The `MathImpl` class in a client project overrides the previous method.
 Then, a broken use is reported pointing to the client method declaration.
