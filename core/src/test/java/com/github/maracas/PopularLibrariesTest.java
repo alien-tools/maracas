@@ -1,10 +1,15 @@
 package com.github.maracas;
 
+import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.Delta;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,34 +18,58 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
+/**
+ * Run the Maracas analysis on some popular libraries from Maven Central
+ * and run some basic checks on the resulting models.
+ * The old version of the library is used as client for broken use analysis.
+ */
 class PopularLibrariesTest {
   static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
-  static final String GUAVA_18 = "https://repo1.maven.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar";
-  static final String GUAVA_19 = "https://repo1.maven.org/maven2/com/google/guava/guava/19.0/guava-19.0.jar";
-  static final String SLF4J_161 = "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1.jar";
-  static final String SLF4J_172 = "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar";
 
-  @Test
-  void guava_18_to_19() {
-    Path g18 = downloadJAR(GUAVA_18);
-    Path g19 = downloadJAR(GUAVA_19);
-
-    Delta d = Maracas.computeDelta(g18, g19);
-    assertIsValid(d);
+  static Stream<Arguments> interestingLibraries() {
+    return Stream.of(
+      Arguments.of("com.google.guava",           "guava",             "18.0",     "19.0"),
+      Arguments.of("com.google.guava",           "guava",             "30.0-jre", "31.0.1-jre"),
+      Arguments.of("org.slf4j",                  "slf4j-api",         "1.6.1",    "1.7.2"),
+      Arguments.of("fr.inria.gforge.spoon",      "spoon-core",        "7.0.0",    "8.0.0"),
+      Arguments.of("fr.inria.gforge.spoon",      "spoon-core",        "8.0.0",    "9.0.0"),
+      Arguments.of("fr.inria.gforge.spoon",      "spoon-core",        "9.0.0",    "10.0.0"),
+      Arguments.of("junit",                      "junit",             "4.12",     "4.13.2"),
+      Arguments.of("org.junit.jupiter",          "junit-jupiter-api", "5.5.2",    "5.6.3"),
+      Arguments.of("org.junit.jupiter",          "junit-jupiter-api", "5.6.3",    "5.8.2"),
+      Arguments.of("commons-io",                 "commons-io",        "2.4",      "2.5"),
+      Arguments.of("commons-io",                 "commons-io",        "2.10.0",   "2.11.0"),
+      Arguments.of("org.apache.commons",         "commons-lang3",     "3.10",     "3.11"),
+      Arguments.of("com.fasterxml.jackson.core", "jackson-databind",  "2.12.5",   "2.13.0"),
+      Arguments.of("com.fasterxml.jackson.core", "jackson-databind",  "2.6.0",    "2.11.0")
+    );
   }
 
-  @Test
-  void slf4j_161_to_172() {
-    Path slf4j161 = downloadJAR(SLF4J_161);
-    Path slf4j172 = downloadJAR(SLF4J_172);
+  @ParameterizedTest
+  @MethodSource("interestingLibraries")
+  void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) {
+    Path oldJar = downloadJAR(coordinatesToJarURL(gid, aid, v1));
+    Path newJar = downloadJAR(coordinatesToJarURL(gid, aid, v2));
+    Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
-    Delta d = Maracas.computeDelta(slf4j161, slf4j172);
-    assertIsValid(d);
+    AnalysisQuery query = AnalysisQuery.builder()
+      .oldJar(oldJar)
+      .newJar(newJar)
+      .sources(sources)
+      .client(sources)
+      .build();
+
+    AnalysisResult result = Maracas.analyze(query);
+    System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
+      result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
+    assertIsValid(result);
   }
 
   @BeforeAll
@@ -53,21 +82,38 @@ class PopularLibrariesTest {
     FileUtils.deleteDirectory(TMP_PATH.toFile());
   }
 
-  void assertIsValid(Delta d) {
-    assertThat(d, is(notNullValue()));
-    assertThat(d, is(notNullValue()));
-    assertThat(d.getBreakingChanges(), everyItem(allOf(
-      hasProperty("reference", is(notNullValue())),
-      // TODO: uncomment once all visitors are implemented
-      //hasProperty("visitor", is(notNullValue()))
-      hasProperty("sourceElement", is(nullValue()))
-    )));
+  void assertIsValid(AnalysisResult res) {
+    Delta delta = res.delta();
+    Collection<BrokenUse> ds = res.allBrokenUses();
+
+    assertThat(delta, is(notNullValue()));
+    delta.getBreakingChanges().forEach(bc -> {
+      assertThat(bc.getReference(), is(notNullValue()));
+      assertThat(bc.getSourceElement(), is(notNullValue()));
+      assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
+    });
+    ds.forEach(d -> {
+      assertThat(d.element(), is(notNullValue()));
+      assertThat(d.element().getPosition().isValidPosition(), is(true));
+      assertThat(d.usedApiElement(), is(notNullValue()));
+      assertThat(d.source(), is(notNullValue()));
+    });
+  }
+
+  String coordinatesToJarURL(String gid, String aid, String v) {
+    return "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.jar".formatted(
+      gid.replaceAll("\\.", "/"), aid, v, aid, v);
+  }
+
+  String coordinatesToSourcesURL(String gid, String aid, String v) {
+    return "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-sources.jar".formatted(
+      gid.replaceAll("\\.", "/"), aid, v, aid, v);
   }
 
   static Path downloadJAR(String uri) {
     try {
       URL url = new URL(uri);
-      String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1, url.getFile().length());
+      String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1);
       Path dest = TMP_PATH.resolve(filename);
       ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
       FileOutputStream fileOutputStream = new FileOutputStream(dest.toFile());
@@ -77,5 +123,21 @@ class PopularLibrariesTest {
       e.printStackTrace();
       return null;
     }
+  }
+
+  static Path downloadAndExtractSources(String uri) {
+    Path sourcesJar = downloadJAR(uri);
+    String filename = sourcesJar.getFileName().toString();
+    Path dest = TMP_PATH.resolve(filename.substring(0, filename.length() - 4));
+    dest.toFile().mkdirs();
+
+    try {
+      ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString());
+      zipFile.extractAll(dest.toAbsolutePath().toString());
+    } catch (ZipException e) {
+      e.printStackTrace();
+    }
+
+    return dest;
   }
 }
