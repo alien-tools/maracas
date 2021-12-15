@@ -1,0 +1,31 @@
+---
+layout: page
+title: Breaking Changes
+---
+
+<!-- Description -->
+<div>
+	<p>
+    Hereafter, we present the list of breaking changes and broken uses detected by Maracas.
+    The detection of these entities is mostly based on the Java Language Specification Java SE 8 Edition.
+    If you pinpoint missed cases, we encourage you to report an [issue](https://github.com/alien-tools/maracas/issues).
+	</p>
+</div>
+
+<!-- Cases -->
+<div>
+  <h2>Cases</h2>
+  <div>
+    {% for bc in site.bcs %}
+    <div>
+      <ul>
+        <li>
+          <a href="{{ site.baseurl }}{{ bc.url }}">
+            {{ bc.title }}
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</div>

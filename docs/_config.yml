@@ -18,3 +18,8 @@ plugins:
 # Custom vars
 version:             0.0.1
 google_analytics_id: #UA-XXXX-Y
+
+# Collections
+collections:
+  bcs:
+    output: true
