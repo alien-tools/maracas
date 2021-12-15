@@ -21,23 +21,56 @@ import spoon.reflect.reference.CtTypeReference;
 /**
  * Visitor in charge of gathering all supertype removed issues in client code.
  *
- * <p>INTERFACE_REMOVED and SUPERCLASS_REMOVED detected cases:
+ * The visitor detects the following cases:
  * <ul>
- * <li> Methods overriding methods declared within the supertype.
- *      Example: <pre>@Override<b>public void m() { return; }</pre>
- * <li> Accessing supertype fields via subtypes.
- *      Example: <pre>AffectedSubtype.field</pre>
- * <li> Accessing supertype methods via subtypes.
- *      Example: <pre>AffectedSubtype.method()</pre>
- * <li> Casting local variables with removed supertype.
- *      Example: <pre>RemovedSupertype s = (RemovedSupertype) subtypeObj;</pre>
+ * <li> Methods overriding methods declared within the supertype. Example:
+ *      <pre>
+ *      @Override
+ *      public void m() { return; }
+ *      </pre>
+ * <li> Accessing supertype fields via subtypes. Example:
+ *      <pre>
+ *      AffectedSubtype.field;
+ *      </pre>
+ * <li> Invoking supertype methods via subtypes. Example:
+ *      <pre>
+ *      AffectedSubtype.method();
+ *      </pre>
+ * <li> Casting local variables with removed supertype. Example:
+ *      <pre>
+ *      RemovedSupertype s = (RemovedSupertype) subtypeObj;
+ *      </pre>
+ * </ul>
  */
 public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
+    /**
+     * Spoon reference to the class that removed the supertype(s).
+     */
     protected final CtTypeReference<?> clsRef;
+
+    /**
+     * Set of removed supertypes of the class (interfaces and classes).
+     */
     protected final Set<CtTypeReference<?>> supertypes;
+
+    /**
+     * Set of methods defined within the removed supertypes.
+     */
     protected final Set<CtExecutableReference<?>> superMethods;
+
+    /**
+     * Set of field defined within the removed supertypes.
+     */
     protected final Set<String> superFields;
 
+    /**
+     * Creates a SupertypeRemovedVisitor instance.
+     *
+     * @param clsRef     class that removed the supertype(s)
+     * @param supertypes set of removed supertypes
+     * @param change     kind of breaking change (interface removed or
+     *                   superclass removed)
+     */
     protected SupertypeRemovedVisitor(CtTypeReference<?> clsRef, Set<CtTypeReference<?>> supertypes, JApiCompatibilityChange change) {
         super(change);
         this.clsRef = clsRef;
@@ -103,6 +136,13 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
         visitExpAssignment(localVariable.getAssignment());
     }
 
+    /**
+     * Visits an assignment expression and adds a new broken use if the class of
+     * the object is a subtype of the removed supertype.
+     *
+     * @param <T>        type of the expression
+     * @param assignExpr assignment expression
+     */
     private <T> void visitExpAssignment(CtExpression<T> assignExpr) {
         // FIXME: when dealing with interfaces this issue is not reported
         // as a compilation error.
