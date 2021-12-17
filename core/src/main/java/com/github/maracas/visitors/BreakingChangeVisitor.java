@@ -21,12 +21,12 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
     /**
      * Kind of breaking change as defined by JApiCmp.
      */
-	private final JApiCompatibilityChange change;
+	protected final JApiCompatibilityChange change;
 
 	/**
 	 * Set of detected broken uses.
 	 */
-	private final Set<BrokenUse> brokenUses = new HashSet<>();
+	protected final Set<BrokenUse> brokenUses = new HashSet<>();
 
 	/**
 	 * Creates a BreakingChangeVisitor instance.
