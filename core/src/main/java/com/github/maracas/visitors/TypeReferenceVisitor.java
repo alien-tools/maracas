@@ -6,13 +6,30 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Generic type reference visitor. It creates a broken use for every reference
- * to the supplied {code clsRef}.
+ * Generic visitor in charge of gathering type reference issues in client code.
+ *
+ * It creates a broken use for every reference to the supplied {code clsRef}.
+ * The visitor detects the following cases:
+ * <ul>
+ * <li> Any reference to the now-removed class. Example:
+ *      <pre>
+ *      public void method(RemovedClass cls) { }
+ *      </pre>
+ * </ul>
  */
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
+    /**
+     * Spoon reference to the modified type
+     */
 	protected final CtTypeReference<?> clsRef;
 
-	public TypeReferenceVisitor(JApiCompatibilityChange change, CtTypeReference<?> clsRef) {
+	/**
+	 * Creates a TypeReferenceVisitor instance.
+	 *
+	 * @param clsRef modified type
+	 * @param change kind of breaking change
+	 */
+	public TypeReferenceVisitor(CtTypeReference<?> clsRef, JApiCompatibilityChange change) {
 		super(change);
 		this.clsRef = clsRef;
 	}
@@ -21,7 +38,6 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
 			APIUse use = getAPIUseByRole(reference);
-
 			brokenUse(reference.getParent(), reference, clsRef, use);
 		}
 	}
@@ -29,9 +45,9 @@ public class TypeReferenceVisitor extends BreakingChangeVisitor {
 	/*
 	 * Uncomment in case we also want to detect:
 	 *   - Every reference to a field that it declares
-   *   - Every reference to an executable that it declares
-   *   - Every method that overrides one of its methods
-   *
+     *   - Every reference to an executable that it declares
+     *   - Every method that overrides one of its methods
+     *
 	@Override
 	public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
 		if (clsRef.equals(reference.getDeclaringType()))

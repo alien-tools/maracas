@@ -4,11 +4,15 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Broken uses of CLASS_REMOVED are:
- *   - Any reference to the now-removed class
+ * Visitor in charge of gathering class removed issues in client code.
  */
 public class ClassRemovedVisitor extends TypeReferenceVisitor {
+    /**
+     * Creates a ClassRemovedVisitor instance.
+     *
+     * @param clsRef the now-removed class
+     */
 	public ClassRemovedVisitor(CtTypeReference<?> clsRef) {
-		super(JApiCompatibilityChange.CLASS_REMOVED, clsRef);
+		super(clsRef, JApiCompatibilityChange.CLASS_REMOVED);
 	}
 }
