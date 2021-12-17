@@ -1,5 +1,12 @@
 package com.github.maracas.util;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import japicmp.model.JApiConstructor;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
@@ -7,6 +14,7 @@ import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLoop;
+import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -20,13 +28,6 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class SpoonHelpers {
 
@@ -121,6 +122,8 @@ public class SpoonHelpers {
 			return e.getFactory().Type().booleanPrimitiveType();
 		else if (e instanceof CtThrow thrw)
 			return thrw.getThrownExpression().getType();
+		else if (e instanceof CtReturn<?> retrn)
+		    return retrn.getReturnedExpression().getType();
 
 		// FIXME: CtSwitch not supported yet
 

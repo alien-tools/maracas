@@ -1,8 +1,17 @@
 package com.github.maracas.delta;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
+
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -13,7 +22,6 @@ import japicmp.model.JApiSuperclass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
-import spoon.SpoonException;
 import spoon.reflect.CtModel;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
@@ -22,14 +30,6 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A delta model lists the breaking changes between two versions of a library,
@@ -88,14 +88,15 @@ public class Delta {
             @Override
             public void visit(JApiClass cls) {
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
+                if (clsRef != null) {
+                    cls.getCompatibilityChanges().forEach(c ->
+                      breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
+                    );
 
-                cls.getCompatibilityChanges().forEach(c ->
-                  breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
-                );
-
-                cls.getInterfaces().forEach(i ->
-                  visit(cls, i)
-                );
+                    cls.getInterfaces().forEach(i ->
+                      visit(cls, i)
+                    );
+                }
             }
 
             @Override
@@ -110,7 +111,7 @@ public class Delta {
                     CtExecutableReference<?> mRef = root.getFactory().Method().createReference(sign);
 
                     try {
-                        if (mRef.getExecutableDeclaration() != null) {
+                        if (mRef != null && mRef.getExecutableDeclaration() != null) {
                             m.getCompatibilityChanges().forEach(c ->
                               breakingChanges.add(new MethodBreakingChange(m, mRef, c))
                             );
@@ -150,9 +151,10 @@ public class Delta {
                     CtField oldField = oldFieldOpt.get();
                     CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
 
-                    f.getCompatibilityChanges().forEach(c ->
-                      breakingChanges.add(new FieldBreakingChange(f, fRef, c))
-                    );
+                    if (fRef != null && fRef.getFieldDeclaration() != null)
+                        f.getCompatibilityChanges().forEach(c ->
+                          breakingChanges.add(new FieldBreakingChange(f, fRef, c))
+                        );
                 } else {
                     // No oldField
                 }
@@ -168,7 +170,7 @@ public class Delta {
                     String sign = SpoonHelpers.buildSpoonSignature(cons);
                     CtExecutableReference<?> consRef = root.getFactory().Constructor().createReference(sign);
 
-                    if (consRef.getExecutableDeclaration() != null) {
+                    if (consRef != null && consRef.getExecutableDeclaration() != null) {
                         cons.getCompatibilityChanges().forEach(c ->
                           breakingChanges.add(new MethodBreakingChange(cons, consRef, c))
                         );
@@ -193,16 +195,20 @@ public class Delta {
             public void visit(JApiSuperclass superCls) {
                 JApiClass jApiClass = superCls.getJApiClassOwning();
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
-                superCls.getCompatibilityChanges().forEach(c ->
-                  breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
-                );
+
+                if (clsRef != null && clsRef.getTypeDeclaration() != null)
+                    superCls.getCompatibilityChanges().forEach(c ->
+                      breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
+                    );
             }
 
             public void visit(JApiClass cls, JApiImplementedInterface intf) {
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
-                intf.getCompatibilityChanges().forEach(c ->
-                  breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
-                );
+
+                if (clsRef != null && clsRef.getTypeDeclaration() != null)
+                    intf.getCompatibilityChanges().forEach(c ->
+                      breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
+                    );
             }
         });
 
@@ -226,7 +232,7 @@ public class Delta {
         breakingChanges.forEach(decl -> {
             CtReference bytecodeRef = decl.getReference();
 
-            if (bytecodeRef.getDeclaration() == null)
+            if (bytecodeRef == null || bytecodeRef.getDeclaration() == null)
                 return;
 
             if (bytecodeRef instanceof CtTypeReference<?> typeRef) {

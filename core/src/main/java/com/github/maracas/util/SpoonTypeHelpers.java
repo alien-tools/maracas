@@ -107,7 +107,7 @@ public class SpoonTypeHelpers {
      */
     public static boolean isSubtype(Set<CtTypeReference<?>> superRefs, CtTypeReference<?> typeRef) {
         for (CtTypeReference<?> superRef : superRefs) {
-            if (superRef == null)
+            if (superRef == null || superRef.getTypeDeclaration() == null)
                 return false;
 
             if (superRef.equals(typeRef))

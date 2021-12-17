@@ -105,6 +105,8 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 				APIUse.IMPORT;
 			case DECLARED_TYPE_REF ->
 				APIUse.TYPE_DEPENDENCY; // FIXME: This one is weird
+			case BOUNDING_TYPE ->
+			    APIUse.TYPE_DEPENDENCY;
 			default ->
 				throw new RuntimeException("Unmanaged role " + role + " for " + element + " in " + element.getParent());
 		};
