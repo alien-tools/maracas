@@ -24,10 +24,8 @@ public interface Vehicle {
 ```
 
 ```diff
--public abstract class LandVehicles implements Vehicle {
-+public abstract class LandVehicles {
-
-}
+-public abstract class LandVehicle implements Vehicle { }
++public abstract class LandVehicle { }
 ```
 
 ---

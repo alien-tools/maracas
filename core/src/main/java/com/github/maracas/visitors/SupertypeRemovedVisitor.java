@@ -23,23 +23,32 @@ import spoon.reflect.reference.CtTypeReference;
  *
  * The visitor detects the following cases:
  * <ul>
- * <li> Methods overriding methods declared within the supertype. Example:
- *      <pre>
- *      @Override
- *      public void m() { return; }
- *      </pre>
- * <li> Accessing supertype fields via subtypes. Example:
- *      <pre>
+ * <li>Methods overriding methods declared within the supertype. Example:
+ *
+ * <pre>
+ * &#64;Override
+ * public void m() {
+ *     return;
+ * }
+ * </pre>
+ *
+ * <li>Accessing supertype fields via subtypes. Example:
+ *
+ * <pre>
  *      AffectedSubtype.field;
- *      </pre>
- * <li> Invoking supertype methods via subtypes. Example:
- *      <pre>
- *      AffectedSubtype.method();
- *      </pre>
- * <li> Casting local variables with removed supertype. Example:
- *      <pre>
- *      RemovedSupertype s = (RemovedSupertype) subtypeObj;
- *      </pre>
+ * </pre>
+ *
+ * <li>Invoking supertype methods via subtypes. Example:
+ *
+ * <pre>
+ * AffectedSubtype.method();
+ * </pre>
+ *
+ * <li>Casting local variables with removed supertype. Example:
+ *
+ * <pre>
+ * RemovedSupertype s = (RemovedSupertype) subtypeObj;
+ * </pre>
  * </ul>
  */
 public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
@@ -68,22 +77,18 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
      *
      * @param clsRef     class that removed the supertype(s)
      * @param supertypes set of removed supertypes
-     * @param change     kind of breaking change (interface removed or
-     *                   superclass removed)
+     * @param change     kind of breaking change (interface removed or superclass
+     *                   removed)
      */
-    protected SupertypeRemovedVisitor(CtTypeReference<?> clsRef, Set<CtTypeReference<?>> supertypes, JApiCompatibilityChange change) {
+    protected SupertypeRemovedVisitor(CtTypeReference<?> clsRef, Set<CtTypeReference<?>> supertypes,
+        JApiCompatibilityChange change) {
         super(change);
         this.clsRef = clsRef;
         this.supertypes = supertypes;
-        this.superMethods = supertypes.stream()
-            .map(i -> i.getDeclaredExecutables())
-            .flatMap(Collection::stream)
+        this.superMethods = supertypes.stream().map(i -> i.getDeclaredExecutables()).flatMap(Collection::stream)
             .collect(Collectors.toSet());
-        this.superFields = supertypes.stream()
-            .map(i -> i.getDeclaredFields())
-            .flatMap(Collection::stream)
-            .map(f -> f.getSimpleName())
-            .collect(Collectors.toSet());
+        this.superFields = supertypes.stream().map(i -> i.getDeclaredFields()).flatMap(Collection::stream)
+            .map(f -> f.getSimpleName()).collect(Collectors.toSet());
     }
 
     @Override
@@ -113,7 +118,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
         // var target = invocation.getTarget();
         // if (methRef.isStatic() && target instanceof CtTypeAccess<?>
         // && supertypes.contains(((CtTypeAccess<?>) target).getAccessedType()))
-        //    return;
+        // return;
     }
 
     @Override
@@ -137,8 +142,8 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
     }
 
     /**
-     * Visits an assignment expression and adds a new broken use if the class of
-     * the object is a subtype of the removed supertype.
+     * Visits an assignment expression and adds a new broken use if the class of the
+     * object is a subtype of the removed supertype.
      *
      * @param <T>        type of the expression
      * @param assignExpr assignment expression
