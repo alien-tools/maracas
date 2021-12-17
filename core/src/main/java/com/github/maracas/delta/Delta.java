@@ -24,6 +24,7 @@ import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import spoon.reflect.CtModel;
+import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
@@ -246,7 +247,11 @@ public class Delta {
         // Remove breaking changes with an implicit source element.
         for (Iterator<BreakingChange> iter = breakingChanges.iterator(); iter.hasNext();) {
             BreakingChange bc = iter.next();
-            if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
+            // FIXME: the isImplicit() method is still not returning the expected
+            // output. Using the position as a proxy.
+            // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
+            //     iter.remove();
+            if (bc.getSourceElement().getPosition() instanceof NoSourcePosition)
                 iter.remove();
         }
     }
