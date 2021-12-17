@@ -1,18 +1,8 @@
 package com.github.maracas.delta;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
-
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -23,6 +13,7 @@ import japicmp.model.JApiSuperclass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
+import spoon.SpoonException;
 import spoon.reflect.CtModel;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
@@ -31,6 +22,14 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * A delta model lists the breaking changes between two versions of a library,
@@ -87,46 +86,46 @@ public class Delta {
 
         JApiCmpDeltaVisitor.visit(classes, new JApiCmpDeltaVisitor() {
             @Override
-            public void visit(JApiClass jApiClass) {
-                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
-                jApiClass.getCompatibilityChanges().forEach(c ->
-                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
+            public void visit(JApiClass cls) {
+                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
+
+                cls.getCompatibilityChanges().forEach(c ->
+                  breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
                 );
 
-                jApiClass.getInterfaces().forEach(i ->
-                    visit(jApiClass, i)
+                cls.getInterfaces().forEach(i ->
+                  visit(cls, i)
                 );
             }
 
             @Override
-            public void visit(JApiMethod jApiMethod) {
-                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiMethod.getjApiClass().getFullyQualifiedName());
-                var oldMethodOpt = jApiMethod.getOldMethod();
-                var newMethodOpt = jApiMethod.getNewMethod();
+            public void visit(JApiMethod m) {
+                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(m.getjApiClass().getFullyQualifiedName());
+                var oldMethodOpt = m.getOldMethod();
+                var newMethodOpt = m.getNewMethod();
 
                 if (oldMethodOpt.isPresent()) {
                     CtMethod oldMethod = oldMethodOpt.get();
-                    Optional<CtExecutableReference<?>> mRefOpt =
-                        clsRef.getDeclaredExecutables()
-                        .stream()
-                        .filter(m -> SpoonHelpers.matchingSignatures(m, oldMethod))
-                        .findFirst();
+                    String sign = SpoonHelpers.buildSpoonSignature(m);
+                    CtExecutableReference<?> mRef = root.getFactory().Method().createReference(sign);
 
-                    if (mRefOpt.isPresent()) {
-                        jApiMethod.getCompatibilityChanges().forEach(c ->
-                            breakingChanges.add(new MethodBreakingChange(jApiMethod, mRefOpt.get(), c))
-                        );
-                    } else {
-                        if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf")) {
-                            // When an enum is transformed into anything else,
-                            // japicmp reports that valueOf(String)/values() are removed
-                            // Ignore. FIXME
-                            ;
+                    try {
+                        if (mRef.getExecutableDeclaration() != null) {
+                            m.getCompatibilityChanges().forEach(c ->
+                              breakingChanges.add(new MethodBreakingChange(m, mRef, c))
+                            );
                         } else {
-                            // FIXME: Commenting following lines to avoid verbose log
-//                            System.err.println("Spoon's old method cannot be found: " + jApiMethod);
-//                            System.err.println("\tKnown bug: is the method @Deprecated?");
+                            if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf")) {
+                                // When an enum is transformed into anything else,
+                                // japicmp reports that valueOf(String)/values() are removed
+                                // Ignore. FIXME
+                                ;
+                            } else {
+                                System.out.println("Couldn't find old method " + m);
+                            }
                         }
+                    } catch (Exception e) {
+                        System.out.println("Couldn't resolve method " + m + " [" + e.getMessage() + "]");
                     }
                 } else if (newMethodOpt.isPresent()) {
                     // Added method introducing a breaking change.
@@ -134,26 +133,25 @@ public class Delta {
 
                     // FIXME: we miss the information about the newly added method
                     if (!(newMethod.getName().equals("values") || newMethod.getName().equals("valueOf"))) {
-                        jApiMethod.getCompatibilityChanges().forEach(c ->
-                            breakingChanges.add(new ClassBreakingChange(jApiMethod.getjApiClass(), clsRef, c))
+                        m.getCompatibilityChanges().forEach(c ->
+                          breakingChanges.add(new ClassBreakingChange(m.getjApiClass(), clsRef, c))
                         );
                     }
-
                 } else {
                     throw new RuntimeException("The JApiCmp delta model is corrupted.");
                 }
             }
 
             @Override
-            public void visit(JApiField jApiField) {
-                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiField.getjApiClass().getFullyQualifiedName());
-                var oldFieldOpt = jApiField.getOldFieldOptional();
+            public void visit(JApiField f) {
+                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(f.getjApiClass().getFullyQualifiedName());
+                var oldFieldOpt = f.getOldFieldOptional();
                 if (oldFieldOpt.isPresent()) {
                     CtField oldField = oldFieldOpt.get();
                     CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
 
-                    jApiField.getCompatibilityChanges().forEach(c ->
-                        breakingChanges.add(new FieldBreakingChange(jApiField, fRef, c))
+                    f.getCompatibilityChanges().forEach(c ->
+                      breakingChanges.add(new FieldBreakingChange(f, fRef, c))
                     );
                 } else {
                     // No oldField
@@ -161,51 +159,49 @@ public class Delta {
             }
 
             @Override
-            public void visit(JApiConstructor jApiConstructor) {
-                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiConstructor.getjApiClass().getFullyQualifiedName());
-                var oldConsOpt = jApiConstructor.getOldConstructor();
+            public void visit(JApiConstructor cons) {
+                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cons.getjApiClass().getFullyQualifiedName());
+                var oldConsOpt = cons.getOldConstructor();
 
                 if (oldConsOpt.isPresent()) {
                     CtConstructor oldCons = oldConsOpt.get();
-                    Optional<CtExecutableReference<?>> cRefOpt =
-                        clsRef.getDeclaredExecutables()
-                        .stream()
-                        .filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
-                        .findFirst();
+                    String sign = SpoonHelpers.buildSpoonSignature(cons);
+                    CtExecutableReference<?> consRef = root.getFactory().Constructor().createReference(sign);
 
-                    if (cRefOpt.isPresent()) {
-                        jApiConstructor.getCompatibilityChanges().forEach(c ->
-                            breakingChanges.add(new MethodBreakingChange(jApiConstructor, cRefOpt.get(), c))
+                    if (consRef.getExecutableDeclaration() != null) {
+                        cons.getCompatibilityChanges().forEach(c ->
+                          breakingChanges.add(new MethodBreakingChange(cons, consRef, c))
                         );
                     } else {
                         // No old constructor
+                        System.out.println("Couldn't find constructor " + cons);
                     }
                 }
             }
 
             @Override
-            public void visit(JApiImplementedInterface jApiImplementedInterface) {
+            public void visit(JApiImplementedInterface intf) {
                 // Using visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface)
                 // FIXME: is there a way to get the JApiClass from the interface?
             }
 
             @Override
-            public void visit(JApiAnnotation jApiAnnotation) {
+            public void visit(JApiAnnotation ann) {
             }
 
             @Override
-            public void visit(JApiSuperclass jApiSuperclass) {
-                JApiClass jApiClass = jApiSuperclass.getJApiClassOwning();
+            public void visit(JApiSuperclass superCls) {
+                JApiClass jApiClass = superCls.getJApiClassOwning();
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
-                jApiSuperclass.getCompatibilityChanges().forEach(c ->
-                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
+                superCls.getCompatibilityChanges().forEach(c ->
+                  breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
                 );
             }
 
-            public void visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface) {
-                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
-                jApiImplementedInterface.getCompatibilityChanges().forEach(c ->
-                    breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
+            public void visit(JApiClass cls, JApiImplementedInterface intf) {
+                CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
+                intf.getCompatibilityChanges().forEach(c ->
+                  breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
                 );
             }
         });
@@ -218,7 +214,7 @@ public class Delta {
      * this method with the old library's source code populates the source code
      * location for every breaking change.
      *
-     * @param sources a {@link Path} to the old library's source code
+     * @param sources a {@link java.nio.file.Path} to the old library's source code
      */
     public void populateLocations(Path sources) {
         if (!PathHelpers.isValidDirectory(sources))
@@ -229,9 +225,11 @@ public class Delta {
 
         breakingChanges.forEach(decl -> {
             CtReference bytecodeRef = decl.getReference();
+
+            if (bytecodeRef.getDeclaration() == null)
+                return;
+
             if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
-                // FIXME: Issue with anonymous class in the
-                // https://github.com/break-bot/spoon-before-bc/pull/2 example
                 CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
                 decl.setSourceElement(sourceRef.getTypeDeclaration());
             } else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
@@ -251,40 +249,40 @@ public class Delta {
             // output. Using the position as a proxy.
             // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
             //     iter.remove();
-            if (bc.getSourceElement().getPosition() instanceof NoSourcePosition)
+            if (bc.getSourceElement() != null && bc.getSourceElement().getPosition() instanceof NoSourcePosition)
                 iter.remove();
         }
     }
 
     /**
-     * Returns a list of {@link BreakingChangeVisitor}, one per {@link BreakingChange}
+     * Returns a list of {@link com.github.maracas.visitors.BreakingChangeVisitor}, one per {@link com.github.maracas.delta.BreakingChange}
      * in the current delta model. Each visitor is responsible for inferring
      * the set of broken uses in client code impacted by the breaking change.
      */
     public Collection<BreakingChangeVisitor> getVisitors() {
         return
-            breakingChanges.stream()
+          breakingChanges.stream()
             .map(BreakingChange::getVisitor)
             .filter(Objects::nonNull) // Temporary; FIXME
             .toList();
     }
 
     /**
-     * Returns the list of {@link BreakingChange in the current delta model
+     * Returns the list of {@link com.github.maracas.delta.BreakingChange in the current delta model
      */
     public Collection<BreakingChange> getBreakingChanges() {
         return breakingChanges;
     }
 
     /**
-     * Returns the {@link Path} to the library's old JAR of the current delta
+     * Returns the {@link java.nio.file.Path} to the library's old JAR of the current delta
      */
     public Path getOldJar() {
         return oldJar;
     }
 
     /**
-     * Returns the {@link Path} to the library's new JAR of the current delta
+     * Returns the {@link java.nio.file.Path} to the library's new JAR of the current delta
      */
     public Path getNewJar() {
         return newJar;
@@ -295,18 +293,18 @@ public class Delta {
         StringBuilder sb = new StringBuilder();
         sb.append("Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()));
         sb.append(
-            breakingChanges.stream()
+          breakingChanges.stream()
             .map(bd -> """
                 [%s]
                 Reference: %s
                 Source: %s %s
                 """.formatted(
-                    bd.getChange(),
-                    bd.getReference(),
-                    bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement(),
-                    bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : "<no source>")
-                ).collect(Collectors.joining())
-            );
+              bd.getChange(),
+              bd.getReference(),
+              bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement(),
+              bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : "<no source>")
+            ).collect(Collectors.joining())
+        );
         return sb.toString();
     }
 }
