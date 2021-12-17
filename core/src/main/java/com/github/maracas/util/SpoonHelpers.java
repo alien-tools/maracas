@@ -1,11 +1,8 @@
 package com.github.maracas.util;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-
-import javassist.CtBehavior;
+import japicmp.model.JApiConstructor;
+import japicmp.model.JApiMethod;
+import japicmp.model.JApiParameter;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtIf;
@@ -23,6 +20,13 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SpoonHelpers {
 
@@ -63,28 +67,28 @@ public class SpoonHelpers {
 		return parent;
 	}
 
-	/**
-	 * Verifies if the signature of a Spoon method (CtExecutableReference)
-	 * is equivalent to the one of the JApiCmp method (CtBehavior).
-	 * @param spoonMethod the Spoon method
-	 * @param japiMethod  The JapiCmp method
-	 * @return            <code>true</code> if the methods have the same
-	 *                    signature; <code>false</code> otherwise.
-	 */
-	public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {
-		String japiMethName = "";
+	public static String buildSpoonSignature(JApiMethod m) {
+		String returnType = m.getReturnType().getOldReturnType();
+		if (returnType.equals("n.a."))
+			returnType = "void";
+		String type = m.getjApiClass().getFullyQualifiedName();
+		String name = m.getName();
+		String params = m.getParameters().stream().map(p -> p.getType()).collect(Collectors.joining(","));
+		return "%s %s#%s(%s)".formatted(returnType, type, name, params);
+	}
 
-		if (spoonMethod.isConstructor() && japiMethod.getLongName().contains("$")) {  // Inner class constructor
-			String ln = japiMethod.getLongName();
-			String outerCN = ln.substring(0, ln.indexOf("$"));
-			japiMethName = ln.replaceAll(String.format("\\(%s,?", outerCN), "(");
-		} else if (spoonMethod.isConstructor()) {                                     // Regular constructor
-			japiMethName = japiMethod.getLongName();
-		} else {                                                                      // Regular method
-			japiMethName = japiMethod.getName().concat(japiMethod.getSignature());
+	public static String buildSpoonSignature(JApiConstructor cons) {
+		String type = cons.getjApiClass().getFullyQualifiedName();
+		List<JApiParameter> params = cons.getParameters();
+		if (cons.getName().contains("$") && !params.isEmpty()) {
+			String firstParam = params.get(0).getType();
+			String containingCls = cons.getjApiClass().getFullyQualifiedName();
+			String outerCls = containingCls.substring(0, containingCls.lastIndexOf("$"));
+
+			if (firstParam.equals(outerCls)) // anonymous class or non-static inner class
+				params.remove(0);
 		}
-
-		return japiMethName.startsWith(spoonMethod.getSignature());
+		return " %s#<init>(%s)".formatted(type, params.stream().map(p -> p.getType()).collect(Collectors.joining(",")));
 	}
 
 	public static String fullyQualifiedName(CtReference ref) {
@@ -132,18 +136,18 @@ public class SpoonHelpers {
 	 *             <code>false</code> otherwise.
 	 */
 	public static boolean isImplicit(CtElement elem) {
-	    if (elem instanceof CtConstructor<?> cons)
-	        return cons.isImplicit();
-	    else if (elem instanceof CtField<?> field)
-	        return field.isImplicit();
-	    else if (elem instanceof CtMethod<?> meth)
-	        return meth.isImplicit();
-	    else if (elem instanceof CtTypeAccess<?> typeAcc)
-	        return typeAcc.isImplicit();
-	    // Default to CtElement isImplicit() method. Other cases might be
-	    // missing.
-	    else
-	        return elem.isImplicit();
+		if (elem instanceof CtConstructor<?> cons)
+			return cons.isImplicit();
+		else if (elem instanceof CtField<?> field)
+			return field.isImplicit();
+		else if (elem instanceof CtMethod<?> meth)
+			return meth.isImplicit();
+		else if (elem instanceof CtTypeAccess<?> typeAcc)
+			return typeAcc.isImplicit();
+			// Default to CtElement isImplicit() method. Other cases might be
+			// missing.
+		else
+			return elem.isImplicit();
 	}
 
 	/**

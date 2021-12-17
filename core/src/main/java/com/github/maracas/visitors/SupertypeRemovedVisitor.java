@@ -89,7 +89,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
     @Override
     public <T> void visitCtFieldReference(CtFieldReference<T> fieldRef) {
         CtTypeReference<?> typeRef = fieldRef.getDeclaringType();
-        if (typeRef.isSubtypeOf(clsRef)) {
+        if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
             CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
 
             if (declRef == null && superFields.contains(fieldRef.getSimpleName()))

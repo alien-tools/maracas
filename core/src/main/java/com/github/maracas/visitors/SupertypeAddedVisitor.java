@@ -8,6 +8,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Visitor in charge of gathering all supertype added issues in client code.
@@ -27,11 +28,15 @@ public class SupertypeAddedVisitor extends BreakingChangeVisitor {
 		this.newTypes = newTypes;
 	}
 
+	// FIXME: Is there a way to avoid running this on every non-abstract class in the client?
+	// e.g. by starting with some stricter conditions on the classes we want to look at
 	@Override
 	public <T> void visitCtClass(CtClass<T> cls) {
 		if (!cls.isAbstract()) {
 			CtTypeReference<?> typeRef = cls.getReference();
-			Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
+			Set<CtTypeReference<?>> interfaces = typeRef.getSuperInterfaces().stream()
+				.filter(ref -> ref.getTypeDeclaration() != null)
+				.collect(Collectors.toSet());
 
 			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef))
 				brokenUse(cls, cls, clsRef, APIUse.IMPLEMENTS);
