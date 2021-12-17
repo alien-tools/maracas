@@ -21,7 +21,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.github.maracas</groupId>
-			<artifactId>comp-changes-new</artifactId>
+			<artifactId>comp-changes-old</artifactId>
 			<version>0.0.1</version>
 		</dependency>
 		<dependency>
