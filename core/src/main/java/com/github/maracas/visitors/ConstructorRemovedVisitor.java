@@ -1,36 +1,44 @@
 package com.github.maracas.visitors;
 
+import com.github.maracas.brokenUse.APIUse;
+
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtNewClass;
-import spoon.reflect.code.CtSuperAccess;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.util.Collection;
-
-import com.github.maracas.brokenUse.APIUse;
-
 /**
- * Visitor in charge of gathering all constructor removed issues 
- * in client code.
- * 
- * <p>CONSTRUCTOR_REMOVED detected cases:
+ * Visitor in charge of gathering all constructor removed issues in client code.
+ *
+ * The visitor detects the following cases:
  * <ul>
- * <li> Any call to the removed constructor.
- *      Example: <pre>new TypeName();</pre>
- * <li> Call to the removed constructor when creating an anonymous 
- *      class.
- *      Example: <pre>new AnonymClass() { }</pre>
- * <li> Invocation to super() constructor.
- *      Example: <pre>super()</pre>
+ * <li> Any call to the removed constructor. Example:
+ *      <pre>
+ *      new TypeName();
+ *      </pre>
+ * <li> Call to the removed constructor when creating an anonymous class. Example:
+ *      <pre>
+ *      new AnonymClass() { }
+ *      </pre>
+ * <li> Invocation to super() constructor. Example:
+ *      <pre>
+ *      super();
+ *      </pre>
  * </ul>
  */
 public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
-
+    /**
+     * Spoon reference to the removed constructor.
+     */
 	private final CtExecutableReference<?> mRef;
 
+	/**
+	 * Creates a ConstructorRemovedVisitor instance.
+	 *
+	 * @param mRef the now-removed constructor
+	 */
 	public ConstructorRemovedVisitor(CtExecutableReference<?> mRef) {
 		super(JApiCompatibilityChange.CONSTRUCTOR_REMOVED);
 		this.mRef = mRef;
@@ -38,9 +46,8 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtConstructorCall(CtConstructorCall<T> consCall) {
-		if (mRef.equals(consCall.getExecutable())) {
+		if (mRef.equals(consCall.getExecutable()))
 			brokenUse(consCall, consCall.getExecutable(), mRef, APIUse.INSTANTIATION);
-		}
 	}
 
 	@Override
@@ -55,14 +62,13 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 					brokenUse(anonymClass, exec, mRef, APIUse.INSTANTIATION)
 				);
 	}
-	
+
 	@Override
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
 		// Every invocation of a constructor refers to super()
-		if (mRef.equals(invocation.getExecutable())) {
+		if (mRef.equals(invocation.getExecutable()))
 			brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
-		}
-		// FIXME: some cases do not throw a compilation error: 
-		// super() refers to the Object type constructor 
+		// FIXME: some cases do not throw a compilation error:
+		// super() refers to the Object type constructor
 	}
 }

@@ -121,5 +121,6 @@ public class VehicleFactory {
     Vehicle vehicle = (Vehicle) new Car();
     return vehicle;
   }
+  
 }
 ```
