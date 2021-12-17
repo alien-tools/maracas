@@ -1,22 +1,22 @@
 ---
 layout: bc
-title: Interface Removed
+title: Superclass Removed
 ---
 
-> A class removes one of its interfaces.
+> A class removes its superclass.
 
 ---
 
 ## Example
-The class `LandVehicles` in the library project removes the interface `Vehicle` from its declaration.
+The class `LandVehicles` in the library project removes the superclass `Vehicle` from its declaration.
 
 ```java
-public interface Vehicle {
+public abstract class Vehicle {
   public static final int INITIAL_KMS = 0;
 
   String getType();
 
-  default void move() {
+  public static void move() {
     System.out.println("The vehicle is moving.");
   }
 
@@ -24,7 +24,7 @@ public interface Vehicle {
 ```
 
 ```diff
--public abstract class LandVehicles implements Vehicle {
+-public abstract class LandVehicles extends Vehicle {
 +public abstract class LandVehicles {
 
 }
@@ -35,18 +35,18 @@ public interface Vehicle {
 ## Broken Uses
 Hereafter, we list the **broken uses** that are currently detected by Maracas.   
 
-- [1. Methods overriding methods declared in the now-removed interface](#case-1)
-- [2. Accesses of fields declared in the now-removed interface](#case-2)
-- [3. Invocations of static or default methods declared in the now-removed interface](#case-3)
-- [4. Casts of subtypes referencing the now-removed interface](#case-4)
+- [1. Methods overriding methods declared in the now-removed superclass](#case-1)
+- [2. Accesses of fields declared in the now-removed superclass](#case-2)
+- [3. Invocations of static or default methods declared in the now-removed superclass](#case-3)
+- [4. Casts of subtypes referencing the now-removed superclass](#case-4)
 
 <br>
 
-### 1. Methods overriding methods declared in the now-removed interface <a name="case-1"></a>
+### 1. Methods overriding methods declared in the now-removed superclass <a name="case-1"></a>
 
 #### Example
 The concrete `Car` class in a client project extends the `LandVehicle` abstract class defined in the library.
-The `Car` overrides the `getType()` method declared within the now-removed interface (i.e. `Vehicle`).
+The `Car` overrides the `getType()` method declared within the now-removed superclass (i.e. `Vehicle`).
 Then, a broken use is reported pointing to the client method declaration.
 
 ```java
@@ -64,11 +64,11 @@ public class Car extends LandVehicle {
 
 ---
 
-### 2. Accesses of fields declared in the now-removed interface <a name="case-2"></a>
+### 2. Accesses of fields declared in the now-removed superclass <a name="case-2"></a>
 
 #### Example
 The concrete `Car` class in a client project extends the `LandVehicle` abstract class defined in the library.
-The `resetKms()` method is defined within the `Car` class and it accesses the `INITIAL_KMS` constant defined in the `Vehicle` interface.
+The `resetKms()` method is defined within the `Car` class and it accesses the `INITIAL_KMS` constant defined in the `Vehicle` class.
 Then, a broken use is reported pointing to the line of the field access expression.
 
 ```java
@@ -83,11 +83,11 @@ public class Car extends LandVehicle {
 
 ---
 
-### 3. Invocations of static or default methods declared in the now-removed interface <a name="case-3"></a>
+### 3. Invocations of static or default methods declared in the now-removed superclass <a name="case-3"></a>
 
 #### Example
 The concrete `Car` class in a client project extends the `LandVehicle` abstract class defined in the library.
-The `moveCar()` method is defined within the `Car` class and it invokes the `move()` method defined in the `Vehicle` interface.
+The `moveCar()` method is defined within the `Car` class and it invokes the `move()` method defined in the `Vehicle` class.
 Then, a broken use is reported pointing to the line of the method invocation expression.
 
 ```java
@@ -103,7 +103,7 @@ public class Car extends LandVehicle {
 
 ---
 
-### 4. Casts of subtypes referencing the now-removed interface <a name="case-4"></a>
+### 4. Casts of subtypes referencing the now-removed superclass <a name="case-4"></a>
 
 #### Example
 On the one hand, the concrete `Car` class in a client project extends the `LandVehicle` abstract class defined in the library.
