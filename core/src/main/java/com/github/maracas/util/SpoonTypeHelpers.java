@@ -13,7 +13,12 @@ import spoon.reflect.reference.CtTypeReference;
  * narrowing, boxing, unboxing, and subtyping cases.
  */
 public class SpoonTypeHelpers {
-
+    /**
+     * Private constructor of the SpoonTypeHelpers.
+     *
+     * The class cannot have any instance. Its declarations must be used in a
+     * static manner.
+     */
     private SpoonTypeHelpers() {}
 
     /**
@@ -21,6 +26,9 @@ public class SpoonTypeHelpers {
      * This implementation most likely messes up.
      */
     public static boolean isAssignableFrom(CtTypeReference<?> expected, CtTypeReference<?> given) {
+        if (given == null || expected == null)
+            return false;
+
         if (expected.equals(given))
             return true;
 
@@ -31,14 +39,12 @@ public class SpoonTypeHelpers {
 
         // If we expect a primitive, either we can widen the given primitive,
         // or it is a compatible boxed type
-        if (expected.isPrimitive()) {
+        if (expected.isPrimitive())
             return primitivesAreCompatible(expected, given.unbox()); // No helper for that!?
-        }
 
         // If it's a boxed type
-        else if (!expected.equals(expected.unbox())) {
+        else if (!expected.equals(expected.unbox()))
             return primitivesAreCompatible(expected.unbox(), given.unbox());
-        }
 
         // If we expect an array, only compatible type is an array of a subtype
         // FIXME: this should account for multidimensional arrays
@@ -53,12 +59,12 @@ public class SpoonTypeHelpers {
             return false;
         }
 
-        // If we expect a class/interface, we already checked for subtyping,
+        // If we expect a class/interface/enum, we already checked for subtyping,
         // so that's a no
-        else if (expected.isClass() || expected.isInterface())
+        else if (expected.isClass() || expected.isInterface() || expected.isEnum())
             return false;
 
-        throw new RuntimeException(
+         throw new RuntimeException(
             "Unhandled type conversion case (" + expected + " <: " + given + ")");
     }
 

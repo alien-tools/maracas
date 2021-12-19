@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.github.maracas.brokenUse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
+import spoon.SpoonException;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
@@ -94,22 +95,31 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
     @Override
     public <T> void visitCtFieldReference(CtFieldReference<T> fieldRef) {
         CtTypeReference<?> typeRef = fieldRef.getDeclaringType();
-        if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
-            CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
+        try {
+            if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
+                CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
 
-            if (declRef == null && superFields.contains(fieldRef.getSimpleName()))
-                brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
+                if (declRef == null && superFields.contains(fieldRef.getSimpleName()))
+                    brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
+            }
+        } catch(SpoonException e) {
+            // FIXME: Find fancier solution. A declaration cannot be resolved
         }
     }
 
     @Override
     public <T> void visitCtInvocation(CtInvocation<T> invocation) {
         CtTypeReference<?> typeRef = ((CtType<?>) invocation.getParent(CtType.class)).getReference();
-        if (typeRef.isSubtypeOf(clsRef)) {
-            CtExecutableReference<?> methRef = invocation.getExecutable();
 
-            if (superMethods.contains(methRef))
-                brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+        try {
+            if (typeRef.isSubtypeOf(clsRef)) {
+                CtExecutableReference<?> methRef = invocation.getExecutable();
+
+                if (superMethods.contains(methRef))
+                    brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+            }
+        } catch (SpoonException e) {
+            // FIXME: Find fancier solution. A declaration cannot be resolved
         }
 
         // FIXME: cases where a static access is performed via the supertype
@@ -123,11 +133,16 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
     @Override
     public <T> void visitCtMethod(CtMethod<T> m) {
-        if (m.getDeclaringType().isSubtypeOf(clsRef)) {
-            CtExecutableReference<?> superMeth = m.getReference().getOverridingExecutable();
+        try {
+            if (m.getDeclaringType().isSubtypeOf(clsRef)) {
+                CtExecutableReference<?> superMeth = m.getReference().getOverridingExecutable();
 
-            if (superMeth != null && superMethods.contains(superMeth))
-                brokenUse(m, superMeth, clsRef, APIUse.METHOD_OVERRIDE);
+                if (superMeth != null && superMethods.contains(superMeth))
+                    brokenUse(m, superMeth, clsRef, APIUse.METHOD_OVERRIDE);
+            }
+        } catch (SpoonException e) {
+            // A declaration cannot be resolved
+            // FIXME: deal with this issue in a fancier way?
         }
     }
 

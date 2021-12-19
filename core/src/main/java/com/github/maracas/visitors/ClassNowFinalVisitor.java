@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.github.maracas.brokenUse.APIUse;
 
 import japicmp.model.JApiCompatibilityChange;
+import spoon.SpoonException;
 import spoon.reflect.code.CtNewClass;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -35,13 +36,17 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
 		if (m.hasAnnotation(java.lang.Override.class)) {
-			Optional<CtMethod<?>> superMethod =
-				m.getTopDefinitions()
-					.stream()
-					.filter(superM -> clsRef.equals(superM.getDeclaringType().getReference()))
-					.findAny();
+		    try {
+    			Optional<CtMethod<?>> superMethod =
+    				m.getTopDefinitions()
+    					.stream()
+    					.filter(superM -> clsRef.equals(superM.getDeclaringType().getReference()))
+    					.findAny();
 
-			superMethod.ifPresent(ctMethod -> brokenUse(m, ctMethod, clsRef, APIUse.METHOD_OVERRIDE));
+    			superMethod.ifPresent(ctMethod -> brokenUse(m, ctMethod, clsRef, APIUse.METHOD_OVERRIDE));
+		    } catch(SpoonException e) {
+		        // FIXME: Find fancier solution. A declaration cannot be resolved
+		    }
 		}
 	}
 

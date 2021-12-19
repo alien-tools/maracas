@@ -15,6 +15,7 @@ import spoon.reflect.CtModel;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtSynchronized;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -124,7 +125,8 @@ public class SpoonHelpers {
 			return thrw.getThrownExpression().getType();
 		else if (e instanceof CtReturn<?> retrn)
 		    return retrn.getReturnedExpression().getType();
-
+		else if (e instanceof CtSynchronized sync)
+		    return sync.getExpression().getType();
 		// FIXME: CtSwitch not supported yet
 
 		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
