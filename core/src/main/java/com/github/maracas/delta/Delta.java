@@ -23,7 +23,6 @@ import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import spoon.reflect.CtModel;
-import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
@@ -255,7 +254,7 @@ public class Delta {
             // output. Using the position as a proxy.
             // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
             //     iter.remove();
-            if (bc.getSourceElement() != null && bc.getSourceElement().getPosition() instanceof NoSourcePosition)
+            if (bc.getSourceElement() == null || bc.getSourceElement().getPosition().isValidPosition())
                 iter.remove();
         }
     }
