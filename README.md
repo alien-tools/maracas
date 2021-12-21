@@ -6,9 +6,8 @@ Currently, Maracas consists of two main components:
   - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
   - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [break-bot](https://github.com/break-bot/breakbot) to analyze pull requests on GitHub and report their impact
 
-![Build](https://github.com/alien-tools/maracas/actions/workflows/Java%20CI/badge.svg?branch=main) ![Coverage](.github/badges/jacoco.svg) ![CodeQL](https://github.com/alien-tools/maracas/actions/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+![Build](https://github.com/alien-tools/maracas/workflows/Java%20CI/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
----
 
 ## Content
 
