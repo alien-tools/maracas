@@ -34,7 +34,7 @@ Hereafter, we list the **broken uses** that are currently detected by Maracas.
 
 #### Example
 The concrete `Car` class in a client project extends the `LandVehicle` abstract class defined in the library.
-The `Car` does not override the `getType()` method declared within the now-added interface (i.e. `Vehicle`).
+The `Car` class does not override the `getType()` method declared within the now-added interface (i.e. `Vehicle`).
 Then, a broken use is reported pointing to the class declaration.
 
 ```java
