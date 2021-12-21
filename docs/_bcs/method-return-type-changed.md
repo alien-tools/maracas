@@ -8,7 +8,8 @@ title: Method Return Type Changed
 ---
 
 ## Example
-Method `add()` is removed from the class `Math` in the library project.
+The `power()` and `factorial()` methods have been defined in the `Math` class.
+The type of the `power()` method is changed from `int` to `long`, and the type of the `factorial()` method from `long` to `int`.
 
 ```diff
 public interface Math {
