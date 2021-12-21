@@ -4,19 +4,27 @@ import static com.github.maracas.brokenUse.APIUse.METHOD_INVOCATION;
 import static com.github.maracas.brokenUse.APIUse.METHOD_OVERRIDE;
 import static japicmp.model.JApiCompatibilityChange.METHOD_RETURN_TYPE_CHANGED;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class MethodReturnTypeChangedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(METHOD_RETURN_TYPE_CHANGED, 4);
+		assertNumberBrokenUses(METHOD_RETURN_TYPE_CHANGED, 5);
+		// FIXME: After fixing the skipped test
 	}
 
 	@Test
 	void testInvokeWidenedMeth() {
 		assertBrokenUse("MethodReturnTypeChangedMI.java", 16, METHOD_RETURN_TYPE_CHANGED, METHOD_INVOCATION);
 	}
+
+	@Disabled("Not all casts generate a compilation error")
+	@Test
+    void testInvokeWidenedCast() {
+        assertNoBrokenUse("MethodReturnTypeChangedMI.java",26, METHOD_RETURN_TYPE_CHANGED, METHOD_INVOCATION);
+    }
 
 	@Test
 	void testInvokeWidenedMethSuper() {

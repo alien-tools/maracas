@@ -13,6 +13,7 @@ import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtReturn;
@@ -128,6 +129,8 @@ public class SpoonHelpers {
 		    return retrn.getReturnedExpression().getType();
 		else if (e instanceof CtSynchronized sync)
 		    return sync.getExpression().getType();
+		else if (e instanceof CtAssignment<?, ?> assign)
+		    return assign.getType();
 		// FIXME: CtSwitch not supported yet
 
 		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
