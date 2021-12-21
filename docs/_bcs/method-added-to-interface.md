@@ -14,6 +14,7 @@ The interface `Vehicle` in the library project adds the method `getColor()`.
 public interface Vehicle {
   String getType();
 +  String getColor();
+
 }
 
 ```
@@ -35,5 +36,10 @@ Then, a broken use is reported pointing to the class declaration.
 
 ```java
 // Broken use reported here
-public class Bus implements Vehicle { }
+public class Bus implements Vehicle {
+  @Override
+  public String getType() {
+    return "Bus";
+  }
+}
 ```
