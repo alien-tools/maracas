@@ -108,7 +108,7 @@ To learn more about Maracas and how to use it, please visit our [GitHub page](ht
 
 
 ## Support
-If you would like to learn more about `maracas` or you are a current user and you need some help, do not hesitate to send us an email at [thomas.degueule \<at> labri.fr](mailto:thomas.degueule@labri.fr?subject=[Maracas]%20Support) or [l.m.ochoa.venegas \<at> tue.nl](mailto:l.m.ochoa.venegas@tue.nl?subject=[Maracas]%20Support).
+If you would like to learn more about Maracas or you are a current user and you need some help, do not hesitate to send us an email at [thomas.degueule \<at> labri.fr](mailto:thomas.degueule@labri.fr?subject=[Maracas]%20Support) or [l.m.ochoa.venegas \<at> tue.nl](mailto:l.m.ochoa.venegas@tue.nl?subject=[Maracas]%20Support).
 
 
 ## Contributing
