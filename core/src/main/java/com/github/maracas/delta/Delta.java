@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.github.maracas.util.PathHelpers;
@@ -164,19 +165,37 @@ public class Delta {
                 CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cons.getjApiClass().getFullyQualifiedName());
                 var oldConsOpt = cons.getOldConstructor();
 
+                // FIXME: Creating a reference out from a constructor signature
+                // returns an ExecutableReference with no position. This code
+                // needs to go at some point.
                 if (oldConsOpt.isPresent()) {
                     CtConstructor oldCons = oldConsOpt.get();
-                    String sign = SpoonHelpers.buildSpoonSignature(cons);
-                    CtExecutableReference<?> consRef = root.getFactory().Constructor().createReference(sign);
+                    Optional<CtExecutableReference<?>> cRefOpt =
+                        clsRef.getDeclaredExecutables()
+                        .stream()
+                        .filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
+                        .findFirst();
 
-                    if (consRef != null && consRef.getExecutableDeclaration() != null) {
+                    if (cRefOpt.isPresent()) {
                         cons.getCompatibilityChanges().forEach(c ->
-                          breakingChanges.add(new MethodBreakingChange(cons, consRef, c))
-                        );
+                            breakingChanges.add(new MethodBreakingChange(cons, cRefOpt.get(), c)));
                     } else {
-                        // No old constructor
-                        System.out.println("Couldn't find constructor " + cons);
-                    }
+                      System.out.println("Couldn't find constructor " + cons);
+                  }
+
+                  // FIXME: Once the issue with the signature is found,
+                  // uncomment this code.
+//                    String sign = SpoonHelpers.buildSpoonSignature(cons);
+//                    CtExecutableReference<?> consRef = root.getFactory().Constructor().createReference(sign);
+//
+//                    if (consRef != null && consRef.getExecutableDeclaration() != null) {
+//                        cons.getCompatibilityChanges().forEach(c ->
+//                          breakingChanges.add(new MethodBreakingChange(cons, consRef, c))
+//                        );
+//                    } else {
+//                        // No old constructor
+//                        System.out.println("Couldn't find constructor " + cons);
+//                    }
                 }
             }
 
@@ -228,21 +247,23 @@ public class Delta {
         CtModel model = SpoonHelpers.buildSpoonModel(sources, null);
         CtPackage root = model.getRootPackage();
 
-        breakingChanges.forEach(decl -> {
-            CtReference bytecodeRef = decl.getReference();
+        breakingChanges.forEach(bc -> {
+            CtReference bytecodeRef = bc.getReference();
 
+            // FIXME: constructor.getDeclaration() always returns null with
+            // signature implementation
             if (bytecodeRef == null || bytecodeRef.getDeclaration() == null)
                 return;
 
             if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
                 CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
-                decl.setSourceElement(sourceRef.getTypeDeclaration());
+                bc.setSourceElement(sourceRef.getTypeDeclaration());
             } else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
                 CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(execRef.getExecutableDeclaration());
-                decl.setSourceElement(sourceRef.getExecutableDeclaration());
+                bc.setSourceElement(sourceRef.getExecutableDeclaration());
             } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef) {
                 CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
-                decl.setSourceElement(sourceRef.getFieldDeclaration());
+                bc.setSourceElement(sourceRef.getFieldDeclaration());
             } else
                 throw new RuntimeException("Shouldn't be here");
         });
