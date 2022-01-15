@@ -250,11 +250,6 @@ public class Delta {
         breakingChanges.forEach(bc -> {
             CtReference bytecodeRef = bc.getReference();
 
-            // FIXME: constructor.getDeclaration() always returns null with
-            // signature implementation
-            if (bytecodeRef == null || bytecodeRef.getDeclaration() == null)
-                return;
-
             if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
                 CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
                 bc.setSourceElement(sourceRef.getTypeDeclaration());
