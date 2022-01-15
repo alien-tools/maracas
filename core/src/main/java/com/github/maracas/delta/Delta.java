@@ -275,7 +275,7 @@ public class Delta {
             // output. Using the position as a proxy.
             // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
             //     iter.remove();
-            if (bc.getSourceElement() == null || bc.getSourceElement().getPosition().isValidPosition())
+            if (bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition())
                 iter.remove();
         }
     }
