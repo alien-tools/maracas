@@ -15,8 +15,10 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
@@ -86,10 +88,10 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
         super(change);
         this.clsRef = clsRef;
         this.supertypes = supertypes;
-        this.superMethods = supertypes.stream().map(i -> i.getDeclaredExecutables()).flatMap(Collection::stream)
+        this.superMethods = supertypes.stream().map(CtTypeInformation::getDeclaredExecutables).flatMap(Collection::stream)
             .collect(Collectors.toSet());
-        this.superFields = supertypes.stream().map(i -> i.getDeclaredFields()).flatMap(Collection::stream)
-            .map(f -> f.getSimpleName()).collect(Collectors.toSet());
+        this.superFields = supertypes.stream().map(CtTypeInformation::getDeclaredFields).flatMap(Collection::stream)
+            .map(CtReference::getSimpleName).collect(Collectors.toSet());
     }
 
     @Override
@@ -167,7 +169,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
         // FIXME: when dealing with interfaces this issue is not reported
         // as a compilation error.
         if (assignExpr != null) {
-            Set<CtTypeReference<?>> casts = new HashSet<CtTypeReference<?>>(assignExpr.getTypeCasts());
+            Set<CtTypeReference<?>> casts = new HashSet<>(assignExpr.getTypeCasts());
             CtTypeReference<?> typeRef = assignExpr.getType();
 
             for (CtTypeReference<?> cast : casts) {

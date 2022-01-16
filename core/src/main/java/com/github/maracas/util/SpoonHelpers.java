@@ -5,7 +5,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import japicmp.model.JApiConstructor;
@@ -78,7 +77,7 @@ public class SpoonHelpers {
 			returnType = "void";
 		String type = m.getjApiClass().getFullyQualifiedName();
 		String name = m.getName();
-		String params = m.getParameters().stream().map(p -> p.getType()).collect(Collectors.joining(","));
+		String params = m.getParameters().stream().map(JApiParameter::getType).collect(Collectors.joining(","));
 		return "%s %s#%s(%s)".formatted(returnType, type, name, params);
 	}
 
@@ -93,7 +92,7 @@ public class SpoonHelpers {
 			if (firstParam.equals(outerCls)) // anonymous class or non-static inner class
 				params.remove(0);
 		}
-		return " %s#<init>(%s)".formatted(type, params.stream().map(p -> p.getType()).collect(Collectors.joining(",")));
+		return " %s#<init>(%s)".formatted(type, params.stream().map(JApiParameter::getType).collect(Collectors.joining(",")));
 	}
 
 	public static String fullyQualifiedName(CtReference ref) {
@@ -174,7 +173,7 @@ public class SpoonHelpers {
 	 */
 	@Deprecated
 	public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {
-		String japiMethName = "";
+		String japiMethName;
 
 		if (spoonMethod.isConstructor() && japiMethod.getName().contains("$")) {  // Inner class constructor
 			String ln = japiMethod.getLongName();
@@ -197,7 +196,7 @@ public class SpoonHelpers {
 	 * For those not familiar with class loading trickery, be wary
 	 */
 	private static class ParentLastURLClassLoader extends URLClassLoader {
-		private ChildURLClassLoader childClassLoader;
+		private final ChildURLClassLoader childClassLoader;
 
 		/**
 		 * This class allows me to call findClass on a classloader
@@ -218,7 +217,7 @@ public class SpoonHelpers {
 		 * We need this because findClass is protected in URLClassLoader
 		 */
 		private static class ChildURLClassLoader extends URLClassLoader {
-			private FindClassClassLoader realParent;
+			private final FindClassClassLoader realParent;
 
 			public ChildURLClassLoader(URL[] urls, FindClassClassLoader realParent) {
 				super(urls, null);

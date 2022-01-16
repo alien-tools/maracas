@@ -57,7 +57,7 @@ public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
 		if (superclass != null)
 			superclass.getDeclaredExecutables()
 				.stream()
-				.filter(exec -> mRef.equals(exec))
+				.filter(mRef::equals)
 				.forEach(exec ->
 					brokenUse(anonymClass, exec, mRef, APIUse.INSTANTIATION)
 				);

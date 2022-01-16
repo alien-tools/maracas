@@ -16,7 +16,6 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -102,19 +101,12 @@ public class Delta {
                 CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
                 bc.setSourceElement(sourceRef.getFieldDeclaration());
             } else
-                logger.warn("Couldn't resolve source location for %s", bc.getReference());
+                logger.warn("Couldn't resolve source location for {}", bc.getReference());
         });
 
         // Remove breaking changes with an implicit source element.
-        for (Iterator<BreakingChange> iter = breakingChanges.iterator(); iter.hasNext();) {
-            BreakingChange bc = iter.next();
-            // FIXME: the isImplicit() method is still not returning the expected
-            // output. Using the position as a proxy.
-            // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
-            //     iter.remove();
-            if (bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition())
-                iter.remove();
-        }
+        // FIXME: the isImplicit() method is not returning the expected output. Using the position as a proxy.
+        breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
     }
 
     /**
@@ -153,21 +145,17 @@ public class Delta {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()));
-        sb.append(
+        return "Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()) +
           breakingChanges.stream()
             .map(bd -> """
-                [%s]
-                Reference: %s
-                Source: %s %s
-                """.formatted(
+              [%s]
+              Reference: %s
+              Source: %s %s
+              """.formatted(
               bd.getChange(),
               bd.getReference(),
               bd.getSourceElement() instanceof CtNamedElement ne ? ne.getSimpleName() : bd.getSourceElement(),
               bd.getSourceElement() != null ? bd.getSourceElement().getPosition() : "<no source>")
-            ).collect(Collectors.joining())
-        );
-        return sb.toString();
+            ).collect(Collectors.joining());
     }
 }

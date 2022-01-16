@@ -70,12 +70,11 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
             // When an enum is transformed into anything else,
             // japicmp reports that valueOf(String)/values() are removed
             // Ignore. FIXME
-            ;
           } else
-            logger.warn("Couldn't find old method %s", m);
+            logger.warn("Couldn't find old method {}", m);
         }
       } catch (Exception e) {
-        logger.warn("Couldn't resolve method %s with Spoon: %s", m, e.getMessage());
+        logger.warn("Couldn't resolve method {} with Spoon: {}", m, e.getMessage());
       }
     } else if (newMethodOpt.isPresent()) {
       // Added method introducing a breaking change.
@@ -129,7 +128,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
         cons.getCompatibilityChanges().forEach(c ->
           breakingChanges.add(new MethodBreakingChange(cons, cRefOpt.get(), c)));
       else
-        logger.warn("Couldn't find constructor %s", cons);
+        logger.warn("Couldn't find constructor {}", cons);
 
       // FIXME: Once the issue with the signature is found,
       // uncomment this code.
