@@ -88,17 +88,17 @@ public class Delta {
         breakingChanges.forEach(bc -> {
             CtReference bytecodeRef = bc.getReference();
 
-            if (bytecodeRef instanceof CtTypeReference<?> typeRef) {
+            if (bytecodeRef instanceof CtTypeReference<?> typeRef && typeRef.getTypeDeclaration() != null) {
                 CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
                 bc.setSourceElement(sourceRef.getTypeDeclaration());
-            } else if (bytecodeRef instanceof CtExecutableReference<?> execRef) {
+            } else if (bytecodeRef instanceof CtExecutableReference<?> execRef && execRef.getExecutableDeclaration() != null) {
                 CtExecutableReference<?> sourceRef = root.getFactory().Executable().createReference(execRef.getExecutableDeclaration());
                 bc.setSourceElement(sourceRef.getExecutableDeclaration());
-            } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef) {
+            } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef && fieldRef.getFieldDeclaration() != null) {
                 CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
                 bc.setSourceElement(sourceRef.getFieldDeclaration());
             } else
-                throw new RuntimeException("Shouldn't be here");
+                System.out.println("Couldn't resolve source location for " + bc.getReference());
         });
 
         // Remove breaking changes with an implicit source element.
