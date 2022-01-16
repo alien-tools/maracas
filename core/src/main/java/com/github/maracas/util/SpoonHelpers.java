@@ -5,6 +5,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import japicmp.model.JApiConstructor;
@@ -160,31 +161,32 @@ public class SpoonHelpers {
 	}
 
 	/**
-     * Verifies if the signature of a Spoon method (CtExecutableReference)
-     * is equivalent to the one of the JApiCmp method (CtBehavior).
-     *
-     * FIXME: This method must disappear once we solve the issue with the
-     * constructor signature.
-     * @param spoonMethod the Spoon method
-     * @param japiMethod  The JapiCmp method
-     * @return            <code>true</code> if the methods have the same
-     *                    signature; <code>false</code> otherwise.
-     */
+	 * Verifies if the signature of a Spoon method (CtExecutableReference)
+	 * is equivalent to the one of the JApiCmp method (CtBehavior).
+	 * <p>
+	 * FIXME: This method must disappear once we solve the issue with the
+	 * constructor signature.
+	 *
+	 * @param spoonMethod the Spoon method
+	 * @param japiMethod  The JapiCmp method
+	 * @return <code>true</code> if the methods have the same
+	 * signature; <code>false</code> otherwise.
+	 */
 	@Deprecated
-    public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {
-        String japiMethName = "";
+	public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {
+		String japiMethName = "";
 
-        if (spoonMethod.isConstructor() && japiMethod.getLongName().contains("$")) {  // Inner class constructor
-            String ln = japiMethod.getLongName();
-            String outerCN = ln.substring(0, ln.indexOf("$"));
-            japiMethName = ln.replaceAll(String.format("\\(%s,?", outerCN), "(");
-        } else if (spoonMethod.isConstructor()) {                                     // Regular constructor
-            japiMethName = japiMethod.getLongName();
-        } else {                                                                      // Regular method
-            japiMethName = japiMethod.getName().concat(japiMethod.getSignature());
-        }
-        return japiMethName.startsWith(spoonMethod.getSignature());
-    }
+		if (spoonMethod.isConstructor() && japiMethod.getName().contains("$")) {  // Inner class constructor
+			String ln = japiMethod.getLongName();
+			String outerCN = ln.substring(0, ln.indexOf("$"));
+			japiMethName = ln.replaceAll(String.format("\\(%s,?", outerCN), "(");
+		} else if (spoonMethod.isConstructor()) {                                     // Regular constructor
+			japiMethName = japiMethod.getLongName();
+		} else {                                                                      // Regular method
+			japiMethName = japiMethod.getName().concat(japiMethod.getSignature());
+		}
+		return japiMethName.startsWith(spoonMethod.getSignature());
+	}
 
 	/**
 	 * cf https://stackoverflow.com/a/5446671
