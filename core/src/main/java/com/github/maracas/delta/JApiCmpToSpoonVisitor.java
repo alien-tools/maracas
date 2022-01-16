@@ -11,6 +11,8 @@ import japicmp.model.JApiSuperclass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -23,6 +25,7 @@ import java.util.Optional;
 public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
   private final CtPackage root;
   private final Collection<BreakingChange> breakingChanges = new ArrayList<>();
+  private static final Logger logger = LogManager.getLogger(JApiCmpToSpoonVisitor.class);
 
   public JApiCmpToSpoonVisitor(CtPackage root) {
     this.root = root;
@@ -68,12 +71,11 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
             // japicmp reports that valueOf(String)/values() are removed
             // Ignore. FIXME
             ;
-          } else {
-            System.out.println("Couldn't find old method " + m);
-          }
+          } else
+            logger.warn("Couldn't find old method %s", m);
         }
       } catch (Exception e) {
-        System.out.println("Couldn't resolve method " + m + " [" + e.getMessage() + "]");
+        logger.warn("Couldn't resolve method %s with Spoon: %s", m, e.getMessage());
       }
     } else if (newMethodOpt.isPresent()) {
       // Added method introducing a breaking change.
@@ -123,12 +125,11 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
           .filter(c -> SpoonHelpers.matchingSignatures(c, oldCons))
           .findFirst();
 
-      if (cRefOpt.isPresent()) {
+      if (cRefOpt.isPresent())
         cons.getCompatibilityChanges().forEach(c ->
           breakingChanges.add(new MethodBreakingChange(cons, cRefOpt.get(), c)));
-      } else {
-        System.out.println("Couldn't find constructor " + cons);
-      }
+      else
+        logger.warn("Couldn't find constructor %s", cons);
 
       // FIXME: Once the issue with the signature is found,
       // uncomment this code.

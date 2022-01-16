@@ -4,6 +4,8 @@ import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import japicmp.model.JApiClass;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
@@ -36,6 +38,8 @@ public class Delta {
      * The list of {@link BreakingChange} extracted from japicmp's classes
      */
     private final Collection<BreakingChange> breakingChanges;
+
+    private static final Logger logger = LogManager.getLogger(Delta.class);
 
     /**
      * @see #fromJApiCmpDelta(Path, Path, List)
@@ -98,7 +102,7 @@ public class Delta {
                 CtFieldReference<?> sourceRef = root.getFactory().Field().createReference(fieldRef.getFieldDeclaration());
                 bc.setSourceElement(sourceRef.getFieldDeclaration());
             } else
-                System.out.println("Couldn't resolve source location for " + bc.getReference());
+                logger.warn("Couldn't resolve source location for %s", bc.getReference());
         });
 
         // Remove breaking changes with an implicit source element.
