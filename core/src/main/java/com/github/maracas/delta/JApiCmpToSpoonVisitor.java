@@ -3,6 +3,7 @@ package com.github.maracas.delta;
 import com.github.maracas.util.SpoonHelpers;
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
+import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiConstructor;
 import japicmp.model.JApiField;
 import japicmp.model.JApiImplementedInterface;
@@ -35,12 +36,21 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
     return breakingChanges;
   }
 
+  // FIXME: we used to filter out weird BCs such as MAAIII, and include non-breaking changes such as ADA;
+  // take some decision
+  boolean isInterestingCompatibilityChange(JApiCompatibilityChange c) {
+    return (!c.isBinaryCompatible() || !c.isSourceCompatible() || c.name().equals("ANNOTATION_DEPRECATED_ADDED"))
+      && !c.name().equals("METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE");
+  }
+
   @Override
   public void visit(JApiClass cls) {
     CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
     if (clsRef != null) {
-      cls.getCompatibilityChanges().forEach(c ->
-        breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
+      cls.getCompatibilityChanges().stream()
+        .filter(this::isInterestingCompatibilityChange)
+        .forEach(c ->
+          breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
       );
 
       cls.getInterfaces().forEach(i ->
@@ -62,8 +72,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
       try {
         if (mRef != null && mRef.getExecutableDeclaration() != null) {
-          m.getCompatibilityChanges().forEach(c ->
-            breakingChanges.add(new MethodBreakingChange(m, mRef, c))
+          m.getCompatibilityChanges().stream()
+            .filter(this::isInterestingCompatibilityChange)
+            .forEach(c ->
+              breakingChanges.add(new MethodBreakingChange(m, mRef, c))
           );
         } else {
           if (oldMethod.getName().equals("values") || oldMethod.getName().equals("valueOf")) {
@@ -82,8 +94,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
       // FIXME: we miss the information about the newly added method
       if (!(newMethod.getName().equals("values") || newMethod.getName().equals("valueOf"))) {
-        m.getCompatibilityChanges().forEach(c ->
-          breakingChanges.add(new ClassBreakingChange(m.getjApiClass(), clsRef, c))
+        m.getCompatibilityChanges().stream()
+          .filter(this::isInterestingCompatibilityChange)
+          .forEach(c ->
+            breakingChanges.add(new ClassBreakingChange(m.getjApiClass(), clsRef, c))
         );
       }
     } else {
@@ -100,8 +114,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
       CtFieldReference<?> fRef = clsRef.getDeclaredField(oldField.getName());
 
       if (fRef != null && fRef.getFieldDeclaration() != null)
-        f.getCompatibilityChanges().forEach(c ->
-          breakingChanges.add(new FieldBreakingChange(f, fRef, c))
+        f.getCompatibilityChanges().stream()
+          .filter(this::isInterestingCompatibilityChange)
+          .forEach(c ->
+            breakingChanges.add(new FieldBreakingChange(f, fRef, c))
         );
     } else {
       // No oldField
@@ -125,8 +141,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
           .findFirst();
 
       if (cRefOpt.isPresent())
-        cons.getCompatibilityChanges().forEach(c ->
-          breakingChanges.add(new MethodBreakingChange(cons, cRefOpt.get(), c)));
+        cons.getCompatibilityChanges().stream()
+          .filter(this::isInterestingCompatibilityChange)
+          .forEach(c ->
+            breakingChanges.add(new MethodBreakingChange(cons, cRefOpt.get(), c)));
       else
         logger.warn("Couldn't find constructor {}", cons);
 
@@ -162,8 +180,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
     CtTypeReference<?> clsRef = root.getFactory().Type().createReference(jApiClass.getFullyQualifiedName());
 
     if (clsRef != null && clsRef.getTypeDeclaration() != null)
-      superCls.getCompatibilityChanges().forEach(c ->
-        breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
+      superCls.getCompatibilityChanges().stream()
+        .filter(this::isInterestingCompatibilityChange)
+        .forEach(c ->
+          breakingChanges.add(new ClassBreakingChange(jApiClass, clsRef, c))
       );
   }
 
@@ -171,8 +191,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
     CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
 
     if (clsRef != null && clsRef.getTypeDeclaration() != null)
-      intf.getCompatibilityChanges().forEach(c ->
-        breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
+      intf.getCompatibilityChanges().stream()
+        .filter(this::isInterestingCompatibilityChange)
+        .forEach(c ->
+          breakingChanges.add(new ClassBreakingChange(cls, clsRef, c))
       );
   }
 }
