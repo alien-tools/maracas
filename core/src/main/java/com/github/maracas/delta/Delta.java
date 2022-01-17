@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -97,12 +98,15 @@ public class Delta {
                 bc.setSourceElement(sourceRef.getTypeDeclaration());
             } else if (bytecodeRef instanceof CtExecutableReference<?> execRef && execRef.getExecutableDeclaration() != null) {
                 CtTypeReference<?> typeRef = root.getFactory().Type().createReference(execRef.getDeclaringType().getTypeDeclaration());
-                CtExecutableReference<?> sourceRef =
+                Optional<CtExecutableReference<?>> sourceRef =
                   typeRef.getTypeDeclaration().getDeclaredExecutables().stream()
                     .filter(e -> Objects.equals(e.getSignature(), execRef.getSignature()))
-                    .findFirst()
-                    .get();
-                bc.setSourceElement(sourceRef.getExecutableDeclaration());
+                    .findFirst();
+
+                if (sourceRef.isPresent())
+                    bc.setSourceElement(sourceRef.get().getExecutableDeclaration());
+                else
+                    logger.warn("Couldn't resolve method {} in {}: {}", execRef.getSignature(), typeRef, typeRef.getTypeDeclaration().getDeclaredExecutables());
             } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef && fieldRef.getFieldDeclaration() != null) {
                 CtTypeReference<?> typeRef = root.getFactory().Type().createReference(fieldRef.getDeclaringType().getTypeDeclaration());
                 CtFieldReference<?> sourceRef = typeRef.getTypeDeclaration().getDeclaredField(fieldRef.getSimpleName());
