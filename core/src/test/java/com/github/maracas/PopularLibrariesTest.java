@@ -7,6 +7,7 @@ import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -30,6 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * and run some basic checks on the resulting models.
  * The old version of the library is used as client for broken use analysis.
  */
+@Tag("slow")
 class PopularLibrariesTest {
   static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
 
@@ -47,8 +49,12 @@ class PopularLibrariesTest {
       Arguments.of("commons-io",                 "commons-io",        "2.4",      "2.5"),
       Arguments.of("commons-io",                 "commons-io",        "2.10.0",   "2.11.0"),
       Arguments.of("org.apache.commons",         "commons-lang3",     "3.10",     "3.11"),
-      Arguments.of("com.fasterxml.jackson.core", "jackson-databind",  "2.12.5",   "2.13.0"),
-      Arguments.of("com.fasterxml.jackson.core", "jackson-databind",  "2.6.0",    "2.11.0")
+      Arguments.of("com.google.code.gson",       "gson",              "2.7",      "2.8.9"),
+      Arguments.of("log4j",                      "log4j",             "1.2.16",   "1.2.17"),
+      Arguments.of("org.assertj",                "assertj-core",      "3.21.0",   "3.22.0"),
+      Arguments.of("org.apache.httpcomponents",  "httpclient",        "4.4.1",    "4.5"),
+      Arguments.of("joda-time",                  "joda-time",         "2.9",      "2.10"),
+      Arguments.of("org.mockito",                "mockito-core",      "3.12.4",   "4.0.0")
     );
   }
 
