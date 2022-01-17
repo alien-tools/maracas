@@ -7,8 +7,11 @@ import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
@@ -95,41 +98,44 @@ public class Delta {
 
             if (bytecodeRef instanceof CtTypeReference<?> typeRef && typeRef.getTypeDeclaration() != null) {
                 CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
-                bc.setSourceElement(sourceRef.getTypeDeclaration());
+                CtType<?> typeDecl = sourceRef.getTypeDeclaration();
+
+                if (typeDecl != null && typeDecl.getPosition().isValidPosition())
+                    bc.setSourceElement(typeDecl);
+                else
+                    logger.warn("Couldn't find a source location for type {} in {} [{}]", typeRef, sources, bc.getChange());
             } else if (bytecodeRef instanceof CtExecutableReference<?> execRef && execRef.getExecutableDeclaration() != null) {
                 CtTypeReference<?> typeRef = root.getFactory().Type().createReference(execRef.getDeclaringType().getTypeDeclaration());
-                Optional<CtExecutableReference<?>> sourceRef =
+                Optional<CtExecutableReference<?>> sourceRefOpt =
                   typeRef.getTypeDeclaration().getDeclaredExecutables().stream()
                     .filter(e -> Objects.equals(e.getSignature(), execRef.getSignature()))
                     .findFirst();
 
-                if (sourceRef.isPresent())
-                    bc.setSourceElement(sourceRef.get().getExecutableDeclaration());
-                else
-                    logger.warn("Couldn't resolve method {} in {}: {}", execRef.getSignature(), typeRef, typeRef.getTypeDeclaration().getDeclaredExecutables());
+                if (sourceRefOpt.isPresent()) {
+                    CtExecutableReference<?> sourceRef = sourceRefOpt.get();
+                    CtExecutable<?> execDecl = sourceRef.getExecutableDeclaration();
+
+                    if (execDecl != null && execDecl.getPosition().isValidPosition())
+                        bc.setSourceElement(execDecl);
+                    else
+                        logger.warn("Couldn't find a source location for method {} in type {} in {} [{}]", execRef, typeRef, sources, bc.getChange());
+                } else
+                    logger.warn("Couldn't resolve method {} in type {} in {} [{}]", execRef, typeRef, sources, bc.getChange());
             } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef && fieldRef.getFieldDeclaration() != null) {
                 CtTypeReference<?> typeRef = root.getFactory().Type().createReference(fieldRef.getDeclaringType().getTypeDeclaration());
                 CtFieldReference<?> sourceRef = typeRef.getTypeDeclaration().getDeclaredField(fieldRef.getSimpleName());
-                bc.setSourceElement(sourceRef.getFieldDeclaration());
+                CtField<?> fieldDecl = sourceRef.getFieldDeclaration();
+
+                if (fieldDecl != null && fieldDecl.getPosition().isValidPosition())
+                    bc.setSourceElement(fieldDecl);
+                else
+                    logger.warn("Couldn't find a source location for field {} in {} [{}]", fieldRef, sources, bc.getChange());
             } else
-                logger.warn("Couldn't resolve source element for {}", bc.getReference());
+                logger.warn("Couldn't resolve source element for {} [{}]", bc.getReference(), bc.getChange());
         });
 
-        // Remove breaking changes with an implicit source element.
-        // FIXME: the isImplicit() method is not returning the expected output. Using the position as a proxy.
-        for (Iterator<BreakingChange> iter = breakingChanges.iterator(); iter.hasNext();) {
-            BreakingChange bc = iter.next();
-            // FIXME: the isImplicit() method is still not returning the expected
-            // output. Using the position as a proxy.
-            // if (!SpoonHelpers.isImplicit(bc.getSourceElement()))
-            //     iter.remove();
-            if (bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition()) {
-                logger.warn("Invalid source position for {}", bc.getReference());
-                iter.remove();
-            } else {
-                logger.info("Valid source position for {}", bc.getReference());
-            }
-        }
+        // Remove breaking changes with that do not map to a source location
+        breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
     }
 
     /**
