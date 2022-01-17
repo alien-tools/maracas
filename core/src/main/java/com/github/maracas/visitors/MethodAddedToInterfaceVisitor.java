@@ -6,6 +6,7 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +44,7 @@ public class MethodAddedToInterfaceVisitor extends BreakingChangeVisitor {
 		if (!cls.isAbstract()) {
 			CtTypeReference<?> typeRef = cls.getReference();
 			Set<CtTypeReference<?>> interfaces = new HashSet<>(typeRef.getSuperInterfaces());
-			Set<CtTypeReference<?>> superCls = new HashSet<>(List.of(typeRef.getSuperclass()));
+			Set<CtTypeReference<?>> superCls = new HashSet<>(Arrays.asList(typeRef.getSuperclass()));
 
 			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef))
 				brokenUse(cls, cls, clsRef, APIUse.IMPLEMENTS);
