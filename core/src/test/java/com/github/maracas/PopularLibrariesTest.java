@@ -38,7 +38,7 @@ class PopularLibrariesTest {
   static Stream<Arguments> interestingLibraries() {
     return Stream.of(
       Arguments.of("com.google.guava",           "guava",             "18.0",     "19.0"),
-      Arguments.of("com.google.guava",           "guava",             "30.0-jre", "31.0.1-jre"),
+      //Arguments.of("com.google.guava",           "guava",             "30.0-jre", "31.0.1-jre"),
       Arguments.of("org.slf4j",                  "slf4j-api",         "1.6.1",    "1.7.2"),
       Arguments.of("fr.inria.gforge.spoon",      "spoon-core",        "7.0.0",    "8.0.0"),
       Arguments.of("fr.inria.gforge.spoon",      "spoon-core",        "8.0.0",    "9.0.0"),
