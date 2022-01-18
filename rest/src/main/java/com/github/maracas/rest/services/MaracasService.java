@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.github.maracas.MaracasOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,12 @@ public class MaracasService {
 	public Delta makeDelta(Path jar1, Path jar2, Path sources, BreakbotConfig config) {
 		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
-		Options japiOptions = Maracas.defaultJApiOptions();
-		config.excludes().forEach(excl -> japiOptions.addExcludeFromArgument(Optional.of(excl), false));
+		MaracasOptions options = Maracas.defaultMaracasOptions();
+		Options jApiOptions = options.getJApiOptions();
+		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 
 		Stopwatch watch = Stopwatch.createStarted();
-		Delta delta = Maracas.computeDelta(jar1, jar2, japiOptions);
+		Delta delta = Maracas.computeDelta(jar1, jar2, options);
 		delta.populateLocations(sources);
 
 		logger.info("Done Δ({} -> {}) in {}ms", jar1.getFileName(), jar2.getFileName(),
