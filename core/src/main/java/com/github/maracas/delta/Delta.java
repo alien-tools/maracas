@@ -106,37 +106,53 @@ public class Delta {
                 else
                     logger.warn("Couldn't find a source location for type {} in {} [{}]", typeRef, sources, bc.getChange());
             } else if (bytecodeRef instanceof CtExecutableReference<?> execRef && execRef.getExecutableDeclaration() != null) {
-                CtTypeReference<?> typeRef = root.getFactory().Type().createReference(execRef.getDeclaringType().getTypeDeclaration());
-                Optional<CtExecutableReference<?>> sourceRefOpt =
-                  typeRef.getTypeDeclaration().getDeclaredExecutables().stream()
-                    .filter(e -> Objects.equals(e.getSignature(), execRef.getSignature()))
-                    .findFirst();
+                CtType<?> declaringType = findSourceTypeDeclaration(root, execRef.getDeclaringType().getTypeDeclaration());
 
-                if (sourceRefOpt.isPresent()) {
-                    CtExecutableReference<?> sourceRef = sourceRefOpt.get();
-                    CtExecutable<?> execDecl = sourceRef.getExecutableDeclaration();
+                if (declaringType != null) {
+                    Optional<CtExecutableReference<?>> sourceRefOpt =
+                      declaringType.getDeclaredExecutables().stream()
+                        .filter(e -> Objects.equals(e.getSignature(), execRef.getSignature()))
+                        .findFirst();
 
-                    if (execDecl != null && execDecl.getPosition().isValidPosition())
-                        bc.setSourceElement(execDecl);
-                    else
-                        logger.warn("Couldn't find a source location for method {} in type {} in {} [{}]", execRef, typeRef, sources, bc.getChange());
+                    if (sourceRefOpt.isPresent()) {
+                        CtExecutableReference<?> sourceRef = sourceRefOpt.get();
+                        CtExecutable<?> execDecl = sourceRef.getExecutableDeclaration();
+
+                        if (execDecl != null && execDecl.getPosition().isValidPosition())
+                            bc.setSourceElement(execDecl);
+                        else
+                            logger.warn("Couldn't find a source location for method {} in type {} in {} [{}]", execRef, declaringType, sources, bc.getChange());
+                    } else
+                        logger.warn("Couldn't resolve method {} in type {} in {} [{}]", execRef, declaringType, sources, bc.getChange());
                 } else
-                    logger.warn("Couldn't resolve method {} in type {} in {} [{}]", execRef, typeRef, sources, bc.getChange());
+                    logger.warn("Couldn't find declaring type {} for method {}", execRef.getDeclaringType(), execRef);
             } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef && fieldRef.getFieldDeclaration() != null) {
-                CtTypeReference<?> typeRef = root.getFactory().Type().createReference(fieldRef.getDeclaringType().getTypeDeclaration());
-                CtFieldReference<?> sourceRef = typeRef.getTypeDeclaration().getDeclaredField(fieldRef.getSimpleName());
-                CtField<?> fieldDecl = sourceRef.getFieldDeclaration();
+                CtType<?> declaringType = findSourceTypeDeclaration(root, fieldRef.getDeclaringType().getTypeDeclaration());
 
-                if (fieldDecl != null && fieldDecl.getPosition().isValidPosition())
-                    bc.setSourceElement(fieldDecl);
-                else
-                    logger.warn("Couldn't find a source location for field {} in {} [{}]", fieldRef, sources, bc.getChange());
+                if (declaringType != null) {
+                    CtFieldReference<?> sourceRef = declaringType.getDeclaredField(fieldRef.getSimpleName());
+                    CtField<?> fieldDecl = sourceRef.getFieldDeclaration();
+
+                    if (fieldDecl != null && fieldDecl.getPosition().isValidPosition())
+                        bc.setSourceElement(fieldDecl);
+                    else
+                        logger.warn("Couldn't find a source location for field {} in {} [{}]", fieldRef, sources, bc.getChange());
+                } else
+                    logger.warn("Couldn't find declaring type {} for field {}", fieldRef.getDeclaringType(), fieldRef);
             } else
                 logger.warn("Couldn't resolve source element for {} [{}]", bc.getReference(), bc.getChange());
         });
 
-        // Remove breaking changes with that do not map to a source location
+        // Remove breaking changes that do not map to a source location
         breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
+    }
+
+    private CtType<?> findSourceTypeDeclaration(CtPackage root, CtType<?> binaryTypeDeclaration) {
+        CtTypeReference<?> typeRef = root.getFactory().Type().createReference(binaryTypeDeclaration);
+
+        if (typeRef != null)
+            return typeRef.getTypeDeclaration();
+        return null;
     }
 
     /**
