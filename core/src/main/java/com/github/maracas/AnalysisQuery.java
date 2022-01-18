@@ -20,7 +20,7 @@ public class AnalysisQuery {
 	private final Path newJar;
 	private final Path sources;
 	private final Collection<Path> clients;
-	private final Options jApiOptions;
+	private final MaracasOptions options;
 
 	/**
 	 * Use the dedicated {@link Builder}
@@ -28,12 +28,12 @@ public class AnalysisQuery {
 	 * @see #builder()
 	 */
 	private AnalysisQuery(Path oldJar, Path newJar, Path sources,
-		Collection<Path> clients, Options jApiOptions) {
+		Collection<Path> clients, MaracasOptions options) {
 		this.oldJar = oldJar;
 		this.newJar = newJar;
 		this.sources = sources;
 		this.clients = clients;
-		this.jApiOptions = jApiOptions;
+		this.options = options;
 	}
 
 	/**
@@ -74,12 +74,12 @@ public class AnalysisQuery {
 	}
 
 	/**
-	 * JApiCmp's options
+	 * Maracas options
 	 *
-	 * @see japicmp.config.Options
+	 * @see com.github.maracas.MaracasOptions
 	 */
-	public Options getJApiOptions() {
-		return jApiOptions;
+	public MaracasOptions getMaracasOptions() {
+		return options;
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class AnalysisQuery {
 		private Path newJar;
 		private Path sources;
 		private final Collection<Path> clients = new ArrayList<>();
-		private Options jApiOptions = Maracas.defaultJApiOptions();
+		private MaracasOptions options = MaracasOptions.newDefault();
 
 		/**
 		 * Use {@link AnalysisQuery#builder()}
@@ -180,17 +180,17 @@ public class AnalysisQuery {
 		}
 
 		/**
-		 * Set the options to pass to JApiCmp
+		 * Set the options to pass to Maracas
 		 *
-		 * @param options JApiCmp's options
+		 * @param options Maracas options
 		 * @return the builder
-		 * @see japicmp.config.Options
+		 * @see com.github.maracas.MaracasOptions
 		 */
-		public Builder jApiOptions(Options options) {
+		public Builder options(MaracasOptions options) {
 			if (options == null)
 				throw new IllegalArgumentException("options is null");
 
-			this.jApiOptions = options;
+			this.options = options;
 			return this;
 		}
 
@@ -205,7 +205,7 @@ public class AnalysisQuery {
 			if (pattern == null)
 				throw new IllegalArgumentException("pattern is null");
 
-			this.jApiOptions.addExcludeFromArgument(Optional.of(pattern), false);
+			this.options.getJApiOptions().addExcludeFromArgument(Optional.of(pattern), false);
 			return this;
 		}
 
@@ -216,7 +216,7 @@ public class AnalysisQuery {
 		 */
 		public AnalysisQuery build() {
 			validate();
-			return new AnalysisQuery(oldJar, newJar, sources, clients, jApiOptions);
+			return new AnalysisQuery(oldJar, newJar, sources, clients, options);
 		}
 
 		private void validate() {

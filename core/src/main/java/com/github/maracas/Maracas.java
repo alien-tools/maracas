@@ -10,9 +10,8 @@ import com.github.maracas.visitors.CombinedVisitor;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
-import japicmp.config.Options;
-import japicmp.model.AccessModifier;
 import japicmp.model.JApiClass;
+import japicmp.model.JApiCompatibilityChange;
 import japicmp.output.OutputFilter;
 import spoon.reflect.CtModel;
 
@@ -40,7 +39,7 @@ public class Maracas {
 		Objects.requireNonNull(query);
 
 		// Compute the delta model between old and new JARs
-		Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getJApiOptions());
+		Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
 
 		// If we get the library's sources, populate the delta's source code locations
 		if (query.getSources() != null)
@@ -62,38 +61,39 @@ public class Maracas {
 	 *
 	 * @param oldJar The library's old JAR
 	 * @param newJar The library's new JAR
+	 * @param options Maracas and JApiCmp options
 	 * @return a new delta model based on JapiCmp's results
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
-	 * @see #computeDelta(Path, Path, Options)
+	 * @see #computeDelta(Path, Path, MaracasOptions)
 	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
 	 */
-	public static Delta computeDelta(Path oldJar, Path newJar, Options jApiOptions) {
+	public static Delta computeDelta(Path oldJar, Path newJar, MaracasOptions options) {
 		if (!PathHelpers.isValidJar(oldJar))
 			throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
 		if (!PathHelpers.isValidJar(newJar))
 			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
-		Options opts = jApiOptions != null ? jApiOptions : defaultJApiOptions();
-		JarArchiveComparatorOptions options = JarArchiveComparatorOptions.of(opts);
-		JarArchiveComparator comparator = new JarArchiveComparator(options);
+		MaracasOptions opts = options != null ? options : defaultMaracasOptions();
+		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
+		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
 		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
 		JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
 
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 
-		OutputFilter filter = new OutputFilter(opts);
+		OutputFilter filter = new OutputFilter(opts.getJApiOptions());
 		filter.filter(classes);
 
 		return Delta.fromJApiCmpDelta(
-			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes);
+			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
 	}
 
 	/**
-	 * @see #computeDelta(Path, Path, Options)
+	 * @see #computeDelta(Path, Path, MaracasOptions)
 	 */
 	public static Delta computeDelta(Path oldJar, Path newJar) {
-		return computeDelta(oldJar, newJar, defaultJApiOptions());
+		return computeDelta(oldJar, newJar, defaultMaracasOptions());
 	}
 
 	/**
@@ -125,12 +125,22 @@ public class Maracas {
 		return visitor.getBrokenUses();
 	}
 
-	public static Options defaultJApiOptions() {
-		Options defaultOptions = Options.newDefault();
-		defaultOptions.setAccessModifier(AccessModifier.PROTECTED);
-		defaultOptions.setOutputOnlyModifications(true);
-		defaultOptions.setIgnoreMissingClasses(true);
+	public static MaracasOptions defaultMaracasOptions() {
+		MaracasOptions maracasOptions = MaracasOptions.newDefault();
 
-		return defaultOptions;
+		// We don't care about source- and binary-compatible changes (except ADA...)
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_ADDED);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.INTERFACE_ADDED);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE);
+
+		// We don't care about _IN_SUPERCLASS changes as they're just redundant
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
+		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
+
+		return maracasOptions;
 	}
 }

@@ -31,14 +31,14 @@ class AnalysisQueryTest {
 
 	@Test
 	void builder_correctlyCreatesQuery() {
-		Options opts = Maracas.defaultJApiOptions();
+		MaracasOptions opts = MaracasOptions.newDefault();
 
 		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
 			.client(validDirectory)
 			.sources(validDirectory)
-			.jApiOptions(opts)
+			.options(opts)
 			.build();
 
 		assertThat(query.getOldJar(), is(equalTo(validJar.toAbsolutePath())));
@@ -46,7 +46,7 @@ class AnalysisQueryTest {
 		assertThat(query.getClients(), hasSize(1));
 		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
 		assertThat(query.getSources(), is(equalTo(validDirectory.toAbsolutePath())));
-		assertThat(query.getJApiOptions(), is(equalTo(opts)));
+		assertThat(query.getMaracasOptions(), is(equalTo(opts)));
 	}
 
 	@Test
@@ -87,9 +87,9 @@ class AnalysisQueryTest {
 			.exclude("#foo()")
 			.build();
 
-			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(AnnotationClassFilter.class)));
-			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikeBehaviorFilter.class)));
-			assertThat(query.getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikePackageFilter.class)));
+			assertThat(query.getMaracasOptions().getJApiOptions().getExcludes(), hasItem(instanceOf(AnnotationClassFilter.class)));
+			assertThat(query.getMaracasOptions().getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikeBehaviorFilter.class)));
+			assertThat(query.getMaracasOptions().getJApiOptions().getExcludes(), hasItem(instanceOf(JavadocLikePackageFilter.class)));
 	}
 
 	@Test
@@ -188,7 +188,7 @@ class AnalysisQueryTest {
 	@Test
 	void nullOptions_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.jApiOptions(null)
+			builder.options(null)
 		);
 	}
 

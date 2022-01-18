@@ -1,5 +1,6 @@
 package com.github.maracas.delta;
 
+import com.github.maracas.MaracasOptions;
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
@@ -19,7 +20,6 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,17 +63,18 @@ public class Delta {
      *        {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
      * @return a corresponding new delta model
      */
-    public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes) {
+    public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes, MaracasOptions options) {
         Objects.requireNonNull(oldJar);
         Objects.requireNonNull(newJar);
         Objects.requireNonNull(classes);
+        Objects.requireNonNull(options);
 
         // We need to create CtReferences to v1 to map japicmp's delta
         // to our own. Building an empty model with the right
         // classpath allows us to create these references.
         CtModel model = SpoonHelpers.buildSpoonModel(null, oldJar);
         CtPackage root = model.getRootPackage();
-        JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root);
+        JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root, options);
         JApiCmpDeltaVisitor.visit(classes, visitor);
 
         return new Delta(oldJar, newJar, visitor.getBreakingChanges());
@@ -174,7 +175,7 @@ public class Delta {
 
     @Override
     public String toString() {
-        return "Δ(%s -> %s)\n".formatted(oldJar.getFileName(), newJar.getFileName()) +
+        return "Δ(%s -> %s)%n".formatted(oldJar.getFileName(), newJar.getFileName()) +
           breakingChanges.stream()
             .map(bd -> """
               [%s]

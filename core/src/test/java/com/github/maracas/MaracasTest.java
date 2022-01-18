@@ -5,6 +5,7 @@ import com.github.maracas.delta.Delta;
 
 import japicmp.config.Options;
 import japicmp.model.AccessModifier;
+import japicmp.model.JApiCompatibilityChange;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.cu.position.NoSourcePosition;
 
@@ -13,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -75,29 +77,56 @@ class MaracasTest {
 	}
 
 	@Test
-	void analyze_QueryWithOptions_UsesOptions() {
-		Options publicOpts = Maracas.defaultJApiOptions();
-		publicOpts.setAccessModifier(AccessModifier.PUBLIC);
+	void analyze_QueryWithAccessModifier_IsConsidered() {
+		MaracasOptions publicOpts = MaracasOptions.newDefault();
+		publicOpts.getJApiOptions().setAccessModifier(AccessModifier.PUBLIC);
 
-		Options privateOpts = Maracas.defaultJApiOptions();
-		privateOpts.setAccessModifier(AccessModifier.PRIVATE);
+		MaracasOptions privateOpts = MaracasOptions.newDefault();
+		privateOpts.getJApiOptions().setAccessModifier(AccessModifier.PRIVATE);
 
 		AnalysisResult resPublic = Maracas.analyze(
 			AnalysisQuery.builder()
 				.oldJar(v1)
 				.newJar(v2)
-				.jApiOptions(publicOpts)
+				.options(publicOpts)
 				.build());
 
 		AnalysisResult resPrivate = Maracas.analyze(
 			AnalysisQuery.builder()
 				.oldJar(v1)
 				.newJar(v2)
-				.jApiOptions(privateOpts)
+				.options(privateOpts)
 				.build());
 
 		assertThat(resPublic.delta().getBreakingChanges().size(),
 			is(not(equalTo(resPrivate.delta().getBreakingChanges().size()))));
+	}
+
+	@Test
+	void analyze_QueryWithExcludedBC_IsConsidered() {
+		AnalysisResult resWithoutOpts = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldJar(v1)
+				.newJar(v2)
+				.build());
+
+		MaracasOptions opts = MaracasOptions.newDefault();
+		opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED);
+		AnalysisResult resWithOpts = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldJar(v1)
+				.newJar(v2)
+				.options(opts)
+				.build());
+
+		assertThat(
+			resWithoutOpts.delta().getBreakingChanges().stream()
+				.filter(bc -> bc.getChange().equals(JApiCompatibilityChange.METHOD_REMOVED))
+				.count(), greaterThan(0L));
+		assertThat(
+			resWithOpts.delta().getBreakingChanges().stream()
+				.filter(bc -> bc.getChange().equals(JApiCompatibilityChange.METHOD_REMOVED))
+				.count(), is(equalTo(0L)));
 	}
 
 	@Test
