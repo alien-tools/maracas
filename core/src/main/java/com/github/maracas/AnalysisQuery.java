@@ -92,7 +92,7 @@ public class AnalysisQuery {
 		private Path newJar;
 		private Path sources;
 		private final Collection<Path> clients = new ArrayList<>();
-		private MaracasOptions options = MaracasOptions.newDefault();
+		private MaracasOptions options = Maracas.defaultMaracasOptions();
 
 		/**
 		 * Use {@link AnalysisQuery#builder()}
