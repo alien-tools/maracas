@@ -59,8 +59,8 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 			CtElement parent = invocation.getParent();
 			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(parent);
 			// FIXME: are there issues with type casts?
-			if (!SpoonTypeHelpers.isAssignableFrom(expectedType, newType))
-                brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
+			if (expectedType != null && !SpoonTypeHelpers.isAssignableFrom(expectedType, newType))
+				brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
 		}
 	}
 

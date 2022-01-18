@@ -14,6 +14,7 @@ import javassist.CtBehavior;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtReturn;
@@ -31,6 +32,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.support.reflect.code.CtBlockImpl;
 
 public class SpoonHelpers {
 
@@ -131,7 +133,8 @@ public class SpoonHelpers {
 		    return sync.getExpression().getType();
 		else if (e instanceof CtAssignment<?, ?> assign)
 		    return assign.getType();
-		// FIXME: CtSwitch not supported yet
+		else if (e instanceof CtBlock)
+			return null;
 
 		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
 	}
