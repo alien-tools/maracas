@@ -1,16 +1,24 @@
 package com.github.maracas;
 
-import com.github.maracas.delta.Delta;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
 	public static void main(String[] args) {
-		Path x = Paths.get("/home/dig/v1.jar");
-		Path y = Paths.get("/home/dig/v2.jar");
-		Delta delta = Maracas.computeDelta(x, y);
-		delta.populateLocations(Paths.get("/home/dig/sources/src/main/java"));
-		System.out.println(delta);
+		Path v1 = Paths.get("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
+		Path v2 = Paths.get("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
+		Path c = Paths.get("test-data/comp-changes/client/src/");
+		Path sources = Paths.get("test-data/comp-changes/old/");
+
+		AnalysisQuery query = AnalysisQuery.builder()
+			.oldJar(v1)
+			.newJar(v2)
+			.sources(sources)
+			.client(c)
+			.build();
+
+		AnalysisResult result = Maracas.analyze(query);
+		System.out.println("Changes: " + result.delta());
+		System.out.println("Impact:  " + result.allBrokenUses());
 	}
 }
