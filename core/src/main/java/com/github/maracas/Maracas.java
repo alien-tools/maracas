@@ -12,7 +12,6 @@ import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
-import japicmp.model.JApiCompatibilityChange;
 import japicmp.output.OutputFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,7 +78,7 @@ public class Maracas {
 			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
 		Stopwatch sw = Stopwatch.createStarted();
-		MaracasOptions opts = options != null ? options : defaultMaracasOptions();
+		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
 		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
 		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
@@ -102,7 +101,7 @@ public class Maracas {
 	 * @see #computeDelta(Path, Path, MaracasOptions)
 	 */
 	public static Delta computeDelta(Path oldJar, Path newJar) {
-		return computeDelta(oldJar, newJar, defaultMaracasOptions());
+		return computeDelta(oldJar, newJar, MaracasOptions.newDefault());
 	}
 
 	/**
@@ -137,24 +136,5 @@ public class Maracas {
 
 		logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
 		return visitor.getBrokenUses();
-	}
-
-	public static MaracasOptions defaultMaracasOptions() {
-		MaracasOptions maracasOptions = MaracasOptions.newDefault();
-
-		// We don't care about source- and binary-compatible changes (except ADA...)
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_ADDED);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.INTERFACE_ADDED);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE);
-
-		// We don't care about _IN_SUPERCLASS changes as they're just redundant
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
-		maracasOptions.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
-
-		return maracasOptions;
 	}
 }

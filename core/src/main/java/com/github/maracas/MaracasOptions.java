@@ -11,21 +11,34 @@ public class MaracasOptions {
   private final Options jApiOptions;
   private final Set<JApiCompatibilityChange> excludedBreakingChanges = new HashSet<>();
 
-  public MaracasOptions(Options jApiOptions) {
+  private MaracasOptions(Options jApiOptions) {
     this.jApiOptions = jApiOptions;
   }
 
-  public static MaracasOptions newDefault() {
-    return new MaracasOptions(defaultJApiOptions());
+  public static Options defaultJApiOptions() {
+    Options opts = Options.newDefault();
+    opts.setAccessModifier(AccessModifier.PROTECTED);
+    opts.setOutputOnlyModifications(true);
+    opts.setIgnoreMissingClasses(true);
+
+    return opts;
   }
 
-  public static Options defaultJApiOptions() {
-    Options jApiOptions = Options.newDefault();
-    jApiOptions.setAccessModifier(AccessModifier.PROTECTED);
-    jApiOptions.setOutputOnlyModifications(true);
-    jApiOptions.setIgnoreMissingClasses(true);
+  public static MaracasOptions newDefault() {
+    MaracasOptions opts = new MaracasOptions(defaultJApiOptions());
 
-    return jApiOptions;
+    // We don't care about source- and binary-compatible changes (except ADA...)
+    opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS);
+    opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE);
+
+    // We don't care about super-type changes as they're just redundant
+    opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
+    opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS);
+    opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS);
+    opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
+    opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
+
+    return opts;
   }
 
   public void excludeBreakingChange(JApiCompatibilityChange c) {

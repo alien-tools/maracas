@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import com.github.maracas.util.PathHelpers;
 
-import japicmp.config.Options;
 import japicmp.util.Optional;
 
 /**
@@ -92,7 +91,7 @@ public class AnalysisQuery {
 		private Path newJar;
 		private Path sources;
 		private final Collection<Path> clients = new ArrayList<>();
-		private MaracasOptions options = Maracas.defaultMaracasOptions();
+		private MaracasOptions options = MaracasOptions.newDefault();
 
 		/**
 		 * Use {@link AnalysisQuery#builder()}

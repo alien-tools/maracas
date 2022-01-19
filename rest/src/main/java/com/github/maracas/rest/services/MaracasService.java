@@ -34,7 +34,7 @@ public class MaracasService {
 	public Delta makeDelta(Path jar1, Path jar2, Path sources, BreakbotConfig config) {
 		logger.info("Computing Δ({} -> {})", jar1.getFileName(), jar2.getFileName());
 
-		MaracasOptions options = Maracas.defaultMaracasOptions();
+		MaracasOptions options = MaracasOptions.newDefault();
 		Options jApiOptions = options.getJApiOptions();
 		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 
