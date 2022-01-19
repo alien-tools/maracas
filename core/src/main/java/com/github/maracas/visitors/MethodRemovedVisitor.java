@@ -51,6 +51,6 @@ public class MethodRemovedVisitor extends BreakingChangeVisitor {
 		if (mRef.getExecutableDeclaration() instanceof CtMethod<?> method) {
 			if (m.isOverriding(method))
 				brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
-		} else throw new RuntimeException("That should be a method though");
+		}
 	}
 }
