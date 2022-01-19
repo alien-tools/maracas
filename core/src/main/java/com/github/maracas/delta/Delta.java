@@ -1,28 +1,25 @@
 package com.github.maracas.delta;
 
 import com.github.maracas.MaracasOptions;
+import com.github.maracas.util.BinaryToSourceMapper;
 import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
+import com.google.common.base.Stopwatch;
 import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
-import spoon.reflect.reference.CtTypeReference;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +43,7 @@ public class Delta {
     private static final Logger logger = LogManager.getLogger(Delta.class);
 
     /**
-     * @see #fromJApiCmpDelta(Path, Path, List)
+     * @see #fromJApiCmpDelta(Path, Path, List, MaracasOptions)
      */
     private Delta(Path oldJar, Path newJar, Collection<BreakingChange> breakingChanges) {
         this.oldJar = oldJar;
@@ -72,10 +69,16 @@ public class Delta {
         // We need to create CtReferences to v1 to map japicmp's delta
         // to our own. Building an empty model with the right
         // classpath allows us to create these references.
+        Stopwatch sw = Stopwatch.createStarted();
         CtModel model = SpoonHelpers.buildSpoonModel(null, oldJar);
         CtPackage root = model.getRootPackage();
+        logger.info("Building Spoon model from {} took {}ms", oldJar, sw.elapsed().toMillis());
+
+        sw.reset();
+        sw.start();
         JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root, options);
         JApiCmpDeltaVisitor.visit(classes, visitor);
+        logger.info("Mapping JApiCmp's breaking changes to Spoon took {}ms", sw.elapsed().toMillis());
 
         return new Delta(oldJar, newJar, visitor.getBreakingChanges());
     }
@@ -91,68 +94,28 @@ public class Delta {
         if (!PathHelpers.isValidDirectory(sources))
             throw new IllegalArgumentException("sources isn't a valid directory");
 
+        Stopwatch sw = Stopwatch.createStarted();
         CtModel model = SpoonHelpers.buildSpoonModel(sources, null);
         CtPackage root = model.getRootPackage();
+        BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
+        logger.info("Building Spoon model from {} took {}ms", sources, sw.elapsed().toMillis());
 
+        sw.reset();
+        sw.start();
         breakingChanges.forEach(bc -> {
-            CtReference bytecodeRef = bc.getReference();
+            CtReference binaryRef = bc.getReference();
+            CtElement source = mapper.resolve(binaryRef);
 
-            if (bytecodeRef instanceof CtTypeReference<?> typeRef && typeRef.getTypeDeclaration() != null) {
-                CtTypeReference<?> sourceRef = root.getFactory().Type().createReference(typeRef.getTypeDeclaration());
-                CtType<?> typeDecl = sourceRef.getTypeDeclaration();
-
-                if (typeDecl != null && typeDecl.getPosition().isValidPosition())
-                    bc.setSourceElement(typeDecl);
-                else
-                    logger.warn("Couldn't find a source location for type {} in {} [{}]", typeRef, sources, bc.getChange());
-            } else if (bytecodeRef instanceof CtExecutableReference<?> execRef && execRef.getExecutableDeclaration() != null) {
-                CtType<?> declaringType = findSourceTypeDeclaration(root, execRef.getDeclaringType().getTypeDeclaration());
-
-                if (declaringType != null) {
-                    Optional<CtExecutableReference<?>> sourceRefOpt =
-                      declaringType.getDeclaredExecutables().stream()
-                        .filter(e -> Objects.equals(e.getSignature(), execRef.getSignature()))
-                        .findFirst();
-
-                    if (sourceRefOpt.isPresent()) {
-                        CtExecutableReference<?> sourceRef = sourceRefOpt.get();
-                        CtExecutable<?> execDecl = sourceRef.getExecutableDeclaration();
-
-                        if (execDecl != null && execDecl.getPosition().isValidPosition())
-                            bc.setSourceElement(execDecl);
-                        else
-                            logger.warn("Couldn't find a source location for method {} in type {} in {} [{}]", execRef, declaringType, sources, bc.getChange());
-                    } else
-                        logger.warn("Couldn't resolve method {} in type {} in {} [{}]", execRef, declaringType, sources, bc.getChange());
-                } else
-                    logger.warn("Couldn't find declaring type {} for method {}", execRef.getDeclaringType(), execRef);
-            } else if (bytecodeRef instanceof CtFieldReference<?> fieldRef && fieldRef.getFieldDeclaration() != null) {
-                CtType<?> declaringType = findSourceTypeDeclaration(root, fieldRef.getDeclaringType().getTypeDeclaration());
-
-                if (declaringType != null) {
-                    CtFieldReference<?> sourceRef = declaringType.getDeclaredField(fieldRef.getSimpleName());
-                    CtField<?> fieldDecl = sourceRef.getFieldDeclaration();
-
-                    if (fieldDecl != null && fieldDecl.getPosition().isValidPosition())
-                        bc.setSourceElement(fieldDecl);
-                    else
-                        logger.warn("Couldn't find a source location for field {} in {} [{}]", fieldRef, sources, bc.getChange());
-                } else
-                    logger.warn("Couldn't find declaring type {} for field {}", fieldRef.getDeclaringType(), fieldRef);
-            } else
-                logger.warn("Couldn't resolve source element for {} [{}]", bc.getReference(), bc.getChange());
+            if (source != null)
+                bc.setSourceElement(source);
+            else
+                logger.warn("Couldn't resolve a source location for {} in {}", binaryRef, sources);
         });
 
         // Remove breaking changes that do not map to a source location
         breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
-    }
 
-    private CtType<?> findSourceTypeDeclaration(CtPackage root, CtType<?> binaryTypeDeclaration) {
-        CtTypeReference<?> typeRef = root.getFactory().Type().createReference(binaryTypeDeclaration);
-
-        if (typeRef != null)
-            return typeRef.getTypeDeclaration();
-        return null;
+        logger.info("Mapping binary breaking changes to source code took {}ms", sw.elapsed().toMillis());
     }
 
     /**

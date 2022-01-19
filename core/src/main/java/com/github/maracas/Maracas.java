@@ -7,12 +7,15 @@ import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
+import com.google.common.base.Stopwatch;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.output.OutputFilter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
 
 import java.nio.file.Path;
@@ -23,6 +26,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Maracas {
+	private static final Logger logger = LogManager.getLogger(Maracas.class);
+
 	// Just use the static methods
 	private Maracas() {
 
@@ -73,6 +78,7 @@ public class Maracas {
 		if (!PathHelpers.isValidJar(newJar))
 			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
+		Stopwatch sw = Stopwatch.createStarted();
 		MaracasOptions opts = options != null ? options : defaultMaracasOptions();
 		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
 		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
@@ -85,8 +91,11 @@ public class Maracas {
 		OutputFilter filter = new OutputFilter(opts.getJApiOptions());
 		filter.filter(classes);
 
-		return Delta.fromJApiCmpDelta(
+		Delta delta = Delta.fromJApiCmpDelta(
 			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
+
+		logger.info("Δ({}, {}) took {}ms", oldJar, newJar, sw.elapsed().toMillis());
+		return delta;
 	}
 
 	/**
@@ -111,8 +120,12 @@ public class Maracas {
 		if (!PathHelpers.isValidDirectory(client))
 			throw new IllegalArgumentException("client isn't a valid directory: " + client);
 
+		Stopwatch sw = Stopwatch.createStarted();
 		CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
+		logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
 
+		sw.reset();
+		sw.start();
 		Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 		CombinedVisitor visitor = new CombinedVisitor(visitors);
 
@@ -122,6 +135,7 @@ public class Maracas {
 		visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
 		visitor.scan(model.getRootPackage());
 
+		logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
 		return visitor.getBrokenUses();
 	}
 

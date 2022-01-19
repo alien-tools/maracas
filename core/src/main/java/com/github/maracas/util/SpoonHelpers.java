@@ -32,7 +32,6 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtBlockImpl;
 
 public class SpoonHelpers {
 
