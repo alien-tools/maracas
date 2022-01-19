@@ -95,8 +95,8 @@ class PopularLibrariesTest {
     assertThat(delta, is(notNullValue()));
     delta.getBreakingChanges().forEach(bc -> {
       assertThat(bc.getReference(), is(notNullValue()));
-      //assertThat(bc.getSourceElement(), is(notNullValue()));
-      //assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
+      assertThat(bc.getSourceElement(), is(notNullValue()));
+      assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
     });
     ds.forEach(d -> {
       assertThat(d.element(), is(notNullValue()));
