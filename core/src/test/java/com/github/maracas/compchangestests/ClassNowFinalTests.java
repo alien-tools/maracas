@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class ClassNowFinalTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(CLASS_NOW_FINAL, 9);
+		assertNumberBrokenUses(CLASS_NOW_FINAL, 6);
 	}
 
 	@Test
