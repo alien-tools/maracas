@@ -18,18 +18,8 @@ class ClassNowFinalTests extends CompChangesTest {
 	}
 
 	@Test
-	void testExtMethod() {
-		assertBrokenUse("ClassNowFinalExt.java", 8, CLASS_NOW_FINAL, METHOD_OVERRIDE);
-	}
-
-	@Test
 	void testAbsExt() {
 		assertBrokenUse("ClassNowFinalAbsExt.java", 5, CLASS_NOW_FINAL, EXTENDS);
-	}
-
-	@Test
-	void testAbsExtMethod() {
-		assertBrokenUse("ClassNowFinalAbsExt.java", 8, CLASS_NOW_FINAL, METHOD_OVERRIDE);
 	}
 
 	@Test
@@ -45,11 +35,6 @@ class ClassNowFinalTests extends CompChangesTest {
 	@Test
 	void testAnonymousSubAbs() {
 		assertBrokenUse("ClassNowFinalAnonymousSub.java", 13, CLASS_NOW_FINAL, EXTENDS);
-	}
-
-	@Test
-	void testAnonymousSubAbsMethod() {
-		assertBrokenUse("ClassNowFinalAnonymousSub.java", 15, CLASS_NOW_FINAL, METHOD_OVERRIDE);
 	}
 
 	// A bit of a corner case: a type goes from enum to class; this is reported

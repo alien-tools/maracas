@@ -14,7 +14,6 @@ import spoon.reflect.reference.CtTypeReference;
 /**
  * Broken uses of CLASS_NOW_FINAL are:
  *	- Classes (regular and anonymous) extending the now-final class
- *	- Methods @Override-ing a method of the now-final class
  *
  * Note that JApiCmp reports a CLASS_NOW_FINAL on types that go from {@code class}
  * to {@code enum}.
@@ -31,23 +30,6 @@ public class ClassNowFinalVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtClass(CtClass<T> ctClass) {
 		if (clsRef.equals(ctClass.getSuperclass()))
 			brokenUse(ctClass, ctClass.getSuperclass(), clsRef, APIUse.EXTENDS);
-	}
-
-	@Override
-	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (m.hasAnnotation(java.lang.Override.class)) {
-		    try {
-    			Optional<CtMethod<?>> superMethod =
-    				m.getTopDefinitions()
-    					.stream()
-    					.filter(superM -> clsRef.equals(superM.getDeclaringType().getReference()))
-    					.findAny();
-
-    			superMethod.ifPresent(ctMethod -> brokenUse(m, ctMethod, clsRef, APIUse.METHOD_OVERRIDE));
-		    } catch(SpoonException e) {
-		        // FIXME: Find fancier solution. A declaration cannot be resolved
-		    }
-		}
 	}
 
 	@Override
