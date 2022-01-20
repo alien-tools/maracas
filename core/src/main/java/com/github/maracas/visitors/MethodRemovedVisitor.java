@@ -49,7 +49,9 @@ public class MethodRemovedVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
 		if (mRef.getExecutableDeclaration() instanceof CtMethod<?> method) {
-			if (m.isOverriding(method))
+			// Redundant check, but the signature equality check + short-circuiting
+			// avoids invoking the super-expensive isOverriding() on every CtMethod
+			if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method))
 				brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
 		}
 	}
