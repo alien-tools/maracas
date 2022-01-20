@@ -1,7 +1,5 @@
 package com.github.maracas;
 
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.delta.Delta;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
@@ -19,7 +17,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -68,14 +65,29 @@ class PopularLibrariesTest {
     AnalysisQuery query = AnalysisQuery.builder()
       .oldJar(oldJar)
       .newJar(newJar)
-      .sources(sources)
       .client(sources)
       .build();
 
     AnalysisResult result = Maracas.analyze(query);
+    assertThat(result.delta(), is(notNullValue()));
     System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
       result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
-    assertIsValid(result);
+
+    result.delta().getBreakingChanges().forEach(bc -> {
+      assertThat(bc.getReference(), is(notNullValue()));
+    });
+    result.allBrokenUses().forEach(d -> {
+      assertThat(d.element(), is(notNullValue()));
+      assertThat(d.element().getPosition().isValidPosition(), is(true));
+      assertThat(d.usedApiElement(), is(notNullValue()));
+      assertThat(d.source(), is(notNullValue()));
+    });
+
+    result.delta().populateLocations(sources);
+    result.delta().getBreakingChanges().forEach(bc -> {
+      assertThat(bc.getSourceElement(), is(notNullValue()));
+      assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
+    });
   }
 
   @BeforeAll
@@ -86,24 +98,6 @@ class PopularLibrariesTest {
   @AfterAll
   static void cleanUp() throws IOException {
     FileUtils.deleteDirectory(TMP_PATH.toFile());
-  }
-
-  void assertIsValid(AnalysisResult res) {
-    Delta delta = res.delta();
-    Collection<BrokenUse> ds = res.allBrokenUses();
-
-    assertThat(delta, is(notNullValue()));
-    delta.getBreakingChanges().forEach(bc -> {
-      assertThat(bc.getReference(), is(notNullValue()));
-      assertThat(bc.getSourceElement(), is(notNullValue()));
-      assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
-    });
-    ds.forEach(d -> {
-      assertThat(d.element(), is(notNullValue()));
-      assertThat(d.element().getPosition().isValidPosition(), is(true));
-      assertThat(d.usedApiElement(), is(notNullValue()));
-      assertThat(d.source(), is(notNullValue()));
-    });
   }
 
   String coordinatesToJarURL(String gid, String aid, String v) {
