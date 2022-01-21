@@ -50,11 +50,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiClass cls) {
-    if (cls.getChangeStatus() == JApiChangeStatus.NEW) {
-      logger.warn("{} is ChangeStatus.NEW, ignoring", cls);
-      return;
-    }
-
     Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(cls);
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
@@ -74,11 +69,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiMethod m) {
-    if (m.getChangeStatus() == JApiChangeStatus.NEW) {
-      logger.warn("{} is ChangeStatus.NEW, ignoring", m);
-      return;
-    }
-
     Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(m);
     if (!bcs.isEmpty()) {
       var oldMethodOpt = m.getOldMethod();
@@ -114,11 +104,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiField f) {
-    if (f.getChangeStatus() == JApiChangeStatus.NEW) {
-      logger.warn("{} is ChangeStatus.NEW, ignoring", f);
-      return;
-    }
-
     Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(f);
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(f.getjApiClass().getFullyQualifiedName());
@@ -145,11 +130,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiConstructor cons) {
-    if (cons.getChangeStatus() == JApiChangeStatus.NEW) {
-      logger.warn("{} is ChangeStatus.NEW, ignoring", cons);
-      return;
-    }
-
     Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(cons);
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cons.getjApiClass().getFullyQualifiedName());
