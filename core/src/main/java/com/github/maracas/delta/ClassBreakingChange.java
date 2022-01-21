@@ -61,7 +61,6 @@ public class ClassBreakingChange extends AbstractBreakingChange {
 					CtTypeReference<?> oldSuper = clsRef.getFactory().Type().createReference(superClass.getSuperclassOld());
 					yield new SuperclassRemovedVisitor(clsRef, oldSuper);
 				}
-				case CLASS_NO_LONGER_PUBLIC      -> null; // CLASS_LESS_ACCESSIBLE is a superset of CLASS_NO_LONGER_PUBLIC; fix japicmp
 				default -> null; // FIXME: should eventually disappear
 			};
 	}
