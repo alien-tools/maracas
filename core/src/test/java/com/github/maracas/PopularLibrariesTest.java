@@ -1,5 +1,6 @@
 package com.github.maracas;
 
+import japicmp.model.AccessModifier;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
@@ -62,10 +63,16 @@ class PopularLibrariesTest {
     Path newJar = downloadJAR(coordinatesToJarURL(gid, aid, v2));
     Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
+    // Since we're using the libraries as clients themselves (so all package names clash),
+    // the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
+    MaracasOptions opts = MaracasOptions.newDefault();
+    opts.getJApiOptions().setAccessModifier(AccessModifier.PROTECTED);
+
     AnalysisQuery query = AnalysisQuery.builder()
       .oldJar(oldJar)
       .newJar(newJar)
       .client(sources)
+      .options(opts)
       .build();
 
     AnalysisResult result = Maracas.analyze(query);
