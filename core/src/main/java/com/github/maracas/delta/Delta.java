@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +57,7 @@ public class Delta {
      * @param newJar the library's new JAR
      * @param classes the list of changes extracted using
      *        {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
+     * @param options Maracas' options
      * @return a corresponding new delta model
      */
     public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes, MaracasOptions options) {
@@ -65,6 +65,9 @@ public class Delta {
         Objects.requireNonNull(newJar);
         Objects.requireNonNull(classes);
         Objects.requireNonNull(options);
+
+        JApiCmpDeltaFilter filter = new JApiCmpDeltaFilter(options);
+        filter.filter(classes);
 
         // We need to create CtReferences to v1 to map japicmp's delta
         // to our own. Building an empty model with the right
@@ -76,7 +79,7 @@ public class Delta {
 
         sw.reset();
         sw.start();
-        JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root, options);
+        JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root);
         JApiCmpDeltaVisitor.visit(classes, visitor);
         logger.info("Mapping JApiCmp's breaking changes to Spoon took {}ms", sw.elapsed().toMillis());
 

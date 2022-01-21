@@ -86,15 +86,7 @@ public class Maracas {
 		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
 		JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
 
-		List<JApiClass> classes =
-			comparator.compare(oldAPI, newAPI)
-				.stream()
-				.filter(cls -> !cls.getFullyQualifiedName().matches(".*\\$[0-9]+.*"))
-				.collect(Collectors.toList());
-
-		OutputFilter filter = new OutputFilter(opts.getJApiOptions());
-		filter.filter(classes);
-
+		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 		Delta delta = Delta.fromJApiCmpDelta(
 			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
 

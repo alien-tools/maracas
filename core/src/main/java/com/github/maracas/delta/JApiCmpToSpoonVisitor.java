@@ -1,11 +1,8 @@
 package com.github.maracas.delta;
 
-import com.github.maracas.MaracasOptions;
 import com.github.maracas.util.SpoonHelpers;
 import japicmp.model.JApiAnnotation;
-import japicmp.model.JApiChangeStatus;
 import japicmp.model.JApiClass;
-import japicmp.model.JApiCompatibility;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiConstructor;
 import japicmp.model.JApiField;
@@ -28,29 +25,20 @@ import java.util.Optional;
 
 public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
   private final CtPackage root;
-  private final MaracasOptions options;
   private final Collection<BreakingChange> breakingChanges = new ArrayList<>();
   private static final Logger logger = LogManager.getLogger(JApiCmpToSpoonVisitor.class);
 
-  public JApiCmpToSpoonVisitor(CtPackage root, MaracasOptions options) {
+  public JApiCmpToSpoonVisitor(CtPackage root) {
     this.root = root;
-    this.options = options;
   }
 
   public Collection<BreakingChange> getBreakingChanges() {
     return breakingChanges;
   }
 
-  public Collection<JApiCompatibilityChange> getCompatibilityChanges(JApiCompatibility comp) {
-    return
-      comp.getCompatibilityChanges().stream()
-        .filter(c -> !options.getExcludedBreakingChanges().contains(c))
-        .toList();
-  }
-
   @Override
   public void visit(JApiClass cls) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(cls);
+    Collection<JApiCompatibilityChange> bcs = cls.getCompatibilityChanges();
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
 
@@ -69,16 +57,14 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiMethod m) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(m);
+    Collection<JApiCompatibilityChange> bcs = m.getCompatibilityChanges();
     if (!bcs.isEmpty()) {
       var oldMethodOpt = m.getOldMethod();
       var newMethodOpt = m.getNewMethod();
 
       if (oldMethodOpt.isPresent()) {
-        CtMethod oldMethod = oldMethodOpt.get();
         String sign = SpoonHelpers.buildSpoonSignature(m);
         CtExecutableReference<?> mRef = root.getFactory().Method().createReference(sign);
-        CtTypeReference<?> clsRef = mRef.getDeclaringType();
 
         if (mRef != null && mRef.getExecutableDeclaration() != null)
           breakingChanges.addAll(
@@ -104,7 +90,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiField f) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(f);
+    Collection<JApiCompatibilityChange> bcs = f.getCompatibilityChanges();
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(f.getjApiClass().getFullyQualifiedName());
 
@@ -130,7 +116,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiConstructor cons) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(cons);
+    Collection<JApiCompatibilityChange> bcs = cons.getCompatibilityChanges();
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cons.getjApiClass().getFullyQualifiedName());
       var oldConsOpt = cons.getOldConstructor();
@@ -185,7 +171,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
   @Override
   public void visit(JApiSuperclass superCls) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(superCls);
+    Collection<JApiCompatibilityChange> bcs = superCls.getCompatibilityChanges();
 
     if (!bcs.isEmpty()) {
       JApiClass jApiClass = superCls.getJApiClassOwning();
@@ -201,7 +187,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
   }
 
   public void visit(JApiClass cls, JApiImplementedInterface intf) {
-    Collection<JApiCompatibilityChange> bcs = getCompatibilityChanges(intf);
+    Collection<JApiCompatibilityChange> bcs = intf.getCompatibilityChanges();
 
     if (!bcs.isEmpty()) {
       CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
