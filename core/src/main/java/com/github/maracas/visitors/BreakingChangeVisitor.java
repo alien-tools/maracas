@@ -94,7 +94,7 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 			// FIXME: try to distinguish between regular access to a type,
 			// and access to a type by instantiation (new)
 			case ACCESSED_TYPE, ARGUMENT_TYPE, BOUNDING_TYPE, CAST, DECLARING_TYPE,
-			    MULTI_TYPE, THROWN, TYPE, TYPE_ARGUMENT ->
+			    MULTI_TYPE, THROWN, TYPE, TYPE_ARGUMENT, TYPE_REF ->
 				APIUse.TYPE_DEPENDENCY;
 			case SUPER_TYPE ->
 				APIUse.EXTENDS;

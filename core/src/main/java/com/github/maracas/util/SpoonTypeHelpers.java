@@ -61,11 +61,7 @@ public class SpoonTypeHelpers {
 
         // If we expect a class/interface/enum, we already checked for subtyping,
         // so that's a no
-        else if (expected.isClass() || expected.isInterface() || expected.isEnum())
-            return false;
-
-         throw new RuntimeException(
-            "Unhandled type conversion case (" + expected + " <: " + given + ")");
+        else return false;
     }
 
     /**

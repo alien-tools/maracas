@@ -52,7 +52,8 @@ class PopularLibrariesTest {
       Arguments.of("org.assertj",                "assertj-core",      "3.21.0",   "3.22.0"),
       Arguments.of("org.apache.httpcomponents",  "httpclient",        "4.4.1",    "4.5"),
       Arguments.of("joda-time",                  "joda-time",         "2.9",      "2.10"),
-      Arguments.of("org.mockito",                "mockito-core",      "3.12.4",   "4.0.0")
+      Arguments.of("org.mockito",                "mockito-core",      "3.12.4",   "4.0.0"),
+      Arguments.of("com.github.gumtreediff",     "core",              "2.1.2",    "3.0.0")
     );
   }
 

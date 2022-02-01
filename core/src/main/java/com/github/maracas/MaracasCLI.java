@@ -69,7 +69,7 @@ public class MaracasCLI implements Runnable {
 			);
 			System.out.println("Done in " + watch.elapsed(TimeUnit.SECONDS) + "s.");
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			System.err.println("Fatal error: " + e.getMessage());
 		}
 	}
 
