@@ -3,6 +3,7 @@ package com.github.maracas.build;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -52,16 +53,58 @@ public class MavenBuildHandler implements BuildHandler {
 
     @Override
     public void build() {
+        logger.info("Building {} with pom={} goals={} properties={}",
+            config.srcDir(), config.pom(), config.goals(), config.properties());
+        InvocationRequest request = createDefaultInvocationRequest();
+        executeRequest(request);
+    }
+
+    @Override
+    public List<CompilerMessage> gatherCompilerMessages() {
+        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
+        InvocationRequest request = createDefaultInvocationRequest();
+
+        try {
+            Invoker invoker = new DefaultInvoker();
+            MavenBuildOutputHandler outputHandler = new MavenBuildOutputHandler();
+            invoker.setOutputHandler(outputHandler);
+            InvocationResult result = invoker.execute(request);
+
+            if (result.getExecutionException() != null)
+                throw new BuildException(String.format("%s failed: %s",
+                    request.getGoals(), result.getExecutionException()));
+
+            messages = outputHandler.getMessages();
+        } catch(MavenInvocationException e) {
+            throw new BuildException(e);
+        }
+
+        return messages;
+    }
+
+    /**
+     * Updates the POM file of Maven project.
+     *
+     * @return true if the POM file has been successfully updated, false
+     * otherwise.
+     */
+    public boolean updatePOM() {
+        return false;
+    }
+
+    /**
+     * Creates a default invocation request based on the {@link MavenBuildConfig}
+     * instance. It sets the values of the POM file, goals, and properties of
+     * the {@link InvocationRequest}. In addition, it sets the batch mode
+     * attribute to true.
+     *
+     * @return {@link InvocationRequest} instance
+     */
+    private InvocationRequest createDefaultInvocationRequest() {
+        MavenBuildConfig.validate(config);
         File srcDir = new File(config.srcDir());
-        if (!srcDir.exists())
-           throw new BuildException("The source directory cannot be found");
-
         File pom = srcDir.toPath().resolve(Paths.get(config.pom())).toFile();
-        if (!pom.exists())
-            throw new BuildException("The POM file of the projcet cannot be found");
-
-        Properties properties = new Properties();
-        config.properties().forEach(p -> properties.put(p, "true"));
+        Properties properties = MavenBuildConfig.getMavenProperties(config);
         List<String> goals = config.goals();
 
         InvocationRequest request = new DefaultInvocationRequest();
@@ -69,10 +112,7 @@ public class MavenBuildHandler implements BuildHandler {
         request.setGoals(goals);
         request.setProperties(properties);
         request.setBatchMode(true);
-
-        logger.info("Building {} with pom={} goals={} properties={}",
-            srcDir, pom, goals, properties);
-        executeRequest(request);
+        return request;
     }
 
     /**
@@ -98,21 +138,4 @@ public class MavenBuildHandler implements BuildHandler {
             throw new BuildException(e);
         }
     }
-
-    @Override
-    public List<CompilerMessage> gatherCompilerMessages() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * Updates the POM file of Maven project.
-     *
-     * @return true if the POM file has been successfully updated, false
-     * otherwise.
-     */
-    public boolean updatePOM() {
-        return false;
-    }
-
 }
