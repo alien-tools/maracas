@@ -24,6 +24,7 @@
 		<module>core</module>
 		<module>rest</module>
 		<module>test-data</module>
+		<module>validator</module>
 	</modules>
 
 	<build>
