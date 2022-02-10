@@ -54,11 +54,11 @@ public class MavenBuildHandler implements BuildHandler {
     public void build() {
         File srcDir = new File(config.srcDir());
         if (!srcDir.exists())
-           throw new RuntimeException("The source directory cannot be found");
+           throw new BuildException("The source directory cannot be found");
 
         File pom = srcDir.toPath().resolve(Paths.get(config.pom())).toFile();
         if (!pom.exists())
-            throw new RuntimeException("The POM file of the projcet cannot be found");
+            throw new BuildException("The POM file of the projcet cannot be found");
 
         Properties properties = new Properties();
         config.properties().forEach(p -> properties.put(p, "true"));
@@ -88,14 +88,14 @@ public class MavenBuildHandler implements BuildHandler {
             InvocationResult result = invoker.execute(request);
 
             if (result.getExecutionException() != null)
-                throw new RuntimeException(String.format("%s failed: %s",
+                throw new BuildException(String.format("%s failed: %s",
                     request.getGoals(), result.getExecutionException()));
 
             if (result.getExitCode() != 0)
-                throw new RuntimeException(String.format("%s failed: %s",
+                throw new BuildException(String.format("%s failed: %s",
                     request.getGoals(), result.getExitCode()));
         } catch (MavenInvocationException e) {
-            throw new RuntimeException(e);
+            throw new BuildException(e);
         }
     }
 
