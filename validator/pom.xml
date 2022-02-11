@@ -36,6 +36,11 @@
 	
 	<dependencies>
 		<dependency>
+			<groupId>com.github.maracas</groupId>
+			<artifactId>maracas-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-invoker</artifactId>
 			<version>3.1.0</version>
