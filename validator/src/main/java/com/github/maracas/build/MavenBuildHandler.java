@@ -101,10 +101,10 @@ public class MavenBuildHandler implements BuildHandler {
      * @return {@link InvocationRequest} instance
      */
     private InvocationRequest createDefaultInvocationRequest() {
-        MavenBuildConfig.validate(config);
+        config.validate();
         File srcDir = new File(config.srcDir());
         File pom = srcDir.toPath().resolve(Paths.get(config.pom())).toFile();
-        Properties properties = MavenBuildConfig.getMavenProperties(config);
+        Properties properties = config.mavenProperties();
         List<String> goals = config.goals();
 
         InvocationRequest request = new DefaultInvocationRequest();

@@ -59,7 +59,7 @@ public record MavenBuildConfig(
      *
      * @return Maven properties
      */
-    public Properties getMavenProperties() {
+    public Properties mavenProperties() {
         Properties prop = new Properties();
         properties.forEach(p -> prop.put(p, "true"));
         return prop;
