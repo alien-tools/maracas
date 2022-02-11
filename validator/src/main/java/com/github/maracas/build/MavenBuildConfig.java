@@ -59,10 +59,10 @@ public record MavenBuildConfig(
      *
      * @return Maven properties
      */
-    public static Properties getMavenProperties(MavenBuildConfig config) {
-        Properties properties = new Properties();
-        config.properties().forEach(p -> properties.put(p, "true"));
-        return properties;
+    public Properties getMavenProperties() {
+        Properties prop = new Properties();
+        properties.forEach(p -> prop.put(p, "true"));
+        return prop;
     }
 
     /**
@@ -73,13 +73,13 @@ public record MavenBuildConfig(
      *
      * @param config instance of the MavenBuildConfig class.
      */
-    public static void validate(MavenBuildConfig config) {
-        File srcDir = new File(config.srcDir());
-        if (!srcDir.exists())
+    public void validate() {
+        File srcDirFile = new File(srcDir);
+        if (!srcDirFile.exists())
            throw new BuildException("The source directory cannot be found");
 
-        File pom = srcDir.toPath().resolve(Paths.get(config.pom())).toFile();
-        if (!pom.exists())
+        File pomFile = srcDirFile.toPath().resolve(Paths.get(pom)).toFile();
+        if (!pomFile.exists())
             throw new BuildException("The POM file of the projcet cannot be found");
     }
 }
