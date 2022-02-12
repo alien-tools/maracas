@@ -1,13 +1,13 @@
-package com.github.maracas.matchers;
+package com.github.maracas.accuracy;
 
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.maracas.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.build.CompilerMessage;
-import com.github.maracas.matchers.AccuracyCase.AccuracyType;
 
 /**
  * Accuracy case reporting (non-)matches between {@link BrokenUse} and

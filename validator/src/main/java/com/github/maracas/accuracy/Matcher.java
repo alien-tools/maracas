@@ -1,4 +1,4 @@
-package com.github.maracas.matchers;
+package com.github.maracas.accuracy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +45,6 @@ public interface Matcher {
                 messagesMap.replace(key, currentMessages);
             }
         }
-
         return messagesMap;
     }
 }
