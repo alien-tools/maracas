@@ -1,7 +1,5 @@
 package com.github.maracas;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -11,9 +9,6 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import com.github.maracas.accuracy.AccuracyAnalyzer;
 import com.github.maracas.accuracy.AccuracyCase;
@@ -24,6 +19,7 @@ import com.github.maracas.build.BuildHandler;
 import com.github.maracas.build.CompilerMessage;
 import com.github.maracas.build.MavenBuildConfig;
 import com.github.maracas.build.MavenBuildHandler;
+import com.github.maracas.build.MavenHelper;
 import com.github.maracas.delta.Delta;
 
 /**
@@ -62,8 +58,8 @@ public class MaracasValidator {
         packageMavenProject(api2);
 
         // Get path of the previously generated JARs
-        String jarApi1 = getJarPath(api1).toString();
-        String jarApi2 = getJarPath(api2).toString();
+        String jarApi1 = MavenHelper.getJarPath(api1).toString();
+        String jarApi2 = MavenHelper.getJarPath(api2).toString();
 
         return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient);
     }
@@ -119,45 +115,5 @@ public class MaracasValidator {
             null, List.of("clean", "package"), null);
         BuildHandler handler = new MavenBuildHandler(src, config);
         handler.build();
-    }
-
-    /**
-     * Returns the JAR path of a Maven project after packing it in the target
-     * folder.
-     *
-     * @param src absolute path to the source project
-     * @return path to the JAR file
-     */
-    private static Path getJarPath(Path src) {
-        return getJarPath(src, null);
-    }
-
-    /**
-     * Returns the JAR path of a Maven project after packing it in the target
-     * folder.
-     *
-     * @param src             absolute path to the source project
-     * @param relativePOMPath relative path to the POM file in the source project
-     * @return path to the JAR file
-     */
-    private static Path getJarPath(Path src, String relativePOMPath) {
-        if (relativePOMPath == null)
-            relativePOMPath = "pom.xml";
-
-        Path pom = src.resolve(relativePOMPath);
-        MavenXpp3Reader pomReader = new MavenXpp3Reader();
-        Model model;
-
-        try {
-            model = pomReader.read(new FileInputStream(pom.toFile()));
-            String artifactId = model.getArtifactId();
-            String version = model.getVersion();
-            Path targetDir = src.resolve("target");
-            Path jar = targetDir.resolve(String.format("%s-%s.jar", artifactId, version));
-            return jar;
-        } catch (IOException | XmlPullParserException e) {
-            logger.error(e);
-        }
-        return null;
     }
 }
