@@ -15,7 +15,7 @@ public class AccuracyAnalyzer {
     /**
      * Class logger
      */
-    private static final Logger logger = LogManager.getLogger(LocationMatcher.class);
+    private static final Logger logger = LogManager.getLogger(AccuracyAnalyzer.class);
 
     /**
      * Collection of {@link AccuracyCase} (i.e., true positives, false positives,
