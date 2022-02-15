@@ -6,12 +6,13 @@ import java.nio.file.Path;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
- *
+ * Class with Maven helper methods
  */
 public class MavenHelper {
     /**
@@ -60,8 +61,41 @@ public class MavenHelper {
             Path jar = targetDir.resolve(String.format("%s-%s.jar", artifactId, version));
             return jar;
         } catch (IOException | XmlPullParserException e) {
-            logger.error(e);
+            logger.error("Couldn't resolve JAR path", e);
         }
         return null;
+    }
+
+    /**
+     * Updates the values of a dependency in the POM file.
+     *
+     * @param src             absolute path to the source project
+     * @param relativePOMPath relative path to the POM file in the source project
+     * @param upgrade         {@link MavenArtifactUpgrade} with the artifact
+     *                        upgrade information
+     */
+    public static void updateDependency(Path src, String relativePOMPath, MavenArtifactUpgrade upgrade) {
+        if (relativePOMPath == null)
+            relativePOMPath = "pom.xml";
+
+        Path pom = src.resolve(relativePOMPath);
+        MavenXpp3Reader pomReader = new MavenXpp3Reader();
+        Model model;
+
+        try {
+            model = pomReader.read(new FileInputStream(pom.toFile()));
+            for (Dependency dependency : model.getDependencies()) {
+                if (dependency.getGroupId().equalsIgnoreCase(upgrade.oldGroupId())
+                    && dependency.getArtifactId().equalsIgnoreCase(upgrade.oldArtifactId())
+                    && dependency.getVersion().equalsIgnoreCase(upgrade.newVersion())) {
+                    logger.info("Patching dependency in POM file from {}:{}:{} to {}:{}:{}",
+                        upgrade.oldGroupId(), upgrade.oldArtifactId(), upgrade.oldVersion(),
+                        upgrade.newGroupId(), upgrade.newArtifactId(), upgrade.newVersion());
+                    dependency.setArtifactId(upgrade.newArtifactId());
+                }
+            }
+        } catch (IOException | XmlPullParserException e) {
+            logger.error("Couldn't patch dependency in POM file", e);
+        }
     }
 }

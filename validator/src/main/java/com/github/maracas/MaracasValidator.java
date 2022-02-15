@@ -1,7 +1,6 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +16,7 @@ import com.github.maracas.accuracy.Matcher;
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.build.BuildHandler;
 import com.github.maracas.build.CompilerMessage;
+import com.github.maracas.build.MavenArtifactUpgrade;
 import com.github.maracas.build.MavenBuildConfig;
 import com.github.maracas.build.MavenBuildHandler;
 import com.github.maracas.build.MavenHelper;
@@ -43,25 +43,25 @@ public class MaracasValidator {
      * representing the corresponding value. The metrics are computed based on
      * input source projects.
      *
-     * @param srcApi1   absolute path to the source project of the old library release
-     * @param srcApi2   absolute path to the source project of the new library release
-     * @param srcClient absolute path to the source project of the client
+     * @param srcApi1   path to the source project of the old library release
+     * @param srcApi2   path to the source project of the new library release
+     * @param srcClient path to the source project of the client
+     * @param clientPOM relative path to the client POM file
+     * @param upgrade   Maven artifact upgrade values
      * @return map with accuracy metrics
      */
-    public static Map<String,Float> accuracyMetricsFromSrc(String srcApi1, String srcApi2, String srcClient) {
-        Path api1 = Paths.get(srcApi1);
-        Path api2 = Paths.get(srcApi2);
-
+    public static Map<String,Float> accuracyMetricsFromSrc(Path srcApi1, Path srcApi2,
+        Path srcClient, String clientPOM, MavenArtifactUpgrade upgrade) {
         // Generate JAR in target folder
         logger.info("Packing libraries: {} and {}", srcApi1, srcApi2);
-        packageMavenProject(api1);
-        packageMavenProject(api2);
+        packageMavenProject(srcApi1);
+        packageMavenProject(srcApi2);
 
         // Get path of the previously generated JARs
-        String jarApi1 = MavenHelper.getJarPath(api1).toString();
-        String jarApi2 = MavenHelper.getJarPath(api2).toString();
+        Path jarApi1 = MavenHelper.getJarPath(srcApi1);
+        Path jarApi2 = MavenHelper.getJarPath(srcApi2);
 
-        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient);
+        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, clientPOM, upgrade);
     }
 
     /**
@@ -70,22 +70,23 @@ public class MaracasValidator {
      * representing the corresponding value. The metrics are computed based on
      * input JARs of the library and the source project of the client.
      *
-     * @param jarApi1   absolute path to the JAR of the old library release
-     * @param jarApi2   absolute path to the JAR of the new library release
-     * @param srcClient absolute path to the source project of the client
+     * @param jarApi1   path to the JAR of the old library release
+     * @param jarApi2   path to the JAR of the new library release
+     * @param srcClient path to the source project of the client
+     * @param clientPOM relative path to the client POM file
+     * @param upgrade   Maven artifact upgrade values
      * @return map with accuracy metrics
      */
-    public static Map<String,Float> accuracyMetricsFromJars(String jarApi1, String jarApi2, String srcClient) {
-        Path jar1 = Paths.get(jarApi1);
-        Path jar2 = Paths.get(jarApi2);
-        Path client = Paths.get(srcClient);
-
+    public static Map<String,Float> accuracyMetricsFromJars(Path jarApi1, Path jarApi2,
+        Path srcClient, String clientPOM, MavenArtifactUpgrade upgrade) {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
-        BuildHandler handler = new MavenBuildHandler(client);
-        Delta delta = Maracas.computeDelta(jar1, jar2);
-        Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(client, delta);
-        logger.info("Compiling client source code");
+        BuildHandler handler = new MavenBuildHandler(srcClient);
+        Delta delta = Maracas.computeDelta(jarApi1, jarApi2);
+        Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(srcClient, delta);
+
+        logger.info("Updating and compiling client source code");
+        MavenHelper.updateDependency(srcClient, clientPOM, upgrade);
         List<CompilerMessage> messages = handler.gatherCompilerMessages();
 
         // Match cases and analyze
