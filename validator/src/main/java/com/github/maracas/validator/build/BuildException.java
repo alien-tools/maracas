@@ -1,4 +1,4 @@
-package com.github.maracas.build;
+package com.github.maracas.validator.build;
 
 /**
  * Exception raised during the build process of a project.

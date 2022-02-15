@@ -1,4 +1,4 @@
-package com.github.maracas.accuracy;
+package com.github.maracas.validator.accuracy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.build.CompilerMessage;
+import com.github.maracas.validator.build.CompilerMessage;
 
 /**
  * Matches broken uses with compiler messages.

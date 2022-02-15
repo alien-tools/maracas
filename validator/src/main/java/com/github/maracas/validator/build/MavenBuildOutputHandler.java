@@ -1,4 +1,4 @@
-package com.github.maracas.build;
+package com.github.maracas.validator.build;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.github.maracas.accuracy;
+package com.github.maracas.validator.accuracy;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.maracas.accuracy.AccuracyCase.AccuracyType;
+import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
 
 /**
  * Analyzes accuracy data.

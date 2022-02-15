@@ -1,4 +1,4 @@
-package com.github.maracas.accuracy;
+package com.github.maracas.validator.accuracy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,9 +8,9 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.maracas.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.build.CompilerMessage;
+import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
+import com.github.maracas.validator.build.CompilerMessage;
 
 /**
  * Type of matcher based on {@link BrokenUse} and {@link CompilerMessage}

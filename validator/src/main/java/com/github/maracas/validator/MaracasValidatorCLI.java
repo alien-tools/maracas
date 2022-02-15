@@ -1,4 +1,4 @@
-package com.github.maracas;
+package com.github.maracas.validator;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Command;
 
-import com.github.maracas.build.MavenArtifactUpgrade;
+import com.github.maracas.validator.build.MavenArtifactUpgrade;
 import com.google.common.base.Stopwatch;
 
 import picocli.CommandLine;

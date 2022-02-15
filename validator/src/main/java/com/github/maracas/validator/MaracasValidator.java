@@ -1,4 +1,4 @@
-package com.github.maracas;
+package com.github.maracas.validator;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -9,18 +9,19 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.maracas.accuracy.AccuracyAnalyzer;
-import com.github.maracas.accuracy.AccuracyCase;
-import com.github.maracas.accuracy.LocationMatcher;
-import com.github.maracas.accuracy.Matcher;
+import com.github.maracas.Maracas;
 import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.build.BuildHandler;
-import com.github.maracas.build.CompilerMessage;
-import com.github.maracas.build.MavenArtifactUpgrade;
-import com.github.maracas.build.MavenBuildConfig;
-import com.github.maracas.build.MavenBuildHandler;
-import com.github.maracas.build.MavenHelper;
 import com.github.maracas.delta.Delta;
+import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
+import com.github.maracas.validator.accuracy.AccuracyCase;
+import com.github.maracas.validator.accuracy.LocationMatcher;
+import com.github.maracas.validator.accuracy.Matcher;
+import com.github.maracas.validator.build.BuildHandler;
+import com.github.maracas.validator.build.CompilerMessage;
+import com.github.maracas.validator.build.MavenArtifactUpgrade;
+import com.github.maracas.validator.build.MavenBuildConfig;
+import com.github.maracas.validator.build.MavenBuildHandler;
+import com.github.maracas.validator.build.MavenHelper;
 
 /**
  * Maracas validator API

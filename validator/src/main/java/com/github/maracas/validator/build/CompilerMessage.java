@@ -1,4 +1,4 @@
-package com.github.maracas.build;
+package com.github.maracas.validator.build;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
