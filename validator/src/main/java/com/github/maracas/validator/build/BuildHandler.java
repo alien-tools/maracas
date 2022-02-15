@@ -1,6 +1,6 @@
 package com.github.maracas.validator.build;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Interface in charge of handling compilation tasks.
@@ -16,5 +16,5 @@ public interface BuildHandler {
      * Gathers all compiler messages after trying to compile a project.
      * @return list of {@link CompilerMessage}
      */
-    List<CompilerMessage> gatherCompilerMessages();
+    Set<CompilerMessage> gatherCompilerMessages();
 }

@@ -1,8 +1,8 @@
 package com.github.maracas.validator.build;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,23 +26,23 @@ public class MavenBuildOutputHandler implements InvocationOutputHandler {
     private static final String ERROR_PATTERN = "\\[ERROR\\]\\s+(.+):\\[(\\d+),(\\d+)\\]\\s+(.+)";
 
     /**
-     * List of compiler messages
+     * Set of compiler messages
      */
-    private List<CompilerMessage> messages;
+    private Set<CompilerMessage> messages;
 
     /**
      * Creates a MavenBuildOutputHandler instance.
      */
     public MavenBuildOutputHandler() {
-        this.messages = new ArrayList<CompilerMessage>();
+        this.messages = new HashSet<CompilerMessage>();
     }
 
     /**
-     * Returns the list of compiler messages extracted from the build trace.
+     * Returns the set of compiler messages extracted from the build trace.
      *
      * @return list of {@link CompilerMessage}
      */
-    public List<CompilerMessage> getMessages() {
+    public Set<CompilerMessage> getMessages() {
         return this.messages;
     }
 

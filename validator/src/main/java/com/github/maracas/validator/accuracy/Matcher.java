@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.validator.build.CompilerMessage;
@@ -22,7 +23,7 @@ public interface Matcher {
      * @param messages   list of {@link CompilerMessage} objects
      * @return collection of {@link AccuracyCase} objects
      */
-    Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, List<CompilerMessage> messages);
+    Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, Set<CompilerMessage> messages);
 
     /**
      * Transforms a list of {@link CompilerMessage} objects into a map. The keys
@@ -32,7 +33,7 @@ public interface Matcher {
      * @param messages list of {@link CompilerMessage} objects
      * @return map of paths and {@link CompilerMessage} objects
      */
-    static Map<String, List<CompilerMessage>> messagesToMap(List<CompilerMessage> messages) {
+    static Map<String, List<CompilerMessage>> messagesToMap(Set<CompilerMessage> messages) {
         Map<String, List<CompilerMessage>> messagesMap = new HashMap<String, List<CompilerMessage>>();
 
         for (CompilerMessage message : messages) {
@@ -40,7 +41,7 @@ public interface Matcher {
             if (!messagesMap.containsKey(key)) {
                 messagesMap.put(key, List.of(message));
             } else {
-                List<CompilerMessage> currentMessages = new ArrayList(messagesMap.get(key));
+                List<CompilerMessage> currentMessages = new ArrayList<CompilerMessage>(messagesMap.get(key));
                 currentMessages.add(message);
                 messagesMap.replace(key, currentMessages);
             }

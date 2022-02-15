@@ -3,9 +3,10 @@ package com.github.maracas.validator.build;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,8 +61,8 @@ public class MavenBuildHandler implements BuildHandler {
     }
 
     @Override
-    public List<CompilerMessage> gatherCompilerMessages() {
-        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
+    public Set<CompilerMessage> gatherCompilerMessages() {
+        Set<CompilerMessage> messages = new HashSet<CompilerMessage>();
         InvocationRequest request = createDefaultInvocationRequest();
 
         try {

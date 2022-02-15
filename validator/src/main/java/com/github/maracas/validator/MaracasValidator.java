@@ -1,10 +1,14 @@
 package com.github.maracas.validator;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,13 +92,17 @@ public class MaracasValidator {
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);
-        List<CompilerMessage> messages = handler.gatherCompilerMessages();
+        Set<CompilerMessage> messages = handler.gatherCompilerMessages();
 
         // Match cases and analyze
         logger.info("Matching compiler messages against broken uses");
         Matcher matcher = new LocationMatcher();
         Collection<AccuracyCase> cases = matcher.match(brokenUses, messages);
         AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
+
+        // TODO: use for debug purposes
+        writeObjects(messages, "/home/lina/Documents/out/compilerMessages.txt");
+        writeObjects(cases, "/home/lina/Documents/out/accuracyCases.txt");
 
         // Gather accuracy metrics
         logger.info("Computing accuracy metrics");
@@ -117,5 +125,16 @@ public class MaracasValidator {
             null, List.of("clean", "package"), null);
         BuildHandler handler = new MavenBuildHandler(src, config);
         handler.build();
+    }
+
+    private static void writeObjects(Collection objs, String file) {
+        try {
+            PrintWriter pw = new PrintWriter(new FileOutputStream(file));
+            for (Object obj : objs)
+                pw.println(obj.toString());
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
