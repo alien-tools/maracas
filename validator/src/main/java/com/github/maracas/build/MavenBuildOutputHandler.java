@@ -18,7 +18,7 @@ public class MavenBuildOutputHandler implements InvocationOutputHandler {
     /**
      * Class logger
      */
-    private static final Logger logger = LogManager.getLogger(MavenBuildHandler.class);
+    private static final Logger logger = LogManager.getLogger(MavenBuildOutputHandler.class);
 
     /**
      * RegEx pattern of a Maven error in the build trace
@@ -64,8 +64,7 @@ public class MavenBuildOutputHandler implements InvocationOutputHandler {
                 messages.add(compilerMessage);
             }
         } else {
-            logger.warn(String.format("The following line couldn't be parsed: %s",
-                currentLine));
+            logger.warn("The following line couldn't be parsed: {}", currentLine);
         }
     }
 }

@@ -83,16 +83,6 @@ public class MavenBuildHandler implements BuildHandler {
     }
 
     /**
-     * Updates the POM file of Maven project.
-     *
-     * @return true if the POM file has been successfully updated, false
-     * otherwise.
-     */
-    public boolean updatePOM() {
-        return false;
-    }
-
-    /**
      * Creates a default invocation request based on the {@link MavenBuildConfig}
      * instance. It sets the values of the POM file, goals, and properties of
      * the {@link InvocationRequest}. In addition, it sets the batch mode
