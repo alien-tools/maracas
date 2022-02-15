@@ -1,89 +1,108 @@
 package com.github.maracas;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.Command;
 
-import com.github.maracas.accuracy.AccuracyAnalyzer;
-import com.github.maracas.accuracy.AccuracyCase;
-import com.github.maracas.accuracy.LocationMatcher;
-import com.github.maracas.accuracy.Matcher;
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.build.BuildHandler;
-import com.github.maracas.build.CompilerMessage;
-import com.github.maracas.build.MavenBuildConfig;
-import com.github.maracas.build.MavenBuildHandler;
-import com.github.maracas.delta.Delta;
+import com.github.maracas.build.MavenArtifactUpgrade;
+import com.google.common.base.Stopwatch;
 
-public class MaracasValidatorCLI {
-    public static void main(String[] args) {
-        Path src = Paths.get("/home/lina/Documents/code/maracas/test-data/comp-changes/client");
-        Path api1 = Paths.get("/home/lina/Documents/code/maracas/test-data/comp-changes/old");
-        Path api2 = Paths.get("/home/lina/Documents/code/maracas/test-data/comp-changes/new");
+import picocli.CommandLine;
+import picocli.CommandLine.Option;
 
-        // Generate jar in target folder
-        packageMavenProject(api1);
-        packageMavenProject(api2);
+@Command(
+    name = "Maracas Validator",
+    description = "Validate the accuracy of the Maracas tool",
+    version = "0.1.0")
+public class MaracasValidatorCLI implements Runnable {
+    @Option(names = {"-o", "--old"},
+        description = "The library's old JAR")
+    private Path oldLibJar;
 
-        // Get path of the previously generated jars
-        //Path jar1 = Paths.get("/home/lina/Documents/code/maracas/test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-        //Path jar2 = Paths.get("/home/lina/Documents/code/maracas/test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-        Path jar1 = getJarPath(api1, null);
-        Path jar2 = getJarPath(api2, null);
+    @Option(names = {"-n", "--new"},
+        description = "The library's new JAR")
+    private Path newLibJar;
 
-        BuildHandler handler = new MavenBuildHandler(src);
-        Delta delta = Maracas.computeDelta(jar1, jar2);
-        Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(src, delta);
-        List<CompilerMessage> messages = handler.gatherCompilerMessages();
+    @Option(names = {"-os", "--oldSrc"},
+        description = "Directory containing the library's old source code")
+    private Path oldLibSrc;
 
-        Matcher matcher = new LocationMatcher();
-        Collection<AccuracyCase> cases = matcher.match(brokenUses, messages);
-        AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
+    @Option(names = {"-ns", "--newSrc"},
+        description = "Directory containing the library's new source code")
+    private Path newLibSrc;
 
-        System.out.println(String.format("Precision: %s", analyzer.precision()));
-        System.out.println(String.format("Recall: %s", analyzer.recall()));
-        System.out.println(String.format("TP: %s", analyzer.truePositives().size()));
-        System.out.println(String.format("FP: %s", analyzer.falsePositives().size()));
-        System.out.println(String.format("FN: %s", analyzer.falseNegatives().size()));
+    @Option(names = {"-c", "--client"}, required = true,
+        description = "Directory containing the client's source code")
+    private Path clientSrc;
 
-        //handler.build();
-//        for (CompilerMessage msg : handler.gatherCompilerMessages()) {
-//            System.out.println(msg.toString());
-//        }
-    }
+    @Option(names = {"--pom"},
+        description = "Relative path to the client's POM file")
+    private String clientPOM;
 
-    private static void packageMavenProject(Path src) {
-        MavenBuildConfig config = new MavenBuildConfig(src.toString(),
-            null, List.of("clean", "package"), null);
-        BuildHandler handler = new MavenBuildHandler(src, config);
-        handler.build();
-    }
+    @Option(names = {"--oldGroupId"},
+        description = "The library's old groupID")
+    private String oldGroupId;
 
-    private static Path getJarPath(Path src, String relativePOMPath) {
-        if (relativePOMPath == null)
-            relativePOMPath = "pom.xml";
+    @Option(names = {"--newGroupId"},
+        description = "The library's new groupID")
+    private String newGroupId;
 
-        Path pom = src.resolve(relativePOMPath);
-        MavenXpp3Reader pomReader = new MavenXpp3Reader();
-        Model model;
+    @Option(names = {"--oldArtifactId"},
+        description = "The library's old artifactID")
+    private String oldArtifactId;
 
+    @Option(names = {"--newArtifactId"},
+        description = "The library's new artifactID")
+    private String newArtifactId;
+
+    @Option(names = {"--oldVersion"},
+        description = "The library's old version")
+    private String oldVersion;
+
+    @Option(names = {"--newVersion"},
+        description = "The library's new version")
+    private String newVersion;
+
+    @Override
+    public void run() {
         try {
-            model = pomReader.read(new FileInputStream(pom.toFile()));
-            String artifactId = model.getArtifactId();
-            String version = model.getVersion();
-            Path targetDir = src.resolve("target");
-            Path jar = targetDir.resolve(String.format("%s-%s.jar", artifactId, version));
-            return jar;
-        } catch (IOException | XmlPullParserException e) {
-            System.out.println(e);
+            Stopwatch watch = Stopwatch.createStarted();
+            MavenArtifactUpgrade mvnValues = new MavenArtifactUpgrade(oldGroupId,
+                newGroupId, oldArtifactId, newArtifactId, oldVersion, newVersion);
+            Map<String, Float> metrics;
+
+            if (oldLibJar != null && newLibJar != null)
+                metrics = MaracasValidator.accuracyMetricsFromJars(oldLibJar, newLibJar,
+                    clientSrc, clientPOM, mvnValues);
+            else if (oldLibSrc != null && newLibSrc != null)
+                metrics = MaracasValidator.accuracyMetricsFromSrc(oldLibSrc, newLibSrc,
+                    clientSrc, clientPOM, mvnValues);
+            else
+                throw new RuntimeException("The library's old and new JARs or source code have not been properly defined");
+
+            System.out.println("""
+            +----------------+
+             ACCURACY METRICS
+            +----------------+
+            """);
+
+            metrics.forEach((k, v) -> System.out.println(String.format("%s: %s", k, v)));
+            System.out.println(String.format("Done in %s seconds", watch.elapsed(TimeUnit.SECONDS)));
+        } catch (Exception e) {
+            System.err.println(String.format("Fatal error: %s", e.getMessage()));
         }
-        return null;
+    }
+
+    /**
+     * Main method of the CLI tool.
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        CommandLine cli = new CommandLine(new MaracasValidatorCLI());
+        int exitCode = cli.execute(args);
+        System.exit(exitCode);
     }
 }
