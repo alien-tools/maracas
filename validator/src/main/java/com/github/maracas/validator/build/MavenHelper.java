@@ -1,6 +1,7 @@
 package com.github.maracas.validator.build;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -9,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
@@ -84,16 +86,24 @@ public class MavenHelper {
 
         try {
             model = pomReader.read(new FileInputStream(pom.toFile()));
+            logger.info("Patching dependency in POM file {}", upgrade);
+
             for (Dependency dependency : model.getDependencies()) {
-                if (dependency.getGroupId().equalsIgnoreCase(upgrade.oldGroupId())
-                    && dependency.getArtifactId().equalsIgnoreCase(upgrade.oldArtifactId())
-                    && dependency.getVersion().equalsIgnoreCase(upgrade.newVersion())) {
-                    logger.info("Patching dependency in POM file from {}:{}:{} to {}:{}:{}",
-                        upgrade.oldGroupId(), upgrade.oldArtifactId(), upgrade.oldVersion(),
-                        upgrade.newGroupId(), upgrade.newArtifactId(), upgrade.newVersion());
+                if (upgrade.oldArtifactId() != null
+                    && dependency.getGroupId().equalsIgnoreCase(upgrade.oldGroupId()))
+                    dependency.setGroupId(upgrade.newGroupId());
+
+                if (upgrade.oldArtifactId() != null
+                    && dependency.getArtifactId().equalsIgnoreCase(upgrade.oldArtifactId()))
                     dependency.setArtifactId(upgrade.newArtifactId());
-                }
+
+                if (upgrade.oldVersion() != null
+                    && dependency.getVersion().equalsIgnoreCase(upgrade.newVersion()))
+                    dependency.setVersion(upgrade.newVersion());
             }
+
+            MavenXpp3Writer writer = new MavenXpp3Writer();
+            writer.write(new FileOutputStream(pom.toFile()), model);
         } catch (IOException | XmlPullParserException e) {
             logger.error("Couldn't patch dependency in POM file", e);
         }

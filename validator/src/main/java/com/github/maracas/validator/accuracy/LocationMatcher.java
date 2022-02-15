@@ -44,10 +44,10 @@ public class LocationMatcher implements Matcher {
 
             if (!matchedMessages.isEmpty()) {
                 cases.add(new AccuracyCase(brokenUse, matchedMessages, AccuracyType.TRUE_POSITIVE));
-                System.out.println(AccuracyType.TRUE_POSITIVE);
+                //System.out.println(AccuracyType.TRUE_POSITIVE);
             } else {
                 cases.add(new AccuracyCase(brokenUse, null, AccuracyType.FALSE_POSITIVE));
-                System.out.println(AccuracyType.FALSE_POSITIVE);
+                //System.out.println(AccuracyType.FALSE_POSITIVE);
             }
 
         }
