@@ -97,6 +97,7 @@ public class MaracasValidator {
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);
+        MavenHelper.increaseMaxMessages(srcClient, pomClient, 10000);
         Set<CompilerMessage> messages = handler.gatherCompilerMessages();
 
         // Match cases and analyze
