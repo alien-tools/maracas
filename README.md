@@ -1,9 +1,23 @@
+![Build](https://github.com/alien-tools/maracas/workflows/Java%20CI/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+
 # Maracas
+
 Maracas is a source code and bytecode analysis framework⁠—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—designed to analyze how Java libraries evolve and how their evolution impact their clients.
 
 Currently, Maracas consists of two main components:
   - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
   - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [break-bot](https://github.com/break-bot/breakbot) to analyze pull requests on GitHub and report their impact
+
+
+## Content
+
+- [Using Maracas](#using-maracas)
+- [Deploying Maracas REST](#deploying-maracas-rest)
+- [Documentation](#documentation)
+- [Support](#support)
+- [Contributing](#contributing)
+- [License](#license)
+
 
 ## Using Maracas
 
@@ -87,3 +101,19 @@ $ docker-compose up
 ```
 
 The REST server listens on port `8080`. Its documentation is exposed at `http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config`.
+
+
+## Documentation
+To learn more about Maracas and how to use it, please visit our [GitHub page](https://alien-tools.github.io/maracas/).
+
+
+## Support
+If you would like to learn more about Maracas or you are a current user and you need some help, do not hesitate to send us an email at [thomas.degueule \<at> labri.fr](mailto:thomas.degueule@labri.fr?subject=[Maracas]%20Support) or [l.m.ochoa.venegas \<at> tue.nl](mailto:l.m.ochoa.venegas@tue.nl?subject=[Maracas]%20Support).
+
+
+## Contributing
+To learn more about how to contribute to Maracas, please check the provided [guidelines](https://github.com/alien-tools/maracas/blob/main/CONTRIBUTING.md) and the project [code of conduct](https://github.com/alien-tools/maracas/blob/main/CONTRIBUTING.md).
+
+## License
+This repository—and all its content—is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).  
+© 2021 Maracas
