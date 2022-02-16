@@ -21,9 +21,9 @@ public class MavenBuildOutputHandler implements InvocationOutputHandler {
     private static final Logger logger = LogManager.getLogger(MavenBuildOutputHandler.class);
 
     /**
-     * RegEx pattern of a Maven error in the build trace
+     * RegEx pattern of a Maven error or warning in the build trace
      */
-    private static final String ERROR_PATTERN = "\\[ERROR\\]\\s+(.+):\\[(\\d+),(\\d+)\\]\\s+(.+)";
+    private static final String MESSAGE_PATTERN = "\\[(ERROR|WARNING)\\]\\s+(.+):\\[(\\d+),(\\d+)\\]\\s+(.+)";
 
     /**
      * Set of compiler messages
@@ -48,16 +48,16 @@ public class MavenBuildOutputHandler implements InvocationOutputHandler {
 
     @Override
     public void consumeLine(String currentLine) throws IOException {
-        Pattern errorPattern = Pattern.compile(ERROR_PATTERN);
+        Pattern errorPattern = Pattern.compile(MESSAGE_PATTERN);
 
-        if (currentLine.startsWith("[ERROR]")) {
+        if (currentLine.startsWith("[ERROR]") || currentLine.startsWith("[WARNING]")) {
             Matcher errorMatcher = errorPattern.matcher(currentLine);
 
             if (errorMatcher.matches()) {
-                String path = errorMatcher.group(1);
-                int line = Integer.parseInt(errorMatcher.group(2));
-                int column = Integer.parseInt(errorMatcher.group(3));
-                String message = errorMatcher.group(4);
+                String path = errorMatcher.group(2);
+                int line = Integer.parseInt(errorMatcher.group(3));
+                int column = Integer.parseInt(errorMatcher.group(4));
+                String message = errorMatcher.group(5);
 
                 CompilerMessage compilerMessage =
                     new CompilerMessage(path, line, column, message);

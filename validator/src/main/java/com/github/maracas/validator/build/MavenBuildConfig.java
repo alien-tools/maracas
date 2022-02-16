@@ -49,7 +49,7 @@ public record MavenBuildConfig(
             : List.of("clean", "compile");
         this.properties = properties != null && !properties.isEmpty()
             ? properties
-            : List.of("skipTests");
+            : List.of("skipTests", "maven.compiler.showDeprecation");
     }
 
     /**
