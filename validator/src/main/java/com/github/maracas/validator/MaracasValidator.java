@@ -20,6 +20,7 @@ import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.accuracy.LocationMatcher;
 import com.github.maracas.validator.accuracy.Matcher;
+import com.github.maracas.validator.accuracy.MatcherOptions;
 import com.github.maracas.validator.build.BuildHandler;
 import com.github.maracas.validator.build.CompilerMessage;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
@@ -53,10 +54,12 @@ public class MaracasValidator {
      * @param srcClient path to the source project of the client
      * @param pomClient relative path to the client POM file
      * @param upgrade   Maven artifact upgrade values
+     * @param opts      {@link MatcherOptions} instance to exclude a subset of
+     *                  breaking changes
      * @return map with accuracy metrics
      */
     public static Map<String,Float> accuracyMetricsFromSrc(Path srcApi1, Path srcApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade) {
+        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts) {
         // Generate JAR in target folder
         logger.info("Packing libraries: {} and {}", srcApi1, srcApi2);
         packageMavenProject(srcApi1);
@@ -66,7 +69,7 @@ public class MaracasValidator {
         Path jarApi1 = MavenHelper.getJarPath(srcApi1);
         Path jarApi2 = MavenHelper.getJarPath(srcApi2);
 
-        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade);
+        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts);
     }
 
     /**
@@ -80,10 +83,12 @@ public class MaracasValidator {
      * @param srcClient path to the source project of the client
      * @param pomClient relative path to the client POM file
      * @param upgrade   Maven artifact upgrade values
+     * @param opts      {@link MatcherOptions} instance to exclude a subset of
+     *                  breaking changes
      * @return map with accuracy metrics
      */
     public static Map<String,Float> accuracyMetricsFromJars(Path jarApi1, Path jarApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade) {
+        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts) {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
         BuildHandler handler = new MavenBuildHandler(srcClient);
@@ -97,7 +102,7 @@ public class MaracasValidator {
         // Match cases and analyze
         logger.info("Matching compiler messages against broken uses");
         Matcher matcher = new LocationMatcher();
-        Collection<AccuracyCase> cases = matcher.match(brokenUses, messages);
+        Collection<AccuracyCase> cases = matcher.match(brokenUses, messages, opts);
         AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
 
         // TODO: use for debug purposes

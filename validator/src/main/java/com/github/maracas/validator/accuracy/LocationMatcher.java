@@ -27,8 +27,9 @@ public class LocationMatcher implements Matcher {
     private static final Logger logger = LogManager.getLogger(LocationMatcher.class);
 
     @Override
-    public Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, Set<CompilerMessage> messages) {
-        Map<String, List<CompilerMessage>> messagesMap = Matcher.messagesToMap(messages);
+    public Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts) {
+        Set<CompilerMessage> filteredMessages = filterCompilerMessages(messages, opts);
+        Map<String, List<CompilerMessage>> messagesMap = Matcher.messagesToMap(filteredMessages);
         Collection<AccuracyCase> cases       = new ArrayList<AccuracyCase>();
         Set<CompilerMessage> matchedMessages = new HashSet<CompilerMessage>();
 
@@ -54,11 +55,32 @@ public class LocationMatcher implements Matcher {
             matchedMessages.addAll(currentMatchedMessages);
         }
 
-        Set<CompilerMessage> unmatchedMessages = new HashSet<CompilerMessage>(messages);
+        Set<CompilerMessage> unmatchedMessages = new HashSet<CompilerMessage>(filteredMessages);
         unmatchedMessages.removeAll(matchedMessages);
         for (CompilerMessage message : unmatchedMessages)
             cases.add(new AccuracyCase(null, List.of(message), AccuracyType.FALSE_NEGATIVE));
 
         return cases;
+    }
+
+    @Override
+    public Set<CompilerMessage> filterCompilerMessages(Set<CompilerMessage> messages, MatcherOptions opts) {
+        Set<CompilerMessage> filteredMessages = new HashSet<CompilerMessage>();
+
+        if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
+            for (CompilerMessage message : messages) {
+                boolean include = true;
+                for (String pattern : opts.excludedBreakingChanges().values()) {
+                    if (message.path().contains(pattern)) {
+                        include = false;
+                        break;
+                    }
+                }
+
+                if (include)
+                    filteredMessages.add(message);
+            }
+        }
+        return filteredMessages;
     }
 }

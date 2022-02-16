@@ -75,10 +75,10 @@ public class MaracasValidatorCLI implements Runnable {
 
             if (oldLibJar != null && newLibJar != null)
                 metrics = MaracasValidator.accuracyMetricsFromJars(oldLibJar, newLibJar,
-                    clientSrc, clientPOM, mvnValues);
+                    clientSrc, clientPOM, mvnValues, null);
             else if (oldLibSrc != null && newLibSrc != null)
                 metrics = MaracasValidator.accuracyMetricsFromSrc(oldLibSrc, newLibSrc,
-                    clientSrc, clientPOM, mvnValues);
+                    clientSrc, clientPOM, mvnValues, null);
             else
                 throw new RuntimeException("The library's old and new JARs or source code have not been properly defined");
 
