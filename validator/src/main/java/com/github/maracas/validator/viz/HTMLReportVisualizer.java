@@ -30,6 +30,9 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Collection;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 
@@ -37,19 +40,47 @@ import j2html.tags.DomContent;
 import j2html.tags.specialized.HtmlTag;
 
 /**
- *
+ * HTML eeport visualizer of accuracy metrics
  */
 public class HTMLReportVisualizer extends ReportVisualizer {
+    /**
+     * Class logger
+     */
+    private static final Logger logger = LogManager.getLogger(HTMLReportVisualizer.class);
 
-    private final AccuracyAnalyzer analyzer;
-    private final Collection<AccuracyCase> falsePositives;
-    private final Collection<AccuracyCase> falseNegatives;
-    private final Collection<AccuracyCase> truePositives;
-
+    /**
+     * Title of the HTML report
+     */
     private static final String REPORT_TITLE = "Maracas Validator Report";
 
-    public HTMLReportVisualizer(Collection<AccuracyCase> cases, Path report) {
-        super(cases, report);
+    /**
+     * Accuracy metrics analyzer
+     */
+    private final AccuracyAnalyzer analyzer;
+
+    /**
+     * Collection of false positive cases
+     */
+    private final Collection<AccuracyCase> falsePositives;
+
+    /**
+     * Collection of false negatives cases
+     */
+    private final Collection<AccuracyCase> falseNegatives;
+
+    /**
+     * Collection of true positive cases
+     */
+    private final Collection<AccuracyCase> truePositives;
+
+    /**
+     * Creates a HTMLReportVisualizer instance.
+     *
+     * @param cases collection of {@link AccuracyCase} instances
+     * @param path  path where the report must be generated
+     */
+    public HTMLReportVisualizer(Collection<AccuracyCase> cases, Path path) {
+        super(cases, path);
         this.analyzer = new AccuracyAnalyzer(cases);
         this.falsePositives = analyzer.falsePositives();
         this.falseNegatives = analyzer.falseNegatives();
@@ -102,11 +133,17 @@ public class HTMLReportVisualizer extends ReportVisualizer {
             );
             writer.write(html.render());
         } catch (IOException e) {
-
+            logger.error("Cannot generate the HTML report:", e);
         }
     }
 
-    public DomContent generateMetricsView() {
+    /**
+     * Generates the accuracy metrics view. Includes information about precision,
+     * recall, and number of false positives, false negatives, and true positives.
+     *
+     * @return div with the accuracy metrics view
+     */
+    private DomContent generateMetricsView() {
         return div(
             attrs(".col-6.p-4"),
             h2("Accuracy Metrics"),
@@ -127,7 +164,13 @@ public class HTMLReportVisualizer extends ReportVisualizer {
         );
     }
 
-    public DomContent generateFalsePositivesView() {
+    /**
+     * Generates the false positives view. Contains information about reported
+     * broken uses that have not been matched against any compiler message.
+     *
+     * @return div with the false positives view
+     */
+    private DomContent generateFalsePositivesView() {
         return div(
             attrs(".col-6.p-4"),
             h2("Broken Uses (False Positives)"),
@@ -176,7 +219,13 @@ public class HTMLReportVisualizer extends ReportVisualizer {
         );
     }
 
-    public DomContent generateFalseNegativesView() {
+    /**
+     * Generates the false negatives view. Contains information about reported
+     * compiler messages that have not been matched against any broken use.
+     *
+     * @return div with the false negatives view
+     */
+    private DomContent generateFalseNegativesView() {
         return div(
             attrs(".col-6.p-4"),
             h2("Compiler Messages (False Negatives)"),
@@ -219,7 +268,13 @@ public class HTMLReportVisualizer extends ReportVisualizer {
         );
     }
 
-    public DomContent generateTruePositivesView() {
+    /**
+     * Generates the true positives view. Contains information about matched
+     * broken uses and compiler messages.
+     *
+     * @return div with the true positives view
+     */
+    private DomContent generateTruePositivesView() {
         return div(
             attrs(".p-4"),
             h2("Matched Cases (True Positives)"),
@@ -227,13 +282,13 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                 attrs(".input-group.my-2"),
                 input()
                     .withClass("form-control")
-                    .withId("maracas-fp-input")
+                    .withId("maracas-tp-input")
                     .attr("onkeyup", "filter(\"maracas-tp-input\", \"maracas-tp-ul\")")
                     .withPlaceholder("Filter matched cases...")
                     .withType("text")
             ),
             ul(
-                attrs("#maracas-fp-ul.list-group.maracas-scroll.my-2.border.border-2.border-dark"),
+                attrs("#maracas-tp-ul.list-group.maracas-scroll.my-2.border.border-2.border-dark"),
                 each(truePositives, c ->
                     li(
                         attrs(".list-group-item.list-group-item-action"),
@@ -298,7 +353,13 @@ public class HTMLReportVisualizer extends ReportVisualizer {
         );
     }
 
-    public DomContent generateScript() {
+    /**
+     * Generates a JavaScript script to filter out list items based on a search
+     * string.
+     *
+     * @return script with the JavaScript filter() function
+     */
+    private DomContent generateScript() {
         String script = """
             function filter(inputId, ulId) {
                 var input = document.getElementById(inputId);
