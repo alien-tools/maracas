@@ -1,5 +1,6 @@
 package com.github.maracas.validator.viz;
 
+import static j2html.TagCreator.a;
 import static j2html.TagCreator.attrs;
 import static j2html.TagCreator.b;
 import static j2html.TagCreator.body;
@@ -8,11 +9,13 @@ import static j2html.TagCreator.div;
 import static j2html.TagCreator.each;
 import static j2html.TagCreator.h1;
 import static j2html.TagCreator.h2;
+import static j2html.TagCreator.h5;
 import static j2html.TagCreator.head;
 import static j2html.TagCreator.hr;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.input;
 import static j2html.TagCreator.join;
+import static j2html.TagCreator.label;
 import static j2html.TagCreator.li;
 import static j2html.TagCreator.link;
 import static j2html.TagCreator.p;
@@ -141,9 +144,21 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                 attrs("#maracas-fp-ul.list-group.maracas-scroll.my-2.border.border-2.border-dark"),
                 each(falsePositives, c ->
                     li(
-                        attrs(".list-group-item"),
+                        attrs(".list-group-item.list-group-item-action"),
+                        div(
+                            attrs(".form-check.mt-2.mb-4"),
+                            input(attrs(".form-check-input"))
+                                .withType("checkbox"),
+                            label(attrs(".form-check-label"))
+                                .withText("Reviewed")
+                        ),
                         p(
-                            join(b("Path:"), c.brokenUse().element().getPosition().getFile().getAbsolutePath()),
+                            join(
+                                b("Path:"),
+                                a()
+                                    .withHref(c.brokenUse().element().getPosition().getFile().getAbsolutePath())
+                                    .withText(c.brokenUse().element().getPosition().getFile().getAbsolutePath())
+                            ),
                             br(),
                             join(b("Line:"), String.valueOf(c.brokenUse().element().getPosition().getLine())),
                             br(),
@@ -178,9 +193,21 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                 attrs("#maracas-fn-ul.list-group.maracas-scroll.my-2.border.border-2.border-dark"),
                 each(falseNegatives, c ->
                     li(
-                        attrs(".list-group-item"),
+                        attrs(".list-group-item.list-group-item-action"),
+                        div(
+                            attrs(".form-check.mt-2.mb-4"),
+                            input(attrs(".form-check-input"))
+                                .withType("checkbox"),
+                            label(attrs(".form-check-label"))
+                                .withText("Reviewed")
+                        ),
                         p(
-                            join(b("Path:"), c.messages().get(0).path()),
+                            join(
+                                b("Path:"),
+                                a()
+                                .withHref(c.messages().get(0).path())
+                                .withText(c.messages().get(0).path())
+                            ),
                             br(),
                             join(b("Line:"), String.valueOf(c.messages().get(0).line())),
                             br(),
@@ -206,22 +233,64 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                     .withType("text")
             ),
             ul(
-                attrs("#maracas-fp-ul.list-group.maracas-scroll.my-2"),
+                attrs("#maracas-fp-ul.list-group.maracas-scroll.my-2.border.border-2.border-dark"),
                 each(truePositives, c ->
                     li(
-                        attrs(".list-group-item"),
-                        p(
-                            join(b("Path:"), c.brokenUse().element().getPosition().getFile().getAbsolutePath()),
-                            br(),
-                            join(b("Line:"), String.valueOf(c.brokenUse().element().getPosition().getLine())),
-                            br(),
-                            join(b("Breaking change:"), c.brokenUse().change().toString()),
-                            br(),
-                            join(b("API use:"), c.brokenUse().use().toString()),
-                            br(),
-                            join(b("Used declaration:"), c.brokenUse().usedApiElement().toString()),
-                            br(),
-                            join(b("Source declaration:"), c.brokenUse().source().toString())
+                        attrs(".list-group-item.list-group-item-action"),
+                        div(
+                            attrs(".row"),
+                            div(
+                                attrs(".col-6.p-4"),
+                                div(
+                                    attrs(".form-check.mt-2.mb-4"),
+                                    input(attrs(".form-check-input"))
+                                        .withType("checkbox"),
+                                    label(attrs(".form-check-label"))
+                                        .withText("Reviewed")
+                                ),
+                                h5("Broken use:"),
+                                p(
+                                    join(
+                                        b("Path:"),
+                                        a()
+                                            .withHref(c.brokenUse().element().getPosition().getFile().getAbsolutePath())
+                                            .withText(c.brokenUse().element().getPosition().getFile().getAbsolutePath())
+                                    ),
+                                    br(),
+                                    join(b("Line:"), String.valueOf(c.brokenUse().element().getPosition().getLine())),
+                                    br(),
+                                    join(b("Breaking change:"), c.brokenUse().change().toString()),
+                                    br(),
+                                    join(b("API use:"), c.brokenUse().use().toString()),
+                                    br(),
+                                    join(b("Used declaration:"), c.brokenUse().usedApiElement().toString()),
+                                    br(),
+                                    join(b("Source declaration:"), c.brokenUse().source().toString())
+                                )
+                            ),
+                            div(
+                                attrs(".col-6.p-4"),
+                                h5("Compiler messages:"),
+                                ul(
+                                    attrs(".list-group.my-2"),
+                                    each(c.messages(), m ->
+                                        li(
+                                            attrs(".list-group-item"),
+                                            p(
+                                                join(b("Path:"),
+                                                    a()
+                                                    .withHref(m.path())
+                                                    .withText(m.path())
+                                                ),
+                                                br(),
+                                                join(b("Line:"), String.valueOf(m.line())),
+                                                br(),
+                                                join(b("Message:"), String.valueOf(m.message()))
+                                            )
+                                        )
+                                    )
+                                )
+                            )
                         )
                     )
                 )
