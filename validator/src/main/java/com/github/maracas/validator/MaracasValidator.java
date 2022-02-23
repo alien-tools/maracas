@@ -27,6 +27,8 @@ import com.github.maracas.validator.build.MavenArtifactUpgrade;
 import com.github.maracas.validator.build.MavenBuildConfig;
 import com.github.maracas.validator.build.MavenBuildHandler;
 import com.github.maracas.validator.build.MavenHelper;
+import com.github.maracas.validator.viz.HTMLReportVisualizer;
+import com.github.maracas.validator.viz.ReportVisualizer;
 
 /**
  * Maracas validator API
@@ -56,10 +58,13 @@ public class MaracasValidator {
      * @param upgrade   Maven artifact upgrade values
      * @param opts      {@link MatcherOptions} instance to exclude a subset of
      *                  breaking changes
+     * @param report    path to the report file with the accuracy cases data
+     *                  (can be null)
      * @return map with accuracy metrics
      */
     public static Map<String,Float> accuracyMetricsFromSrc(Path srcApi1, Path srcApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts) {
+        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts,
+        Path report) {
         // Generate JAR in target folder
         logger.info("Packing libraries: {} and {}", srcApi1, srcApi2);
         packageMavenProject(srcApi1);
@@ -69,7 +74,7 @@ public class MaracasValidator {
         Path jarApi1 = MavenHelper.getJarPath(srcApi1);
         Path jarApi2 = MavenHelper.getJarPath(srcApi2);
 
-        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts);
+        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts, report);
     }
 
     /**
@@ -85,9 +90,36 @@ public class MaracasValidator {
      * @param upgrade   Maven artifact upgrade values
      * @param opts      {@link MatcherOptions} instance to exclude a subset of
      *                  breaking changes
+     * @param report    path to the report file with the accuracy cases data
+     *                  (can be null)
      * @return map with accuracy metrics
      */
     public static Map<String,Float> accuracyMetricsFromJars(Path jarApi1, Path jarApi2,
+        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts,
+        Path report) {
+        Collection<AccuracyCase> cases = generateCasesFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts);
+        AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
+
+        // Gather accuracy metrics
+        logger.info("Computing accuracy metrics");
+        Map<String,Float> metrics = new HashMap<String,Float>();
+        metrics.put("precision", analyzer.precision());
+        metrics.put("recall", analyzer.recall());
+        metrics.put("true-positives", (float) analyzer.truePositives().size());
+        metrics.put("false-positives", (float) analyzer.falsePositives().size());
+        metrics.put("false-negatives", (float) analyzer.falseNegatives().size());
+
+        // Write report
+        if (report != null) {
+            logger.info("Writing report at {}", report);
+            ReportVisualizer viz = new HTMLReportVisualizer(cases, report);
+            viz.generate();
+        }
+
+        return metrics;
+    }
+
+    private static Collection<AccuracyCase> generateCasesFromJars(Path jarApi1, Path jarApi2,
         Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts) {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
@@ -104,21 +136,12 @@ public class MaracasValidator {
         logger.info("Matching compiler messages against broken uses");
         Matcher matcher = new LocationMatcher();
         Collection<AccuracyCase> cases = matcher.match(brokenUses, messages, opts);
-        AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
 
         // TODO: use for debug purposes
         writeObjects(messages, "/home/lina/Documents/out/compilerMessages.txt");
         writeObjects(cases, "/home/lina/Documents/out/accuracyCases.txt");
 
-        // Gather accuracy metrics
-        logger.info("Computing accuracy metrics");
-        Map<String,Float> metrics = new HashMap<String,Float>();
-        metrics.put("precision", analyzer.precision());
-        metrics.put("recall", analyzer.recall());
-        metrics.put("true-positives", (float) analyzer.truePositives().size());
-        metrics.put("false-positives", (float) analyzer.falsePositives().size());
-        metrics.put("false-negatives", (float) analyzer.falseNegatives().size());
-        return metrics;
+        return cases;
     }
 
     /**

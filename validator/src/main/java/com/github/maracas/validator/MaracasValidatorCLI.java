@@ -65,6 +65,10 @@ public class MaracasValidatorCLI implements Runnable {
         description = "The library's new version")
     private String newVersion;
 
+    @Option(names = {"-r", "--report"},
+        description = "The path to the report with the accuracy analysis")
+    private Path report;
+
     @Override
     public void run() {
         try {
@@ -75,10 +79,10 @@ public class MaracasValidatorCLI implements Runnable {
 
             if (oldLibJar != null && newLibJar != null)
                 metrics = MaracasValidator.accuracyMetricsFromJars(oldLibJar, newLibJar,
-                    clientSrc, clientPOM, mvnValues, null);
+                    clientSrc, clientPOM, mvnValues, null, report);
             else if (oldLibSrc != null && newLibSrc != null)
                 metrics = MaracasValidator.accuracyMetricsFromSrc(oldLibSrc, newLibSrc,
-                    clientSrc, clientPOM, mvnValues, null);
+                    clientSrc, clientPOM, mvnValues, null, report);
             else
                 throw new RuntimeException("The library's old and new JARs or source code have not been properly defined");
 

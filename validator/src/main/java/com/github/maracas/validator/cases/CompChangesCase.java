@@ -24,10 +24,12 @@ public class CompChangesCase {
         Path srcApi1 = Paths.get("../test-data/comp-changes/old/");
         Path srcApi2 = Paths.get("../test-data/comp-changes/new/");;
         Path srcClient = Paths.get("../test-data/comp-changes/client/");
+        Path report = Paths.get("src/main/resources/comp-changes/report.html");
         MavenArtifactUpgrade upgrade = new MavenArtifactUpgrade(null, null,
             "comp-changes-old", "comp-changes-new", null, null);
 
-        Map<String, Float> metrics = MaracasValidator.accuracyMetricsFromSrc(srcApi1, srcApi2, srcClient, null, upgrade, compChangesOptions());
+        Map<String, Float> metrics = MaracasValidator.accuracyMetricsFromSrc(srcApi1,
+            srcApi2, srcClient, null, upgrade, compChangesOptions(), report);
         metrics.forEach((k, v) -> System.out.println(String.format("%s: %s", k, v)));
     }
 
