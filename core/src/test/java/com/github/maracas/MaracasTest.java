@@ -1,26 +1,34 @@
 package com.github.maracas;
 
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.delta.Delta;
-
-import japicmp.config.Options;
-import japicmp.model.AccessModifier;
-import japicmp.model.JApiCompatibilityChange;
-import org.junit.jupiter.api.Test;
-import spoon.reflect.cu.position.NoSourcePosition;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
+//import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Set;
+
+import org.junit.jupiter.api.Test;
+
+import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.delta.Delta;
+
+import japicmp.model.AccessModifier;
+import japicmp.model.JApiCompatibilityChange;
+import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
 	Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
@@ -155,7 +163,7 @@ class MaracasTest {
 	@Test
 	void computeBrokenUses_isValid() {
 		Delta delta = Maracas.computeDelta(v1, v2);
-		Collection<BrokenUse> ds = Maracas.computeBrokenUses(client, delta);
+		Set<BrokenUse> ds = Maracas.computeBrokenUses(client, delta);
 
 		assertThat(ds, is(not(empty())));
 		// No hasProperty() on records :(

@@ -14,7 +14,6 @@ import japicmp.model.JApiCompatibilityChange;
  * Maracas validator on the CompChanges project.
  */
 public class CompChangesCase {
-
     /**
      * Main method with the CompChanges pipeline.
      *
