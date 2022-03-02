@@ -125,7 +125,7 @@ public class MaracasValidator {
         logger.info("Computing delta and broken uses for client {}", srcClient);
         BuildHandler handler = new MavenBuildHandler(srcClient);
         Delta delta = Maracas.computeDelta(jarApi1, jarApi2);
-        Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(srcClient, delta);
+        Set<BrokenUse> brokenUses = Maracas.computeBrokenUses(srcClient, delta);
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);

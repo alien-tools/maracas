@@ -14,6 +14,7 @@ import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.validator.build.CompilerMessage;
+import com.github.maracas.validator.cases.CompChangesMatcherFilter;
 
 import spoon.reflect.cu.SourcePosition;
 
@@ -28,13 +29,16 @@ public class LocationMatcher implements Matcher {
     private static final Logger logger = LogManager.getLogger(LocationMatcher.class);
 
     @Override
-    public Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts) {
-        Set<CompilerMessage> filteredMessages = filterCompilerMessages(messages, opts);
+    public Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts) {
+        MatcherFilter filter = new CompChangesMatcherFilter(opts);
+        Set<BrokenUse> filteredBrokenUses = filter.filterBrokenUses(brokenUses);
+        Set<CompilerMessage> filteredMessages = filter.filterCompilerMessages(messages);
+
         Map<String, List<CompilerMessage>> messagesMap = Matcher.messagesToMap(filteredMessages);
         Collection<AccuracyCase> cases       = new ArrayList<AccuracyCase>();
         Set<CompilerMessage> matchedMessages = new HashSet<CompilerMessage>();
 
-        for (BrokenUse brokenUse : brokenUses) {
+        for (BrokenUse brokenUse : filteredBrokenUses) {
             SourcePosition position = brokenUse.element().getPosition();
             String path = position.getFile().getAbsolutePath();
             int line = position.getLine();
@@ -62,26 +66,5 @@ public class LocationMatcher implements Matcher {
             cases.add(new AccuracyCase(null, List.of(message), AccuracyType.FALSE_NEGATIVE));
 
         return cases;
-    }
-
-    @Override
-    public Set<CompilerMessage> filterCompilerMessages(Set<CompilerMessage> messages, MatcherOptions opts) {
-        Set<CompilerMessage> filteredMessages = new HashSet<CompilerMessage>();
-
-        if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
-            for (CompilerMessage message : messages) {
-                boolean include = true;
-                for (String pattern : opts.excludedBreakingChanges().values()) {
-                    if (message.path().contains(pattern)) {
-                        include = false;
-                        break;
-                    }
-                }
-
-                if (include)
-                    filteredMessages.add(message);
-            }
-        }
-        return filteredMessages;
     }
 }

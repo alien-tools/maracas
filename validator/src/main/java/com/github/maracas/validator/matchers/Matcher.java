@@ -25,17 +25,7 @@ public interface Matcher {
      * @param opts       {@link MatcherOptions} object
      * @return collection of {@link AccuracyCase} objects
      */
-    Collection<AccuracyCase> match(Collection<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts);
-
-    /**
-     * Filters out the set of {@link CompilerMessage} instances based on the
-     * definition of the {@link MatcherOptions} object.
-     *
-     * @param messages {@link CompilerMessage} instances to filter
-     * @param opts     {@link MatcherOptions} instance
-     * @return filtered set of {@link CompilerMessage} instances
-     */
-    Set<CompilerMessage> filterCompilerMessages(Set<CompilerMessage> messages, MatcherOptions opts);
+    Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts);
 
     /**
      * Transforms a list of {@link CompilerMessage} objects into a map. The keys
