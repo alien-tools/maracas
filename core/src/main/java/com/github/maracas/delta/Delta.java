@@ -1,5 +1,7 @@
 package com.github.maracas.delta;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.util.BinaryToSourceMapper;
 import com.github.maracas.util.PathHelpers;
@@ -15,6 +17,7 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -126,6 +129,7 @@ public class Delta {
      * in the current delta model. Each visitor is responsible for inferring
      * the set of broken uses in client code impacted by the breaking change.
      */
+    @JsonIgnore
     public Collection<BreakingChangeVisitor> getVisitors() {
         return
           breakingChanges.stream()
@@ -153,6 +157,10 @@ public class Delta {
      */
     public Path getNewJar() {
         return newJar;
+    }
+
+    public String toJson() throws IOException {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
     }
 
     @Override

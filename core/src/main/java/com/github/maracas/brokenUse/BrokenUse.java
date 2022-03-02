@@ -2,6 +2,9 @@ package com.github.maracas.brokenUse;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.github.maracas.util.CtElementSerializer;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
@@ -16,16 +19,19 @@ public record BrokenUse(
 	/**
 	 * The impacted {@link CtElement} in the client's AST
 	 */
+	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement element,
 
 	/**
 	 * The {@link CtElement} in the library's code that is being used by the {@link #element}
 	 */
+	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement usedApiElement,
 
 	/**
 	 * The original breaking change in the library's code
 	 */
+	@JsonSerialize(using = ToStringSerializer.class)
 	CtReference source,
 
 	/**

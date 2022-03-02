@@ -1,5 +1,9 @@
 package com.github.maracas.delta;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.github.maracas.util.CtElementSerializer;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 
 import japicmp.model.JApiCompatibilityChange;
@@ -14,6 +18,7 @@ public interface BreakingChange {
 	/**
 	 * Returns a {@link CtReference} pointer to the impacted declaration
 	 */
+	@JsonSerialize(using = ToStringSerializer.class)
 	CtReference getReference();
 
 	/**
@@ -25,12 +30,14 @@ public interface BreakingChange {
 	 * Returns the {@link BreakingChangeVisitor} responsible for detecting the
 	 * impact this breaking change has on client code
 	 */
+	@JsonIgnore
 	BreakingChangeVisitor getVisitor();
 
 	/**
 	 * Returns the {@link CtElement} in the library's source code corresponding
 	 * to the breaking change's {@link #getReference()}, if any.
 	 */
+	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement getSourceElement();
 
 	/**

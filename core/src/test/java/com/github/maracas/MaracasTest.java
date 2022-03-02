@@ -23,11 +23,11 @@ import static org.hamcrest.collection.IsMapContaining.hasKey;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MaracasTest {
-	Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-	Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-	Path client = Paths.get("../test-data/comp-changes/client/src/");
-	Path client2 = Paths.get("../test-data/comp-changes/old/src/");
-	Path sources = Paths.get("../test-data/comp-changes/old/src/");
+	Path v1 = TestData.compChangesV1;
+	Path v2 = TestData.compChangesV2;
+	Path client = TestData.compChangesClient;
+	Path client2 = TestData.compChangesSources;
+	Path sources = TestData.compChangesSources;
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {

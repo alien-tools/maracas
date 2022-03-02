@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.maracas.TestData;
 import org.junit.jupiter.api.BeforeAll;
 
 import com.github.maracas.AnalysisQuery;
@@ -32,9 +33,9 @@ public class CompChangesTest {
 
 	@BeforeAll
 	static void setUp() {
-		Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path client = Paths.get("../test-data/comp-changes/client/src/");
+		Path v1 = TestData.compChangesV1;
+		Path v2 = TestData.compChangesV2;
+		Path client = TestData.compChangesClient;
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)

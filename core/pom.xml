@@ -69,6 +69,17 @@
 			<version>10.0.0</version>
 		</dependency>
 		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>4.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.13.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 			<scope>test</scope>
@@ -104,11 +115,6 @@
 			<artifactId>zip4j</artifactId>
 			<version>2.9.1</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>info.picocli</groupId>
-			<artifactId>picocli</artifactId>
-			<version>4.6.2</version>
 		</dependency>
 		<!-- test data -->
 		<dependency>
