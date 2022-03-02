@@ -10,12 +10,14 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.maracas.brokenUse.APIUse;
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.validator.build.CompilerMessage;
 import com.github.maracas.validator.cases.CompChangesMatcherFilter;
 
+import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;
 
 /**
@@ -39,6 +41,12 @@ public class LocationMatcher implements Matcher {
         Set<CompilerMessage> matchedMessages = new HashSet<CompilerMessage>();
 
         for (BrokenUse brokenUse : filteredBrokenUses) {
+            // Handle special cases that are not detected by the compiler
+            if (isDeprecatedImport(brokenUse)) {
+                cases.add(new AccuracyCase(brokenUse, new ArrayList<CompilerMessage>(), AccuracyType.TRUE_POSITIVE));
+                continue;
+            }
+
             SourcePosition position = brokenUse.element().getPosition();
             String path = position.getFile().getAbsolutePath();
             int line = position.getLine();
@@ -66,5 +74,17 @@ public class LocationMatcher implements Matcher {
             cases.add(new AccuracyCase(null, List.of(message), AccuracyType.FALSE_NEGATIVE));
 
         return cases;
+    }
+
+    /**
+     * Verifies if the broken use points to an ANNOTATION_DEPRECATED_ADDED
+     * breaking change and an IMPORT API use. See issue #24.
+     *
+     * @param brokenUse {@link BrokenUse} instance
+     * @return true if the conditions are met, false otherwise
+     */
+    private boolean isDeprecatedImport(BrokenUse brokenUse) {
+        return brokenUse.change().equals(JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED)
+            && brokenUse.use().equals(APIUse.IMPORT);
     }
 }

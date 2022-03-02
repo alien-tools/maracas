@@ -11,6 +11,7 @@ import japicmp.model.JApiCompatibilityChange;
 /**
  * Match options to exclude unsupported breaking changes.
  */
+@SuppressWarnings("rawtypes")
 public record MatcherOptions(
     Map<Enum, String> excludedBreakingChanges) {
     /**
