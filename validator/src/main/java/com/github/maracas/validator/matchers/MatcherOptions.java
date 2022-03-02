@@ -1,4 +1,4 @@
-package com.github.maracas.validator.accuracy;
+package com.github.maracas.validator.matchers;
 
 import java.util.HashMap;
 import java.util.Map;

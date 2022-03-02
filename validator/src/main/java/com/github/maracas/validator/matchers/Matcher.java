@@ -1,4 +1,4 @@
-package com.github.maracas.validator.accuracy;
+package com.github.maracas.validator.matchers;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.build.CompilerMessage;
 
 /**

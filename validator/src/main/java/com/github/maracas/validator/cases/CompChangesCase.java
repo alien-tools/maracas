@@ -5,8 +5,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import com.github.maracas.validator.MaracasValidator;
-import com.github.maracas.validator.accuracy.MatcherOptions;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
+import com.github.maracas.validator.matchers.MatcherOptions;
 
 import japicmp.model.JApiCompatibilityChange;
 
