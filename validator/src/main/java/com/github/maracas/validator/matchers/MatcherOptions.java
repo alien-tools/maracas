@@ -12,7 +12,7 @@ import japicmp.model.JApiCompatibilityChange;
  * Match options to exclude unsupported breaking changes.
  */
 public record MatcherOptions(
-    Map<JApiCompatibilityChange, String> excludedBreakingChanges) {
+    Map<Enum, String> excludedBreakingChanges) {
     /**
      * Class logger
      */
@@ -22,18 +22,19 @@ public record MatcherOptions(
      * Creates a MatcherOptions instance.
      */
     public MatcherOptions() {
-        this(new HashMap<JApiCompatibilityChange, String>());
+        this(new HashMap<Enum, String>());
     }
 
     /**
-     * Exclude a {@link JApiCompatibilityChange} instance from the matching
-     * process.
+     * Exclude a {@link JApiCompatibilityChange} or {@link MissingJApiCompatibilityChange}
+     * instance from the matching process.
      *
-     * @param change {@link JApiCompatibilityChange} instance to exclude
+     * @param change {@link JApiCompatibilityChange} or {@link MissingJApiCompatibilityChange}
+     *               instance to exclude
      * @param regex  RegEx pattern to match the breaking change against a
      *               compiler message
      */
-    public void excludeBreakingChange(JApiCompatibilityChange change, String regex) {
+    public void excludeBreakingChange(Enum change, String regex) {
         excludedBreakingChanges.put(change, regex);
     }
 }

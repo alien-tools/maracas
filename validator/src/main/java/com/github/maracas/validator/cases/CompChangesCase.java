@@ -7,6 +7,7 @@ import java.util.Map;
 import com.github.maracas.validator.MaracasValidator;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
 import com.github.maracas.validator.matchers.MatcherOptions;
+import com.github.maracas.validator.matchers.MissingJApiCompatibilityChange;
 
 import japicmp.model.JApiCompatibilityChange;
 
@@ -62,6 +63,9 @@ public class CompChangesCase {
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE, "methodDefaultAddedInImplementedInterface");
         opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS, "fieldLessAccessibleThanInSuperclass");
         //opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS, "fieldRemovedInSuperclass");
+
+        // Missing JApiCmp breaking changes
+        opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE, "methodMoreAccessible");
 
         return opts;
     }
