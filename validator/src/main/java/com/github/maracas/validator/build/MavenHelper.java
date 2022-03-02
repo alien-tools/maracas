@@ -121,14 +121,15 @@ public class MavenHelper {
     }
 
     /**
-     * Increases the number of error and warning messages reported by the Maven
-     * compiler.
+     * Configure the Maven compiler. The number of reported error and warning
+     * messages is increased, deprecation warning are announced, and static
+     * issues are reported.
      *
      * @param src             absolute path to the source project
      * @param relativePOMPath relative path to the POM file in the source project
      * @param messages        maximum number of messages to report
      */
-    public static void increaseMaxMessages(Path src, String relativePOMPath, int messages) {
+    public static void configureMavenCompiler(Path src, String relativePOMPath, int messages) {
         try {
             Model model = createModel(src, relativePOMPath);
             logger.info("Increasing Xmaxerrs and Xmaxwarns to {} in POM file", messages);
@@ -152,9 +153,23 @@ public class MavenHelper {
                 compilerPlugin.setConfiguration(new Xpp3Dom("configuration"));
 
             Xpp3Dom config = (Xpp3Dom) compilerPlugin.getConfiguration();
-            Xpp3Dom compilerArgs = addDomNodeChild(config, "compilerArguments", null);
-            addDomNodeChild(compilerArgs, "Xmaxerrs", String.valueOf(messages));
-            addDomNodeChild(compilerArgs, "Xmaxwarns", String.valueOf(messages));
+            Xpp3Dom compilerArgs = replaceDomNodeChild(config, "compilerArgs", null);
+
+            // Increase max number of reported errors
+            addDomNodeChild(compilerArgs, "arg", "-Xmaxerrs");
+            addDomNodeChild(compilerArgs, "arg", String.valueOf(messages));
+
+            // Increase max number of reported warnings
+            addDomNodeChild(compilerArgs, "arg", "-Xmaxwarns");
+            addDomNodeChild(compilerArgs, "arg", String.valueOf(messages));
+
+            // Report deprecated cases
+            addDomNodeChild(compilerArgs, "arg", "-Xlint:deprecation");
+            addDomNodeChild(compilerArgs, "arg", "-Xlint:dep-ann");
+
+            // Report warning related to static uses
+            addDomNodeChild(compilerArgs, "arg", "-Xlint:static");
+
             writeModel(model, src, relativePOMPath);
         } catch (IOException | XmlPullParserException e) {
             logger.error("Couldn't patch dependency in POM file", e);
@@ -171,16 +186,24 @@ public class MavenHelper {
      * @return added child node
      */
     private static Xpp3Dom addDomNodeChild(Xpp3Dom parent, String name, String value) {
-        Xpp3Dom child = parent.getChild(name);
-        if (child == null) {
-            child = new Xpp3Dom(name);
-            parent.addChild(child);
-        }
+        Xpp3Dom child = new Xpp3Dom(name);
+        child.setValue(value);
+        parent.addChild(child);
+        return child;
+    }
+
+    private static Xpp3Dom replaceDomNodeChild(Xpp3Dom parent, String name, String value) {
+        for (int i = 0; i < parent.getChildren().length; i++)
+            parent.removeChild(i);
+
+        Xpp3Dom child = new Xpp3Dom(name);
+        parent.addChild(child);
         if (value != null)
             child.setValue(value);
 
         return child;
     }
+
     /**
      * Creates a POM file model given the path to the source project and the
      * relative path of the POM file.

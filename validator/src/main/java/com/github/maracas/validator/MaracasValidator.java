@@ -18,15 +18,15 @@ import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
 import com.github.maracas.validator.accuracy.AccuracyCase;
-import com.github.maracas.validator.accuracy.LocationMatcher;
-import com.github.maracas.validator.accuracy.Matcher;
-import com.github.maracas.validator.accuracy.MatcherOptions;
 import com.github.maracas.validator.build.BuildHandler;
 import com.github.maracas.validator.build.CompilerMessage;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
 import com.github.maracas.validator.build.MavenBuildConfig;
 import com.github.maracas.validator.build.MavenBuildHandler;
 import com.github.maracas.validator.build.MavenHelper;
+import com.github.maracas.validator.matchers.LocationMatcher;
+import com.github.maracas.validator.matchers.Matcher;
+import com.github.maracas.validator.matchers.MatcherOptions;
 import com.github.maracas.validator.viz.HTMLReportVisualizer;
 import com.github.maracas.validator.viz.ReportVisualizer;
 
@@ -129,7 +129,7 @@ public class MaracasValidator {
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);
-        MavenHelper.increaseMaxMessages(srcClient, pomClient, 10000);
+        MavenHelper.configureMavenCompiler(srcClient, pomClient, 10000);
         Set<CompilerMessage> messages = handler.gatherCompilerMessages();
 
         // Match cases and analyze
