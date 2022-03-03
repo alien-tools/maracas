@@ -1,5 +1,16 @@
 package com.github.maracas;
 
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
@@ -8,22 +19,12 @@ import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.base.Stopwatch;
+
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
-import japicmp.output.OutputFilter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
-
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Maracas {
 	private static final Logger logger = LogManager.getLogger(Maracas.class);
@@ -51,7 +52,7 @@ public class Maracas {
 			delta.populateLocations(query.getSources());
 
 		// For every client, compute the set of broken uses
-		Map<Path, Collection<BrokenUse>> clientsBrokenUses = new HashMap<>();
+		Map<Path, Set<BrokenUse>> clientsBrokenUses = new HashMap<>();
 		query.getClients()
 			.forEach(c ->
 				clientsBrokenUses.put(c, computeBrokenUses(c, delta))
@@ -64,8 +65,8 @@ public class Maracas {
 	 * Compares the library's old and new JARs and returns a delta model
 	 * containing all {@link BreakingChange} between them, based on JApiCmp.
 	 *
-	 * @param oldJar The library's old JAR
-	 * @param newJar The library's new JAR
+	 * @param oldJar  the library's old JAR
+	 * @param newJar  the library's new JAR
 	 * @param options Maracas and JApiCmp options
 	 * @return a new delta model based on JapiCmp's results
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
@@ -103,15 +104,15 @@ public class Maracas {
 
 	/**
 	 * Computes the impact the {@code delta} model has on {@code client} and
-	 * returns the corresponding list of {@link BrokenUse}
+	 * returns the corresponding set of {@link BrokenUse}
 	 *
-	 * @param client Valid path to the client's source code to analyze
-	 * @param delta The delta model
-	 * @return the corresponding list of {@link BrokenUse}
+	 * @param client valid path to the client's source code to analyze
+	 * @param delta  the delta model
+	 * @return the corresponding set of {@link BrokenUse}
 	 * @throws NullPointerException if delta is null
 	 * @throws IllegalArgumentException if client isn't a valid directory
 	 */
-	public static Collection<BrokenUse> computeBrokenUses(Path client, Delta delta) {
+	public static Set<BrokenUse> computeBrokenUses(Path client, Delta delta) {
 		Objects.requireNonNull(delta);
 		if (!PathHelpers.isValidDirectory(client))
 			throw new IllegalArgumentException("client isn't a valid directory: " + client);

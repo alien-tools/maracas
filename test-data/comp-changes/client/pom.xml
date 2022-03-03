@@ -16,6 +16,18 @@
 
 	<build>
 		<sourceDirectory>src/</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.10.0</version>
+				<configuration>
+					<compilerArguments>
+						<Xmaxerrs>10000</Xmaxerrs>
+						<Xmaxwarns>10000</Xmaxwarns>
+					</compilerArguments>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 	<dependencies>

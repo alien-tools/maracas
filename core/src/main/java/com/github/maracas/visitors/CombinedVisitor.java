@@ -2,6 +2,8 @@ package com.github.maracas.visitors;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.github.maracas.brokenUse.BrokenUse;
 
@@ -105,12 +107,12 @@ public class CombinedVisitor extends CtScanner {
 		this.visitors = visitors;
 	}
 
-	public Collection<BrokenUse> getBrokenUses() {
+	public Set<BrokenUse> getBrokenUses() {
 		return
 			visitors.stream()
 			.map(BreakingChangeVisitor::getBrokenUses)
 			.flatMap(Collection::stream)
-			.toList();
+			.collect(Collectors.toSet());
 	}
 
 	@Override

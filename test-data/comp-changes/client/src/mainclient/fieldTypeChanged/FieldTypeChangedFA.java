@@ -151,8 +151,8 @@ public class FieldTypeChangedFA {
 		ftc.narrowPrimitive = (short) 2.2;
 		ftc.narrowReference = new B();
 
-		ftc.boxing = new Integer(2);
-		ftc.unboxing = new Integer(2);
+		ftc.boxing = Integer.valueOf(2);
+		ftc.unboxing = Integer.valueOf(2);
 		ftc.changedBoxing = (2 == 2);
 
 		ftc.narrowReferenceList = new ArrayList<A>() {};

@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.github.maracas.TestData;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,8 +28,8 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
 public class CompChangesTest {
-	static Collection<BrokenUse> brokenUses;
-	static Collection<BrokenUse> found;
+	static Set<BrokenUse> brokenUses;
+	static Set<BrokenUse> found;
 
 	@BeforeAll
 	static void setUp() {
@@ -48,7 +48,7 @@ public class CompChangesTest {
 
 		AnalysisResult result = Maracas.analyze(query);
 		brokenUses = result.allBrokenUses();
-		found = new ArrayList<>();
+		found = new HashSet<BrokenUse>();
 	}
 
 	public static void assertBrokenUse(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
