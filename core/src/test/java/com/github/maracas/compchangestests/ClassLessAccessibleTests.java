@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 64);
+		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 68);
 	}
 
 	@Test
