@@ -50,8 +50,10 @@ public class MaracasValidator {
     /**
      * Creates a MaracasValidator instance.
      *
-     * @param jarApi1   path to the JAR of the old library release
-     * @param jarApi2   path to the JAR of the new library release
+     * @param api1      path to the source code or JAR file of the old library
+     *                  release
+     * @param api2      path to the source code or JAR file of the new library
+     *                  release
      * @param srcClient path to the source project of the client
      * @param pomClient relative path to the client POM file
      * @param upgrade   Maven artifact upgrade values
