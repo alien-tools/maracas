@@ -56,7 +56,10 @@ public class LocationMatcher implements Matcher {
 
             if (currentMessages != null)
                 for (CompilerMessage message : currentMessages) {
-                    if (line == message.line())
+                    // Check method override special case
+                    if (line == message.line()
+                        || (line == message.line() + 1
+                        && brokenUse.use().equals(APIUse.METHOD_OVERRIDE)))
                         currentMatchedMessages.add(message);
                 }
 
