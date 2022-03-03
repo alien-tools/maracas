@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.github.maracas.validator.MaracasValidator;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
+import com.github.maracas.validator.matchers.MatcherFilter;
 import com.github.maracas.validator.matchers.MatcherOptions;
 import com.github.maracas.validator.matchers.MissingJApiCompatibilityChange;
 
@@ -28,9 +29,18 @@ public class CompChangesCase {
         MavenArtifactUpgrade upgrade = new MavenArtifactUpgrade(null, null,
             "comp-changes-old", "comp-changes-new", null, null);
 
-        Map<String, Float> metrics = MaracasValidator.accuracyMetricsFromSrc(srcApi1,
-            srcApi2, srcClient, null, upgrade, compChangesOptions(), report);
+        MatcherOptions opts = compChangesOptions();
+        MaracasValidator validator = new MaracasValidator(srcApi1, srcApi2, srcClient,
+            null, upgrade, opts, true);
+        MatcherFilter filter = new CompChangesMatcherFilter(opts);
+        validator.validate(filter);
+
+        // Compute metrics
+        Map<String, Float> metrics = validator.computeAccuracyMetrics();
         metrics.forEach((k, v) -> System.out.println(String.format("%s: %s", k, v)));
+
+        // Create report
+        validator.createHTMLReport(report);
     }
 
     /**

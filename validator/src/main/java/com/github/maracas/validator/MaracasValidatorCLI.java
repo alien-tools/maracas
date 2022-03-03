@@ -75,16 +75,22 @@ public class MaracasValidatorCLI implements Runnable {
             Stopwatch watch = Stopwatch.createStarted();
             MavenArtifactUpgrade mvnValues = new MavenArtifactUpgrade(oldGroupId,
                 newGroupId, oldArtifactId, newArtifactId, oldVersion, newVersion);
+            MaracasValidator validator;
             Map<String, Float> metrics;
 
             if (oldLibJar != null && newLibJar != null)
-                metrics = MaracasValidator.accuracyMetricsFromJars(oldLibJar, newLibJar,
-                    clientSrc, clientPOM, mvnValues, null, report);
+                validator = new MaracasValidator(oldLibJar, newLibJar, clientSrc,
+                    clientPOM, mvnValues, null, false);
             else if (oldLibSrc != null && newLibSrc != null)
-                metrics = MaracasValidator.accuracyMetricsFromSrc(oldLibSrc, newLibSrc,
-                    clientSrc, clientPOM, mvnValues, null, report);
+                validator = new MaracasValidator(oldLibSrc, newLibSrc, clientSrc,
+                    clientPOM, mvnValues, null, true);
             else
                 throw new RuntimeException("The library's old and new JARs or source code have not been properly defined");
+
+            // Compute metrics
+            // TODO: support different MatcherFilters
+            validator.validate();
+            metrics = validator.computeAccuracyMetrics();
 
             System.out.println("""
             +----------------+
@@ -93,6 +99,19 @@ public class MaracasValidatorCLI implements Runnable {
             """);
 
             metrics.forEach((k, v) -> System.out.println(String.format("%s: %s", k, v)));
+
+            // Create HTML report
+            if (report != null) {
+                validator.createHTMLReport(report);
+
+                System.out.println("""
+                    +----------------+
+                     HTML REPORT
+                    +----------------+
+                    """);
+                System.out.println(String.format("The report has been written at %s",
+                    report.toString()));
+            }
             System.out.println(String.format("Done in %s seconds", watch.elapsed(TimeUnit.SECONDS)));
         } catch (Exception e) {
             System.err.println(String.format("Fatal error: %s", e.getMessage()));

@@ -18,14 +18,13 @@ public interface Matcher {
     /**
      * Computes a collection of {@link AccuracyCase} objects. The collection
      * comes from matching {@link BrokenUse} and {@link CompilerMessage} objects.
-     * TODO: feels weird to have collections and lists. Use the same?
+     * TODO: feels weird to have collections and sets. Use the same?
      *
      * @param brokenUses collection of {@link BrokenUse} objects
      * @param messages   list of {@link CompilerMessage} objects
-     * @param opts       {@link MatcherOptions} object
      * @return collection of {@link AccuracyCase} objects
      */
-    Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts);
+    Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages);
 
     /**
      * Transforms a list of {@link CompilerMessage} objects into a map. The keys

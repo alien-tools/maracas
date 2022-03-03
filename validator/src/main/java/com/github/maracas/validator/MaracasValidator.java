@@ -1,8 +1,5 @@
 package com.github.maracas.validator;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,9 +21,10 @@ import com.github.maracas.validator.build.MavenArtifactUpgrade;
 import com.github.maracas.validator.build.MavenBuildConfig;
 import com.github.maracas.validator.build.MavenBuildHandler;
 import com.github.maracas.validator.build.MavenHelper;
-import com.github.maracas.validator.matchers.LocationMatcher;
 import com.github.maracas.validator.matchers.Matcher;
+import com.github.maracas.validator.matchers.MatcherFilter;
 import com.github.maracas.validator.matchers.MatcherOptions;
+import com.github.maracas.validator.matchers.MavenLocationMatcher;
 import com.github.maracas.validator.viz.HTMLReportVisualizer;
 import com.github.maracas.validator.viz.ReportVisualizer;
 
@@ -39,49 +37,18 @@ public class MaracasValidator {
      */
     private static final Logger logger = LogManager.getLogger(MaracasValidator.class);
 
-    /**
-     * Constructor of the class. It does not allow the instantiation of the
-     * class. Only use static methods.
-     */
-    private MaracasValidator() {}
+    private Path jarApi1;
+    private Path jarApi2;
+    private Path srcClient;
+    private String pomClient;
+    private MavenArtifactUpgrade upgrade;
+    private MatcherOptions opts;
+    private Set<BrokenUse> brokenUses;
+    private Set<CompilerMessage> messages;
+    private Collection<AccuracyCase> cases;
 
     /**
-     * Returns a map with the accuracy metrics (e.g., precision, recall) of
-     * Maracas. Keys are the names of the metrics, and values are float numbers
-     * representing the corresponding value. The metrics are computed based on
-     * input source projects.
-     *
-     * @param srcApi1   path to the source project of the old library release
-     * @param srcApi2   path to the source project of the new library release
-     * @param srcClient path to the source project of the client
-     * @param pomClient relative path to the client POM file
-     * @param upgrade   Maven artifact upgrade values
-     * @param opts      {@link MatcherOptions} instance to exclude a subset of
-     *                  breaking changes
-     * @param report    path to the report file with the accuracy cases data
-     *                  (can be null)
-     * @return map with accuracy metrics
-     */
-    public static Map<String,Float> accuracyMetricsFromSrc(Path srcApi1, Path srcApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts,
-        Path report) {
-        // Generate JAR in target folder
-        logger.info("Packing libraries: {} and {}", srcApi1, srcApi2);
-        packageMavenProject(srcApi1);
-        packageMavenProject(srcApi2);
-
-        // Get path of the previously generated JARs
-        Path jarApi1 = MavenHelper.getJarPath(srcApi1);
-        Path jarApi2 = MavenHelper.getJarPath(srcApi2);
-
-        return accuracyMetricsFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts, report);
-    }
-
-    /**
-     * Returns a map with the accuracy metrics (e.g., precision, recall) of
-     * Maracas. Keys are the names of the metrics, and values are float numbers
-     * representing the corresponding value. The metrics are computed based on
-     * input JARs of the library and the source project of the client.
+     * Creates a MaracasValidator instance.
      *
      * @param jarApi1   path to the JAR of the old library release
      * @param jarApi2   path to the JAR of the new library release
@@ -90,14 +57,92 @@ public class MaracasValidator {
      * @param upgrade   Maven artifact upgrade values
      * @param opts      {@link MatcherOptions} instance to exclude a subset of
      *                  breaking changes
-     * @param report    path to the report file with the accuracy cases data
-     *                  (can be null)
+     * @param sources   true if api1 and api2 point to source code, false if
+     *                  they point to JAR files
+     */
+    public MaracasValidator(Path api1, Path api2, Path srcClient, String pomClient,
+        MavenArtifactUpgrade upgrade, MatcherOptions opts, boolean sources) {
+        this.srcClient = srcClient;
+        this.pomClient = pomClient;
+        this.upgrade = upgrade;
+        this.opts = opts;
+
+        if (sources) {
+            // Generate JAR in target folder
+            logger.info("Packing libraries: {} and {}", api1, api2);
+            packageMavenProject(api1);
+            packageMavenProject(api2);
+
+            // Get path of the previously generated JARs
+            this.jarApi1 = MavenHelper.getJarPath(api1);
+            this.jarApi2 = MavenHelper.getJarPath(api2);
+        } else {
+            this.jarApi1 = api1;
+            this.jarApi2 = api2;
+        }
+    }
+
+    /**
+     * Computes the set of broken uses, compiler messages, and accuracy cases.
+     */
+    public void validate() {
+        validate(null);
+    }
+
+    /**
+     * Computes the set of broken uses, compiler messages, and accuracy cases.
+     *
+     * @param filter {@link MatcherFilter} instance to filter unneeded broken
+     *               uses and compiler messages
+     */
+    public void validate(MatcherFilter filter) {
+        // Compute Maracas data
+        logger.info("Computing delta and broken uses for client {}", srcClient);
+        BuildHandler handler = new MavenBuildHandler(srcClient);
+        Delta delta = Maracas.computeDelta(jarApi1, jarApi2);
+        this.brokenUses = Maracas.computeBrokenUses(srcClient, delta);
+
+        logger.info("Updating and compiling client source code");
+        MavenHelper.updateDependency(srcClient, pomClient, upgrade);
+        MavenHelper.configureMavenCompiler(srcClient, pomClient, 10000);
+        this.messages = handler.gatherCompilerMessages();
+
+        // Filter broken uses and compiler messages if needed
+        if (filter != null) {
+            logger.info("Filtering broken uses and compiler messages");
+            filterCases(filter);
+        }
+
+        // Match cases and analyze
+        logger.info("Matching compiler messages against broken uses");
+        Matcher matcher = new MavenLocationMatcher();
+        this.cases = matcher.match(brokenUses, messages);
+    }
+
+    /**
+     * Filters out broken uses and compiler messages based on the {@link MatcherFilter}
+     * instance.
+     *
+     * @param filter {@link MatcherFilter} instance to filter unneeded broken
+     *               uses and compiler messages
+     */
+    private void filterCases(MatcherFilter filter) {
+        Set<BrokenUse> filteredBrokenUses = filter.filterBrokenUses(brokenUses);
+        Set<CompilerMessage> filteredMessages = filter.filterCompilerMessages(messages);
+        this.brokenUses = filteredBrokenUses;
+        this.messages = filteredMessages;
+    }
+
+    /**
+     * Returns a map with the accuracy metrics (e.g., precision, recall) of
+     * Maracas. Keys are the names of the metrics, and values are float numbers
+     * representing the corresponding value. The {@link #validate()} method
+     * must be called first.
+     *
      * @return map with accuracy metrics
      */
-    public static Map<String,Float> accuracyMetricsFromJars(Path jarApi1, Path jarApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts,
-        Path report) {
-        Collection<AccuracyCase> cases = generateCasesFromJars(jarApi1, jarApi2, srcClient, pomClient, upgrade, opts);
+    public Map<String,Float> computeAccuracyMetrics() {
+        assert cases != null : "The tool has not been validated yet: accuracy cases are null";
         AccuracyAnalyzer analyzer = new AccuracyAnalyzer(cases);
 
         // Gather accuracy metrics
@@ -108,40 +153,22 @@ public class MaracasValidator {
         metrics.put("true-positives", (float) analyzer.truePositives().size());
         metrics.put("false-positives", (float) analyzer.falsePositives().size());
         metrics.put("false-negatives", (float) analyzer.falseNegatives().size());
-
-        // Write report
-        if (report != null) {
-            logger.info("Writing report at {}", report);
-            ReportVisualizer viz = new HTMLReportVisualizer(cases, report);
-            viz.generate();
-        }
-
         return metrics;
     }
 
-    private static Collection<AccuracyCase> generateCasesFromJars(Path jarApi1, Path jarApi2,
-        Path srcClient, String pomClient, MavenArtifactUpgrade upgrade, MatcherOptions opts) {
-        // Compute Maracas data
-        logger.info("Computing delta and broken uses for client {}", srcClient);
-        BuildHandler handler = new MavenBuildHandler(srcClient);
-        Delta delta = Maracas.computeDelta(jarApi1, jarApi2);
-        Set<BrokenUse> brokenUses = Maracas.computeBrokenUses(srcClient, delta);
+    /**
+     * Creates an HTML report of the computed accuracy cases. The {@link #validate()}
+     * method must be called first and report must not be null.
+     *
+     * @param report path to the report file with the accuracy cases data
+     */
+    public void createHTMLReport(Path report) {
+        assert cases != null : "The tool has not been validated yet: accuracy cases are null";
+        assert report != null : "The report path is null";
 
-        logger.info("Updating and compiling client source code");
-        MavenHelper.updateDependency(srcClient, pomClient, upgrade);
-        MavenHelper.configureMavenCompiler(srcClient, pomClient, 10000);
-        Set<CompilerMessage> messages = handler.gatherCompilerMessages();
-
-        // Match cases and analyze
-        logger.info("Matching compiler messages against broken uses");
-        Matcher matcher = new LocationMatcher();
-        Collection<AccuracyCase> cases = matcher.match(brokenUses, messages, opts);
-
-        // TODO: use for debug purposes
-        writeObjects(messages, "/home/lina/Documents/out/compilerMessages.txt");
-        writeObjects(cases, "/home/lina/Documents/out/accuracyCases.txt");
-
-        return cases;
+        logger.info("Creating report at {}", report);
+        ReportVisualizer viz = new HTMLReportVisualizer(cases, report);
+        viz.generate();
     }
 
     /**
@@ -154,16 +181,5 @@ public class MaracasValidator {
             null, List.of("clean", "package"), null);
         BuildHandler handler = new MavenBuildHandler(src, config);
         handler.build();
-    }
-
-    private static void writeObjects(Collection objs, String file) {
-        try {
-            PrintWriter pw = new PrintWriter(new FileOutputStream(file));
-            for (Object obj : objs)
-                pw.println(obj.toString());
-            pw.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 }

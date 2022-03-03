@@ -15,7 +15,6 @@ import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.validator.build.CompilerMessage;
-import com.github.maracas.validator.cases.CompChangesMatcherFilter;
 
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.SourcePosition;
@@ -24,23 +23,19 @@ import spoon.reflect.cu.SourcePosition;
  * Type of matcher based on {@link BrokenUse} and {@link CompilerMessage}
  * object locations.
  */
-public class LocationMatcher implements Matcher {
+public class MavenLocationMatcher implements Matcher {
     /**
      * Class logger
      */
-    private static final Logger logger = LogManager.getLogger(LocationMatcher.class);
+    private static final Logger logger = LogManager.getLogger(MavenLocationMatcher.class);
 
     @Override
-    public Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages, MatcherOptions opts) {
-        MatcherFilter filter = new CompChangesMatcherFilter(opts);
-        Set<BrokenUse> filteredBrokenUses = filter.filterBrokenUses(brokenUses);
-        Set<CompilerMessage> filteredMessages = filter.filterCompilerMessages(messages);
-
-        Map<String, List<CompilerMessage>> messagesMap = Matcher.messagesToMap(filteredMessages);
+    public Collection<AccuracyCase> match(Set<BrokenUse> brokenUses, Set<CompilerMessage> messages) {
+        Map<String, List<CompilerMessage>> messagesMap = Matcher.messagesToMap(messages);
         Collection<AccuracyCase> cases       = new ArrayList<AccuracyCase>();
         Set<CompilerMessage> matchedMessages = new HashSet<CompilerMessage>();
 
-        for (BrokenUse brokenUse : filteredBrokenUses) {
+        for (BrokenUse brokenUse : brokenUses) {
             // Handle special cases that are not detected by the compiler
             if (isDeprecatedImport(brokenUse)) {
                 cases.add(new AccuracyCase(brokenUse, new ArrayList<CompilerMessage>(), AccuracyType.TRUE_POSITIVE));
@@ -71,7 +66,7 @@ public class LocationMatcher implements Matcher {
             matchedMessages.addAll(currentMatchedMessages);
         }
 
-        Set<CompilerMessage> unmatchedMessages = new HashSet<CompilerMessage>(filteredMessages);
+        Set<CompilerMessage> unmatchedMessages = new HashSet<CompilerMessage>(messages);
         unmatchedMessages.removeAll(matchedMessages);
         for (CompilerMessage message : unmatchedMessages)
             cases.add(new AccuracyCase(null, List.of(message), AccuracyType.FALSE_NEGATIVE));
