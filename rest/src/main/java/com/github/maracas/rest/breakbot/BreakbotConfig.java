@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +19,14 @@ public record BreakbotConfig(
 ) {
 	public record Build(
 		String pom,
+		String sources,
 		List<String> goals,
 		List<String> properties,
 		String jar
 	) {
-		public Build(String pom, List<String> goals, List<String> properties, String jar) {
+		public Build(String pom, String sources, List<String> goals, List<String> properties, String jar) {
 			this.pom = pom != null ? pom : "pom.xml";
+			this.sources = sources != null ? sources : "";
 			this.goals  = goals != null && !goals.isEmpty() ? goals : List.of("package");
 			this.properties = properties != null && !properties.isEmpty() ? properties : List.of("skipTests");
 			this.jar = jar;
@@ -42,11 +42,9 @@ public record BreakbotConfig(
 
 	}
 
-	private static final Logger logger = LogManager.getLogger(BreakbotConfig.class);
-
 	public BreakbotConfig(List<String> excludes, Build build, List<GitHubRepository> clients) {
 		this.excludes = excludes != null ? excludes : Collections.emptyList();
-		this.build = build != null ? build : new Build(null, null, null, null);
+		this.build = build != null ? build : new Build(null, null, null, null, null);
 		this.clients = clients != null ? clients : Collections.emptyList();
 	}
 

@@ -62,7 +62,7 @@ public class MaracasService {
 
 	public MaracasReport makeReport(PullRequest pr, String ref, Path basePath, Path jar1, Path jar2, BreakbotConfig config) {
 		// Compute delta model
-		Path sources = findSourceDirectory(basePath, null);
+		Path sources = findSourceDirectory(basePath, config.build().sources());
 		Delta maracasDelta = makeDelta(jar1, jar2, sources, config);
 
 		// Compute broken uses per client

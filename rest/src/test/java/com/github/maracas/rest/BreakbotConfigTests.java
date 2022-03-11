@@ -14,6 +14,7 @@ class BreakbotConfigTests {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
 		assertThat(c.build().pom(), is("pom.xml"));
+		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), both(hasSize(1)).and(contains("package")));
 		assertThat(c.build().properties(), both(hasSize(1)).and(contains("skipTests")));
 		assertThat(c.build().jar(), nullValue());
@@ -102,9 +103,21 @@ class BreakbotConfigTests {
 			  properties: [skipTests, skipDepClean]""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().pom(), is("anotherpom.xml"));
+		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
 		assertThat(c.build().properties(), allOf(iterableWithSize(2), hasItem("skipTests"), hasItem("skipDepClean")));
 		assertThat(c.build().jar(), nullValue());
+	}
+
+	@Test
+	void testCustomSources() {
+		String s = """
+			build:
+			  pom: module/pom.xml
+			  sources: module/src/main/java""";
+		BreakbotConfig c = BreakbotConfig.fromYaml(s);
+		assertThat(c.build().pom(), is("module/pom.xml"));
+		assertThat(c.build().sources(), is("module/src/main/java"));
 	}
 
 	@Test
