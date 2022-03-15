@@ -3,6 +3,7 @@ package com.github.maracas.brokenUse;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,5 +89,16 @@ public class DeltaImpact {
         return new ObjectMapper()
             .writerWithDefaultPrettyPrinter()
             .writeValueAsString(this);
+    }
+
+    @Override
+    public String toString() {
+        return "ΔImpact(%s -> %s ON %s)%n)".formatted(
+            delta.getOldJar(),
+            delta.getNewJar(),
+            client,
+            brokenUses.stream()
+                .map(bu -> "%n%s%n".formatted(bu.toString()))
+                .collect(Collectors.joining()));
     }
 }
