@@ -53,7 +53,7 @@ public record AnalysisResult(
 	 */
 	@Deprecated
 	public Set<BrokenUse> brokenUsesForClient(Path client) {
-		return deltaImpacts.get(client).getBrokenUses();
+		return deltaImpacts.get(client.toAbsolutePath()).getBrokenUses();
 	}
 
 	/**
@@ -63,6 +63,6 @@ public record AnalysisResult(
 	 * @return {@link DeltaImpact} model of the given client
 	 */
 	public DeltaImpact deltaImpactForClient(Path client) {
-	    return deltaImpacts.get(client);
+	    return deltaImpacts.get(client.toAbsolutePath());
 	}
 }

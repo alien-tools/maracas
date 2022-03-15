@@ -56,7 +56,7 @@ public class Maracas {
         // For every client, compute the set of broken uses
         Map<Path, DeltaImpact> deltaImpacts = new HashMap<>();
         query.getClients()
-            .forEach(c -> deltaImpacts.put(c, computeDeltaImpact(c, delta)));
+            .forEach(c -> deltaImpacts.put(c.toAbsolutePath(), computeDeltaImpact(c, delta)));
 
         return new AnalysisResult(delta, deltaImpacts);
     }

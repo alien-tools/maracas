@@ -23,6 +23,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
 import japicmp.model.AccessModifier;
@@ -162,7 +163,8 @@ class MaracasTest {
 	@Test
 	void computeBrokenUses_isValid() {
 		Delta delta = Maracas.computeDelta(v1, v2);
-		Set<BrokenUse> ds = Maracas.computeBrokenUses(client, delta);
+		DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
+		Set<BrokenUse> ds = deltaImpact.getBrokenUses();
 
 		assertThat(ds, is(not(empty())));
 		// No hasProperty() on records :(
@@ -202,21 +204,21 @@ class MaracasTest {
 	}
 
 	@Test
-	void computeBrokenUses_invalidPaths_throwsException() {
+	void computeDeltaImpact_invalidPaths_throwsException() {
 		Delta d = Maracas.computeDelta(v1, v2);
 		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeBrokenUses(TestData.invalidDirectory, d)
+			Maracas.computeDeltaImpact(TestData.invalidDirectory, d)
 		);
 
 		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeBrokenUses(null, d)
+			Maracas.computeDeltaImpact(null, d)
 		);
 	}
 
 	@Test
-	void computeBrokenUses_nullDelta_throwsException() {
+	void computeDeltaImpact_nullDelta_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeBrokenUses(v1, null)
+			Maracas.computeDeltaImpact(v1, null)
 		);
 	}
 
