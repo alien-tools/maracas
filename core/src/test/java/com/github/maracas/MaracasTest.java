@@ -18,7 +18,6 @@ import static org.hamcrest.collection.IsMapContaining.hasKey;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -65,9 +64,9 @@ class MaracasTest {
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
-		assertThat(res.brokenUses().keySet(), hasSize(2));
-		assertThat(res.brokenUses(), hasKey(client.toAbsolutePath()));
-		assertThat(res.brokenUses(), hasKey(client2.toAbsolutePath()));
+		assertThat(res.deltaImpacts().keySet(), hasSize(2));
+		assertThat(res.deltaImpacts(), hasKey(client.toAbsolutePath()));
+		assertThat(res.deltaImpacts(), hasKey(client2.toAbsolutePath()));
 	}
 
 	@Test

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
 /**
@@ -19,16 +20,13 @@ public record AnalysisResult(
 	 */
 	Delta delta,
 	/**
-	 * The set of broken uses per analyzed client
+	 * The delta impact model per analyzed client
 	 */
-	// Guava's Multimap cannot associate an empty/null value to a key. So we're
-	// stuck with good old java.util.Map to store empty collections for clients
-	// that do not have any broken use.
-	Map<Path, Set<BrokenUse>> brokenUses
+	Map<Path, DeltaImpact> deltaImpacts
 ) {
 	public AnalysisResult {
 		Objects.requireNonNull(delta);
-		Objects.requireNonNull(brokenUses);
+		Objects.requireNonNull(deltaImpacts);
 	}
 
 	/**
@@ -37,19 +35,34 @@ public record AnalysisResult(
 	 * @return a set of all broken uses
 	 */
 	public Set<BrokenUse> allBrokenUses() {
-		return brokenUses.values()
+		return deltaImpacts.values()
 		    .stream()
+		    .map(m -> m.getBrokenUses())
 		    .flatMap(Collection::stream)
 		    .collect(Collectors.toSet());
 	}
 
 	/**
 	 * Returns all broken uses for a particular client {@code client}
+	 * @deprecated as of 0.2.0-SNAPSHOT, replaced by {@link #deltaImpactForClient(Path)}.
+	 *             Access the {@link BrokenUse} instances of the {@link DeltaImpact}
+	 *             model via the {@link DeltaImpact#getBrokenUses()} method.
 	 *
 	 * @param client The client of interest, identified by the path to its source code
 	 * @return a collection of all broken uses for client {@code client}
 	 */
+	@Deprecated
 	public Set<BrokenUse> brokenUsesForClient(Path client) {
-		return brokenUses.get(client);
+		return deltaImpacts.get(client).getBrokenUses();
+	}
+
+	/**
+	 * Returns a {@link DeltaImpact} model given a client path.
+	 *
+	 * @param client client owning the expected {@link DeltaImpact} model
+	 * @return {@link DeltaImpact} model of the given client
+	 */
+	public DeltaImpact deltaImpactForClient(Path client) {
+	    return deltaImpacts.get(client);
 	}
 }
