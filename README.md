@@ -54,11 +54,14 @@ AnalysisQuery query = AnalysisQuery.builder()
 
 AnalysisResult result = Maracas.analyze(query);
 Delta delta = result.delta();
-Collection<BrokenUse> brokenUses = result.allBrokenUses();
+Set<BrokenUse> brokenUses = result.allBrokenUses();
 
 // Programmatically
 Delta delta = Maracas.computeDelta(v1, v2);
-Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(c, delta);
+Set<BreakingChange> breakingChanges = delta.getBreakingChanges();
+
+DeltaImpact deltaImpact = Maracas.computeDeltaImpact(c, delta);
+Set<BrokenUse> brokenUses = deltaImpact.getBrokenUses();
 
 // Delta models are built from JARs and lack source code locations.
 // To map breaking changes to precise locations in source code,
