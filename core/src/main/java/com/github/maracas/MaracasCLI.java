@@ -75,6 +75,6 @@ public class MaracasCLI implements Runnable {
 
 	public static void main(String[] args) {
 		int exitCode = new CommandLine(new MaracasCLI()).execute(args);
-    System.exit(exitCode);
+		System.exit(exitCode);
 	}
 }

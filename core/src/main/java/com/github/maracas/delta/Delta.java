@@ -1,5 +1,15 @@
 package com.github.maracas.delta;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.MaracasOptions;
@@ -8,21 +18,13 @@ import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.google.common.base.Stopwatch;
+
 import japicmp.model.JApiClass;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A delta model lists the breaking changes between two versions of a library,
@@ -30,19 +32,24 @@ import java.util.stream.Collectors;
  */
 public class Delta {
     /**
+     * Class logger
+     */
+    private static final Logger logger = LogManager.getLogger(Delta.class);
+
+    /**
      * The library's old JAR
      */
     private final Path oldJar;
+
     /**
      * The library's new JAR
      */
     private final Path newJar;
+
     /**
      * The list of {@link BreakingChange} extracted from japicmp's classes
      */
     private final Collection<BreakingChange> breakingChanges;
-
-    private static final Logger logger = LogManager.getLogger(Delta.class);
 
     /**
      * @see #fromJApiCmpDelta(Path, Path, List, MaracasOptions)
@@ -159,8 +166,16 @@ public class Delta {
         return newJar;
     }
 
+    /**
+     * Returns a JSON representation of the object.
+     *
+     * @return string with the JSON representation of the object
+     * @throws IOException
+     */
     public String toJson() throws IOException {
-        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        return new ObjectMapper()
+            .writerWithDefaultPrettyPrinter()
+            .writeValueAsString(this);
     }
 
     @Override
