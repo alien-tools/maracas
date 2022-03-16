@@ -3,13 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.github.maracas</groupId>
-	<artifactId>maracas-parent</artifactId>
-	<packaging>pom</packaging>
-	<version>0.1.0-SNAPSHOT</version>
-	<name>Maracas parent module</name>
-
 	<properties>
+		<revision>0.2.0-SNAPSHOT</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
@@ -19,6 +14,12 @@
 		<maven.javadoc.version>3.3.1</maven.javadoc.version>
 		<jacoco.version>0.8.7</jacoco.version>
 	</properties>
+
+	<groupId>com.github.maracas</groupId>
+	<artifactId>maracas-parent</artifactId>
+	<packaging>pom</packaging>
+	<version>${revision}</version>
+	<name>Maracas parent module</name>
 
 	<modules>
 		<module>core</module>
@@ -96,6 +97,31 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>${maven.deploy.version}</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.2.7</version>
+				<configuration>
+				</configuration>
+				<executions>
+					<!-- enable flattening -->
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<!-- ensure proper cleanup -->
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

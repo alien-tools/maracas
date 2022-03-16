@@ -54,13 +54,11 @@ public class Maracas {
             delta.populateLocations(query.getSources());
 
         // For every client, compute the set of broken uses
-        Map<Path, Set<BrokenUse>> clientsBrokenUses = new HashMap<>();
+        Map<Path, DeltaImpact> deltaImpacts = new HashMap<>();
         query.getClients()
-        .forEach(c ->
-        clientsBrokenUses.put(c, computeBrokenUses(c, delta))
-            );
+            .forEach(c -> deltaImpacts.put(c.toAbsolutePath(), computeDeltaImpact(c, delta)));
 
-        return new AnalysisResult(delta, clientsBrokenUses);
+        return new AnalysisResult(delta, deltaImpacts);
     }
 
     /**
@@ -105,24 +103,11 @@ public class Maracas {
     }
 
     /**
-     * Computes the impact the {@code delta} model has on {@code client} and
-     * returns the corresponding set of {@link BrokenUse} instances.
-     *
-     * @param client valid path to the client's source code to analyze
-     * @param delta  the delta model
-     * @return the corresponding set of {@link BrokenUse} instances
-     * @throws NullPointerException if delta is null
-     * @throws IllegalArgumentException if client isn't a valid directory
-     */
-    public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
-        Set<BrokenUse> brokenUses = computeBrokenUses(client, delta);
-        DeltaImpact impact = new DeltaImpact(client, delta, brokenUses);
-        return impact;
-    }
-
-    /**
      * Computes the set of {@link BrokenUse} instances detected in the
      * {@code client} after analyzing the {@code delta} model.
+     * @deprecated as of 0.2.0-SNAPSHOT, replaced by {@link #computeDeltaImpact(Path, Delta)}.
+     *             Access the {@link BrokenUse} instances of the {@link DeltaImpact}
+     *             model via the {@link DeltaImpact#getBrokenUses()} method.
      *
      * @param client valid path to the client's source code to analyze
      * @param delta  the delta model
@@ -130,6 +115,7 @@ public class Maracas {
      * @throws NullPointerException if delta is null
      * @throws IllegalArgumentException if client isn't a valid directory
      */
+    @Deprecated
     public static Set<BrokenUse> computeBrokenUses(Path client, Delta delta) {
         Objects.requireNonNull(delta);
         if (!PathHelpers.isValidDirectory(client))
@@ -152,5 +138,40 @@ public class Maracas {
 
         logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
         return visitor.getBrokenUses();
+    }
+
+    /**
+     * Computes the impact the {@code delta} model has on {@code client} and
+     * returns the corresponding set of {@link BrokenUse} instances.
+     *
+     * @param client valid path to the client's source code to analyze
+     * @param delta  the delta model
+     * @return the corresponding set of {@link BrokenUse} instances
+     * @throws NullPointerException if delta is null
+     * @throws IllegalArgumentException if client isn't a valid directory
+     */
+    public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
+        Objects.requireNonNull(delta);
+        if (!PathHelpers.isValidDirectory(client))
+            throw new IllegalArgumentException("client isn't a valid directory: " + client);
+
+        Stopwatch sw = Stopwatch.createStarted();
+        CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
+        logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
+
+        sw.reset();
+        sw.start();
+        Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
+        CombinedVisitor visitor = new CombinedVisitor(visitors);
+
+        // FIXME: Only way I found to visit CompilationUnits and Imports in the model
+        // This is probably not the right way.
+        // We still need to visit the root package afterwards.
+        visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
+        visitor.scan(model.getRootPackage());
+
+        logger.info("deltaImpact({}) took {}ms", client, sw.elapsed().toMillis());
+        Set<BrokenUse> brokenUses = visitor.getBrokenUses();
+        return new DeltaImpact(client, delta, brokenUses);
     }
 }

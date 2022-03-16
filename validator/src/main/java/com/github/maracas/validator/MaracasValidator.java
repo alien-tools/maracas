@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.github.maracas.Maracas;
 import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
 import com.github.maracas.validator.accuracy.AccuracyCase;
@@ -102,7 +103,8 @@ public class MaracasValidator {
         logger.info("Computing delta and broken uses for client {}", srcClient);
         BuildHandler handler = new MavenBuildHandler(srcClient);
         Delta delta = Maracas.computeDelta(jarApi1, jarApi2);
-        this.brokenUses = Maracas.computeBrokenUses(srcClient, delta);
+        DeltaImpact deltaImpact = Maracas.computeDeltaImpact(srcClient, delta);
+        this.brokenUses = deltaImpact.getBrokenUses();
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);

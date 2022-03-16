@@ -2,18 +2,19 @@ package com.github.maracas.rest.services;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.github.maracas.MaracasOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.github.maracas.Maracas;
+import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.ClientReport;
@@ -47,12 +48,13 @@ public class MaracasService {
 		return delta;
 	}
 
-	public Collection<BrokenUse> makeBrokenUses(Delta delta, Path clientSources) {
+	public Set<BrokenUse> makeBrokenUses(Delta delta, Path clientSources) {
 		logger.info("Computing brokenUses({}, Δ({} -> {}))", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName());
 
 		Stopwatch watch = Stopwatch.createStarted();
-		Collection<BrokenUse> brokenUses = Maracas.computeBrokenUses(clientSources, delta);
+		DeltaImpact deltaImpact = Maracas.computeDeltaImpact(clientSources, delta);
+		Set<BrokenUse> brokenUses = deltaImpact.getBrokenUses();
 
 		logger.info("Done brokenUses({}, Δ({} -> {})) in {}ms", clientSources,
 			delta.getOldJar().getFileName(), delta.getNewJar().getFileName(),

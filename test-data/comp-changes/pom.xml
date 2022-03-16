@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.github.maracas</groupId>
 		<artifactId>maracas-test-data</artifactId>
-		<version>0.1.0-SNAPSHOT</version>
+		<version>${revision}</version>
 	</parent>
 
 	<artifactId>comp-changes-parent</artifactId>
