@@ -5,6 +5,7 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 import com.github.maracas.forges.clone.Cloner;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,8 +129,13 @@ public class PullRequestService {
 			CompletableFuture.allOf(baseFuture, headFuture).join();
 			Builder baseBuilder = baseFuture.get();
 			Builder headBuilder = headFuture.get();
-			Path baseJar = baseBuilder.locateJar();
-			Path headJar = headBuilder.locateJar();
+			Optional<Path> baseJar = baseBuilder.locateJar();
+			Optional<Path> headJar = headBuilder.locateJar();
+
+			if (baseJar.isEmpty())
+				throw new BuildException("Couldn't build a JAR from " + pr.base());
+			if (headJar.isEmpty())
+				throw new BuildException("Couldn't build a JAR from " + pr.head());
 
 			// Step 2: build the delta model
 			Path sources =
@@ -136,7 +143,7 @@ public class PullRequestService {
 					baseBuilder.locateSources() :
 					baseClone.resolve(config.build().sources());
 
-			Delta delta = maracasService.makeDelta(baseJar, headJar, sources, config);
+			Delta delta = maracasService.makeDelta(baseJar.get(), headJar.get(), sources, config);
 
 			// Step 3: if we found some breaking changes, clone & analyze the clients
 			List<ClientReport> brokenUses = new ArrayList<>();

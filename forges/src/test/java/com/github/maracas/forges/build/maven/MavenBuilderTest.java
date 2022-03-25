@@ -28,14 +28,14 @@ class MavenBuilderTest {
     MavenBuilder builder = new MavenBuilder(validPom);
     builder.build();
     System.out.println(builder.locateJar());
-    assertTrue(builder.locateJar().toFile().exists());
+    assertTrue(builder.locateJar().isPresent());
   }
 
   @Test
   void build_validPom_withGoal() {
     MavenBuilder builder = new MavenBuilder(validPom);
     builder.build(List.of("clean"), MavenBuilder.DEFAULT_PROPERTIES);
-    assertFalse(builder.locateJar().toFile().exists());
+    assertFalse(builder.locateJar().isPresent());
   }
 
   @Test

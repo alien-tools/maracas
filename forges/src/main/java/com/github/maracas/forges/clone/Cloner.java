@@ -6,6 +6,6 @@ import com.github.maracas.forges.Repository;
 import java.nio.file.Path;
 
 public interface Cloner {
-  Path clone(Commit commit, Path dest);
-  Path clone(Repository repository, Path dest);
+  Path clone(Commit commit, Path dest) throws CloneException;
+  Path clone(Repository repository, Path dest) throws CloneException;
 }

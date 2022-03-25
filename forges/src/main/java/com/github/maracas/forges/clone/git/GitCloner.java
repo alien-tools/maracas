@@ -16,8 +16,6 @@ import java.util.Objects;
  * So we're using dirty Processes, trying to optimize network/cpu usage.
  */
 public class GitCloner implements Cloner {
-  private static final Logger logger = LogManager.getLogger(GitCloner.class);
-
   @Override
   public Path clone(Commit commit, Path dest) {
     Objects.requireNonNull(commit);
@@ -58,7 +56,6 @@ public class GitCloner implements Cloner {
       ProcessBuilder pb = new ProcessBuilder(command);
       pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
       pb.environment().put("GIT_TERMINAL_PROMPT", "0");
-      logger.info("Running {}", pb.command());
 
       int exitCode = pb.start().waitFor();
       if (exitCode != 0)

@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 public class MavenBuilder implements Builder {
@@ -48,16 +49,16 @@ public class MavenBuilder implements Builder {
   }
 
   @Override
-  public Path build() {
-    return build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
+  public void build() {
+    build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
   }
 
-  public Path build(List<String> goals, Properties properties) {
+  public void build(List<String> goals, Properties properties) {
     Objects.requireNonNull(goals);
     Objects.requireNonNull(properties);
 
-    Path jar = locateJar();
-    if (!jar.toFile().exists()) {
+    Optional<Path> jar = locateJar();
+    if (jar.isEmpty()) {
       InvocationRequest request = new DefaultInvocationRequest();
       request.setPomFile(pom.toFile());
       request.setGoals(goals);
@@ -78,24 +79,27 @@ public class MavenBuilder implements Builder {
         throw new BuildException("Maven build error", e);
       }
     } else logger.info("{} has already been built. Skipping.", pom);
-
-    return jar;
   }
 
   @Override
-  public Path locateJar() {
+  public Optional<Path> locateJar() {
     MavenXpp3Reader reader = new MavenXpp3Reader();
     try (InputStream in = new FileInputStream(pom.toFile())) {
       Model model = reader.read(in);
       String aid = model.getArtifactId();
       String vid = model.getVersion();
-      return target.resolve("%s-%s.jar".formatted(aid, vid));
+      Path jar = target.resolve("%s-%s.jar".formatted(aid, vid));
+
+      if (jar.toFile().exists())
+        return Optional.of(jar);
+      else
+        return Optional.empty();
     } catch (IOException | XmlPullParserException e) {
-      throw new BuildException("Error parsing pom file", e);
+      throw new BuildException("Couldn't parse " + pom, e);
     }
   }
 
-  // FIXME: Parse the pom, locate sources properly
+  // FIXME: Parse the pom for non-standard locations
   @Override
   public Path locateSources() {
     if (base.resolve("src/main/java").toFile().exists())
