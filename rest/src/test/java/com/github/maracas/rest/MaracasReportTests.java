@@ -11,6 +11,9 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.github.maracas.forges.PullRequest;
+import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.github.GitHubForge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;
@@ -26,7 +29,6 @@ import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.Delta;
 import com.github.maracas.rest.data.BrokenUse;
 import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PullRequest;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,12 +53,16 @@ class MaracasReportTests {
 			.build();
 		AnalysisResult result = Maracas.analyze(query);
 
+		GitHubForge forge = new GitHubForge(github);
+		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 2);
+		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
+
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(result.delta(), new PullRequest("alien-tools", "comp-changes", 2), "main", "../test-data/comp-changes/old/"),
+			Delta.fromMaracasDelta(result.delta(), pr, Paths.get("../test-data/comp-changes/old/")),
 			List.of(ClientReport.success("alien-tools/comp-changes-client",
 				result.allBrokenUses()
 					.stream()
-					.map(d -> BrokenUse.fromMaracasBrokenUse(d, "alien-tools", "comp-changes-client", "main", c1.toString()))
+					.map(d -> BrokenUse.fromMaracasBrokenUse(d, clientRepo, "main", c1))
 					.collect(Collectors.toList())
 			))
 		);

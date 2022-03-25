@@ -14,7 +14,6 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +24,10 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class MavenBuilder implements Builder {
+  private final Path pom;
+  private final Path target;
+  private final Path base;
+
   public static final Properties DEFAULT_PROPERTIES = new Properties();
   public static final List<String> DEFAULT_GOALS = new ArrayList<>();
   private static final Logger logger = LogManager.getLogger(MavenBuilder.class);
@@ -34,21 +37,27 @@ public class MavenBuilder implements Builder {
     DEFAULT_GOALS.add("package");
   }
 
-  @Override
-  public Path build(Path pom) {
-    return build(pom, DEFAULT_GOALS, DEFAULT_PROPERTIES);
+  public MavenBuilder(Path pom) {
+    Objects.requireNonNull(pom);
+    if (!pom.toFile().exists())
+      throw new BuildException("The pom file doesn't exist: " + pom);
+
+    this.pom = pom.toAbsolutePath();
+    this.base = pom.getParent().toAbsolutePath();
+    this.target = base.resolve("target").toAbsolutePath();
   }
 
-  public Path build(Path pom, List<String> goals, Properties properties) {
+  @Override
+  public Path build() {
+    return build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
+  }
+
+  public Path build(List<String> goals, Properties properties) {
     Objects.requireNonNull(goals);
     Objects.requireNonNull(properties);
 
-    if (!pom.toFile().exists())
-      throw new BuildException("The pom file " + pom + " doesn't exist");
-
-    Path target = pom.toAbsolutePath().getParent().resolve("target");
-
-    if (!target.toFile().exists()) {
+    Path jar = locateJar();
+    if (!jar.toFile().exists()) {
       InvocationRequest request = new DefaultInvocationRequest();
       request.setPomFile(pom.toFile());
       request.setGoals(goals);
@@ -65,32 +74,35 @@ public class MavenBuilder implements Builder {
           throw new BuildException(goals + " failed: " + result.getExecutionException().getMessage());
         if (result.getExitCode() != 0)
           throw new BuildException(goals + " failed: " + result.getExitCode());
-        if (!target.toFile().exists())
-          throw new BuildException(goals + " goal did not produce a /target/");
       } catch (MavenInvocationException e) {
         throw new BuildException("Maven build error", e);
       }
     } else logger.info("{} has already been built. Skipping.", pom);
 
-    return locateJar(pom);
+    return jar;
   }
 
-  private Path locateJar(Path pom) {
-    Path target = pom.toAbsolutePath().getParent().resolve("target");
-
+  @Override
+  public Path locateJar() {
     MavenXpp3Reader reader = new MavenXpp3Reader();
     try (InputStream in = new FileInputStream(pom.toFile())) {
       Model model = reader.read(in);
       String aid = model.getArtifactId();
       String vid = model.getVersion();
-      Path jar = target.resolve("%s-%s.jar".formatted(aid, vid));
-
-      if (!jar.toFile().exists())
-        throw new BuildException("Couldn't find the JAR " + jar);
-
-      return jar;
+      return target.resolve("%s-%s.jar".formatted(aid, vid));
     } catch (IOException | XmlPullParserException e) {
-      throw new BuildException("pom.xml", e);
+      throw new BuildException("Error parsing pom file", e);
     }
+  }
+
+  // FIXME: Parse the pom, locate sources properly
+  @Override
+  public Path locateSources() {
+    if (base.resolve("src/main/java").toFile().exists())
+      return base.resolve("src/main/java");
+    else if (base.resolve("src/").toFile().exists())
+      return base.resolve("src");
+    else
+      return base;
   }
 }

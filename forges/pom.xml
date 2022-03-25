@@ -14,7 +14,7 @@
 	<name>Maracas Forges Support</name>
 
 	<properties>
-		<junit.version>5.7.2</junit.version>
+		<junit.version>5.8.2</junit.version>
 	</properties>
 
 	<dependencyManagement>
@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>org.kohsuke</groupId>
 			<artifactId>github-api</artifactId>
-			<version>1.135</version>
+			<version>1.301</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -71,5 +71,11 @@
 			<version>2.2</version>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>

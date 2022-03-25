@@ -13,7 +13,7 @@ import java.util.Objects;
 
 /**
  * We would like to use JGit, but the lack of support for shallow clones hurts.
- * So we're using Processes, trying to optimize network/cpu usage.
+ * So we're using dirty Processes, trying to optimize network/cpu usage.
  */
 public class GitCloner implements Cloner {
   private static final Logger logger = LogManager.getLogger(GitCloner.class);

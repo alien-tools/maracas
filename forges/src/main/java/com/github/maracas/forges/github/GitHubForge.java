@@ -23,12 +23,13 @@ public class GitHubForge implements Forge {
   public Repository fetchRepository(String owner, String name) {
     Objects.requireNonNull(owner);
     Objects.requireNonNull(name);
+    String fullName = owner + "/" + name;
 
     try {
-      GHRepository repo = gh.getRepository(owner + "/" + name);
-      return new Repository(owner, name, repo.getHtmlUrl().toString());
+      GHRepository repo = gh.getRepository(fullName);
+      return new Repository(owner, name, repo.getHttpTransportUrl(), repo.getDefaultBranch());
     } catch (IOException e) {
-      throw new ForgeException(e);
+      throw new ForgeException("Couldn't fetch repository " + fullName, e);
     }
   }
 
@@ -38,12 +39,12 @@ public class GitHubForge implements Forge {
 
     try {
       GHPullRequest pr = gh.getRepository(repository.fullName()).getPullRequest(number);
-      Commit base = new Commit(repository, pr.getBase().getSha());
-      Commit head = new Commit(repository, pr.getHead().getSha());
+      Commit base = new Commit(repository, pr.getBase().getSha(), pr.getBase().getRef());
+      Commit head = new Commit(repository, pr.getHead().getSha(), pr.getHead().getRef());
 
       return new PullRequest(repository, number, base, head);
     } catch (IOException e) {
-      throw new ForgeException(e);
+      throw new ForgeException("Couldn't fetch PR %d from repository %s".formatted(number, repository.fullName()), e);
     }
   }
 }

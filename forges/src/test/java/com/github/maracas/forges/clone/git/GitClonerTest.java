@@ -26,7 +26,7 @@ class GitClonerTest {
 
   @Test
   void clone_repository() {
-    cloner.clone(new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas"), CLONES);
+    cloner.clone(new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"), CLONES);
     assertTrue(CLONES.resolve("pom.xml").toFile().exists());
   }
 
@@ -34,8 +34,8 @@ class GitClonerTest {
   void clone_commit() {
     cloner.clone(
       new Commit(
-        new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas"),
-        "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
+        new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
+        "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9", "main"),
       CLONES);
     assertTrue(CLONES.resolve("pom.xml").toFile().exists());
   }
@@ -43,7 +43,7 @@ class GitClonerTest {
   @Test
   void clone_repository_invalid() {
     assertThrows(CloneException.class, () ->
-      cloner.clone(new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown"), CLONES)
+      cloner.clone(new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"), CLONES)
     );
   }
 
@@ -52,8 +52,8 @@ class GitClonerTest {
     assertThrows(CloneException.class, () ->
       cloner.clone(
         new Commit(
-          new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown"),
-          "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
+          new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"),
+          "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9", "main"),
         CLONES)
     );
   }
@@ -63,8 +63,8 @@ class GitClonerTest {
     assertThrows(CloneException.class, () ->
       cloner.clone(
         new Commit(
-          new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas"),
-          "unknown"),
+          new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
+          "unknown", "main"),
         CLONES)
     );
   }

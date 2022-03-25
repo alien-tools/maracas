@@ -1,8 +1,11 @@
 package com.github.maracas.rest.controllers;
 
+import com.github.maracas.forges.ForgeException;
+import com.github.maracas.forges.PullRequest;
+import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.rest.breakbot.BreakbotException;
 import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PullRequest;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.*;
 import org.apache.logging.log4j.LogManager;
@@ -22,17 +25,18 @@ public class PullRequestController {
 
 	private static final Logger logger = LogManager.getLogger(PullRequestController.class);
 
-	@PostMapping("/pr/{owner}/{repository}/{prId}")
+	@PostMapping("/pr/{owner}/{repository}/{number}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequest(
 		@PathVariable String owner,
 		@PathVariable String repository,
-		@PathVariable Integer prId,
+		@PathVariable Integer number,
 		@RequestParam(required=false) String callback,
 		@RequestHeader(required=false) String installationId,
 		@RequestBody(required=false) String breakbotYaml
 	) {
 		try {
-			String location = prService.analyzePR(new PullRequest(owner, repository, prId), callback, installationId, breakbotYaml);
+			PullRequest pr = prService.fetchPullRequest(owner, repository, number);
+			String location = prService.analyzePR(pr, callback, installationId, breakbotYaml);
 			return ResponseEntity
 				.accepted()
 				.header("Location", location)
@@ -46,13 +50,13 @@ public class PullRequestController {
 		}
 	}
 
-	@GetMapping("/pr/{owner}/{repository}/{prId}")
+	@GetMapping("/pr/{owner}/{repository}/{number}")
 	public ResponseEntity<PullRequestResponse> getPullRequest(
 		@PathVariable String owner,
 		@PathVariable String repository,
-		@PathVariable Integer prId
+		@PathVariable Integer number
 	) {
-		PullRequest pr = new PullRequest(owner, repository, prId);
+		PullRequest pr = prService.fetchPullRequest(owner, repository, number);
 
 		// Either we have it already
 		MaracasReport report = prService.getReport(pr);
@@ -73,14 +77,15 @@ public class PullRequestController {
 			.body(new PullRequestResponse("This PR isn't being analyzed"));
 	}
 
-	@PostMapping("/pr-sync/{owner}/{repository}/{prId}")
+	@PostMapping("/pr-sync/{owner}/{repository}/{number}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequestSync(
 		@PathVariable String owner,
 		@PathVariable String repository,
-		@PathVariable Integer prId,
+		@PathVariable Integer number,
 		@RequestBody(required=false) String breakbotYaml
 	) {
-		MaracasReport report = prService.analyzePRSync(new PullRequest(owner, repository, prId), breakbotYaml);
+		PullRequest pr = prService.fetchPullRequest(owner, repository, number);
+		MaracasReport report = prService.analyzePRSync(pr, breakbotYaml);
 		return ResponseEntity.ok(new PullRequestResponse("ok", report));
 	}
 
@@ -91,7 +96,7 @@ public class PullRequestController {
 			.body(new PullRequestResponse(e.getMessage()));
 	}
 
-	@ExceptionHandler({GitHubException.class, BreakbotException.class})
+	@ExceptionHandler({BreakbotException.class, ForgeException.class})
 	public ResponseEntity<PullRequestResponse> handleGitHubExceptions(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -12,8 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 @Tag("slow")
 class SpoonTests extends AbstractControllerTest {
@@ -66,6 +65,7 @@ class SpoonTests extends AbstractControllerTest {
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
 			assertThat(res.report().delta(), is(notNullValue()));
+			assertThat(res.report().clientReports(), hasSize(15));
 		}
 	}
 }

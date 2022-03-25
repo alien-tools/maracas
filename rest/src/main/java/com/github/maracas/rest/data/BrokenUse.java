@@ -1,11 +1,12 @@
 package com.github.maracas.rest.data;
 
-import com.github.maracas.rest.util.GitHubUtils;
+import com.github.maracas.forges.Repository;
 import com.github.maracas.util.SpoonHelpers;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public record BrokenUse(
@@ -18,7 +19,7 @@ public record BrokenUse(
 	int endLine,
 	String url
 ) {
-	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenUse.BrokenUse d, String owner, String repository, String ref, String clonePath) {
+	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenUse.BrokenUse d, Repository repository, String branch, Path clone) {
 		SourcePosition pos = d.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)
@@ -33,7 +34,7 @@ public record BrokenUse(
 				null
 			);
 
-		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
+		String relativeFile = clone.toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
 		return new BrokenUse(
 			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
 			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
@@ -42,7 +43,7 @@ public record BrokenUse(
 			relativeFile,
 			pos.getLine(),
 			pos.getEndLine(),
-			GitHubUtils.buildGitHubFileUrl(owner, repository, ref, relativeFile, pos.getLine(), pos.getEndLine())
+			repository.buildGitHubFileUrl(branch, relativeFile, pos.getLine(), pos.getEndLine())
 		);
 	}
 }

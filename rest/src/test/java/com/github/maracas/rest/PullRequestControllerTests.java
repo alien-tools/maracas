@@ -111,7 +111,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  pom: unknown.xml""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
-			.andExpect(status().isInternalServerError()) // FIXME: Well, shouldn't be a 500 though?
+			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.message", containsString("BuildException")));
 	}
 
@@ -194,7 +194,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("unknown.xml could not be found")),
+					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", report: null}")),
 				exactly(1)
 			);
 		}
