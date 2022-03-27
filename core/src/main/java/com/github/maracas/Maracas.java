@@ -1,16 +1,5 @@
 package com.github.maracas;
 
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
@@ -20,12 +9,21 @@ import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.base.Stopwatch;
-
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
+
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Maracas {
     /**
@@ -49,16 +47,29 @@ public class Maracas {
         // Compute the delta model between old and new JARs
         Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
 
+        // If no breaking change, we can skip the rest and just return that
+        if (delta.getBreakingChanges().isEmpty())
+            return new AnalysisResult(
+              delta,
+              query.getClients().stream()
+                .map(c -> new DeltaImpact(c, delta, Collections.emptySet()))
+                .collect(Collectors.toMap(
+                  impact -> impact.getClient(),
+                  impact -> impact))
+            );
+
         // If we get the library's sources, populate the delta's source code locations
         if (query.getSources() != null)
             delta.populateLocations(query.getSources());
 
-        // For every client, compute the set of broken uses
-        Map<Path, DeltaImpact> deltaImpacts = new HashMap<>();
-        query.getClients()
-            .forEach(c -> deltaImpacts.put(c.toAbsolutePath(), computeDeltaImpact(c, delta)));
-
-        return new AnalysisResult(delta, deltaImpacts);
+        return new AnalysisResult(
+          delta,
+          query.getClients().parallelStream()
+            .map(c -> computeDeltaImpact(c, delta))
+            .collect(Collectors.toMap(
+              impact -> impact.getClient(),
+              impact -> impact))
+        );
     }
 
     /**
