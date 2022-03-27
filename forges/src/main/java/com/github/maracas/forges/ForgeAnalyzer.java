@@ -8,6 +8,7 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +28,7 @@ public class ForgeAnalyzer {
     this.executorService = executorService;
   }
 
-  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, List<CommitBuilder> clients, MaracasOptions options)
+  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);

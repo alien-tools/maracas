@@ -34,8 +34,8 @@ public class MavenBuilder implements Builder {
   private static final Logger logger = LogManager.getLogger(MavenBuilder.class);
 
   static {
-    DEFAULT_PROPERTIES.setProperty("skipTests", "true");
-    DEFAULT_GOALS.add("clean");
+    DEFAULT_PROPERTIES.setProperty("maven.test.skip", "true");
+    DEFAULT_PROPERTIES.setProperty("assembly.skipAssembly", "true");
     DEFAULT_GOALS.add("package");
   }
 

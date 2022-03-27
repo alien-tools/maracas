@@ -27,7 +27,8 @@
 		<module>rest</module>
 		<module>test-data</module>
 		<module>validator</module>
-	</modules>
+        <module>experiments</module>
+    </modules>
 
 	<build>
 		<plugins>
