@@ -59,4 +59,10 @@ class MavenBuilderTest {
       builder.build(List.of("nope"), MavenBuilder.DEFAULT_PROPERTIES)
     );
   }
+
+  @Test
+  void locateSources() {
+    MavenBuilder builder = new MavenBuilder(validPom);
+    assertEquals(validPom.getParent().resolve("src/main/java").toAbsolutePath(), builder.locateSources());
+  }
 }

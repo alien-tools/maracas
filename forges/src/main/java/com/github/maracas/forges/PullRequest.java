@@ -3,6 +3,7 @@ package com.github.maracas.forges;
 import com.google.common.hash.Hashing;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public record PullRequest(
   Repository repository,
@@ -10,6 +11,13 @@ public record PullRequest(
   Commit base,
   Commit head
 ) {
+  public PullRequest {
+    Objects.requireNonNull(repository);
+    Objects.requireNonNull(number);
+    Objects.requireNonNull(base);
+    Objects.requireNonNull(head);
+  }
+
   public String buildGitHubDiffUrl(String file, int line) {
     return "https://github.com/%s/%s/pull/%d/files#diff-%sL%d".formatted(
       repository.owner(),

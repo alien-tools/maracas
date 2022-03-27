@@ -51,7 +51,7 @@ class GitHubForgeTest {
     Repository repo = github.fetchRepository("alien-tools", "comp-changes");
     PullRequest pr = github.fetchPullRequest(repo, 2);
     assertEquals(2, pr.number());
-    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265", "main"), pr.base());
-    assertEquals(new Commit(repo, "6c19cc73f549a71f5c8a808f336883d3a7a981f3", "prepare-v2"), pr.head());
+    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.base());
+    assertEquals(new Commit(repo, "6c19cc73f549a71f5c8a808f336883d3a7a981f3"), pr.head());
   }
 }

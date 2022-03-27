@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -35,7 +36,7 @@ class GitClonerTest {
     cloner.clone(
       new Commit(
         new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
-        "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9", "main"),
+        "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
       CLONES);
     assertTrue(CLONES.resolve("pom.xml").toFile().exists());
   }
@@ -53,7 +54,7 @@ class GitClonerTest {
       cloner.clone(
         new Commit(
           new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"),
-          "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9", "main"),
+          "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
         CLONES)
     );
   }
@@ -64,8 +65,21 @@ class GitClonerTest {
       cloner.clone(
         new Commit(
           new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
-          "unknown", "main"),
+          "unknown"),
         CLONES)
+    );
+  }
+
+  @Test
+  void clone_In_ReadOnly_Location() throws IOException {
+    Path readOnly = CLONES.resolve("read-only");
+    readOnly.toFile().mkdirs();
+    readOnly.toFile().setReadOnly();
+
+    assertThrows(CloneException.class, () ->
+      cloner.clone(
+        new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
+        readOnly)
     );
   }
 }
