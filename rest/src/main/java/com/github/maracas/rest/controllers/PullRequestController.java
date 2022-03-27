@@ -89,7 +89,7 @@ public class PullRequestController {
 		return ResponseEntity.ok(new PullRequestResponse("ok", report));
 	}
 
-	@ExceptionHandler({BuildException.class, CloneException.class, MaracasException.class})
+	@ExceptionHandler({BuildException.class, CloneException.class})
 	public ResponseEntity<PullRequestResponse> handleInternalExceptions(BuildException e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -19,6 +19,14 @@ class GitClonerTest {
   final Path CLONES = Paths.get(System.getProperty("java.io.tmpdir")).resolve("clones");
   Cloner cloner = new GitCloner();
 
+  private String readHEAD(Path clone) {
+    try {
+      return Files.readAllLines(clone.resolve(".git/HEAD")).get(0);
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
   @BeforeEach
   void setUp() throws IOException {
     cloner = new GitCloner();
@@ -29,6 +37,14 @@ class GitClonerTest {
   void clone_repository() {
     cloner.clone(new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"), CLONES);
     assertTrue(CLONES.resolve("pom.xml").toFile().exists());
+    assertEquals("ref: refs/heads/main", readHEAD(CLONES));
+  }
+
+  @Test
+  void clone_repository_branch() {
+    cloner.clone(new Repository("alien-tools", "comp-changes", "https://github.com/alien-tools/comp-changes", "prepare-v2"), CLONES);
+    assertTrue(CLONES.resolve("pom.xml").toFile().exists());
+    assertEquals("ref: refs/heads/prepare-v2", readHEAD(CLONES));
   }
 
   @Test
@@ -39,6 +55,7 @@ class GitClonerTest {
         "fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
       CLONES);
     assertTrue(CLONES.resolve("pom.xml").toFile().exists());
+    assertEquals("fab7a51c347079dbd40cfe7f9eef81837cf5bfa9", readHEAD(CLONES));
   }
 
   @Test

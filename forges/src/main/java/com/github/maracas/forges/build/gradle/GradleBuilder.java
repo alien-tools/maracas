@@ -4,8 +4,10 @@ import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 public class GradleBuilder implements Builder {
   private final Path gradle;
@@ -22,6 +24,11 @@ public class GradleBuilder implements Builder {
 
   @Override
   public void build() throws BuildException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void build(List<String> goals, Properties properties) throws BuildException {
     throw new UnsupportedOperationException();
   }
 

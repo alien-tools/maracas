@@ -4,11 +4,14 @@ import com.github.maracas.forges.build.gradle.GradleBuilder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 public interface Builder {
   void build() throws BuildException;
+  void build(List<String> goals, Properties properties) throws BuildException;
   Optional<Path> locateJar();
   Path locateSources();
 

@@ -30,7 +30,12 @@ public class GitHubForge implements Forge {
 
     try {
       GHRepository repo = gh.getRepository(fullName);
-      return new Repository(owner, name, repo.getHttpTransportUrl(), repo.getDefaultBranch());
+      return new Repository(
+        owner,
+        name,
+        repo.getHttpTransportUrl(),
+        repo.getDefaultBranch()
+      );
     } catch (IOException e) {
       throw new ForgeException("Couldn't fetch repository " + fullName, e);
     }
@@ -47,7 +52,12 @@ public class GitHubForge implements Forge {
       GHRepository repo = gh.getRepository(fullName);
       GHBranch b = repo.getBranch(branch);
 
-      return new Repository(owner, name, repo.getHttpTransportUrl(), branch);
+      return new Repository(
+        owner,
+        name,
+        repo.getHttpTransportUrl(),
+        branch
+      );
     } catch (IOException e) {
       throw new ForgeException("Couldn't fetch repository %s on branch %s".formatted(fullName, branch), e);
     }

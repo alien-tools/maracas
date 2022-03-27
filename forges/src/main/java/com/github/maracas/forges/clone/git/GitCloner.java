@@ -43,6 +43,7 @@ public class GitCloner implements Cloner {
     executeCommand(
       "git", "clone",
       "--depth", "1",
+      "--branch", repository.branch(),
       "--single-branch",
       repository.remoteUrl(),
       dest.toAbsolutePath().toString()

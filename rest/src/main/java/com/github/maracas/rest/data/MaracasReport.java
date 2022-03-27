@@ -1,9 +1,11 @@
 package com.github.maracas.rest.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.AnalysisResult;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

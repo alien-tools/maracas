@@ -35,6 +35,7 @@ public class MavenBuilder implements Builder {
 
   static {
     DEFAULT_PROPERTIES.setProperty("skipTests", "true");
+    DEFAULT_GOALS.add("clean");
     DEFAULT_GOALS.add("package");
   }
 
@@ -53,6 +54,7 @@ public class MavenBuilder implements Builder {
     build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
   }
 
+  @Override
   public void build(List<String> goals, Properties properties) {
     Objects.requireNonNull(goals);
     Objects.requireNonNull(properties);

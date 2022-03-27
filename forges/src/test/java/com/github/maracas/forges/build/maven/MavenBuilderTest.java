@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,6 +58,14 @@ class MavenBuilderTest {
     MavenBuilder builder = new MavenBuilder(validPom);
     assertThrows(BuildException.class, () ->
       builder.build(List.of("nope"), MavenBuilder.DEFAULT_PROPERTIES)
+    );
+  }
+
+  @Test
+  void build_noGoal() {
+    MavenBuilder builder = new MavenBuilder(validPom);
+    assertThrows(BuildException.class, () ->
+      builder.build(Collections.emptyList(), MavenBuilder.DEFAULT_PROPERTIES)
     );
   }
 

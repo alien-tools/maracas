@@ -101,6 +101,10 @@ public class DeltaImpact {
         return brokenUses;
     }
 
+    public Throwable getError() {
+        return error;
+    }
+
     /**
      * Returns a JSON representation of the object.
      *

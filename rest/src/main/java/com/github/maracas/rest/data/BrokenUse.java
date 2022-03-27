@@ -19,15 +19,15 @@ public record BrokenUse(
 	int endLine,
 	String url
 ) {
-	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenUse.BrokenUse d, Repository repository, String branch, Path clone) {
-		SourcePosition pos = d.element().getPosition();
+	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenUse.BrokenUse bu, Repository repository, String branch, Path clone) {
+		SourcePosition pos = bu.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)
 			return new BrokenUse(
-				d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
-				d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
-				SpoonHelpers.fullyQualifiedName(d.source()),
-				d.use().name(),
+				bu.element() instanceof CtNamedElement e ? e.getSimpleName() : bu.element().toString(),
+				bu.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : bu.usedApiElement().toString(),
+				SpoonHelpers.fullyQualifiedName(bu.source()),
+				bu.use().name(),
 				"",
 				-1,
 				-1,
@@ -36,10 +36,10 @@ public record BrokenUse(
 
 		String relativeFile = clone.toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
 		return new BrokenUse(
-			d.element() instanceof CtNamedElement e ? e.getSimpleName() : d.element().toString(),
-			d.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : d.usedApiElement().toString(),
-			SpoonHelpers.fullyQualifiedName(d.source()),
-			d.use().name(),
+			bu.element() instanceof CtNamedElement e ? e.getSimpleName() : bu.element().toString(),
+			bu.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : bu.usedApiElement().toString(),
+			SpoonHelpers.fullyQualifiedName(bu.source()),
+			bu.use().name(),
 			relativeFile,
 			pos.getLine(),
 			pos.getEndLine(),

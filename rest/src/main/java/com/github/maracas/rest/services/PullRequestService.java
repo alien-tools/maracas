@@ -1,20 +1,25 @@
 package com.github.maracas.rest.services;
 
-import com.github.maracas.delta.Delta;
+import com.github.maracas.AnalysisResult;
+import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Commit;
+import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
+import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 import com.github.maracas.forges.clone.Cloner;
 import com.github.maracas.forges.clone.git.GitCloner;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.rest.data.BrokenUse;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
+import japicmp.config.Options;
+import japicmp.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,9 +34,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +44,6 @@ import java.util.concurrent.ExecutionException;
 
 @Service
 public class PullRequestService {
-	@Autowired
-	private MaracasService maracasService;
 	@Autowired
 	private BreakbotService breakbotService;
 	@Autowired
@@ -118,83 +121,80 @@ public class PullRequestService {
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
 		try {
+			Properties buildProperties = new Properties();
+			config.build().properties().forEach(p -> buildProperties.put(p, "true"));
+
 			Path baseClone = clonePath(pr.base());
+			CommitBuilder baseBuilder = new CommitBuilder(pr.base(), baseClone);
+			baseBuilder.setBuildGoals(config.build().goals());
+			baseBuilder.setBuildProperties(buildProperties);
+			if (!StringUtils.isEmpty(config.build().sources())) {
+				Path sources = baseClone.resolve(config.build().sources());
+				if (sources.toFile().exists())
+					baseBuilder.setSources(sources);
+			}
 
-			// Step 1: clone and build both branches of the pull request, retrieve JARs
-			CompletableFuture<Builder> baseFuture = CompletableFuture.supplyAsync(
-				() -> cloneAndBuild(pr.base(), config.build()));
-			CompletableFuture<Builder> headFuture = CompletableFuture.supplyAsync(
-				() -> cloneAndBuild(pr.head(), config.build()));
+			Path headClone = clonePath(pr.head());
+			CommitBuilder headBuilder = new CommitBuilder(pr.head(), headClone);
+			headBuilder.setBuildGoals(config.build().goals());
+			headBuilder.setBuildProperties(buildProperties);
 
-			CompletableFuture.allOf(baseFuture, headFuture).join();
-			Builder baseBuilder = baseFuture.get();
-			Builder headBuilder = headFuture.get();
-			Optional<Path> baseJar = baseBuilder.locateJar();
-			Optional<Path> headJar = headBuilder.locateJar();
+			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
+			for (BreakbotConfig.GitHubRepository c : config.clients()) {
+				Repository clientRepo =
+					StringUtils.isEmpty(c.branch()) ?
+						forge.fetchRepository(c.owner(), c.name()) :
+						forge.fetchRepository(c.owner(), c.name(), c.branch());
 
-			if (baseJar.isEmpty())
-				throw new BuildException("Couldn't build a JAR from " + pr.base());
-			if (headJar.isEmpty())
-				throw new BuildException("Couldn't build a JAR from " + pr.head());
+				// Argh
+				String clientSha = "";
+				try {
+					clientSha = github.getRepository(c.owner() + "/" + c.name()).getBranch(clientRepo.branch()).getSHA1();
+				} catch (IOException e) {}
 
-			// Step 2: build the delta model
-			Path sources =
-				StringUtils.isEmpty(config.build().sources()) ?
-					baseBuilder.locateSources() :
-					baseClone.resolve(config.build().sources());
+				Commit clientCommit =
+					StringUtils.isEmpty(c.sha()) ?
+						new Commit(clientRepo, clientSha) :
+						new Commit(clientRepo, c.sha());
+				Path clientClone = clonePath(clientCommit);
+				CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
+				if (!StringUtils.isEmpty(c.sources())) {
+					Path sources = baseClone.resolve(config.build().sources());
+					if (sources.toFile().exists())
+						clientBuilder.setSources(sources);
+				}
 
-			Delta delta = maracasService.makeDelta(baseJar.get(), headJar.get(), sources, config);
+				clientBuilders.put(clientClone, clientBuilder);
+			}
 
-			// Step 3: if we found some breaking changes, clone & analyze the clients
-			List<ClientReport> brokenUses = new ArrayList<>();
-			if (delta.getBreakingChanges().isEmpty())
-				brokenUses.addAll(
-					config.clients().stream()
-						.map(c -> ClientReport.empty(c.repository()))
-						.toList()
-				);
-			else
-				config.clients().parallelStream().forEach(c -> {
-					try {
-						// Clone the client, taking branch/sha into account
-						String[] fields = c.repository().split("/");
-						String owner = fields[0];
-						String repository = fields[1];
-						Repository clientRepo =
-							StringUtils.isEmpty(c.branch()) ?
-								forge.fetchRepository(owner, repository) :
-								forge.fetchRepository(owner, repository, c.branch());
-						String clientBranchSha = github.getRepository(owner + "/" + repository).getBranch(clientRepo.branch()).getSHA1();
-						String clientSha = StringUtils.isEmpty(c.sha()) ? clientBranchSha : c.sha();
-						Commit clientCommit =  new Commit(clientRepo, clientSha);
+			MaracasOptions options = MaracasOptions.newDefault();
+			Options jApiOptions = options.getJApiOptions();
+			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+			ForgeAnalyzer analyzer = new ForgeAnalyzer();
+			AnalysisResult result = analyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
-						Path clientClone = clone(clientCommit);
-						Path clientSources = locateSources(clientClone, c.sources());
-
-						brokenUses.add(
-							ClientReport.success(c.repository(),
-								maracasService.makeBrokenUses(delta, clientSources).stream()
-									.map(d -> com.github.maracas.rest.data.BrokenUse.fromMaracasBrokenUse(d, clientRepo,
-										clientRepo.branch(), clientClone.toAbsolutePath()))
-									.toList())
-						);
-
-						logger.info("Done computing broken uses on {}", c.repository());
-					} catch (Exception e) {
-						logger.error(e);
-						brokenUses.add(ClientReport.error(c.repository(),
-							new MaracasException("Couldn't analyze client " + c.repository(), e)));
-					}
-				});
-
-			// Step 4: build the report
 			return new MaracasReport(
 				com.github.maracas.rest.data.Delta.fromMaracasDelta(
-					delta,
+					result.delta(),
 					pr,
 					baseClone
 				),
-				brokenUses
+				result.deltaImpacts().values().stream()
+					.map(impact -> {
+						CommitBuilder builder = clientBuilders.get(impact.getClient());
+						Repository clientRepo = builder.getCommit().repository();
+						String clientName = clientRepo.owner() + "/" + clientRepo.name();
+						Throwable t = impact.getError();
+
+						if (t != null)
+							return ClientReport.error(clientName, t);
+						else
+							return ClientReport.success(clientName,
+								impact.getBrokenUses().stream()
+									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), impact.getClient()))
+									.toList());
+					})
+					.toList()
 			);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
