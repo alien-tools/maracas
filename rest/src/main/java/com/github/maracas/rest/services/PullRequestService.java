@@ -160,11 +160,13 @@ public class PullRequestService {
 						String[] fields = c.repository().split("/");
 						String owner = fields[0];
 						String repository = fields[1];
-						Repository clientRepo = forge.fetchRepository(owner, repository);
-						String clientBranch = StringUtils.isEmpty(c.branch()) ? clientRepo.defaultBranch() : c.branch();
-						String clientBranchSha = github.getRepository(owner + "/" + repository).getBranch(clientBranch).getSHA1();
+						Repository clientRepo =
+							StringUtils.isEmpty(c.branch()) ?
+								forge.fetchRepository(owner, repository) :
+								forge.fetchRepository(owner, repository, c.branch());
+						String clientBranchSha = github.getRepository(owner + "/" + repository).getBranch(clientRepo.branch()).getSHA1();
 						String clientSha = StringUtils.isEmpty(c.sha()) ? clientBranchSha : c.sha();
-						Commit clientCommit =  new Commit(clientRepo, clientSha, clientBranch);
+						Commit clientCommit =  new Commit(clientRepo, clientSha);
 
 						Path clientClone = clone(clientCommit);
 						Path clientSources = locateSources(clientClone, c.sources());
@@ -173,7 +175,7 @@ public class PullRequestService {
 							ClientReport.success(c.repository(),
 								maracasService.makeBrokenUses(delta, clientSources).stream()
 									.map(d -> com.github.maracas.rest.data.BrokenUse.fromMaracasBrokenUse(d, clientRepo,
-										clientBranch, clientClone.toAbsolutePath()))
+										clientRepo.branch(), clientClone.toAbsolutePath()))
 									.toList())
 						);
 

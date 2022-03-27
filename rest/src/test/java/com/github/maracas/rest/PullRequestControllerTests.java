@@ -194,7 +194,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", report: null}")),
+					.withBody(subString("The pom file doesn't exist")),
 				exactly(1)
 			);
 		}

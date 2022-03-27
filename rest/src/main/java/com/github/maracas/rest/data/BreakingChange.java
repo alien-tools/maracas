@@ -39,7 +39,7 @@ public record BreakingChange(
 			relativeFile,
 			startLine,
 			endLine,
-			pr.repository().buildGitHubFileUrl(pr.base().branch(), relativeFile, startLine, endLine),
+			pr.repository().buildGitHubFileUrl(pr.baseBranch(), relativeFile, startLine, endLine),
 			pr.buildGitHubDiffUrl(relativeFile, startLine)
 		);
 	}
