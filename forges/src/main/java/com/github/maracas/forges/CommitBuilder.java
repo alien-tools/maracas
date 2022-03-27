@@ -26,16 +26,18 @@ public class CommitBuilder {
 
     this.commit = commit;
     this.clonePath = clonePath;
-    this.sources = clonePath;
   }
 
-  public Path clone() throws CloneException {
+  public Path cloneCommit() throws CloneException {
     Cloner cloner = Cloner.of(commit.repository());
     return cloner.clone(commit, clonePath);
   }
 
-  public Optional<Path> build() throws BuildException {
-    Builder builder = Builder.of(clonePath);
+  public Optional<Path> buildCommit() throws BuildException {
+    Builder builder =
+      buildFile != null ?
+        Builder.of(clonePath, buildFile) :
+        Builder.of(clonePath);
 
     if (!buildGoals.isEmpty() || !buildProperties.isEmpty())
       builder.build(buildGoals, buildProperties);
@@ -45,17 +47,28 @@ public class CommitBuilder {
     return builder.locateJar();
   }
 
-  public Optional<Path> cloneAndBuild() throws CloneException, BuildException {
-    clone();
-    return build();
+  public Optional<Path> cloneAndBuildCommit() throws CloneException, BuildException {
+    cloneCommit();
+    return buildCommit();
+  }
+
+  public Path getSources() {
+    if (sources != null && clonePath.resolve(sources).toFile().exists())
+      return clonePath.resolve(sources);
+    if (clonePath.resolve("src/main/java").toFile().exists())
+      return clonePath.resolve("src/main/java");
+    else if (clonePath.resolve("src/").toFile().exists())
+      return clonePath.resolve("src");
+    else
+      return clonePath;
   }
 
   public void setSources(Path sources) {
     this.sources = sources;
   }
 
-  public Path getSources() {
-    return this.sources;
+  public void setBuildFile(Path buildFile) {
+    this.buildFile = buildFile;
   }
 
   public void setBuildProperties(Properties properties) {
@@ -68,5 +81,9 @@ public class CommitBuilder {
 
   public Commit getCommit() {
     return this.commit;
+  }
+
+  public Path getClonePath() {
+    return this.clonePath;
   }
 }

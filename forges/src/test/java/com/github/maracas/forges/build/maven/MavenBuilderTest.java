@@ -42,9 +42,7 @@ class MavenBuilderTest {
   @Test
   void build_compileError() {
     MavenBuilder builder = new MavenBuilder(testProjectError);
-    assertThrows(BuildException.class, () ->
-      builder.build()
-    );
+    assertThrows(BuildException.class, builder::build);
   }
 
   @Test
@@ -67,11 +65,5 @@ class MavenBuilderTest {
     assertThrows(BuildException.class, () ->
       builder.build(Collections.emptyList(), MavenBuilder.DEFAULT_PROPERTIES)
     );
-  }
-
-  @Test
-  void locateSources() {
-    MavenBuilder builder = new MavenBuilder(validPom);
-    assertEquals(validPom.getParent().resolve("src/main/java").toAbsolutePath(), builder.locateSources());
   }
 }

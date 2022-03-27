@@ -8,8 +8,11 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -48,7 +51,6 @@ class SpoonTests extends AbstractControllerTest {
 			  - repository: SpoonLabs/npefix
 			  - repository: SpoonLabs/nopol
 			    sources: nopol/src/main/java
-			  - repository: SpoonLabs/npefix
 			  - repository: STAMP-project/AssertFixer
 			  - repository: Spirals-Team/casper
 			  - repository: SpoonLabs/CoCoSpoon
@@ -65,7 +67,10 @@ class SpoonTests extends AbstractControllerTest {
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
 			assertThat(res.report().delta(), is(notNullValue()));
-			assertThat(res.report().clientReports(), hasSize(15));
+			assertThat(res.report().clientReports(), hasSize(14));
+			res.report().clientReports().forEach(r -> {
+				assertThat(r.error(), is(nullValue()));
+			});
 		}
 	}
 }

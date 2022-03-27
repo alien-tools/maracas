@@ -100,15 +100,4 @@ public class MavenBuilder implements Builder {
       throw new BuildException("Couldn't parse " + pom, e);
     }
   }
-
-  // FIXME: Parse the pom for non-standard locations
-  @Override
-  public Path locateSources() {
-    if (base.resolve("src/main/java").toFile().exists())
-      return base.resolve("src/main/java");
-    else if (base.resolve("src/").toFile().exists())
-      return base.resolve("src");
-    else
-      return base;
-  }
 }

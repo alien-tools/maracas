@@ -70,6 +70,7 @@ class GitHubForgeTest {
     assertEquals(2, pr.number());
     assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.base());
     assertEquals(new Commit(repo, "6c19cc73f549a71f5c8a808f336883d3a7a981f3"), pr.head());
+    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.prBase());
     assertEquals("main", pr.baseBranch());
     assertEquals("prepare-v2", pr.headBranch());
     assertEquals("alien-tools", pr.repository().owner());

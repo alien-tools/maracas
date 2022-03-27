@@ -36,8 +36,7 @@ class BreakbotConfigTests {
 		assertThat(c.clients(), hasSize(1));
 
 		BreakbotConfig.GitHubRepository r = c.clients().get(0);
-		assertThat(r.owner(), is("a"));
-		assertThat(r.name(), is("b"));
+		assertThat(r.repository(), is("a/b"));
 		assertThat(r.sources(), nullValue());
 		assertThat(r.branch(), nullValue());
 		assertThat(r.sha(), nullValue());
@@ -54,22 +53,19 @@ class BreakbotConfigTests {
 		assertThat(c.clients(), hasSize(3));
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
-		assertThat(r1.owner(), is("a"));
-		assertThat(r1.name(), is("b"));
+		assertThat(r1.repository(), is("a/b"));
 		assertThat(r1.sources(), nullValue());
 		assertThat(r1.branch(), nullValue());
 		assertThat(r1.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r2 = c.clients().get(1);
-		assertThat(r2.owner(), is("a"));
-		assertThat(r2.name(), is("c"));
+		assertThat(r2.repository(), is("a/c"));
 		assertThat(r2.sources(), nullValue());
 		assertThat(r2.branch(), nullValue());
 		assertThat(r2.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r3 = c.clients().get(2);
-		assertThat(r3.owner(), is("b"));
-		assertThat(r3.name(), is("d"));
+		assertThat(r3.repository(), is("b/d"));
 		assertThat(r3.sources(), nullValue());
 		assertThat(r3.branch(), nullValue());
 		assertThat(r3.sha(), nullValue());
@@ -86,15 +82,13 @@ class BreakbotConfigTests {
 		assertThat(c.clients(), hasSize(2));
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
-		assertThat(r1.owner(), is("a"));
-		assertThat(r1.name(), is("b"));
+		assertThat(r1.repository(), is("a/b"));
 		assertThat(r1.sources(), is("src"));
 		assertThat(r1.branch(), nullValue());
 		assertThat(r1.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r2 = c.clients().get(1);
-		assertThat(r2.owner(), is("a"));
-		assertThat(r2.name(), is("c"));
+		assertThat(r2.repository(), is("a/c"));
 		assertThat(r2.sources(), nullValue());
 		assertThat(r2.branch(), nullValue());
 		assertThat(r2.sha(), nullValue());

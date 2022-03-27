@@ -2,16 +2,13 @@ package com.github.maracas.rest.services;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
+import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import com.github.maracas.forges.build.Builder;
-import com.github.maracas.forges.build.maven.MavenBuilder;
-import com.github.maracas.forges.clone.Cloner;
-import com.github.maracas.forges.clone.git.GitCloner;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.BrokenUse;
@@ -41,6 +38,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class PullRequestService {
@@ -121,50 +119,36 @@ public class PullRequestService {
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
 		try {
-			Properties buildProperties = new Properties();
-			config.build().properties().forEach(p -> buildProperties.put(p, "true"));
-
-			Path baseClone = clonePath(pr.base());
-			CommitBuilder baseBuilder = new CommitBuilder(pr.base(), baseClone);
-			baseBuilder.setBuildGoals(config.build().goals());
-			baseBuilder.setBuildProperties(buildProperties);
-			if (!StringUtils.isEmpty(config.build().sources())) {
-				Path sources = baseClone.resolve(config.build().sources());
-				if (sources.toFile().exists())
-					baseBuilder.setSources(sources);
-			}
-
-			Path headClone = clonePath(pr.head());
-			CommitBuilder headBuilder = new CommitBuilder(pr.head(), headClone);
-			headBuilder.setBuildGoals(config.build().goals());
-			headBuilder.setBuildProperties(buildProperties);
+			CommitBuilder baseBuilder = builderFor(pr.prBase(), config);
+			CommitBuilder headBuilder = builderFor(pr.head(), config);
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
+			List<ClientReport> clientReports = new ArrayList<>();
 			for (BreakbotConfig.GitHubRepository c : config.clients()) {
-				Repository clientRepo =
-					StringUtils.isEmpty(c.branch()) ?
-						forge.fetchRepository(c.owner(), c.name()) :
-						forge.fetchRepository(c.owner(), c.name(), c.branch());
+				String[] fields = c.repository().split("/");
+				String clientOwner = fields[0];
+				String clientName = fields[1];
 
-				// Argh
-				String clientSha = "";
 				try {
-					clientSha = github.getRepository(c.owner() + "/" + c.name()).getBranch(clientRepo.branch()).getSHA1();
-				} catch (IOException e) {}
+					Repository clientRepo =
+						StringUtils.isEmpty(c.branch()) ?
+							forge.fetchRepository(clientOwner, clientName) :
+							forge.fetchRepository(clientOwner, clientName, c.branch());
 
-				Commit clientCommit =
-					StringUtils.isEmpty(c.sha()) ?
-						new Commit(clientRepo, clientSha) :
-						new Commit(clientRepo, c.sha());
-				Path clientClone = clonePath(clientCommit);
-				CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
-				if (!StringUtils.isEmpty(c.sources())) {
-					Path sources = baseClone.resolve(config.build().sources());
-					if (sources.toFile().exists())
-						clientBuilder.setSources(sources);
+					String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
+					Commit clientCommit =
+						StringUtils.isEmpty(c.sha()) ?
+							new Commit(clientRepo, clientSha) :
+							new Commit(clientRepo, c.sha());
+					Path clientClone = clonePath(clientCommit);
+					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
+					if (!StringUtils.isEmpty(c.sources()))
+						clientBuilder.setSources(Paths.get(c.sources()));
+
+					clientBuilders.put(clientClone, clientBuilder);
+				} catch (Exception e) {
+					clientReports.add(ClientReport.error(clientName, e));
 				}
-
-				clientBuilders.put(clientClone, clientBuilder);
 			}
 
 			MaracasOptions options = MaracasOptions.newDefault();
@@ -173,17 +157,13 @@ public class PullRequestService {
 			ForgeAnalyzer analyzer = new ForgeAnalyzer();
 			AnalysisResult result = analyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
-			return new MaracasReport(
-				com.github.maracas.rest.data.Delta.fromMaracasDelta(
-					result.delta(),
-					pr,
-					baseClone
-				),
-				result.deltaImpacts().values().stream()
-					.map(impact -> {
-						CommitBuilder builder = clientBuilders.get(impact.getClient());
+			clientReports.addAll(
+				result.deltaImpacts().keySet().stream()
+					.map(client -> {
+						CommitBuilder builder = clientBuilders.get(client);
 						Repository clientRepo = builder.getCommit().repository();
 						String clientName = clientRepo.owner() + "/" + clientRepo.name();
+						DeltaImpact impact = result.deltaImpacts().get(client);
 						Throwable t = impact.getError();
 
 						if (t != null)
@@ -196,6 +176,11 @@ public class PullRequestService {
 					})
 					.toList()
 			);
+
+			return new MaracasReport(
+				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr.prBase())),
+				clientReports
+			);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
@@ -203,28 +188,18 @@ public class PullRequestService {
 		}
 	}
 
-	public Builder cloneAndBuild(Commit c, BreakbotConfig.Build config) {
-		MavenBuilder builder = new MavenBuilder(clone(c).resolve(config.pom()));
-		Properties properties = new Properties();
-		config.properties().forEach(p -> properties.put(p, "true"));
-		builder.build(config.goals(), properties);
+	private CommitBuilder builderFor(Commit c, BreakbotConfig config) {
+		Properties buildProperties = new Properties();
+		config.build().properties().forEach(p -> buildProperties.put(p, "true"));
+
+		CommitBuilder builder = new CommitBuilder(c, clonePath(c));
+		builder.setBuildFile(Paths.get(config.build().pom()));
+		builder.setBuildGoals(config.build().goals());
+		builder.setBuildProperties(buildProperties);
+		if (!StringUtils.isEmpty(config.build().sources()))
+			builder.setSources(Paths.get(config.build().sources()));
+
 		return builder;
-	}
-
-	public Path clone(Commit c) {
-		Cloner cloner = new GitCloner();
-		return cloner.clone(c, clonePath(c));
-	}
-
-	public Path locateSources(Path base, String sources) {
-		if (!StringUtils.isEmpty(sources) && base.resolve(sources).toFile().exists())
-			return base.resolve(sources);
-		else if (base.resolve("src/main/java").toFile().exists())
-			return base.resolve("src/main/java");
-		else if (base.resolve("src/").toFile().exists())
-			return base.resolve("src");
-		else
-			return base;
 	}
 
 	public boolean isProcessing(PullRequest pr) {

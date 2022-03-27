@@ -34,15 +34,12 @@ public record BreakbotConfig(
 	}
 
 	public record GitHubRepository(
-		String owner,
-		String name,
+		String repository,
 		String sources,
 		String branch,
 		String sha
 	) {
-		public GitHubRepository(String repository, String sources, String branch, String sha) {
-			this(repository.split("/")[0], repository.split("/")[1], sources, branch, sha);
-		}
+
 	}
 
 	public BreakbotConfig(List<String> excludes, Build build, List<GitHubRepository> clients) {

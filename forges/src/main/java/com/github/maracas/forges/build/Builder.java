@@ -13,7 +13,6 @@ public interface Builder {
   void build() throws BuildException;
   void build(List<String> goals, Properties properties) throws BuildException;
   Optional<Path> locateJar();
-  Path locateSources();
 
   static Builder of(Path sources) throws BuildException {
     Objects.requireNonNull(sources);
@@ -27,5 +26,18 @@ public interface Builder {
       return new GradleBuilder(gradle);
 
     throw new BuildException("No build file found in " + sources);
+  }
+
+  static Builder of(Path sources, Path buildFile) throws BuildException {
+    Objects.requireNonNull(sources);
+    Objects.requireNonNull(buildFile);
+
+    Path full = sources.resolve(buildFile);
+    if (full.toFile().exists() && full.toFile().isFile() && full.getFileName().toString().equals("pom.xml"))
+      return new MavenBuilder(full);
+    if (full.toFile().exists() && full.toFile().isFile() && full.getFileName().toString().equals("build.gradle"))
+      return new GradleBuilder(full);
+
+    throw new BuildException("No valid build file " + buildFile + " in " + sources);
   }
 }

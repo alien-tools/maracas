@@ -33,10 +33,8 @@ public class ForgeAnalyzer {
     Objects.requireNonNull(v2);
     Objects.requireNonNull(options);
 
-    CompletableFuture<Optional<Path>> futureV1 = CompletableFuture.supplyAsync(
-      () -> v1.cloneAndBuild(), executorService);
-    CompletableFuture<Optional<Path>> futureV2 = CompletableFuture.supplyAsync(
-      () -> v2.cloneAndBuild(), executorService);
+    CompletableFuture<Optional<Path>> futureV1 = CompletableFuture.supplyAsync(v1::cloneAndBuildCommit, executorService);
+    CompletableFuture<Optional<Path>> futureV2 = CompletableFuture.supplyAsync(v2::cloneAndBuildCommit, executorService);
 
     CompletableFuture.allOf(futureV1, futureV2).join();
     Optional<Path> jarV1 = futureV1.get();
@@ -53,30 +51,31 @@ public class ForgeAnalyzer {
         delta,
         clients.stream()
           .collect(Collectors.toMap(
-            c -> c.getSources(),
+            CommitBuilder::getClonePath,
             c -> new DeltaImpact(c.getSources(), delta, Collections.emptySet())
           ))
       );
 
     delta.populateLocations(v1.getSources());
 
-    List<CompletableFuture<DeltaImpact>> clientFutures =
-      clients.stream().map(c ->
-        CompletableFuture.supplyAsync(
+    Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
+      clients.stream()
+        .collect(Collectors.toMap(
+          c -> c.getClonePath(),
+          c -> CompletableFuture.supplyAsync(
             () -> {
-              c.clone();
+              c.cloneCommit();
               return Maracas.computeDeltaImpact(c.getSources(), delta);
             },
             executorService
-        ).exceptionally(t -> new DeltaImpact(c.getSources(), delta, t))
-      ).toList();
+          ).exceptionally(t -> new DeltaImpact(c.getSources(), delta, t))
+      ));
 
-    CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
+    CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
     Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (CompletableFuture<DeltaImpact> future : clientFutures) {
-      DeltaImpact impact = future.get();
-      impacts.put(impact.getClient(), impact);
+    for (Path client : clientFutures.keySet()) {
+      impacts.put(client, clientFutures.get(client).get());
     }
 
     return new AnalysisResult(delta, impacts);

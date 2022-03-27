@@ -31,8 +31,8 @@ public class GitHubForge implements Forge {
     try {
       GHRepository repo = gh.getRepository(fullName);
       return new Repository(
-        owner,
-        name,
+        repo.getOwnerName(),
+        repo.getName(),
         repo.getHttpTransportUrl(),
         repo.getDefaultBranch()
       );
@@ -53,10 +53,10 @@ public class GitHubForge implements Forge {
       GHBranch b = repo.getBranch(branch);
 
       return new Repository(
-        owner,
-        name,
+        repo.getOwnerName(),
+        repo.getName(),
         repo.getHttpTransportUrl(),
-        branch
+        b.getName()
       );
     } catch (IOException e) {
       throw new ForgeException("Couldn't fetch repository %s on branch %s".formatted(fullName, branch), e);
@@ -69,14 +69,18 @@ public class GitHubForge implements Forge {
 
     try {
       GHPullRequest pr = gh.getRepository(repository.fullName()).getPullRequest(number);
+
       Commit base = new Commit(repository, pr.getBase().getSha());
       Commit head = new Commit(repository, pr.getHead().getSha());
+      // FIXME: There must be a better way to get the merge-base
+      Commit prBase = new Commit(repository, rewind(pr.getHead().getCommit(), pr.getCommits()).getSHA1());
 
       return new PullRequest(
         repository,
-        number,
+        pr.getNumber(),
         base,
         head,
+        prBase,
         pr.getBase().getRef(),
         pr.getHead().getRef()
       );
@@ -91,11 +95,21 @@ public class GitHubForge implements Forge {
     Objects.requireNonNull(sha);
 
     try {
-      GHCommit com = gh.getRepository(repository.fullName()).getCommit(sha);
+      GHCommit commit = gh.getRepository(repository.fullName()).getCommit(sha);
 
-      return new Commit(repository, sha);
+      return new Commit(
+        repository,
+        commit.getSHA1()
+      );
     } catch (IOException e) {
       throw new ForgeException("Couldn't fetch commit %s from repository %s".formatted(sha, repository.fullName()), e);
     }
+  }
+
+  private GHCommit rewind(GHCommit commit, int number) throws IOException {
+    GHCommit ret = commit;
+    for (int i = 0; i < number; i++)
+      ret = ret.getParents().get(0);
+    return ret;
   }
 }

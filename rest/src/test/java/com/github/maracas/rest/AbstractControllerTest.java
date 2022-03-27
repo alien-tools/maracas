@@ -45,8 +45,8 @@ public class AbstractControllerTest {
 
 	@BeforeEach
 	public void cleanData() throws IOException {
-		FileUtils.deleteDirectory(new File(clonePath));
-		FileUtils.deleteDirectory(new File(reportPath));
+		//FileUtils.deleteDirectory(new File(clonePath));
+		//FileUtils.deleteDirectory(new File(reportPath));
 	}
 
 	protected MvcResult analyzePRPush(String owner, String repository, int prId, String config) {

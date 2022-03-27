@@ -36,9 +36,4 @@ public class GradleBuilder implements Builder {
   public Optional<Path> locateJar() {
     throw new UnsupportedOperationException();
   }
-
-  @Override
-  public Path locateSources() {
-    throw new UnsupportedOperationException();
-  }
 }

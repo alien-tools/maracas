@@ -88,7 +88,7 @@ class GitClonerTest {
   }
 
   @Test
-  void clone_In_ReadOnly_Location() throws IOException {
+  void clone_In_ReadOnly_Location() {
     Path readOnly = CLONES.resolve("read-only");
     readOnly.toFile().mkdirs();
     readOnly.toFile().setReadOnly();

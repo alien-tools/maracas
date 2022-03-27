@@ -7,7 +7,6 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public record BrokenUse(
 	String elem,

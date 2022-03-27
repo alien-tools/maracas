@@ -80,12 +80,6 @@ class MaracasReportTests {
 		//	))
 		//);
 
-	    report.delta().breakingChanges().forEach(d -> {
-	        if (d.startLine() < 0) {
-	            System.out.println(d);
-	        }
-        });
-
 		report.delta().breakingChanges().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));

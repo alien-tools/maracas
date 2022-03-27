@@ -4,8 +4,6 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 import com.github.maracas.forges.Commit;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
