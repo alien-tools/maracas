@@ -6,13 +6,13 @@ public record Repository(
   String owner,
   String name,
   String remoteUrl,
-  String defaultBranch
+  String branch
 ) {
   public Repository {
     Objects.requireNonNull(owner);
     Objects.requireNonNull(name);
     Objects.requireNonNull(remoteUrl);
-    Objects.requireNonNull(defaultBranch);
+    Objects.requireNonNull(branch);
   }
 
   public String fullName() {

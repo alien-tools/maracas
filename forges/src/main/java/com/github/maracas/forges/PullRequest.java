@@ -9,13 +9,17 @@ public record PullRequest(
   Repository repository,
   int number,
   Commit base,
-  Commit head
+  Commit head,
+  String baseBranch,
+  String headBranch
 ) {
   public PullRequest {
     Objects.requireNonNull(repository);
     Objects.requireNonNull(number);
     Objects.requireNonNull(base);
     Objects.requireNonNull(head);
+    Objects.requireNonNull(baseBranch);
+    Objects.requireNonNull(headBranch);
   }
 
   public String buildGitHubDiffUrl(String file, int line) {

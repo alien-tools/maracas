@@ -62,7 +62,14 @@ public class GitHubForge implements Forge {
       Commit base = new Commit(repository, pr.getBase().getSha());
       Commit head = new Commit(repository, pr.getHead().getSha());
 
-      return new PullRequest(repository, number, base, head);
+      return new PullRequest(
+        repository,
+        number,
+        base,
+        head,
+        pr.getBase().getRef(),
+        pr.getHead().getRef()
+      );
     } catch (IOException e) {
       throw new ForgeException("Couldn't fetch PR %d from repository %s".formatted(number, repository.fullName()), e);
     }
