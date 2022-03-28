@@ -91,8 +91,7 @@ public class PullRequestService {
 		if (isProcessing(pr))
 			logger.info("{} is already being analyzed", uid);
 		else {
-			logger.info("Starting the analysis of {}", uid);
-
+			logger.info("Queuing analysis for {}", uid);
 			CompletableFuture<Void> future =
 				CompletableFuture
 					.supplyAsync(() -> buildMaracasReport(pr, config), executorService)
@@ -128,6 +127,8 @@ public class PullRequestService {
 	}
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
+		logger.info("Starting the analysis for {}", prUid(pr));
+
 		try {
 			CommitBuilder baseBuilder = builderFor(pr.prBase(), config);
 			CommitBuilder headBuilder = builderFor(pr.head(), config);
