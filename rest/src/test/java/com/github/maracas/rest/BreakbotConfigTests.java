@@ -17,8 +17,7 @@ class BreakbotConfigTests {
 		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), both(hasSize(1)).and(contains("package")));
 		assertThat(c.build().properties(), hasSize(2));
-		assertThat(c.build().properties(), contains("maven.test.skip"));
-		assertThat(c.build().properties(), contains("assembly.skipAssembly"));
+		assertThat(c.build().properties(), contains("maven.test.skip", "assembly.skipAssembly"));
 		assertThat(c.build().jar(), nullValue());
 		assertThat(c.clients(), empty());
 	}
