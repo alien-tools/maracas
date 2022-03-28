@@ -259,9 +259,9 @@ public class PullRequestService {
 
 	private Path clonePath(PullRequest pr, Commit c) {
 		return Paths.get(clonePath)
+			.resolve(prUid(pr))
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())
-			.resolve(String.valueOf(pr.number()))
 			.resolve(c.sha())
 			.toAbsolutePath();
 	}
