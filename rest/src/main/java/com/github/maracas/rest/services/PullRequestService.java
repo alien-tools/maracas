@@ -130,8 +130,8 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr.prBase(), config);
-			CommitBuilder headBuilder = builderFor(pr.head(), config);
+			CommitBuilder baseBuilder = builderFor(pr, pr.prBase(), config);
+			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 			List<ClientReport> clientReports = new ArrayList<>();
@@ -151,7 +151,7 @@ public class PullRequestService {
 						StringUtils.isEmpty(c.sha()) ?
 							new Commit(clientRepo, clientSha) :
 							new Commit(clientRepo, c.sha());
-					Path clientClone = clonePath(clientCommit);
+					Path clientClone = clonePath(pr, clientCommit);
 					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
 					if (!StringUtils.isEmpty(c.sources()))
 						clientBuilder.setSources(Paths.get(c.sources()));
@@ -189,7 +189,7 @@ public class PullRequestService {
 			);
 
 			return new MaracasReport(
-				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr.prBase())),
+				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.prBase())),
 				clientReports
 			);
 		} catch (ExecutionException | InterruptedException e) {
@@ -199,11 +199,11 @@ public class PullRequestService {
 		}
 	}
 
-	private CommitBuilder builderFor(Commit c, BreakbotConfig config) {
+	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
 		Properties buildProperties = new Properties();
 		config.build().properties().forEach(p -> buildProperties.put(p, "true"));
 
-		CommitBuilder builder = new CommitBuilder(c, clonePath(c));
+		CommitBuilder builder = new CommitBuilder(c, clonePath(pr, c));
 		builder.setBuildFile(Paths.get(config.build().pom()));
 		builder.setBuildGoals(config.build().goals());
 		builder.setBuildProperties(buildProperties);
@@ -257,10 +257,11 @@ public class PullRequestService {
 			.toFile();
 	}
 
-	private Path clonePath(Commit c) {
+	private Path clonePath(PullRequest pr, Commit c) {
 		return Paths.get(clonePath)
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())
+			.resolve(String.valueOf(pr.number()))
 			.resolve(c.sha())
 			.toAbsolutePath();
 	}

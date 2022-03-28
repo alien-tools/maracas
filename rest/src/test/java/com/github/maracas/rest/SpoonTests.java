@@ -62,7 +62,7 @@ class SpoonTests extends AbstractControllerTest {
 			  - repository: SpoonLabs/spooet
 			  - repository: KTH/spork""";
 
-		for (GHPullRequest pr : javaPRs) {
+		javaPRs.parallelStream().forEach(pr -> {
 			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
@@ -71,6 +71,6 @@ class SpoonTests extends AbstractControllerTest {
 			res.report().clientReports().forEach(r -> {
 				assertThat(r.error(), is(nullValue()));
 			});
-		}
+		});
 	}
 }
