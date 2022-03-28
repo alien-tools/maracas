@@ -38,6 +38,9 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,7 +53,10 @@ public class PullRequestService {
 	private String clonePath;
 	@Value("${maracas.report-path:./reports}")
 	private String reportPath;
+	@Value("${maracas.threads:-1}")
+	private int nThreads;
 
+	private ExecutorService executorService;
 	private Forge forge;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
@@ -60,6 +66,10 @@ public class PullRequestService {
 	public void initialize() {
 		Paths.get(clonePath).toFile().mkdirs();
 		Paths.get(reportPath).toFile().mkdirs();
+
+		executorService = nThreads == -1
+			? Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
+			: Executors.newFixedThreadPool(nThreads);
 
 		forge = new GitHubForge(github);
 	}
@@ -85,7 +95,7 @@ public class PullRequestService {
 
 			CompletableFuture<Void> future =
 				CompletableFuture
-					.supplyAsync(() -> buildMaracasReport(pr, config))
+					.supplyAsync(() -> buildMaracasReport(pr, config), executorService)
 					.handle((report, ex) -> {
 						jobs.remove(uid);
 
@@ -155,6 +165,7 @@ public class PullRequestService {
 			Options jApiOptions = options.getJApiOptions();
 			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 			ForgeAnalyzer analyzer = new ForgeAnalyzer();
+			analyzer.setExecutorService(executorService);
 			AnalysisResult result = analyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
 			clientReports.addAll(
