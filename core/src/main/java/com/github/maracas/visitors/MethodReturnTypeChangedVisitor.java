@@ -42,6 +42,16 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> newType;
 
 	/**
+	 * Actual method that has been changed
+	 */
+	private final CtMethod<?> method;
+
+	/**
+	 * Type expected by the new method
+	 */
+	private final CtTypeReference<?> expectedType;
+
+	/**
 	 * Creates a MethodReturnTypeChangedVisitor instance.
 	 *
 	 * @param mRef    the modified method
@@ -51,6 +61,8 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 		super(JApiCompatibilityChange.METHOD_RETURN_TYPE_CHANGED);
 		this.mRef = mRef;
 		this.newType = newType;
+		this.method = (CtMethod<?>) mRef.getExecutableDeclaration();
+		this.expectedType = SpoonHelpers.inferExpectedType(method);
 	}
 
 	@Override
@@ -66,12 +78,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (mRef.getExecutableDeclaration() instanceof CtMethod<?> method) {
-			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(method);
-			if (m.isOverriding(method) && !SpoonTypeHelpers.isAssignableFrom(newType, expectedType))
-				brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
-		} else {
-			throw new RuntimeException(String.format("%s should be a method.", mRef.getSimpleName()));
-		}
+		if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method) && !SpoonTypeHelpers.isAssignableFrom(newType, expectedType))
+			brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
 	}
 }
