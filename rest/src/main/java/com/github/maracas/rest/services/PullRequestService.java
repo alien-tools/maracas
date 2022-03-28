@@ -166,7 +166,6 @@ public class PullRequestService {
 			Options jApiOptions = options.getJApiOptions();
 			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 			ForgeAnalyzer analyzer = new ForgeAnalyzer();
-			analyzer.setExecutorService(executorService);
 			AnalysisResult result = analyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
 			clientReports.addAll(
