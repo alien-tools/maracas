@@ -171,7 +171,7 @@ public class PullRequestService {
 						else
 							return ClientReport.success(clientName,
 								impact.getBrokenUses().stream()
-									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), impact.getClient()))
+									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client))
 									.toList());
 					})
 					.toList()
