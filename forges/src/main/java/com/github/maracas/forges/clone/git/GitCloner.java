@@ -7,6 +7,7 @@ import com.github.maracas.forges.Commit;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -58,7 +59,7 @@ public class GitCloner implements Cloner {
 
       int exitCode = pb.start().waitFor();
       if (exitCode != 0)
-        throw new CloneException("%s failed: %d".formatted(command, exitCode));
+        throw new CloneException("%s failed: %d".formatted(Arrays.asList(command), exitCode));
     } catch (IOException e) {
       throw new CloneException(e);
     } catch (InterruptedException e) {
