@@ -64,20 +64,31 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchPullRequest_valid() {
+  void fetchPullRequest_opened() {
     Repository repo = github.fetchRepository("alien-tools", "comp-changes");
     PullRequest pr = github.fetchPullRequest(repo, 2);
     assertEquals(2, pr.number());
-    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.base());
-    assertEquals(new Commit(repo, "6c19cc73f549a71f5c8a808f336883d3a7a981f3"), pr.head());
+    assertEquals(new Commit(repo, "43463c9c73933ae0e791dbf8d1d6e152101a4ba9"), pr.head());
     assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.prBase());
     assertEquals("main", pr.baseBranch());
     assertEquals("prepare-v2", pr.headBranch());
     assertEquals("alien-tools", pr.repository().owner());
     assertEquals("comp-changes", pr.repository().name());
-    assertEquals("alien-tools/comp-changes", pr.repository().fullName());
-    assertEquals("https://github.com/alien-tools/comp-changes.git", pr.repository().remoteUrl());
     assertEquals("main", pr.repository().branch());
+  }
+
+  @Test
+  void fetchPullRequest_closed() {
+    Repository repo = github.fetchRepository("INRIA", "spoon");
+    PullRequest pr = github.fetchPullRequest(repo, 4625);
+    assertEquals(4625, pr.number());
+    assertEquals(new Commit(repo, "1ef7b095d58ff671b74f5eef7186c96aa573304e"), pr.head());
+    assertEquals(new Commit(repo, "3f3557e2ec95d4a2a552bdf0cc322c4e6d054725"), pr.prBase());
+    assertEquals("master", pr.baseBranch());
+    assertEquals("regression-resource", pr.headBranch());
+    assertEquals("INRIA", pr.repository().owner());
+    assertEquals("spoon", pr.repository().name());
+    assertEquals("master", pr.repository().branch());
   }
 
   @Test
