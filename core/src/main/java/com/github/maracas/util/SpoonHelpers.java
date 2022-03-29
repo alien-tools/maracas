@@ -1,25 +1,11 @@
 package com.github.maracas.util;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import japicmp.model.JApiConstructor;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
-import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtIf;
-import spoon.reflect.code.CtLoop;
-import spoon.reflect.code.CtReturn;
-import spoon.reflect.code.CtSynchronized;
-import spoon.reflect.code.CtThrow;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtConstructor;
@@ -27,15 +13,23 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtPackage;
-import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class SpoonHelpers {
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.List;
 
-	private SpoonHelpers() {}
+import static java.util.stream.Collectors.joining;
+
+public final class SpoonHelpers {
+
+	private SpoonHelpers() {
+	}
 
 	public static CtModel buildSpoonModel(Path clientSources, Path libraryJar) {
 		Launcher launcher = new Launcher();
@@ -50,7 +44,7 @@ public class SpoonHelpers {
 				//String[] javaCp = { cp.toAbsolutePath().toString() };
 				//launcher.getEnvironment().setSourceClasspath(javaCp);
 
-				URL[] cp = { new URL("file:" + libraryJar.toAbsolutePath()) };
+				URL[] cp = {new URL("file:" + libraryJar.toAbsolutePath())};
 				ClassLoader cl = new ParentLastURLClassLoader(cp);
 				launcher.getEnvironment().setInputClassLoader(cl);
 			} catch (MalformedURLException e) {
@@ -78,7 +72,7 @@ public class SpoonHelpers {
 			returnType = "void";
 		String type = m.getjApiClass().getFullyQualifiedName();
 		String name = m.getName();
-		String params = m.getParameters().stream().map(JApiParameter::getType).collect(Collectors.joining(","));
+		String params = m.getParameters().stream().map(JApiParameter::getType).collect(joining(","));
 		return "%s %s#%s(%s)".formatted(returnType, type, name, params);
 	}
 
@@ -93,11 +87,12 @@ public class SpoonHelpers {
 			if (firstParam.equals(outerCls)) // anonymous class or non-static inner class
 				params.remove(0);
 		}
-		return " %s#<init>(%s)".formatted(type, params.stream().map(JApiParameter::getType).collect(Collectors.joining(",")));
+		return " %s#<init>(%s)".formatted(type, params.stream().map(JApiParameter::getType).collect(joining(",")));
 	}
 
 	public static String fullyQualifiedName(CtReference ref) {
 		String fqn = "";
+
 		if (ref instanceof CtTypeReference<?> tRef)
 			fqn = tRef.getQualifiedName();
 		else if (ref instanceof CtExecutableReference<?> eRef)
@@ -116,35 +111,14 @@ public class SpoonHelpers {
 				CtPackage.TOP_LEVEL_PACKAGE_NAME;
 	}
 
-	// Oof
-	public static CtTypeReference<?> inferExpectedType(CtElement e) {
-		if (e instanceof CtTypedElement<?> elem)
-			return elem.getType();
-		else if (e instanceof CtLoop)
-			return e.getFactory().Type().booleanPrimitiveType();
-		else if (e instanceof CtIf)
-			return e.getFactory().Type().booleanPrimitiveType();
-		else if (e instanceof CtThrow thrw)
-			return thrw.getThrownExpression().getType();
-		else if (e instanceof CtReturn<?> retrn)
-		    return retrn.getReturnedExpression().getType();
-		else if (e instanceof CtSynchronized sync)
-		    return sync.getExpression().getType();
-		else if (e instanceof CtAssignment<?, ?> assign)
-		    return assign.getType();
-		else if (e instanceof CtBlock)
-			return null;
-
-		throw new RuntimeException("Unhandled enclosing type " + e.getClass());
-	}
-
 	/**
 	 * Verifies if a Spoon CtElement is implicit. References a specific
 	 * implementation of the isImplicit() Spoon method given the type of
 	 * declaration the input element represents.
+	 *
 	 * @param elem the CtElement to verify
-	 * @return     <code>true</code> if the element is implicit;
-	 *             <code>false</code> otherwise.
+	 * @return <code>true</code> if the element is implicit;
+	 * <code>false</code> otherwise.
 	 */
 	public static boolean isImplicit(CtElement elem) {
 		if (elem instanceof CtConstructor<?> cons)
@@ -191,10 +165,10 @@ public class SpoonHelpers {
 
 	/**
 	 * cf https://stackoverflow.com/a/5446671
-	 *
+	 * <p>
 	 * A parent-last classloader that will try the child classloader first and then the parent.
 	 * This takes a fair bit of doing because java really prefers parent-first.
-	 *
+	 * <p>
 	 * For those not familiar with class loading trickery, be wary
 	 */
 	private static class ParentLastURLClassLoader extends URLClassLoader {

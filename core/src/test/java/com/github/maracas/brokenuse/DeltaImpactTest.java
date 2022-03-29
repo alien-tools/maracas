@@ -1,4 +1,4 @@
-package com.github.maracas.brokenUse;
+package com.github.maracas.brokenuse;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;

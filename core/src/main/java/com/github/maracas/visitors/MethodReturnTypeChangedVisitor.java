@@ -1,9 +1,7 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-import com.github.maracas.util.SpoonHelpers;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
-
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
@@ -14,7 +12,7 @@ import spoon.reflect.reference.CtTypeReference;
 /**
  * Visitor in charge of gathering all method return type changed issues in
  * client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Invocations to the method in a statement where the expected type is not
@@ -31,9 +29,9 @@ import spoon.reflect.reference.CtTypeReference;
  * </ul>
  */
 public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the modified method.
-     */
+	/**
+	 * Spoon reference to the modified method.
+	 */
 	private final CtExecutableReference<?> mRef;
 
 	/**
@@ -62,14 +60,14 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 		this.mRef = mRef;
 		this.newType = newType;
 		this.method = (CtMethod<?>) mRef.getExecutableDeclaration();
-		this.expectedType = SpoonHelpers.inferExpectedType(method);
+		this.expectedType = SpoonTypeHelpers.inferExpectedType(method);
 	}
 
 	@Override
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
 		if (mRef.equals(invocation.getExecutable())) {
 			CtElement parent = invocation.getParent();
-			CtTypeReference<?> expectedType = SpoonHelpers.inferExpectedType(parent);
+			CtTypeReference<?> expectedType = SpoonTypeHelpers.inferExpectedType(parent);
 			// FIXME: are there issues with type casts?
 			if (expectedType != null && !SpoonTypeHelpers.isAssignableFrom(expectedType, newType))
 				brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);

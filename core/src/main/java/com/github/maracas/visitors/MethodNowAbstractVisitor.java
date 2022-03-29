@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
@@ -10,9 +9,9 @@ import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Broken uses of METHOD_NOW_ABSTRACT are:
- *	- Non-abstract types extending/implementing the enclosing type of the now-abstract method unless:
- *		- The now-abstract method is already implemented somewhere in the hierarchy
- *	- Invocations in subtypes of the now-abstract method
+ * - Non-abstract types extending/implementing the enclosing type of the now-abstract method unless:
+ * - The now-abstract method is already implemented somewhere in the hierarchy
+ * - Invocations in subtypes of the now-abstract method
  */
 public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 	private final CtExecutableReference<?> mRef;

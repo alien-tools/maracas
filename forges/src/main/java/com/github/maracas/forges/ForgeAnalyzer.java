@@ -3,7 +3,7 @@ package com.github.maracas.forges;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
 
@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

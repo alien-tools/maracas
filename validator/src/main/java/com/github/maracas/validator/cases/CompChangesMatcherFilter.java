@@ -3,7 +3,7 @@ package com.github.maracas.validator.cases;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.validator.build.CompilerMessage;
 import com.github.maracas.validator.matchers.MatcherFilter;
 import com.github.maracas.validator.matchers.MatcherOptions;

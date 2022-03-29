@@ -7,7 +7,6 @@ import com.github.maracas.visitors.FieldNowFinalVisitor;
 import com.github.maracas.visitors.FieldNowStaticVisitor;
 import com.github.maracas.visitors.FieldRemovedVisitor;
 import com.github.maracas.visitors.FieldTypeChangedVisitor;
-
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiField;
 import javassist.NotFoundException;
@@ -15,6 +14,9 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * Represents a field-level breaking change
+ */
 public class FieldBreakingChange extends AbstractBreakingChange {
 	private final JApiField jApiField;
 	private final CtFieldReference<?> fRef;
@@ -41,15 +43,17 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 				case FIELD_LESS_ACCESSIBLE  -> new FieldLessAccessibleVisitor(fRef, jApiField.getAccessModifier().getNewModifier().get());
 				case FIELD_TYPE_CHANGED     -> {
 					try {
-						// Thanks for the checked exception
+						// Thanks for the checked exception japi <3
 						String newTypeName = jApiField.getNewFieldOptional().get().getType().getName();
 						CtTypeReference<?> newType = fRef.getFactory().Type().createReference(newTypeName);
 						yield new FieldTypeChangedVisitor(fRef, newType);
 					} catch (NotFoundException e) {
-						yield null;
+						throw new IllegalStateException("japicmp gave us a FIELD_TYPE_CHANGED without the new type of the field");
 					}
 				}
-				default -> null; // FIXME: should eventually disappear
+				case FIELD_STATIC_AND_OVERRIDES_STATIC -> null; // TODO: To be implemented
+				case ANNOTATION_DEPRECATED_ADDED -> null; // TODO: To be implemented
+				default -> throw new IllegalStateException(this + " was somehow associated to a non-field-level breaking change: " + change);
 			};
 	}
 }

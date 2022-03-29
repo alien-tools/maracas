@@ -2,7 +2,7 @@ package com.github.maracas.rest.services;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
@@ -40,8 +40,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 @Service
 public class PullRequestService {
@@ -175,7 +173,7 @@ public class PullRequestService {
 						Repository clientRepo = builder.getCommit().repository();
 						String clientName = clientRepo.owner() + "/" + clientRepo.name();
 						DeltaImpact impact = result.deltaImpacts().get(client);
-						Throwable t = impact.getError();
+						Throwable t = impact.getThrowable();
 
 						if (t != null)
 							return ClientReport.error(clientName, t);

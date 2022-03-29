@@ -8,28 +8,28 @@ import spoon.reflect.declaration.CtElement;
 
 import java.io.IOException;
 
-public class CtElementSerializer extends StdSerializer<CtElement> {
-  public CtElementSerializer() {
-    this(null);
-  }
+public final class CtElementSerializer extends StdSerializer<CtElement> {
+	public CtElementSerializer() {
+		this(null);
+	}
 
-  public CtElementSerializer(Class<CtElement> t) {
-    super(t);
-  }
+	public CtElementSerializer(Class<CtElement> t) {
+		super(t);
+	}
 
-  @Override
-  public void serialize(CtElement element, JsonGenerator json, SerializerProvider serializerProvider) throws IOException {
-    SourcePosition pos = element.getPosition();
-    json.writeStartObject();
+	@Override
+	public void serialize(CtElement element, JsonGenerator json, SerializerProvider serializerProvider) throws IOException {
+		SourcePosition pos = element.getPosition();
+		json.writeStartObject();
 
-    if (pos != null && pos.isValidPosition()) {
-      json.writeStringField("file", pos.getFile().getAbsolutePath());
-      json.writeNumberField("startLine", pos.getLine());
-      json.writeNumberField("endLine", pos.getEndLine());
-      json.writeNumberField("startColumn", pos.getColumn());
-      json.writeNumberField("endColumn", pos.getEndColumn());
-    }
+		if (pos != null && pos.isValidPosition()) {
+			json.writeStringField("file", pos.getFile().getAbsolutePath());
+			json.writeNumberField("startLine", pos.getLine());
+			json.writeNumberField("endLine", pos.getEndLine());
+			json.writeNumberField("startColumn", pos.getColumn());
+			json.writeNumberField("endColumn", pos.getEndColumn());
+		}
 
-    json.writeEndObject();
-  }
+		json.writeEndObject();
+	}
 }

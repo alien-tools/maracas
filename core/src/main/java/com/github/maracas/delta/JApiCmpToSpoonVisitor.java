@@ -44,7 +44,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
       if (clsRef != null && clsRef.getTypeDeclaration() != null) {
         breakingChanges.addAll(
-          bcs.stream().map(c -> new ClassBreakingChange(cls, clsRef, c)).toList()
+          bcs.stream().map(c -> new TypeBreakingChange(cls, clsRef, c)).toList()
         );
       } else
         logger.warn("Couldn't find Spoon node for class {}", cls);
@@ -81,7 +81,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
           CtTypeReference<?> clsRef = root.getFactory().Type().createReference(m.getjApiClass().getFullyQualifiedName());
 
           breakingChanges.addAll(
-            bcs.stream().map(c -> new ClassBreakingChange(m.getjApiClass(), clsRef, c)).toList()
+            bcs.stream().map(c -> new TypeBreakingChange(m.getjApiClass(), clsRef, c)).toList()
           );
         }
       }
@@ -179,7 +179,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
       if (clsRef != null && clsRef.getTypeDeclaration() != null)
         breakingChanges.addAll(
-          bcs.stream().map(c -> new ClassBreakingChange(jApiClass, clsRef, c)).toList()
+          bcs.stream().map(c -> new TypeBreakingChange(jApiClass, clsRef, c)).toList()
         );
       else
         logger.warn("Couldn't find Spoon node for type {}", jApiClass);
@@ -194,7 +194,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
       if (clsRef != null && clsRef.getTypeDeclaration() != null)
         breakingChanges.addAll(
-          bcs.stream().map(c -> new ClassBreakingChange(cls, clsRef, c)).toList()
+          bcs.stream().map(c -> new TypeBreakingChange(cls, clsRef, c)).toList()
         );
       else
         logger.warn("Couldn't find Spoon node for type {}", cls);

@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtInvocation;
@@ -11,7 +10,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Visitor in charge of gathering all constructor removed issues in client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Any call to the removed constructor. Example:
@@ -29,9 +28,9 @@ import spoon.reflect.reference.CtTypeReference;
  * </ul>
  */
 public class ConstructorRemovedVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the removed constructor.
-     */
+	/**
+	 * Spoon reference to the removed constructor.
+	 */
 	private final CtExecutableReference<?> mRef;
 
 	/**

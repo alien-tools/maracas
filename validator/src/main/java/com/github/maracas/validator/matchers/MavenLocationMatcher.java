@@ -10,8 +10,8 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.maracas.brokenUse.APIUse;
-import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.accuracy.AccuracyCase.AccuracyType;
 import com.github.maracas.validator.build.CompilerMessage;

@@ -1,8 +1,7 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
-
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
@@ -13,11 +12,11 @@ import spoon.reflect.reference.CtFieldReference;
 
 /**
  * Broken uses of FIELD_LESS_ACCESSIBLE are:
- *	- Any access to a now-private field
- *	- Any access to a now-package-private field outside the package
- *	- Any access to a now-protected field outside its subtype hierarchy or package
- *
- *	TODO: what about inner classes (e.g. using private fields of the outer?)
+ * - Any access to a now-private field
+ * - Any access to a now-package-private field outside the package
+ * - Any access to a now-protected field outside its subtype hierarchy or package
+ * <p>
+ * 	TODO: what about inner classes (e.g. using private fields of the outer?)
  */
 public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;

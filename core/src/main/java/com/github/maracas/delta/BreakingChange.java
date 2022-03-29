@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.github.maracas.util.CtElementSerializer;
 import com.github.maracas.visitors.BreakingChangeVisitor;
-
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtReference;
@@ -22,7 +21,7 @@ public interface BreakingChange {
 	CtReference getReference();
 
 	/**
-	 * Returns a the kind of breaking change, as specified in {@link JApiCompatibilityChange}
+	 * Returns the kind of breaking change, as specified in {@link JApiCompatibilityChange}
 	 */
 	JApiCompatibilityChange getChange();
 
