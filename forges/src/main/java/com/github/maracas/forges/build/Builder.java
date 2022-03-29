@@ -12,13 +12,20 @@ import java.util.Properties;
 public interface Builder {
   void build() throws BuildException;
   void build(List<String> goals, Properties properties) throws BuildException;
+  Path getBasePath();
   Optional<Path> locateJar();
+  default Optional<Path> getFile(Path file) {
+    if (!getBasePath().resolve(file).toAbsolutePath().toFile().exists())
+      return Optional.empty();
+    else
+      return Optional.of(getBasePath().resolve(file).toAbsolutePath());
+  }
 
   static Builder of(Path sources) throws BuildException {
     Objects.requireNonNull(sources);
 
     Path pom = sources.resolve("pom.xml");
-    Path gradle = sources.resolve("build.gradle");
+    Path gradle = sources.resolve("gradlew");
 
     if (pom.toFile().exists() && pom.toFile().isFile())
       return new MavenBuilder(pom);

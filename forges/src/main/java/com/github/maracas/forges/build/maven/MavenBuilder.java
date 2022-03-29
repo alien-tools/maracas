@@ -50,6 +50,11 @@ public class MavenBuilder implements Builder {
   }
 
   @Override
+  public Path getBasePath() {
+    return base.toAbsolutePath();
+  }
+
+  @Override
   public void build() {
     build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
   }
