@@ -23,6 +23,7 @@
 
 	<modules>
 		<module>core</module>
+		<module>forges</module>
 		<module>rest</module>
 		<module>test-data</module>
 		<module>validator</module>

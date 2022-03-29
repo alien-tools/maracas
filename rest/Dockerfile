@@ -16,7 +16,8 @@ RUN cd /tmp \
   && rm -rf apache-maven-3.8.3-bin.tar.gz \
   && rm -rf *.sha1 \
   && mv ./apache-maven-3.8.3 /usr/share/maven \
-  && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+  && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+  && apk add git
 
 USER spring:spring
 

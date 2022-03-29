@@ -8,12 +8,14 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 @Tag("slow")
 class SpoonTests extends AbstractControllerTest {
@@ -41,7 +43,7 @@ class SpoonTests extends AbstractControllerTest {
 
 		String bbConfig = """
 			build:
-			  properties: [skipTests, skipDepClean, assembly.skipAssembly]
+			  properties: [maven.test.skip, skipDepClean, assembly.skipAssembly, jacoco.skip, mdep.skip]
 			clients:
 			  - repository: SpoonLabs/flacoco
 			  - repository: SpoonLabs/coming
@@ -49,7 +51,6 @@ class SpoonTests extends AbstractControllerTest {
 			  - repository: SpoonLabs/npefix
 			  - repository: SpoonLabs/nopol
 			    sources: nopol/src/main/java
-			  - repository: SpoonLabs/npefix
 			  - repository: STAMP-project/AssertFixer
 			  - repository: Spirals-Team/casper
 			  - repository: SpoonLabs/CoCoSpoon
@@ -61,11 +62,15 @@ class SpoonTests extends AbstractControllerTest {
 			  - repository: SpoonLabs/spooet
 			  - repository: KTH/spork""";
 
-		for (GHPullRequest pr : javaPRs) {
+		javaPRs.parallelStream().forEach(pr -> {
 			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
 			assertThat(res.report().delta(), is(notNullValue()));
-		}
+			assertThat(res.report().clientReports(), hasSize(14));
+			res.report().clientReports().forEach(r -> {
+				assertThat(r.error(), is(nullValue()));
+			});
+		});
 	}
 }

@@ -1,10 +1,11 @@
 package com.github.maracas.rest.data;
 
-import com.github.maracas.rest.util.GitHubUtils;
+import com.github.maracas.forges.PullRequest;
 import com.github.maracas.util.SpoonHelpers;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public record BreakingChange(
@@ -16,7 +17,7 @@ public record BreakingChange(
 	String fileUrl,
 	String diffUrl
 ) {
-	public static BreakingChange fromMaracasBreakingChange(com.github.maracas.delta.BreakingChange decl, PullRequest pr, String ref, String clonePath) {
+	public static BreakingChange fromMaracasBreakingChange(com.github.maracas.delta.BreakingChange decl, PullRequest pr, Path clone) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -31,15 +32,15 @@ public record BreakingChange(
 			}
 		}
 
-		String relativeFile = Paths.get(clonePath).toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
+		String relativeFile = clone.toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
 		return new BreakingChange(
 			SpoonHelpers.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),
 			relativeFile,
 			startLine,
 			endLine,
-			GitHubUtils.buildGitHubFileUrl(pr.owner(), pr.repository(), ref, relativeFile, startLine, endLine),
-			GitHubUtils.buildGitHubDiffUrl(pr.owner(), pr.repository(), pr.id(), relativeFile, startLine)
+			pr.repository().buildGitHubFileUrl(pr.baseBranch(), relativeFile, startLine, endLine),
+			pr.buildGitHubDiffUrl(relativeFile, startLine)
 		);
 	}
 }

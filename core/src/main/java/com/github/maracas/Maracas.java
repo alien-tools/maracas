@@ -1,16 +1,5 @@
 package com.github.maracas;
 
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.github.maracas.brokenUse.BrokenUse;
 import com.github.maracas.brokenUse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
@@ -20,12 +9,21 @@ import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.base.Stopwatch;
-
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.CtModel;
+
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Maracas {
     /**
@@ -49,16 +47,29 @@ public class Maracas {
         // Compute the delta model between old and new JARs
         Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
 
+        // If no breaking change, we can skip the rest and just return that
+        if (delta.getBreakingChanges().isEmpty())
+            return new AnalysisResult(
+              delta,
+              query.getClients().stream()
+                .map(c -> new DeltaImpact(c, delta, Collections.emptySet()))
+                .collect(Collectors.toMap(
+                  impact -> impact.getClient(),
+                  impact -> impact))
+            );
+
         // If we get the library's sources, populate the delta's source code locations
         if (query.getSources() != null)
             delta.populateLocations(query.getSources());
 
-        // For every client, compute the set of broken uses
-        Map<Path, DeltaImpact> deltaImpacts = new HashMap<>();
-        query.getClients()
-            .forEach(c -> deltaImpacts.put(c.toAbsolutePath(), computeDeltaImpact(c, delta)));
-
-        return new AnalysisResult(delta, deltaImpacts);
+        return new AnalysisResult(
+          delta,
+          query.getClients().parallelStream()
+            .map(c -> computeDeltaImpact(c, delta))
+            .collect(Collectors.toMap(
+              impact -> impact.getClient(),
+              impact -> impact))
+        );
     }
 
     /**
@@ -142,11 +153,11 @@ public class Maracas {
 
     /**
      * Computes the impact the {@code delta} model has on {@code client} and
-     * returns the corresponding set of {@link BrokenUse} instances.
+     * returns the corresponding {@link DeltaImpact}.
      *
      * @param client valid path to the client's source code to analyze
      * @param delta  the delta model
-     * @return the corresponding set of {@link BrokenUse} instances
+     * @return the corresponding {@link DeltaImpact}
      * @throws NullPointerException if delta is null
      * @throws IllegalArgumentException if client isn't a valid directory
      */
@@ -155,23 +166,11 @@ public class Maracas {
         if (!PathHelpers.isValidDirectory(client))
             throw new IllegalArgumentException("client isn't a valid directory: " + client);
 
-        Stopwatch sw = Stopwatch.createStarted();
-        CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
-        logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
-
-        sw.reset();
-        sw.start();
-        Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
-        CombinedVisitor visitor = new CombinedVisitor(visitors);
-
-        // FIXME: Only way I found to visit CompilationUnits and Imports in the model
-        // This is probably not the right way.
-        // We still need to visit the root package afterwards.
-        visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
-        visitor.scan(model.getRootPackage());
-
-        logger.info("deltaImpact({}) took {}ms", client, sw.elapsed().toMillis());
-        Set<BrokenUse> brokenUses = visitor.getBrokenUses();
-        return new DeltaImpact(client, delta, brokenUses);
+        try {
+            Set<BrokenUse> brokenUses = computeBrokenUses(client, delta);
+            return new DeltaImpact(client, delta, brokenUses);
+        } catch (Throwable t) {
+            return new DeltaImpact(client, delta, t);
+        }
     }
 }

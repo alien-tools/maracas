@@ -90,17 +90,17 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testPRWithSuppliedBreakbotConfiguration() throws Exception {
+	void testPRWithSuppliedBreakbotConfiguration() {
 		String bbConfig = """
 			clients:
-			  - repository: tdegueul/comp-changes-client""";
+			  - repository: alien-tools/comp-changes-client""";
 
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 3, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports().size(), equalTo(1));
-		assertThat(res.report().clientReports().get(0).url(), is("tdegueul/comp-changes-client"));
+		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
 	}
 
@@ -111,7 +111,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  pom: unknown.xml""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
-			.andExpect(status().isInternalServerError()) // FIXME: Well, shouldn't be a 500 though?
+			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.message", containsString("BuildException")));
 	}
 
@@ -194,7 +194,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("unknown.xml could not be found")),
+					.withBody(subString("No valid build file")),
 				exactly(1)
 			);
 		}
@@ -207,7 +207,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  - repository: unknown/repository""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
-			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't analyze client")));
+			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't fetch repository")));
 	}
 
 	@Test
@@ -264,7 +264,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testPRWithExcludeCriteria() throws Exception {
+	void testPRWithExcludeCriteria() {
 		String bbConfig = """
 			excludes:
 			  - '@main.unstableAnnon.Beta'

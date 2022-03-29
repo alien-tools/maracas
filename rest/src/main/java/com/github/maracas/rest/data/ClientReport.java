@@ -12,10 +12,6 @@ public record ClientReport(
 	@JsonSerialize(using = ToStringSerializer.class)
 	Throwable error
 ) {
-	public static ClientReport empty(String u) {
-		return new ClientReport(u, Collections.emptyList(), null);
-	}
-
 	public static ClientReport success(String u, List<BrokenUse> d) {
 		return new ClientReport(u, d, null);
 	}

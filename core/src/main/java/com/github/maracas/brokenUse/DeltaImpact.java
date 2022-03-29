@@ -2,6 +2,7 @@ package com.github.maracas.brokenUse;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,11 @@ public class DeltaImpact {
     private final Set<BrokenUse> brokenUses;
 
     /**
+     * The {@link Throwable} we got in case the analysis failed
+     */
+    private final Throwable error;
+
+    /**
      * Creates a {@link BrokenUse} instance.
      *
      * @param client     the client project
@@ -50,6 +56,22 @@ public class DeltaImpact {
         this.client = client;
         this.delta = delta;
         this.brokenUses = brokenUses;
+        this.error = null;
+    }
+
+    /**
+     * Creates a failed {@link BrokenUse} instance.
+     *
+     * @param client     the client project
+     * @param delta      the {@link Delta} model computed between two releases of a
+     *                   library
+     * @param brokenUses the set of computed {@link BrokenUse} instances
+     */
+    public DeltaImpact(Path client, Delta delta, Throwable t) {
+        this.client = client;
+        this.delta = delta;
+        this.brokenUses = Collections.emptySet();
+        this.error = t;
     }
 
     /**
@@ -79,6 +101,10 @@ public class DeltaImpact {
         return brokenUses;
     }
 
+    public Throwable getError() {
+        return error;
+    }
+
     /**
      * Returns a JSON representation of the object.
      *
@@ -93,9 +119,9 @@ public class DeltaImpact {
 
     @Override
     public String toString() {
-        return "ΔImpact(%s -> %s ON %s)%n)".formatted(
-            delta.getOldJar(),
-            delta.getNewJar(),
+        return "ΔImpact(%s -> %s ON %s):%n%s)".formatted(
+            delta.getOldJar().getFileName(),
+            delta.getNewJar().getFileName(),
             client,
             brokenUses.stream()
                 .map(bu -> "%n%s%n".formatted(bu.toString()))

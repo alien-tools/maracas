@@ -28,7 +28,7 @@ public record BreakbotConfig(
 			this.pom = pom != null ? pom : "pom.xml";
 			this.sources = sources != null ? sources : "";
 			this.goals  = goals != null && !goals.isEmpty() ? goals : List.of("package");
-			this.properties = properties != null && !properties.isEmpty() ? properties : List.of("skipTests");
+			this.properties = properties != null && !properties.isEmpty() ? properties : List.of("maven.test.skip", "assembly.skipAssembly");
 			this.jar = jar;
 		}
 	}
