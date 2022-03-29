@@ -96,12 +96,15 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
     @Override
     public <T> void visitCtFieldReference(CtFieldReference<T> fieldRef) {
+        if (!superFields.contains(fieldRef.getSimpleName()))
+            return;
+
         CtTypeReference<?> typeRef = fieldRef.getDeclaringType();
         try {
             if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
                 CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
 
-                if (declRef == null && superFields.contains(fieldRef.getSimpleName()))
+                if (declRef == null)
                     brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
             }
         } catch(SpoonException e) {
@@ -111,14 +114,14 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
     @Override
     public <T> void visitCtInvocation(CtInvocation<T> invocation) {
+        if (!superMethods.contains(invocation.getExecutable()))
+            return;
+
         CtTypeReference<?> typeRef = ((CtType<?>) invocation.getParent(CtType.class)).getReference();
 
         try {
             if (typeRef.isSubtypeOf(clsRef)) {
-                CtExecutableReference<?> methRef = invocation.getExecutable();
-
-                if (superMethods.contains(methRef))
-                    brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
+                brokenUse(invocation, invocation.getExecutable(), clsRef, APIUse.METHOD_INVOCATION);
             }
         } catch (SpoonException e) {
             // FIXME: Find fancier solution. A declaration cannot be resolved
@@ -135,6 +138,9 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
     @Override
     public <T> void visitCtMethod(CtMethod<T> m) {
+        if (!superMethods.stream().anyMatch(superM -> superM.getSignature().equals(m.getSignature())))
+            return;
+
         try {
             if (m.getDeclaringType().isSubtypeOf(clsRef)) {
                 CtExecutableReference<?> superMeth = m.getReference().getOverridingExecutable();
