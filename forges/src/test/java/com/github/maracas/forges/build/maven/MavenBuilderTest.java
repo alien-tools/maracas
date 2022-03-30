@@ -10,8 +10,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,9 +26,8 @@ class MavenBuilderTest {
 
   @Test
   void build_validPom_default() {
-    MavenBuilder builder = new MavenBuilder(new BuildConfig(testProject));
+    Builder builder = new MavenBuilder(new BuildConfig(testProject));
     builder.build();
-    System.out.println(builder.locateJar());
     assertTrue(builder.locateJar().isPresent());
   }
 
@@ -38,30 +35,36 @@ class MavenBuilderTest {
   void build_validPom_withGoal() {
     BuildConfig configWithGoal = new BuildConfig(testProject);
     configWithGoal.addGoal("clean");
-    MavenBuilder builder = new MavenBuilder(configWithGoal);
+    Builder builder = new MavenBuilder(configWithGoal);
     builder.build();
     assertFalse(builder.locateJar().isPresent());
   }
 
   @Test
+  void build_validPom_withProperty() {
+    BuildConfig configWithProperty = new BuildConfig(testProject);
+    configWithProperty.setProperty("maven.test.skip", "false");
+    Builder builder = new MavenBuilder(configWithProperty);
+    assertThrows(BuildException.class, builder::build);
+  }
+
+  @Test
   void build_compileError() {
-    MavenBuilder builder = new MavenBuilder(new BuildConfig(testProjectError));
+    Builder builder = new MavenBuilder(new BuildConfig(testProjectError));
     assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_invalidProject() {
     Builder builder = new MavenBuilder(new BuildConfig(invalidProject));
-    assertThrows(BuildException.class, () -> builder.build());
+    assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_invalidGoal() {
     BuildConfig configWithInvalidGoals = new BuildConfig(testProject);
     configWithInvalidGoals.addGoal("nope");
-    MavenBuilder builder = new MavenBuilder(configWithInvalidGoals);
-    assertThrows(BuildException.class, () ->
-      builder.build()
-    );
+    Builder builder = new MavenBuilder(configWithInvalidGoals);
+    assertThrows(BuildException.class, builder::build);
   }
 }
