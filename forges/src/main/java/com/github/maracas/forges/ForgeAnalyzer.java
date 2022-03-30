@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,8 +51,8 @@ public class ForgeAnalyzer {
         delta,
         clients.stream()
           .collect(Collectors.toMap(
-            CommitBuilder::getClonePath,
-            c -> new DeltaImpact(c.getSources(), delta, Collections.emptySet())
+            builder -> builder.getClonePath(),
+            builder -> new DeltaImpact(builder.getSources(), delta, Collections.emptySet())
           ))
       );
 
@@ -75,8 +74,8 @@ public class ForgeAnalyzer {
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
     Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (Path client : clientFutures.keySet()) {
-      impacts.put(client, clientFutures.get(client).get());
+    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
+      impacts.put(entry.getKey(), entry.getValue().get());
     }
 
     return new AnalysisResult(delta, impacts);

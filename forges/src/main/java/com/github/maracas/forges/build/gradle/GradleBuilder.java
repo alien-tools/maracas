@@ -1,55 +1,59 @@
 package com.github.maracas.forges.build.gradle;
 
+import com.github.maracas.forges.build.AbstractBuilder;
+import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.Builder;
-import com.github.maracas.forges.clone.CloneException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
-public class GradleBuilder implements Builder {
-  private final Path gradle;
-  private final Path base;
+public class GradleBuilder extends AbstractBuilder {
+  public static final String BUILD_FILE = "gradlew";
+  public static final List<String> DEFAULT_TASKS = List.of("build");
+  public static final Properties DEFAULT_PROPERTIES = new Properties();
+  private static final Logger logger = LogManager.getLogger(GradleBuilder.class);
 
-  public GradleBuilder(Path gradle) {
-    Objects.requireNonNull(gradle);
-    if (!gradle.toFile().exists())
-      throw new BuildException("The gradlew file doesn't exist: " + gradle);
+  static {
+    DEFAULT_PROPERTIES.setProperty("-x", "test");
+  }
 
-    this.gradle = gradle.toAbsolutePath();
-    this.base = gradle.getParent().toAbsolutePath();
+  public GradleBuilder(BuildConfig config) {
+    super(config);
   }
 
   @Override
-  public void build() throws BuildException {
-    executeCommand(getCommand());
-  }
+  public void build() {
+    File gradlewFile = config.getBasePath().resolve(BUILD_FILE).toFile();
+    Optional<Path> jar = locateJar();
 
-  @Override
-  public void build(List<String> goals, Properties properties) throws BuildException {
-    if (goals.isEmpty())
-      throw new BuildException("No provided goal.");
+    if (jar.isEmpty()) {
+      List<String> goals = config.getGoals().isEmpty()
+        ? DEFAULT_TASKS
+        : config.getGoals();
+      Properties properties = config.getProperties().isEmpty()
+        ? DEFAULT_PROPERTIES
+        : config.getProperties();
 
-    executeCommand(getCommand(goals, properties));
+      executeCommand(getCommand(goals, properties));
+    } else logger.info("{} has already been built. Skipping.", gradlewFile);
   }
 
   @Override
   public Optional<Path> locateJar() {
-    return getFile(Paths.get("build", "libs", base.getFileName().toString() + ".jar"));
-  }
+    Path jar = config.getBasePath()
+      .resolve("build")
+      .resolve("libs")
+      .resolve(config.getBasePath().getFileName().toString() + ".jar");
 
-  @Override
-  public Path getBasePath() {
-    return base;
-  }
-
-  private static String[] getCommand() {
-    List<String> defaultGoals = Arrays.asList("build");
-    Properties defaultProps = new Properties();
-    defaultProps.setProperty("-x", "test");
-    return getCommand(defaultGoals, defaultProps);
+    if (Files.exists(jar))
+      return Optional.of(jar);
+    else
+      return Optional.empty();
   }
 
   private static String[] getCommand(List<String> goals, Properties properties) {
@@ -73,7 +77,7 @@ public class GradleBuilder implements Builder {
   private void executeCommand(String... command) {
     try {
       ProcessBuilder pb = new ProcessBuilder(command);
-      pb.directory(this.base.toFile());
+      pb.directory(config.getBasePath().toFile());
       int exitCode = pb.start().waitFor();
       if (exitCode != 0)
         throw new BuildException("%s failed: %d".formatted(Arrays.asList(command), exitCode));
