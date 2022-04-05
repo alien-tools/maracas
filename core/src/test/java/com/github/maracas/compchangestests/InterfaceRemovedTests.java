@@ -13,7 +13,7 @@ public class InterfaceRemovedTests extends CompChangesTest {
 
     @Test
     void testNoMore() {
-        assertNumberBrokenUses(INTERFACE_REMOVED, 8);
+        assertNumberBrokenUses(INTERFACE_REMOVED, 7);
     }
 
     @Disabled("Issue with isSubtypeOf")
@@ -34,10 +34,9 @@ public class InterfaceRemovedTests extends CompChangesTest {
     	assertBrokenUse("InterfaceAddedExtAbs.java", 5, INTERFACE_REMOVED, METHOD_OVERRIDE);
     }
 
-    @Disabled("No implementation yet!")
     @Test
     void testExtendsSupertypeInv() {
-        assertNoBrokenUse("InterfaceRemovedExt.java", 45, INTERFACE_REMOVED, METHOD_INVOCATION);
+        assertNoBrokenUse("InterfaceRemovedExt.java", 41, INTERFACE_REMOVED, METHOD_INVOCATION);
     }
 
     @Test
