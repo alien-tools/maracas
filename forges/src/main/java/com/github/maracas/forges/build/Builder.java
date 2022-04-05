@@ -14,11 +14,11 @@ public interface Builder {
   static Builder of(BuildConfig config) throws BuildException {
     Objects.requireNonNull(config);
 
-    if (config.getBasePath().resolve(MavenBuilder.BUILD_FILE).toFile().exists())
+    if (config.basePath().resolve(MavenBuilder.BUILD_FILE).toFile().exists())
       return new MavenBuilder(config);
-    if (config.getBasePath().resolve(GradleBuilder.BUILD_FILE).toFile().exists())
+    if (config.basePath().resolve(GradleBuilder.BUILD_FILE).toFile().exists())
       return new GradleBuilder(config);
 
-    throw new BuildException("Don't know how to build " + config.getBasePath());
+    throw new BuildException("Don't know how to build " + config.basePath());
   }
 }

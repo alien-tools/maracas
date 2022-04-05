@@ -18,16 +18,16 @@ class BuilderTest {
 
   @Test
   void build_From_MavenProject() {
-    assertThat(Builder.of(new BuildConfig(mavenProject)), instanceOf(MavenBuilder.class));
+    assertThat(Builder.of(new BuildConfig(mavenProject, "", Paths.get(""))), instanceOf(MavenBuilder.class));
   }
 
   @Test
   void build_From_GradleProject() {
-    assertThat(Builder.of(new BuildConfig(gradleProject)), instanceOf(GradleBuilder.class));
+    assertThat(Builder.of(new BuildConfig(gradleProject, "", Paths.get(""))), instanceOf(GradleBuilder.class));
   }
 
   @Test
   void build_From_UnknownProject() {
-    assertThrows(BuildException.class, () -> Builder.of(new BuildConfig(invalidProject)));
+    assertThrows(BuildException.class, () -> Builder.of(new BuildConfig(invalidProject, "", Paths.get(""))));
   }
 }

@@ -41,8 +41,8 @@ class ForgeAnalyzerTest {
 
     ForgeAnalyzer analyzer = new ForgeAnalyzer();
     AnalysisResult result = analyzer.analyzeCommits(
-      new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone)),
-      new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone)),
+      new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone, "", Paths.get("target/comp-changes-0.0.1.jar"))),
+      new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone, "", Paths.get("target/comp-changes-0.0.2.jar"))),
       Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"))),
       MaracasOptions.newDefault()
     );

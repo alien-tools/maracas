@@ -26,15 +26,14 @@ class MavenBuilderTest {
 
   @Test
   void build_validPom_default() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProject));
+    Builder builder = new MavenBuilder(new BuildConfig(testProject, "", Paths.get("target/maven-project-1.0.0.jar")));
     builder.build();
     assertTrue(builder.locateJar().isPresent());
   }
 
   @Test
   void build_validPom_withGoal() {
-    BuildConfig configWithGoal = new BuildConfig(testProject);
-    configWithGoal.addGoal("clean");
+    BuildConfig configWithGoal = new BuildConfig(testProject, "clean", Paths.get("target/maven-project-1.0.0.jar"));
     Builder builder = new MavenBuilder(configWithGoal);
     builder.build();
     assertFalse(builder.locateJar().isPresent());
@@ -42,28 +41,26 @@ class MavenBuilderTest {
 
   @Test
   void build_validPom_withProperty() {
-    BuildConfig configWithProperty = new BuildConfig(testProject);
-    configWithProperty.setProperty("maven.test.skip", "false");
+    BuildConfig configWithProperty = new BuildConfig(testProject, "package -Dmaven.test.skip=false", Paths.get("target/maven-project-1.0.0.jar"));
     Builder builder = new MavenBuilder(configWithProperty);
-    assertThrows(BuildException.class, builder::build);
+    assertFalse(builder.locateJar().isPresent());
   }
 
   @Test
   void build_compileError() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProjectError));
+    Builder builder = new MavenBuilder(new BuildConfig(testProjectError, "", Paths.get("target/maven-project-1.0.0.jar")));
     assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_invalidProject() {
-    Builder builder = new MavenBuilder(new BuildConfig(invalidProject));
+    Builder builder = new MavenBuilder(new BuildConfig(invalidProject, "", Paths.get("target/maven-project-1.0.0.jar")));
     assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_invalidGoal() {
-    BuildConfig configWithInvalidGoals = new BuildConfig(testProject);
-    configWithInvalidGoals.addGoal("nope");
+    BuildConfig configWithInvalidGoals = new BuildConfig(testProject, "nope", Paths.get("target/maven-project-1.0.0.jar"));
     Builder builder = new MavenBuilder(configWithInvalidGoals);
     assertThrows(BuildException.class, builder::build);
   }

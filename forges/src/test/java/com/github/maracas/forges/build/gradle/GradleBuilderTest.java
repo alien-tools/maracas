@@ -27,15 +27,14 @@ class GradleBuilderTest {
 
   @Test
   void build_validGradlew_default() {
-    Builder builder = new GradleBuilder(new BuildConfig(testProject));
+    Builder builder = new GradleBuilder(new BuildConfig(testProject, "", Paths.get("build/libs/gradle-project.jar")));
     builder.build();
     assertTrue(builder.locateJar().isPresent());
   }
 
   @Test
   void build_validGradlew_withGoal() {
-    BuildConfig configWithGoal = new BuildConfig(testProject);
-    configWithGoal.addGoal("clean");
+    BuildConfig configWithGoal = new BuildConfig(testProject, "clean", Paths.get("build/libs/gradle-project.jar"));
     Builder builder = new GradleBuilder(configWithGoal);
     builder.build();
     assertFalse(builder.locateJar().isPresent());
@@ -43,28 +42,26 @@ class GradleBuilderTest {
 
   @Test
   void build_validGradlew_withProperty() {
-    BuildConfig configWithProperty = new BuildConfig(testProject);
-    configWithProperty.setProperty("--dry-run", "");
+    BuildConfig configWithProperty = new BuildConfig(testProject, "build --dry-run", Paths.get("build/libs/gradle-project.jar"));
     MavenBuilder builder = new MavenBuilder(configWithProperty);
-    assertThrows(BuildException.class, builder::build);
+    assertFalse(builder.locateJar().isPresent());
   }
 
   @Test
   void build_compileError() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProjectError));
+    Builder builder = new MavenBuilder(new BuildConfig(testProjectError, "", Paths.get("build/libs/gradle-project.jar")));
     assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_invalidProject() {
-    Builder builder = new GradleBuilder(new BuildConfig(invalidProject));
+    Builder builder = new GradleBuilder(new BuildConfig(invalidProject, "", Paths.get("build/libs/gradle-project.jar")));
     assertThrows(BuildException.class, builder::build);
   }
 
   @Test
   void build_validGradlew_invalidGoal() {
-    BuildConfig configWithInvalidGoal = new BuildConfig(testProject);
-    configWithInvalidGoal.addGoal("nope");
+    BuildConfig configWithInvalidGoal = new BuildConfig(testProject, "nope", Paths.get("build/libs/gradle-project.jar"));
     Builder builder = new GradleBuilder(configWithInvalidGoal);
     assertThrows(BuildException.class, builder::build);
   }
