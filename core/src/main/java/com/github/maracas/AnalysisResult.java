@@ -1,5 +1,7 @@
 package com.github.maracas;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
@@ -70,5 +72,11 @@ public record AnalysisResult(
 	 */
 	public DeltaImpact deltaImpactForClient(Path client) {
 		return deltaImpacts.get(client.toAbsolutePath());
+	}
+
+	public String toJson() throws JsonProcessingException {
+		return new ObjectMapper()
+			.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(this);
 	}
 }

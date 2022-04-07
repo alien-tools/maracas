@@ -1,6 +1,7 @@
 package com.github.maracas.experiments;
 
 import com.github.maracas.forges.CommitBuilder;
+import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 
 import java.io.IOException;
@@ -18,16 +19,17 @@ public class ClientsManager {
 		clients.put(name, repo);
 	}
 
-	public Map<String, String> clientsAtDate(Date closedAt) {
+	public Map<String, GHCommit> clientsAtDate(Date closedAt) {
 		// TODO: check whether the client was already depending on the library at this point, in the right version
 		return clients.values().stream()
 			.filter(c -> existsAt(c, closedAt))
 			.map(c -> {
 				try {
+					// This consumes sooooooo many API requests
 					var commits = c.queryCommits().until(closedAt).list().toList();
 
 					if (!commits.isEmpty())
-						return commits.get(commits.size() - 1);
+						return commits.get(0);
 					else
 						return null;
 				} catch (IOException e) {
@@ -38,7 +40,7 @@ public class ClientsManager {
 			.filter(Objects::nonNull)
 			.collect(toMap(
 				c -> c.getOwner().getFullName(),
-				c -> c.getSHA1()
+				c -> c
 			));
 	}
 
