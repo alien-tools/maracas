@@ -65,6 +65,16 @@ public record AnalysisResult(
 	}
 
 	/**
+	 * Returns the {@link DeltaImpact} for all broken clients
+	 */
+	public Set<DeltaImpact> brokenClients() {
+		return deltaImpacts.values()
+			.stream()
+			.filter(i -> !i.getBrokenUses().isEmpty())
+			.collect(toSet());
+	}
+
+	/**
 	 * Returns a {@link DeltaImpact} model given a client path.
 	 *
 	 * @param client client owning the expected {@link DeltaImpact} model

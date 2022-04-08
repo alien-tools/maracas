@@ -1,6 +1,5 @@
 package com.github.maracas.experiments;
 
-import com.github.maracas.forges.CommitBuilder;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 
@@ -45,7 +44,7 @@ public class ClientsManager {
 	}
 
 	private boolean existsAt(GHRepository repo, Date date) {
-		try  {
+		try {
 			return repo.getCreatedAt().before(date);
 		} catch (IOException e) {
 			e.printStackTrace();
