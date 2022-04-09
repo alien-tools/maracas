@@ -1,17 +1,16 @@
 package com.github.maracas;
 
+import com.github.maracas.util.PathHelpers;
+import japicmp.util.Optional;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.github.maracas.util.PathHelpers;
-
-import japicmp.util.Optional;
-
 /**
  * An AnalysisQuery holds the information about a library's old and new
  * versions (JARs) and the clients (source code) to analyze.
- *
+ * <p>
  * Use the provided {@link AnalysisQuery.Builder} to build up analysis queries.
  */
 public class AnalysisQuery {
@@ -27,7 +26,7 @@ public class AnalysisQuery {
 	 * @see #builder()
 	 */
 	private AnalysisQuery(Path oldJar, Path newJar, Path sources,
-		Collection<Path> clients, MaracasOptions options) {
+	                      Collection<Path> clients, MaracasOptions options) {
 		this.oldJar = oldJar;
 		this.newJar = newJar;
 		this.sources = sources;
@@ -83,7 +82,7 @@ public class AnalysisQuery {
 
 	/**
 	 * AnalysisQuery's builder.
-	 *
+	 * <p>
 	 * Only {@link #oldJar(Path)} and {@link #newJar(Path)} are mandatory.
 	 */
 	public static class Builder {
@@ -134,7 +133,7 @@ public class AnalysisQuery {
 		 * Sets the library's source code.
 		 *
 		 * @param sources Valid path to the directory containing the source code
-		 * of the old version of the library.
+		 *                of the old version of the library.
 		 * @return the builder
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
@@ -150,7 +149,7 @@ public class AnalysisQuery {
 		 * Includes a client into the analysis.
 		 *
 		 * @param client Valid path to the directory containing the source code of
-		 * a client
+		 *               a client
 		 * @return the builder
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */

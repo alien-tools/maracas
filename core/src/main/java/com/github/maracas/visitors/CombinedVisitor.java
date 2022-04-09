@@ -1,12 +1,6 @@
 package com.github.maracas.visitors;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.github.maracas.brokenUse.BrokenUse;
-
+import com.github.maracas.brokenuse.BrokenUse;
 import spoon.reflect.code.CtAnnotationFieldAccess;
 import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtArrayWrite;
@@ -96,6 +90,11 @@ import spoon.reflect.reference.CtUnboundVariableReference;
 import spoon.reflect.reference.CtWildcardReference;
 import spoon.reflect.visitor.CtScanner;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Traverses the AST once and delegates to the registered
  * visitors when visiting each node.
@@ -110,9 +109,9 @@ public class CombinedVisitor extends CtScanner {
 	public Set<BrokenUse> getBrokenUses() {
 		return
 			visitors.stream()
-			.map(BreakingChangeVisitor::getBrokenUses)
-			.flatMap(Collection::stream)
-			.collect(Collectors.toSet());
+				.map(BreakingChangeVisitor::getBrokenUses)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toSet());
 	}
 
 	@Override

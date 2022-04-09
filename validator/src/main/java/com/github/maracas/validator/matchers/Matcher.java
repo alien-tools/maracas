@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.validator.accuracy.AccuracyCase;
 import com.github.maracas.validator.build.CompilerMessage;
 

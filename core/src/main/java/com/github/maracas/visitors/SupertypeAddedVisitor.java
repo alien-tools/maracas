@@ -1,17 +1,17 @@
 package com.github.maracas.visitors;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
-
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Visitor in charge of gathering all supertype added issues in client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Classes extending the affected type. Example:
@@ -21,9 +21,9 @@ import spoon.reflect.reference.CtTypeReference;
  * </ul>
  */
 public class SupertypeAddedVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the modified type
-     */
+	/**
+	 * Spoon reference to the modified type
+	 */
 	protected final CtTypeReference<?> clsRef;
 
 	/**

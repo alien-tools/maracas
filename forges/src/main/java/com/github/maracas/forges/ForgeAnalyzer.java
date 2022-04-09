@@ -3,7 +3,7 @@ package com.github.maracas.forges;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
 

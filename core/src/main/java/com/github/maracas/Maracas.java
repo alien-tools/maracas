@@ -1,7 +1,6 @@
 package com.github.maracas;
 
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.util.PathHelpers;
@@ -19,158 +18,127 @@ import spoon.reflect.CtModel;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 public class Maracas {
-    /**
-     * Class logger
-     */
-    private static final Logger logger = LogManager.getLogger(Maracas.class);
+	private static final Logger logger = LogManager.getLogger(Maracas.class);
 
-    // Just use the static methods
-    private Maracas() {}
+	// Just use the static methods
+	private Maracas() {
 
-    /**
-     * Analyzes the given {@code query}
-     *
-     * @param query The query to analyze
-     * @return the resulting {@link AnalysisResult} with delta and broken uses
-     * @throws NullPointerException if query is null
-     */
-    public static AnalysisResult analyze(AnalysisQuery query) {
-        Objects.requireNonNull(query);
+	}
 
-        // Compute the delta model between old and new JARs
-        Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
+	/**
+	 * Analyzes the given {@code query}
+	 *
+	 * @param query The query to analyze
+	 * @return the resulting {@link AnalysisResult} with delta and broken uses
+	 * @throws NullPointerException if query is null
+	 */
+	public static AnalysisResult analyze(AnalysisQuery query) {
+		Objects.requireNonNull(query);
 
-        // If no breaking change, we can skip the rest and just return that
-        if (delta.getBreakingChanges().isEmpty())
-            return new AnalysisResult(
-              delta,
-              query.getClients().stream()
-                .map(c -> new DeltaImpact(c, delta, Collections.emptySet()))
-                .collect(Collectors.toMap(
-                  impact -> impact.getClient(),
-                  impact -> impact))
-            );
+		// Compute the delta model between old and new JARs
+		Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
 
-        // If we get the library's sources, populate the delta's source code locations
-        if (query.getSources() != null)
-            delta.populateLocations(query.getSources());
+		// If no breaking change, we can skip the rest and just return that
+		if (delta.getBreakingChanges().isEmpty())
+			return AnalysisResult.noImpact(delta, query.getClients());
 
-        return new AnalysisResult(
-          delta,
-          query.getClients().parallelStream()
-            .map(c -> computeDeltaImpact(c, delta))
-            .collect(Collectors.toMap(
-              impact -> impact.getClient(),
-              impact -> impact))
-        );
-    }
+		// If we got the library's sources, populate the delta's source code locations
+		if (query.getSources() != null)
+			delta.populateLocations(query.getSources());
 
-    /**
-     * Compares the library's old and new JARs and returns a delta model
-     * containing all {@link BreakingChange} between them, based on JApiCmp.
-     *
-     * @param oldJar  the library's old JAR
-     * @param newJar  the library's new JAR
-     * @param options Maracas and JApiCmp options
-     * @return a new delta model based on JapiCmp's results
-     * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
-     * @see #computeDelta(Path, Path, MaracasOptions)
-     * @throws IllegalArgumentException if oldJar or newJar aren't valid
-     */
-    public static Delta computeDelta(Path oldJar, Path newJar, MaracasOptions options) {
-        if (!PathHelpers.isValidJar(oldJar))
-            throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
-        if (!PathHelpers.isValidJar(newJar))
-            throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
+		return new AnalysisResult(
+			delta,
+			query.getClients().parallelStream().collect(toMap(
+				c -> c,
+				c -> computeDeltaImpact(c, delta))
+			)
+		);
+	}
 
-        Stopwatch sw = Stopwatch.createStarted();
-        MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
-        JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
-        JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
+	/**
+	 * Compares the library's old and new JARs and returns a delta model
+	 * containing all {@link BreakingChange} between them, based on JApiCmp.
+	 *
+	 * @param oldJar  the library's old JAR
+	 * @param newJar  the library's new JAR
+	 * @param options Maracas and JApiCmp options
+	 * @return a new delta model based on JapiCmp's results
+	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
+	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
+	 * @see #computeDelta(Path, Path, MaracasOptions)
+	 */
+	public static Delta computeDelta(Path oldJar, Path newJar, MaracasOptions options) {
+		if (!PathHelpers.isValidJar(oldJar))
+			throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
+		if (!PathHelpers.isValidJar(newJar))
+			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
-        JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
-        JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
+		Stopwatch sw = Stopwatch.createStarted();
+		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
+		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
+		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
-        List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
-        Delta delta = Delta.fromJApiCmpDelta(
-            oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
+		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
+		JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
 
-        logger.info("Δ({}, {}) took {}ms", oldJar, newJar, sw.elapsed().toMillis());
-        return delta;
-    }
+		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
+		Delta delta = Delta.fromJApiCmpDelta(
+			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
 
-    /**
-     * @see #computeDelta(Path, Path, MaracasOptions)
-     */
-    public static Delta computeDelta(Path oldJar, Path newJar) {
-        return computeDelta(oldJar, newJar, MaracasOptions.newDefault());
-    }
+		logger.info("Δ({}, {}) took {}ms", oldJar.getFileName(), newJar.getFileName(), sw.elapsed().toMillis());
+		return delta;
+	}
 
-    /**
-     * Computes the set of {@link BrokenUse} instances detected in the
-     * {@code client} after analyzing the {@code delta} model.
-     * @deprecated as of 0.2.0-SNAPSHOT, replaced by {@link #computeDeltaImpact(Path, Delta)}.
-     *             Access the {@link BrokenUse} instances of the {@link DeltaImpact}
-     *             model via the {@link DeltaImpact#getBrokenUses()} method.
-     *
-     * @param client valid path to the client's source code to analyze
-     * @param delta  the delta model
-     * @return the corresponding set of {@link BrokenUse}
-     * @throws NullPointerException if delta is null
-     * @throws IllegalArgumentException if client isn't a valid directory
-     */
-    @Deprecated
-    public static Set<BrokenUse> computeBrokenUses(Path client, Delta delta) {
-        Objects.requireNonNull(delta);
-        if (!PathHelpers.isValidDirectory(client))
-            throw new IllegalArgumentException("client isn't a valid directory: " + client);
+	/**
+	 * @see #computeDelta(Path, Path, MaracasOptions)
+	 */
+	public static Delta computeDelta(Path oldJar, Path newJar) {
+		return computeDelta(oldJar, newJar, MaracasOptions.newDefault());
+	}
 
-        Stopwatch sw = Stopwatch.createStarted();
-        CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
-        logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
+	/**
+	 * Computes the impact the {@code delta} model has on {@code client} and
+	 * returns the corresponding {@link DeltaImpact}.
+	 *
+	 * @param client valid path to the client's source code to analyze
+	 * @param delta  the delta model
+	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
+	 * @throws IllegalArgumentException if client isn't a valid directory
+	 * @throws NullPointerException     if delta is null
+	 */
+	public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
+		if (!PathHelpers.isValidDirectory(client))
+			throw new IllegalArgumentException("client isn't a valid directory: " + client);
+		Objects.requireNonNull(delta);
 
-        sw.reset();
-        sw.start();
-        Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
-        CombinedVisitor visitor = new CombinedVisitor(visitors);
+		try {
+			Stopwatch sw = Stopwatch.createStarted();
+			CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
+			logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
 
-        // FIXME: Only way I found to visit CompilationUnits and Imports in the model
-        // This is probably not the right way.
-        // We still need to visit the root package afterwards.
-        visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
-        visitor.scan(model.getRootPackage());
+			sw.reset();
+			sw.start();
+			Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
+			CombinedVisitor visitor = new CombinedVisitor(visitors);
 
-        logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
-        return visitor.getBrokenUses();
-    }
+			// FIXME: Only way I found to visit CompilationUnits and Imports in the model
+			// This is probably not the right way.
+			visitor.scan(model.getRootPackage().getFactory().CompilationUnit().getMap());
+			// We still need to visit the root package afterwards.
+			visitor.scan(model.getRootPackage());
 
-    /**
-     * Computes the impact the {@code delta} model has on {@code client} and
-     * returns the corresponding {@link DeltaImpact}.
-     *
-     * @param client valid path to the client's source code to analyze
-     * @param delta  the delta model
-     * @return the corresponding {@link DeltaImpact}
-     * @throws NullPointerException if delta is null
-     * @throws IllegalArgumentException if client isn't a valid directory
-     */
-    public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
-        Objects.requireNonNull(delta);
-        if (!PathHelpers.isValidDirectory(client))
-            throw new IllegalArgumentException("client isn't a valid directory: " + client);
-
-        try {
-            Set<BrokenUse> brokenUses = computeBrokenUses(client, delta);
-            return new DeltaImpact(client, delta, brokenUses);
-        } catch (Throwable t) {
-            return new DeltaImpact(client, delta, t);
-        }
-    }
+			logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
+			return new DeltaImpact(client, delta, visitor.getBrokenUses());
+		} catch (Throwable t) {
+			logger.warn("Error building the delta impact for {}: {}", client, t);
+			t.printStackTrace();
+			return new DeltaImpact(client, delta, t);
+		}
+	}
 }

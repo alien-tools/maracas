@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
@@ -12,7 +11,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Broken uses of FIELD_NO_LONGER_STATIC are:
- *	- Attempting to access a no-longer-static field in a static way
+ * - Attempting to access a no-longer-static field in a static way
  */
 public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 	private final CtFieldReference<?> fRef;
@@ -40,13 +39,13 @@ public class FieldNoLongerStaticVisitor extends BreakingChangeVisitor {
 
 		if (
 			accessedType != null &&
-			refType != null &&
-			accessedType.isSubtypeOf(refType) &&
-			// Not a big fan of the simpleName comparison, but it should be safe and
-			// the line below refuses to match
-			fieldAccess.getVariable().getSimpleName().equals(fRef.getFieldDeclaration().getSimpleName()) &&
-			//Objects.equal(fieldAccess.getVariable().getFieldDeclaration(), fRef.getFieldDeclaration())
-			isStaticAccess(fieldAccess)
+				refType != null &&
+				accessedType.isSubtypeOf(refType) &&
+				// Not a big fan of the simpleName comparison, but it should be safe and
+				// the line below refuses to match
+				fieldAccess.getVariable().getSimpleName().equals(fRef.getFieldDeclaration().getSimpleName()) &&
+				//Objects.equal(fieldAccess.getVariable().getFieldDeclaration(), fRef.getFieldDeclaration())
+				isStaticAccess(fieldAccess)
 		)
 			brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
 	}

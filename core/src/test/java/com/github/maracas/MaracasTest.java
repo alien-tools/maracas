@@ -22,8 +22,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
 import japicmp.model.AccessModifier;
@@ -218,7 +218,7 @@ class MaracasTest {
 	@Test
 	void computeDeltaImpact_nullDelta_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDeltaImpact(v1, null)
+			Maracas.computeDeltaImpact(client, null)
 		);
 	}
 

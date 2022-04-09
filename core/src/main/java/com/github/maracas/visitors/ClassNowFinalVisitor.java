@@ -1,20 +1,15 @@
 package com.github.maracas.visitors;
 
-import java.util.Optional;
-
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
-import spoon.SpoonException;
 import spoon.reflect.code.CtNewClass;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Broken uses of CLASS_NOW_FINAL are:
- *	- Classes (regular and anonymous) extending the now-final class
- *
+ * - Classes (regular and anonymous) extending the now-final class
+ * <p>
  * Note that JApiCmp reports a CLASS_NOW_FINAL on types that go from {@code class}
  * to {@code enum}.
  */

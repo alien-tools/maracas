@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
@@ -10,7 +9,7 @@ import spoon.reflect.reference.CtFieldReference;
 
 /**
  * Visitor in charge of gathering field removed issues in client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Read accesses of the now-removed field. Example:
@@ -24,9 +23,9 @@ import spoon.reflect.reference.CtFieldReference;
  * </ul>
  */
 public class FieldRemovedVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the removed field.
-     */
+	/**
+	 * Spoon reference to the removed field.
+	 */
 	private final CtFieldReference<?> fRef;
 
 	/**

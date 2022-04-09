@@ -2,7 +2,7 @@ package com.github.maracas.validator.matchers;
 
 import java.util.Set;
 
-import com.github.maracas.brokenUse.BrokenUse;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.validator.build.CompilerMessage;
 
 /**

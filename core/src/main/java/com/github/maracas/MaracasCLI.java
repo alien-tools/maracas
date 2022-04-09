@@ -1,22 +1,21 @@
 package com.github.maracas;
 
+import com.github.maracas.brokenuse.BrokenUse;
+import com.google.common.base.Stopwatch;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.github.maracas.brokenUse.BrokenUse;
-import com.google.common.base.Stopwatch;
-
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-
 @Command(
-	name        = "Maracas",
+	name = "Maracas",
 	description = "Compute changes between two library versions and their impact on client code",
-	version     = "0.1.0"
+	version = "0.1.0"
 )
 public class MaracasCLI implements Runnable {
 	@Option(names = {"-o", "--old"}, required = true,
@@ -27,7 +26,7 @@ public class MaracasCLI implements Runnable {
 		description = "The library's new JAR")
 	private Path v2;
 
-	@Option(names = {"-c", "--client"}, arity="0..*",
+	@Option(names = {"-c", "--client"}, arity = "0..*",
 		description = "Directory containing the client's source code")
 	private final List<Path> clients = new ArrayList<>();
 
@@ -50,17 +49,17 @@ public class MaracasCLI implements Runnable {
 				result.delta().populateLocations(sources);
 
 			System.out.println("""
-			+------------------+
-			+ BREAKING CHANGES +
-			+------------------+
-			""");
+				+------------------+
+				+ BREAKING CHANGES +
+				+------------------+
+				""");
 			System.out.println(result.delta());
 
 			System.out.println("""
-			+------------+
-			+ BROKEN USES +
-			+------------+
-			""");
+				+------------+
+				+ BROKEN USES +
+				+------------+
+				""");
 			System.out.println(
 				result.allBrokenUses()
 					.stream()

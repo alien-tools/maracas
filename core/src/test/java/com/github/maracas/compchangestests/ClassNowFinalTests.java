@@ -1,7 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenUse.APIUse.EXTENDS;
-import static com.github.maracas.brokenUse.APIUse.METHOD_OVERRIDE;
+import static com.github.maracas.brokenuse.APIUse.EXTENDS;
 import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
 
 import org.junit.jupiter.api.Test;

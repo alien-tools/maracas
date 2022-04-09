@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
@@ -9,7 +8,7 @@ import spoon.reflect.reference.CtExecutableReference;
 
 /**
  * Visitor in charge of gathering method removed issues in client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Invocations to the now-removed method. Example:
@@ -24,9 +23,9 @@ import spoon.reflect.reference.CtExecutableReference;
  * </ul>
  */
 public class MethodRemovedVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the removed method.
-     */
+	/**
+	 * Spoon reference to the removed method.
+	 */
 	private final CtExecutableReference<?> mRef;
 
 	/**

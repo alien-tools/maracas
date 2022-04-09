@@ -2,7 +2,6 @@ package com.github.maracas.forges.build.maven;
 
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.Builder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,60 +10,60 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MavenBuilderTest {
-  final Path testProject = Paths.get("src/test/resources/maven-project/");
-  final Path invalidProject = Paths.get("src/test/resources/");
-  final Path validTarget = testProject.resolve("target/");
-  final Path testProjectError = Paths.get("src/test/resources/maven-project-error/");
+	final Path validProject = Paths.get("src/test/resources/maven-project/");
+	final Path validTarget = validProject.resolve("target/");
+	final Path errorProject = Paths.get("src/test/resources/maven-project-error/");
+	final Path errorTarget = errorProject.resolve("target/");
 
-  @BeforeEach
-  void setUp() throws IOException {
-    FileUtils.deleteDirectory(validTarget.toFile());
-  }
+	@BeforeEach
+	void setUp() throws IOException {
+		FileUtils.deleteDirectory(validTarget.toFile());
+		FileUtils.deleteDirectory(errorTarget.toFile());
+	}
 
-  @Test
-  void build_validPom_default() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProject));
-    builder.build();
-    assertTrue(builder.locateJar().isPresent());
-  }
+	@Test
+	void build_validPom_default() {
+		MavenBuilder builder = new MavenBuilder(new BuildConfig(validProject));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+	}
 
-  @Test
-  void build_validPom_withGoal() {
-    BuildConfig configWithGoal = new BuildConfig(testProject);
-    configWithGoal.addGoal("clean");
-    Builder builder = new MavenBuilder(configWithGoal);
-    builder.build();
-    assertFalse(builder.locateJar().isPresent());
-  }
+	@Test
+	void build_validPom_withGoal() {
+		BuildConfig config = new BuildConfig(validProject);
+		config.addGoal("clean");
+		MavenBuilder builder = new MavenBuilder(config);
+		builder.build();
+		assertFalse(builder.locateJar().isPresent());
+	}
 
-  @Test
-  void build_validPom_withProperty() {
-    BuildConfig configWithProperty = new BuildConfig(testProject);
-    configWithProperty.setProperty("maven.test.skip", "false");
-    Builder builder = new MavenBuilder(configWithProperty);
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_validPom_withProperty() {
+		BuildConfig config = new BuildConfig(validProject);
+		config.setProperty("maven.compiler.source", "42");
+		MavenBuilder builder = new MavenBuilder(config);
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("invalid source release: 42"));
+	}
 
-  @Test
-  void build_compileError() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProjectError));
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_compileError() {
+		MavenBuilder builder = new MavenBuilder(new BuildConfig(errorProject));
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("COMPILATION ERROR"));
+	}
 
-  @Test
-  void build_invalidProject() {
-    Builder builder = new MavenBuilder(new BuildConfig(invalidProject));
-    assertThrows(BuildException.class, builder::build);
-  }
-
-  @Test
-  void build_invalidGoal() {
-    BuildConfig configWithInvalidGoals = new BuildConfig(testProject);
-    configWithInvalidGoals.addGoal("nope");
-    Builder builder = new MavenBuilder(configWithInvalidGoals);
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_invalidGoal() {
+		BuildConfig config = new BuildConfig(validProject);
+		config.addGoal("nope");
+		MavenBuilder builder = new MavenBuilder(config);
+		Exception thrown = assertThrows(BuildException.class, () -> builder.build());
+		assertThat(thrown.getMessage(), containsString("Unknown lifecycle phase \"nope\""));
+	}
 }

@@ -1,6 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenUse.APIUse.IMPLEMENTS;
+import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
 import static japicmp.model.JApiCompatibilityChange.METHOD_ADDED_TO_INTERFACE;
 
 import org.junit.jupiter.api.Test;

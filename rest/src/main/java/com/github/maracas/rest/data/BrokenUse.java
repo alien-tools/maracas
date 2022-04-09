@@ -18,7 +18,7 @@ public record BrokenUse(
 	int endLine,
 	String url
 ) {
-	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenUse.BrokenUse bu, Repository repository, String branch, Path clone) {
+	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenuse.BrokenUse bu, Repository repository, String branch, Path clone) {
 		SourcePosition pos = bu.element().getPosition();
 
 		if (pos instanceof NoSourcePosition)

@@ -1,6 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
+import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtClass;
@@ -8,13 +8,12 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
  * Visitor in charge of gathering all method added to interface issues in
  * client code.
- *
+ * <p>
  * The visitor detects the following cases:
  * <ul>
  * <li> Concrete classes implementing the modified interface. Example:
@@ -24,9 +23,9 @@ import java.util.Set;
  * </ul>
  */
 public class MethodAddedToInterfaceVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the interface where the new method has been added
-     */
+	/**
+	 * Spoon reference to the interface where the new method has been added
+	 */
 	private final CtTypeReference<?> clsRef;
 
 	/**

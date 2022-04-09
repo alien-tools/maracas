@@ -1,10 +1,6 @@
 package com.github.maracas.visitors;
 
-import java.util.Optional;
-import java.util.Set;
-
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtThrow;
@@ -12,11 +8,14 @@ import spoon.reflect.code.CtTry;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * Broken uses of CLASS_NOW_CHECKED_EXCEPTION are:
- *	- All expression throwing the now-checked-exception or one of its subtypes unless:
- *    - It is caught locally
- *    - The enclosing method declares the exception
+ * - All expression throwing the now-checked-exception or one of its subtypes unless:
+ * - It is caught locally
+ * - The enclosing method declares the exception
  */
 public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
@@ -37,9 +36,9 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 			if (enclosingTry != null) {
 				Optional<CtCatch> excCatcher =
 					enclosingTry.getCatchers()
-					.stream()
-					.filter(c -> thrownType.isSubtypeOf(c.getParameter().getType()))
-					.findAny();
+						.stream()
+						.filter(c -> thrownType.isSubtypeOf(c.getParameter().getType()))
+						.findAny();
 
 				if (excCatcher.isPresent())
 					isCaught = true;
@@ -48,13 +47,13 @@ public class ClassNowCheckedExceptionVisitor extends BreakingChangeVisitor {
 			@SuppressWarnings("unchecked")
 			Set<CtTypeReference<? extends Throwable>> thrownTypes =
 				throwStatement.getParent(CtMethod.class)
-				.getThrownTypes();
+					.getThrownTypes();
 
 			Optional<CtTypeReference<? extends Throwable>> compatibleThrows =
 				thrownTypes
-				.stream()
-				.filter(thrownType::isSubtypeOf)
-				.findAny();
+					.stream()
+					.filter(thrownType::isSubtypeOf)
+					.findAny();
 
 			if (compatibleThrows.isPresent())
 				isDeclared = true;

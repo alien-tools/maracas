@@ -1,13 +1,12 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenUse.APIUse;
-
+import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
  * Generic visitor in charge of gathering type reference issues in client code.
- *
+ * <p>
  * It creates a broken use for every reference to the supplied {code clsRef}.
  * The visitor detects the following cases:
  * <ul>
@@ -18,9 +17,9 @@ import spoon.reflect.reference.CtTypeReference;
  * </ul>
  */
 public class TypeReferenceVisitor extends BreakingChangeVisitor {
-    /**
-     * Spoon reference to the modified type
-     */
+	/**
+	 * Spoon reference to the modified type
+	 */
 	protected final CtTypeReference<?> clsRef;
 
 	/**

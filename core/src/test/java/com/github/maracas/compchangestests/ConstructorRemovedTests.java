@@ -1,7 +1,7 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenUse.APIUse.INSTANTIATION;
-import static com.github.maracas.brokenUse.APIUse.METHOD_INVOCATION;
+import static com.github.maracas.brokenuse.APIUse.INSTANTIATION;
+import static com.github.maracas.brokenuse.APIUse.METHOD_INVOCATION;
 import static japicmp.model.JApiCompatibilityChange.CONSTRUCTOR_REMOVED;
 
 import org.junit.jupiter.api.Test;

@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.maracas.Maracas;
-import com.github.maracas.brokenUse.BrokenUse;
-import com.github.maracas.brokenUse.DeltaImpact;
+import com.github.maracas.brokenuse.BrokenUse;
+import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.validator.accuracy.AccuracyAnalyzer;
 import com.github.maracas.validator.accuracy.AccuracyCase;

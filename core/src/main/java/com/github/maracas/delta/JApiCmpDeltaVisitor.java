@@ -1,8 +1,5 @@
 package com.github.maracas.delta;
 
-import java.util.Iterator;
-import java.util.List;
-
 import japicmp.model.JApiAnnotation;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiConstructor;
@@ -13,9 +10,12 @@ import japicmp.model.JApiSuperclass;
 import japicmp.output.Filter;
 import japicmp.output.Filter.FilterVisitor;
 
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * japicmp's visitors are awkwardly named and structured.
- * JApiCmpDeltaVisitor is just a facade for japicmp's visitors
+ * JApiCmpDeltaVisitor is just a facade for japicmp's {@link Filter} visitors
  * getting rid of the {@literal Iterator<>}s and "filter" names.
  *
  * @see FilterVisitor
@@ -48,7 +48,7 @@ public interface JApiCmpDeltaVisitor {
 
 			@Override
 			public void visit(Iterator<JApiImplementedInterface> iterator,
-				JApiImplementedInterface jApiImplementedInterface) {
+			                  JApiImplementedInterface jApiImplementedInterface) {
 				visitor.visit(jApiImplementedInterface);
 			}
 
