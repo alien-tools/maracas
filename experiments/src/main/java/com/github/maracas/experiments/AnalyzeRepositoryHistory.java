@@ -196,7 +196,10 @@ public class AnalyzeRepositoryHistory {
 							Files.write(reportFile, result.toJson().getBytes());
 
 							String clientErrors = result.deltaImpacts().values().stream().map(
-								i -> i.getThrowable() != null ? i.getThrowable().getMessage() : ""
+								i ->
+									i.getThrowable() != null
+										? i.getThrowable().getClass().toString() + ":" + i.getThrowable().getMessage()
+										: "none"
 							).collect(joining("+"));
 
 							writeLine(csvWriter, pr, bcs, checkedClients, brokenClients, allBrokenUses,
