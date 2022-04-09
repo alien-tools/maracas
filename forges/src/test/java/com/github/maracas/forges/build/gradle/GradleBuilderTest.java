@@ -3,7 +3,6 @@ package com.github.maracas.forges.build.gradle;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
-import com.github.maracas.forges.build.maven.MavenBuilder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,60 +11,69 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GradleBuilderTest {
-  final Path testProject = Paths.get("src/test/resources/gradle-project/");
-  final Path testProjectError = Paths.get("src/test/resources/gradle-project-error/");
-  final Path invalidProject = Paths.get("src/test/resources/");
-  final Path validTarget = testProject.resolve("build/");
+	final Path validProject = Paths.get("src/test/resources/gradle-project/");
+	final Path errorProject = Paths.get("src/test/resources/gradle-project-error/");
+	final Path validTarget = validProject.resolve("build/");
+	final Path errorTarget = errorProject.resolve("build/");
 
-  @BeforeEach
-  void setUp() throws IOException {
-    FileUtils.deleteDirectory(validTarget.toFile());
-  }
+	@BeforeEach
+	void setUp() throws IOException {
+		FileUtils.deleteDirectory(validTarget.toFile());
+		FileUtils.deleteDirectory(errorTarget.toFile());
+	}
 
-  @Test
-  void build_validGradlew_default() {
-    Builder builder = new GradleBuilder(new BuildConfig(testProject));
-    builder.build();
-    assertTrue(builder.locateJar().isPresent());
-  }
+	@Test
+	void build_validGradle_default() {
+		Builder builder = new GradleBuilder(new BuildConfig(validProject));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+	}
 
-  @Test
-  void build_validGradlew_withGoal() {
-    BuildConfig configWithGoal = new BuildConfig(testProject);
-    configWithGoal.addGoal("clean");
-    Builder builder = new GradleBuilder(configWithGoal);
-    builder.build();
-    assertFalse(builder.locateJar().isPresent());
-  }
+	@Test
+	void build_validGradle_withGoal() {
+		BuildConfig configWithGoal = new BuildConfig(validProject);
+		configWithGoal.addGoal("clean");
+		Builder builder = new GradleBuilder(configWithGoal);
+		builder.build();
+		assertFalse(builder.locateJar().isPresent());
+	}
 
-  @Test
-  void build_validGradlew_withProperty() {
-    BuildConfig configWithProperty = new BuildConfig(testProject);
-    configWithProperty.setProperty("--dry-run", "");
-    MavenBuilder builder = new MavenBuilder(configWithProperty);
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_validGradle_with_invalidProperty() {
+		BuildConfig configWithProperty = new BuildConfig(validProject);
+		configWithProperty.setProperty("--unknown-property", "");
+		Builder builder = new GradleBuilder(configWithProperty);
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
+	}
 
-  @Test
-  void build_compileError() {
-    Builder builder = new MavenBuilder(new BuildConfig(testProjectError));
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_validGradle_with_validProperty() {
+		BuildConfig configWithProperty = new BuildConfig(validProject);
+		configWithProperty.setProperty("--dry-run", "");
+		Builder builder = new GradleBuilder(configWithProperty);
+		builder.build();
+		assertFalse(builder.locateJar().isPresent());
+	}
 
-  @Test
-  void build_invalidProject() {
-    Builder builder = new GradleBuilder(new BuildConfig(invalidProject));
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_compileError() {
+		Builder builder = new GradleBuilder(new BuildConfig(errorProject));
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
+	}
 
-  @Test
-  void build_validGradlew_invalidGoal() {
-    BuildConfig configWithInvalidGoal = new BuildConfig(testProject);
-    configWithInvalidGoal.addGoal("nope");
-    Builder builder = new GradleBuilder(configWithInvalidGoal);
-    assertThrows(BuildException.class, builder::build);
-  }
+	@Test
+	void build_validGradle_invalidGoal() {
+		BuildConfig configWithInvalidGoal = new BuildConfig(validProject);
+		configWithInvalidGoal.addGoal("nope");
+		Builder builder = new GradleBuilder(configWithInvalidGoal);
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
+	}
 }

@@ -3,88 +3,78 @@ package com.github.maracas.forges.build.gradle;
 import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.google.common.base.Stopwatch;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.io.IoBuilder;
+import org.gradle.tooling.GradleConnector;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 
+/**
+ * There doesn't seem to be a way to skip tasks (e.g., "-x test"),
+ * so we assume Gradle users will prepare an optimized task to be
+ * invoked in their build.gradle
+ */
 public class GradleBuilder extends AbstractBuilder {
-  public static final String BUILD_FILE = "gradlew";
-  public static final List<String> DEFAULT_TASKS = List.of("build");
-  public static final Properties DEFAULT_PROPERTIES = new Properties();
-  private static final Logger logger = LogManager.getLogger(GradleBuilder.class);
+	public static final String BUILD_FILE = "build.gradle";
+	public static final List<String> DEFAULT_GOALS = List.of("build");
+	public static final Properties DEFAULT_PROPERTIES = new Properties();
+	private static final Logger logger = LogManager.getLogger(GradleBuilder.class);
 
-  static {
-    DEFAULT_PROPERTIES.setProperty("-x", "test");
-  }
+	public static boolean isGradleProject(Path basePath) {
+		return Files.exists(basePath.resolve(BUILD_FILE));
+	}
 
-  public GradleBuilder(BuildConfig config) {
-    super(config);
-  }
+	public GradleBuilder(BuildConfig config) {
+		super(config);
+	}
 
-  @Override
-  public void build() {
-    File gradlewFile = config.getBasePath().resolve(BUILD_FILE).toFile();
-    Optional<Path> jar = locateJar();
+	@Override
+	public void build() {
+		Optional<Path> jar = locateJar();
 
-    if (jar.isEmpty()) {
-      List<String> goals = config.getGoals().isEmpty()
-        ? DEFAULT_TASKS
-        : config.getGoals();
-      Properties properties = config.getProperties().isEmpty()
-        ? DEFAULT_PROPERTIES
-        : config.getProperties();
+		if (jar.isEmpty()) {
+			List<String> goals = config.getGoals().isEmpty()
+				? DEFAULT_GOALS
+				: config.getGoals();
+			Properties properties = config.getProperties().isEmpty()
+				? DEFAULT_PROPERTIES
+				: config.getProperties();
 
-      executeCommand(getCommand(goals, properties));
-    } else logger.info("{} has already been built. Skipping.", gradlewFile);
-  }
+			try {
+				Stopwatch sw = Stopwatch.createStarted();
+				GradleConnector.newConnector()
+					.forProjectDirectory(config.getBasePath().toFile())
+					.connect()
+					.newBuild()
+					.setStandardOutput(null)
+					.setStandardError(IoBuilder.forLogger(logger).setLevel(Level.ERROR).buildOutputStream())
+					.withArguments(properties.keySet().toArray(new String[0]))
+					.forTasks(goals.toArray(new String[0]))
+					.run();
+			} catch (org.gradle.tooling.BuildException | org.gradle.tooling.exceptions.UnsupportedBuildArgumentException e) {
+				throw new BuildException("Gradle build failed: %s".formatted(e.getMessage()), e);
+			}
+		} else logger.info("{} has already been built. Skipping.", config.getBasePath());
+	}
 
-  @Override
-  public Optional<Path> locateJar() {
-    Path jar = config.getBasePath()
-      .resolve("build")
-      .resolve("libs")
-      .resolve(config.getBasePath().getFileName().toString() + ".jar");
+	@Override
+	public Optional<Path> locateJar() {
+		Path jar = config.getBasePath()
+			.resolve("build")
+			.resolve("libs")
+			.resolve(config.getBasePath().getFileName().toString() + ".jar");
 
-    if (Files.exists(jar))
-      return Optional.of(jar);
-    else
-      return Optional.empty();
-  }
-
-  private static String[] getCommand(List<String> goals, Properties properties) {
-    List<String> commands = new ArrayList<>();
-    commands.add("./gradlew");
-    commands.addAll(goals);
-    for (String property: properties.stringPropertyNames()) {
-      String value = properties.getProperty(property);
-      if ("".equals(value))
-        commands.add(property);
-      else {
-        commands.add(property);
-        commands.add(value);
-      }
-    }
-    String[] finalCommand = new String[commands.size()];
-    commands.toArray(finalCommand);
-    return finalCommand;
-  }
-
-  private void executeCommand(String... command) {
-    try {
-      ProcessBuilder pb = new ProcessBuilder(command);
-      pb.directory(config.getBasePath().toFile());
-      int exitCode = pb.start().waitFor();
-      if (exitCode != 0)
-        throw new BuildException("%s failed: %d".formatted(Arrays.asList(command), exitCode));
-    } catch (IOException e) {
-      throw new BuildException("Gradle failed", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
-  }
+		if (Files.exists(jar))
+			return Optional.of(jar);
+		else
+			return Optional.empty();
+	}
 }

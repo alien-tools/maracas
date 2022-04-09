@@ -14,9 +14,9 @@ public interface Builder {
   static Builder of(BuildConfig config) throws BuildException {
     Objects.requireNonNull(config);
 
-    if (config.getBasePath().resolve(MavenBuilder.BUILD_FILE).toFile().exists())
+    if (MavenBuilder.isMavenProject(config.getBasePath()))
       return new MavenBuilder(config);
-    if (config.getBasePath().resolve(GradleBuilder.BUILD_FILE).toFile().exists())
+    if (GradleBuilder.isGradleProject(config.getBasePath()))
       return new GradleBuilder(config);
 
     throw new BuildException("Don't know how to build " + config.getBasePath());

@@ -37,6 +37,10 @@ public class MavenBuilder extends AbstractBuilder {
 		DEFAULT_PROPERTIES.setProperty("assembly.skipAssembly", "true");
 	}
 
+	public static boolean isMavenProject(Path basePath) {
+		return Files.exists(basePath.resolve(BUILD_FILE));
+	}
+
 	public MavenBuilder(BuildConfig config) {
 		super(config);
 	}
