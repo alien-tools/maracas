@@ -2,6 +2,7 @@ package com.github.maracas.forges.build.maven;
 
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
+import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
@@ -61,6 +62,10 @@ public class MavenBuilder implements Builder {
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
+			logger.info("Building {} with goals={} properties={}",
+				pom, goals, properties);
+
+			Stopwatch sw = Stopwatch.createStarted();
 			StringBuilder errors = new StringBuilder();
 			InvocationRequest request = new DefaultInvocationRequest();
 			request.setPomFile(pom.toFile());
@@ -76,8 +81,6 @@ public class MavenBuilder implements Builder {
 			});
 
 			try {
-				logger.info("Building {} with goals={} properties={}",
-					pom, goals, properties);
 				Invoker invoker = new DefaultInvoker();
 				InvocationResult result = invoker.execute(request);
 
@@ -85,6 +88,9 @@ public class MavenBuilder implements Builder {
 					throw new BuildException("%s failed: %s".formatted(goals, result.getExecutionException().getMessage()));
 				if (result.getExitCode() != 0)
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
+
+				logger.info("Building {} with goals={} properties={} took {}ms",
+					pom, goals, properties, sw.elapsed().toMillis());
 			} catch (MavenInvocationException e) {
 				throw new BuildException("Error invoking Maven", e);
 			}

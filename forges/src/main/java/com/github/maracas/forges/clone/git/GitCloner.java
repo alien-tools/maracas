@@ -4,6 +4,7 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
+import com.google.common.base.Stopwatch;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,11 +34,14 @@ public class GitCloner implements Cloner {
 		else
 			return dest;
 
+		Stopwatch sw = Stopwatch.createStarted();
 		String workingDirectory = dest.toAbsolutePath().toString();
 		executeCommand("git", "-C", workingDirectory, "init");
 		executeCommand("git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
 		executeCommand("git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
 		executeCommand("git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
+		logger.info("Cloning commit {} from {} took {}ms",
+			commit.sha(), commit.repository().remoteUrl(), sw.elapsed().toMillis());
 
 		return dest;
 	}
@@ -47,6 +51,7 @@ public class GitCloner implements Cloner {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(dest);
 
+		Stopwatch sw = Stopwatch.createStarted();
 		executeCommand(
 			"git", "clone",
 			"--depth", "1",
@@ -55,6 +60,8 @@ public class GitCloner implements Cloner {
 			repository.remoteUrl(),
 			dest.toAbsolutePath().toString()
 		);
+		logger.info("Cloning repository {} [{}] took {}ms",
+			repository.remoteUrl(), repository.branch(), sw.elapsed().toMillis());
 
 		return dest;
 	}
