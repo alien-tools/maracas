@@ -16,6 +16,8 @@ import okhttp3.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHDirection;
+import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
@@ -105,11 +107,21 @@ public class AnalyzeRepositoryHistory {
 		logger.info("Fetching PRs for {}", fullName);
 
 		var prs =
-			ghRepository.getPullRequests(GHIssueState.ALL)
+			ghRepository.queryPullRequests()
+				.state(GHIssueState.ALL)
+				.direction(GHDirection.DESC)
+				.list()
+				.withPageSize(100)
+				.toList()
 				.stream()
-				.filter(this::affectsJavaFiles)
 				.limit(limit)
+				.filter(this::affectsJavaFiles)
 				.toList();
+//			ghRepository.getPullRequests(GHIssueState.ALL)
+//				.stream()
+//				.filter(this::affectsJavaFiles)
+//				.limit(limit)
+//				.toList();
 //			List.of(
 //				ghRepository.getPullRequest(4669),
 //				ghRepository.getPullRequest(4600),

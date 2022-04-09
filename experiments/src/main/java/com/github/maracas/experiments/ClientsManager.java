@@ -25,7 +25,12 @@ public class ClientsManager {
 			.map(c -> {
 				try {
 					// This consumes sooooooo many API requests
-					var commits = c.queryCommits().until(closedAt).list().toList();
+					var commits =
+						c.queryCommits()
+							.until(closedAt)
+							.list()
+							.withPageSize(100)
+							.toList();
 
 					if (!commits.isEmpty())
 						return commits.get(0);
