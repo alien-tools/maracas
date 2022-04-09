@@ -10,11 +10,12 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubForge;
 import com.opencsv.CSVWriter;
 import okhttp3.Cache;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
@@ -288,6 +289,13 @@ public class AnalyzeRepositoryHistory {
 	 */
 	private GitHub buildGitHub() throws IOException {
 		var builder = new OkHttpClient().newBuilder();
+		builder.addInterceptor(new Interceptor() {
+			@Override
+			public Response intercept(Chain chain) throws IOException {
+				logger.info("Sending request {}", chain.request().url());
+				return chain.proceed(chain.request());
+			}
+		});
 
 		var cacheDir = cachePath.toFile();
 		cacheDir.mkdirs();
