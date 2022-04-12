@@ -6,13 +6,12 @@ import static com.github.maracas.brokenuse.APIUse.IMPORT;
 import static com.github.maracas.brokenuse.APIUse.TYPE_DEPENDENCY;
 import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 68);
+		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 66);
 	}
 
 	@Test
@@ -277,7 +276,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
 
 	@Test
 	void testPub2ProInner1() {
-		assertBrokenUse("ClassLessAccessiblePub2ProExt.java", 8, "c1", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 8, "c1", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
@@ -286,17 +285,18 @@ class ClassLessAccessibleTests extends CompChangesTest {
 	}
 
 	@Test
-	void testWeirdCaseWronglyDetected() {
-		// Very weird case; gets a wrong broken use
-		// Putting that in a dummy @Test to keep the total count
-		//
-		//	[CLASS_LESS_ACCESSIBLE]
-		//		Element: c2 (ClassLessAccessiblePub2ProExt.java:9)
-		//		Used:    main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProInner
-		//		Source:  main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProInner
-		//		Use:     TYPE_DEPENDENCY
-		Assertions.assertTrue(true);
-	}
+    void testPub2ProInnerExt1() {
+        assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 9, "c2", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+    }
+
+	@Test
+    void testPub2ProInnerExt2() {
+        assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 9, "new main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProExtInner()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+    }
+	@Test
+    void testPub2ProInnerExt3() {
+        assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 12, "ClassLessAccessiblePub2ProExtInner", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+    }
 
 	@Test
 	void testNoLongerPublicExtImport() {
