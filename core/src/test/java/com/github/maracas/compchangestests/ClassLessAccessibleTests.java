@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ClassLessAccessibleTests extends CompChangesTest {
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 66);
+		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 64);
 	}
 
 	@Test
@@ -279,9 +279,10 @@ class ClassLessAccessibleTests extends CompChangesTest {
 		assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 8, "c1", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
+	// This should be associated to METHOD_LESS_ACCESSIBLE
 	@Test
 	void testPub2ProInner2() {
-		assertBrokenUse("ClassLessAccessiblePub2ProExt.java", 8, "new main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProInner()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 8, "new main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProInner()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 	@Test
