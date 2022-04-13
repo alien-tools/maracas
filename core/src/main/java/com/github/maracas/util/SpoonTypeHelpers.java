@@ -1,5 +1,9 @@
 package com.github.maracas.util;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtIf;
@@ -8,13 +12,11 @@ import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtSynchronized;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtArrayTypeReference;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * Helper in charge of verifying the compatibility between
@@ -104,36 +106,71 @@ public final class SpoonTypeHelpers {
 		return false;
 	}
 
+	public static boolean isSubtype(CtTypeReference<?> typeRef, CtTypeReference<?> superRef) {
+	    if (typeRef != null)
+	        return isSubtype(Set.of(typeRef), superRef);
+	    else
+	        return false;
+	}
+
 	/**
-	 * Verifies if a set of type references are subtypes of the clsRef.
+	 * Verifies if a set of type references are subtypes of the typeRef.
+	 * TODO: Don't see the point of this method anymore. Might need to go away.
 	 *
-	 * @param superRefs set of type references
-	 * @param typeRef   reference super type
-	 * @return <code>true</code> if any of the types is a
-	 * subtype of the clsRef;
-	 * <code>false</code> otherwise.
+	 * @param typeRefs set of type references
+	 * @param superRef reference super type
+	 * @return <code>true</code> if any of the types is a subtype of the clsRef;
+	 *         <code>false</code> otherwise.
 	 */
-	public static boolean isSubtype(Set<CtTypeReference<?>> superRefs, CtTypeReference<?> typeRef) {
-		for (CtTypeReference<?> superRef : superRefs) {
-			if (superRef == null || superRef.getTypeDeclaration() == null)
+	public static boolean isSubtype(Set<CtTypeReference<?>> typeRefs, CtTypeReference<?> superRef) {
+		for (CtTypeReference<?> ref : typeRefs) {
+			if (ref == null || ref.getTypeDeclaration() == null)
 				return false;
 
-			if (superRef.equals(typeRef))
+			if (ref.equals(superRef))
 				return true;
 
-			if ((superRef.getTypeDeclaration().isAbstract() || superRef.isInterface())
-				&& superRef.isSubtypeOf(typeRef)) {
+			if ((ref.getTypeDeclaration().isAbstract() || ref.isInterface())
+				&& ref.isSubtypeOf(superRef)) {
 				// FIXME: interfaces extending other interfaces are not considered
 				// by the isSubtypeOf() method
-				Set<CtTypeReference<?>> clsSupers = new HashSet<>(superRef.getSuperInterfaces());
-				clsSupers.add(superRef.getSuperclass());
-				return isSubtype(clsSupers, typeRef);
+				Set<CtTypeReference<?>> supers = new HashSet<>(ref.getSuperInterfaces());
+				supers.add(ref.getSuperclass());
+				return isSubtype(supers, superRef);
 			} else {
 				return false;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Verifies if a set of {@link CtTypeReference} objects declare at least one
+	 * abstract method that has not been implemented along the type hierarchy.
+	 *
+	 * @param types {@link CtTypeReference} objects to analyze
+	 * @return {@code true} if there is at least one unimplemented abstract
+	 *         method declared by the types passed as parameter; otherwise
+	 *         {@code false}
+	 */
+	public static boolean haveUnimplAbstractMethods(Set<CtTypeReference<?>> types) {
+	    for (CtTypeReference<?> sup : types) {
+            CtType<?> decl = sup.getTypeDeclaration();
+            if (decl == null)
+                return true; // Over-approximate
+            else
+                for (CtExecutableReference<?> e : sup.getAllExecutables()) {
+                    CtBlock<?> body = e.getExecutableDeclaration().getBody();
+                    CtExecutableReference<?> overriden = e.getOverridingExecutable();
+
+                    // Broken use if there is an abstract supermethod with
+                    // no concrete implementation
+                    if (body == null && overriden == null)
+                        return true;
+                }
+        }
+        return false;
 	}
 
 	// Oof
