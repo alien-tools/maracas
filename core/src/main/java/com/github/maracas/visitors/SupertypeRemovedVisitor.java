@@ -15,7 +15,6 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -100,14 +99,13 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 		if (!superFields.contains(fieldRef.getSimpleName()))
 			return;
 
-		CtTypeReference<?> typeRef = fieldRef.getDeclaringType();
+		CtTypeReference<?> declType = fieldRef.getDeclaringType();
+		CtFieldReference<?> declTypeField = declType.getDeclaredField(fieldRef.getSimpleName());
 		try {
-			if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
-				CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
-
-				if (declRef == null)
-					brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
-			}
+			if ((declType.isSubtypeOf(clsRef) && declTypeField == null) ||
+				// A no static invocation has an invalid position
+				(supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition()))
+				brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
 		}
@@ -121,10 +119,10 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 		if (!superMethods.contains(methRef) || isStaticInvocation(invocation))
 			return;
 
-		CtTypeReference<?> typeRef = ((CtType<?>) invocation.getParent(CtType.class)).getReference();
-
+		CtTypeReference<?> declType = methRef.getDeclaringType();
 		try {
-			if (typeRef.isSubtypeOf(clsRef))
+			if ((declType.isSubtypeOf(clsRef) && declType.getDeclaredExecutables().contains(methRef)) ||
+				supertypes.contains(declType))
 				brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
@@ -142,7 +140,8 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 	private <T> boolean isStaticInvocation(CtInvocation<T> invocation) {
 	    CtExecutableReference<?> methRef = invocation.getExecutable();
 	    CtExpression<?> target = invocation.getTarget();
-	    if (methRef.isStatic() && target instanceof CtTypeAccess<?>) {
+	    if (methRef.isStatic() && target instanceof CtTypeAccess<?> ta
+	    	&& ta.getPosition().isValidPosition()) {
             CtTypeReference<?> refType = ((CtTypeAccess<?>) target).getAccessedType();
 	        return supertypes.contains(refType);
 	    }
