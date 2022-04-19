@@ -41,6 +41,7 @@ public class GradleBuilder extends AbstractBuilder {
 		Optional<Path> jar = locateJar();
 
 		if (jar.isEmpty()) {
+			Path workingDirectory = config.getBasePath().resolve(config.getModule());
 			List<String> goals = config.getGoals().isEmpty()
 				? DEFAULT_GOALS
 				: config.getGoals();
@@ -51,7 +52,7 @@ public class GradleBuilder extends AbstractBuilder {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
 				GradleConnector.newConnector()
-					.forProjectDirectory(config.getBasePath().toFile())
+					.forProjectDirectory(config.getBasePath().resolve(config.getModule()).toFile())
 					.connect()
 					.newBuild()
 					.setStandardOutput(null)
@@ -67,10 +68,11 @@ public class GradleBuilder extends AbstractBuilder {
 
 	@Override
 	public Optional<Path> locateJar() {
-		Path jar = config.getBasePath()
+		Path workingDirectory = config.getBasePath().resolve(config.getModule());
+		Path jar = workingDirectory
 			.resolve("build")
 			.resolve("libs")
-			.resolve(config.getBasePath().getFileName().toString() + ".jar");
+			.resolve(workingDirectory.getFileName().toString() + ".jar");
 
 		if (Files.exists(jar))
 			return Optional.of(jar);

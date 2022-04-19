@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class GradleBuilderTest {
 	final Path validProject = Paths.get("src/test/resources/gradle-project/");
 	final Path errorProject = Paths.get("src/test/resources/gradle-project-error/");
+	final Path multiProject = Paths.get("src/test/resources/gradle-multi-project/");
 	final Path validTarget = validProject.resolve("build/");
 	final Path errorTarget = errorProject.resolve("build/");
 
@@ -25,6 +26,8 @@ class GradleBuilderTest {
 	void setUp() throws IOException {
 		FileUtils.deleteDirectory(validTarget.toFile());
 		FileUtils.deleteDirectory(errorTarget.toFile());
+		FileUtils.deleteDirectory(multiProject.resolve("core/build").toFile());
+		FileUtils.deleteDirectory(multiProject.resolve("extra/build").toFile());
 	}
 
 	@Test
@@ -73,6 +76,27 @@ class GradleBuilderTest {
 		BuildConfig configWithInvalidGoal = new BuildConfig(validProject);
 		configWithInvalidGoal.addGoal("nope");
 		Builder builder = new GradleBuilder(configWithInvalidGoal);
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
+	}
+
+	@Test
+	void build_multiGradle_core_default() {
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("core")));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+	}
+
+	@Test
+	void build_multiGradle_extra_default() {
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("extra")));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+	}
+
+	@Test
+	void build_multiGradle_invalid() {
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}
