@@ -81,21 +81,23 @@ class GradleBuilderTest {
 	}
 
 	@Test
-	void build_multiGradle_core_default() {
+	void build_multi_core_default() {
 		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("core")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
+		assertTrue(builder.locateJar().get().getFileName().endsWith("core.jar"));
 	}
 
 	@Test
-	void build_multiGradle_extra_default() {
+	void build_multi_extra_default() {
 		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("extra")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
+		assertTrue(builder.locateJar().get().getFileName().endsWith("extra.jar"));
 	}
 
 	@Test
-	void build_multiGradle_invalid() {
+	void build_multi_invalid() {
 		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));

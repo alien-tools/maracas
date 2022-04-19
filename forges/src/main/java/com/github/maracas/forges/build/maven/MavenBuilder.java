@@ -47,7 +47,7 @@ public class MavenBuilder extends AbstractBuilder {
 
 	@Override
 	public void build() {
-		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
+		File pomFile = config.getBasePath().resolve(config.getModule()).resolve(BUILD_FILE).toFile();
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
@@ -95,13 +95,16 @@ public class MavenBuilder extends AbstractBuilder {
 
 	@Override
 	public Optional<Path> locateJar() {
-		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
+		Path workingDirectory = config.getBasePath().resolve(config.getModule());
+		File pomFile = workingDirectory.resolve(BUILD_FILE).toFile();
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pomFile)) {
 			Model model = reader.read(in);
 			String aid = model.getArtifactId();
 			String vid = model.getVersion();
-			Path jar = config.getBasePath().resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
+			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
+
+			System.out.println("Looking for " + jar);
 
 			if (Files.exists(jar))
 				return Optional.of(jar);

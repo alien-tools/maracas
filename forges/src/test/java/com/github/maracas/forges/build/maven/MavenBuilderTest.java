@@ -20,11 +20,14 @@ class MavenBuilderTest {
 	final Path validTarget = validProject.resolve("target/");
 	final Path errorProject = Paths.get("src/test/resources/maven-project-error/");
 	final Path errorTarget = errorProject.resolve("target/");
+	final Path multiProject = Paths.get("src/test/resources/maven-multi-project/");
 
 	@BeforeEach
 	void setUp() throws IOException {
 		FileUtils.deleteDirectory(validTarget.toFile());
 		FileUtils.deleteDirectory(errorTarget.toFile());
+		FileUtils.deleteDirectory(multiProject.resolve("core-module/target").toFile());
+		FileUtils.deleteDirectory(multiProject.resolve("extra-module/target").toFile());
 	}
 
 	@Test
@@ -66,5 +69,28 @@ class MavenBuilderTest {
 		Builder builder = new MavenBuilder(configWithInvalidGoal);
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Unknown lifecycle phase \"nope\""));
+	}
+
+	@Test
+	void build_multi_core_default() {
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("core-module")));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+		assertTrue(builder.locateJar().get().getFileName().endsWith("core-module-0.0.2.jar"));
+	}
+
+	@Test
+	void build_multi_extra_default() {
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("extra-module")));
+		builder.build();
+		assertTrue(builder.locateJar().isPresent());
+		assertTrue(builder.locateJar().get().getFileName().endsWith("extra-module-0.0.3.jar"));
+	}
+
+	@Test
+	void build_multi_invalid() {
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("nope")));
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Couldn't parse"));
 	}
 }
