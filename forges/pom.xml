@@ -17,6 +17,13 @@
 		<junit.version>5.8.2</junit.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>gradle-releases</id>
+			<url>https://repo.gradle.org/gradle/libs-releases</url>
+		</repository>
+	</repositories>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -46,6 +53,11 @@
 			<version>3.8.4</version>
 		</dependency>
 		<dependency>
+			<groupId>org.gradle</groupId>
+			<artifactId>gradle-tooling-api</artifactId>
+			<version>7.3.3</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.11.0</version>
@@ -58,6 +70,11 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
+			<version>2.17.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-iostreams</artifactId>
 			<version>2.17.1</version>
 		</dependency>
 		<dependency>
