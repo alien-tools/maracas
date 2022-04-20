@@ -2,6 +2,7 @@ FROM openjdk:17-jdk-alpine
 
 ENV MAVEN_HOME=/usr/share/maven
 ENV M2_HOME=/usr/share/maven
+ENV JAVA_OPTS=
 
 RUN addgroup -S spring && adduser -S spring -G spring \
   && mkdir -p /data/clones /data/reports /data/logs \
@@ -24,4 +25,5 @@ USER spring:spring
 ARG JAR_FILE=target/maracas-rest-*-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+#ENTRYPOINT ["java", "$JAVA_OPTS", "-jar", "/app.jar"]
+CMD java $JAVA_OPTS -jar /app.jar
