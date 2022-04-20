@@ -1,6 +1,6 @@
 package com.github.maracas.delta;
 
-import com.github.maracas.visitors.AnnotationDeprecatedAddedVisitor;
+import com.github.maracas.visitors.AnnotationDeprecatedAddedToClassVisitor;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.ClassLessAccessibleVisitor;
 import com.github.maracas.visitors.ClassNowAbstractVisitor;
@@ -50,7 +50,7 @@ public class TypeBreakingChange extends AbstractBreakingChange {
 				case CLASS_NOW_ABSTRACT          -> new ClassNowAbstractVisitor(clsRef);
 				case CLASS_NOW_FINAL             -> new ClassNowFinalVisitor(clsRef);
 				case CLASS_NOW_CHECKED_EXCEPTION -> new ClassNowCheckedExceptionVisitor(clsRef);
-				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedVisitor(clsRef);
+				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToClassVisitor(clsRef);
 				case CLASS_REMOVED               -> new ClassRemovedVisitor(clsRef);
 				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
 				case INTERFACE_ADDED -> {
