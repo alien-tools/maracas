@@ -100,11 +100,14 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 			return;
 
 		CtTypeReference<?> declType = fieldRef.getDeclaringType();
-		CtFieldReference<?> declTypeField = declType.getDeclaredField(fieldRef.getSimpleName());
+		CtFieldReference<?> declTypeField = (declType != null)
+			? declType.getDeclaredField(fieldRef.getSimpleName())
+			: null;
 		try {
-			if ((declType.isSubtypeOf(clsRef) && declTypeField == null) ||
+			if (declType != null &&
+				((declType.isSubtypeOf(clsRef) && declTypeField == null) ||
 				// A no static invocation has an invalid position
-				(supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition()))
+				(supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition())))
 				brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
