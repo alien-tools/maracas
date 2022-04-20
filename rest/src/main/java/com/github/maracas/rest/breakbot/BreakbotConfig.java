@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record BreakbotConfig(
@@ -18,17 +19,17 @@ public record BreakbotConfig(
 	List<GitHubRepository> clients
 ) {
 	public record Build(
-		String pom,
+		String module,
 		String sources,
 		List<String> goals,
-		List<String> properties,
+		Map<String, String> properties,
 		String jar
 	) {
-		public Build(String pom, String sources, List<String> goals, List<String> properties, String jar) {
-			this.pom = pom != null ? pom : "pom.xml";
+		public Build(String module, String sources, List<String> goals, Map<String, String> properties, String jar) {
+			this.module = module != null ? module : "";
 			this.sources = sources != null ? sources : "";
-			this.goals  = goals != null && !goals.isEmpty() ? goals : List.of("package");
-			this.properties = properties != null && !properties.isEmpty() ? properties : List.of("maven.test.skip", "assembly.skipAssembly");
+			this.goals = goals != null && !goals.isEmpty() ? goals : Collections.emptyList();
+			this.properties = properties != null && !properties.isEmpty() ? properties : Collections.emptyMap();
 			this.jar = jar;
 		}
 	}

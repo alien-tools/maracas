@@ -1,8 +1,10 @@
 package com.github.maracas.forges.build.maven;
 
+import com.github.maracas.forges.build.AbstractBuilder;
+import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.Builder;
 import com.google.common.base.Stopwatch;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
@@ -15,60 +17,55 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
-public class MavenBuilder implements Builder {
-	private final Path pom;
-	private final Path target;
-	private final Path base;
-
+public class MavenBuilder extends AbstractBuilder {
+	public static final String BUILD_FILE = "pom.xml";
+	public static final List<String> DEFAULT_GOALS = List.of("package");
 	public static final Properties DEFAULT_PROPERTIES = new Properties();
-	public static final List<String> DEFAULT_GOALS = new ArrayList<>();
 	private static final Logger logger = LogManager.getLogger(MavenBuilder.class);
 
 	static {
 		DEFAULT_PROPERTIES.setProperty("maven.test.skip", "true");
 		DEFAULT_PROPERTIES.setProperty("assembly.skipAssembly", "true");
-		DEFAULT_GOALS.add("package");
 	}
 
-	public MavenBuilder(Path pom) {
-		Objects.requireNonNull(pom);
-		if (!pom.toFile().exists())
-			throw new BuildException("The pom file doesn't exist: " + pom);
+	public static boolean isMavenProject(Path basePath) {
+		return Files.exists(basePath.resolve(BUILD_FILE));
+	}
 
-		this.pom = pom.toAbsolutePath();
-		this.base = pom.getParent().toAbsolutePath();
-		this.target = base.resolve("target").toAbsolutePath();
+	public MavenBuilder(BuildConfig config) {
+		super(config);
 	}
 
 	@Override
 	public void build() {
-		build(DEFAULT_GOALS, DEFAULT_PROPERTIES);
-	}
-
-	@Override
-	public void build(List<String> goals, Properties properties) {
-		Objects.requireNonNull(goals);
-		Objects.requireNonNull(properties);
+		File pomFile = config.getBasePath().resolve(config.getModule()).resolve(BUILD_FILE).toFile();
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
+			List<String> goals = config.getGoals().isEmpty()
+				? DEFAULT_GOALS
+				: config.getGoals();
+			Properties properties = config.getProperties().isEmpty()
+				? DEFAULT_PROPERTIES
+				: config.getProperties();
+
 			logger.info("Building {} with goals={} properties={}",
-				pom, goals, properties);
+				pomFile, goals, properties);
 
 			Stopwatch sw = Stopwatch.createStarted();
 			StringBuilder errors = new StringBuilder();
 			InvocationRequest request = new DefaultInvocationRequest();
-			request.setPomFile(pom.toFile());
+			request.setPomFile(pomFile);
 			request.setGoals(goals);
 			request.setProperties(properties);
 			request.setBatchMode(true);
@@ -90,28 +87,34 @@ public class MavenBuilder implements Builder {
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
 
 				logger.info("Building {} with goals={} properties={} took {}ms",
-					pom, goals, properties, sw.elapsed().toMillis());
+					pomFile, goals, properties, sw.elapsed().toMillis());
 			} catch (MavenInvocationException e) {
 				throw new BuildException("Error invoking Maven", e);
 			}
-		} else logger.info("{} has already been built. Skipping.", pom);
+		} else logger.info("{} has already been built. Skipping.", pomFile);
 	}
 
 	@Override
 	public Optional<Path> locateJar() {
+		Path workingDirectory = config.getBasePath().resolve(config.getModule());
+		File pomFile = workingDirectory.resolve(BUILD_FILE).toFile();
 		MavenXpp3Reader reader = new MavenXpp3Reader();
-		try (InputStream in = new FileInputStream(pom.toFile())) {
+		try (InputStream in = new FileInputStream(pomFile)) {
 			Model model = reader.read(in);
 			String aid = model.getArtifactId();
-			String vid = model.getVersion();
-			Path jar = target.resolve("%s-%s.jar".formatted(aid, vid));
+			String vid = !StringUtils.isEmpty(model.getVersion())
+				? model.getVersion()
+				: model.getParent().getVersion();
+			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
 
-			if (jar.toFile().exists())
+			if (Files.exists(jar))
 				return Optional.of(jar);
-			else
+			else {
+				logger.warn("Couldn't find JAR at " + jar);
 				return Optional.empty();
+			}
 		} catch (IOException | XmlPullParserException e) {
-			throw new BuildException("Couldn't parse " + pom, e);
+			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
 	}
 }

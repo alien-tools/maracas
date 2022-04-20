@@ -108,7 +108,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	void testPRWithBuggyBuildConfiguration() throws Exception {
 		String bbConfig = """
 			build:
-			  pom: unknown.xml""";
+			  module: unknown/""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
 			.andExpect(status().isInternalServerError())
@@ -159,7 +159,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		int prId = 2;
 		String bbConfig = """
 			build:
-			  pom: unknown.xml""";
+			  module: unknown/""";
 
 		int mockPort = 8080;
 		int installationId = 123456789;
@@ -194,7 +194,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("No valid build file")),
+					.withBody(subString("Don't know how to build")),
 				exactly(1)
 			);
 		}

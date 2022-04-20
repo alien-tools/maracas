@@ -6,6 +6,8 @@ services:
       - "8080:8080"
     volumes:
       - maracas-data:/data
+    environment:
+      - JAVA_OPTS
 
 volumes:
   maracas-data:
