@@ -4,6 +4,7 @@ import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.google.common.base.Stopwatch;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
@@ -101,7 +102,9 @@ public class MavenBuilder extends AbstractBuilder {
 		try (InputStream in = new FileInputStream(pomFile)) {
 			Model model = reader.read(in);
 			String aid = model.getArtifactId();
-			String vid = model.getVersion();
+			String vid = !StringUtils.isEmpty(model.getVersion())
+				? model.getVersion()
+				: model.getParent().getVersion();
 			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
 
 			if (Files.exists(jar))
