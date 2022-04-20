@@ -20,7 +20,7 @@ public record PullRequest(
   int number,
   Commit base,
   Commit head,
-  Commit prBase,
+  Commit mergeBase,
   String baseBranch,
   String headBranch
 ) {
@@ -28,7 +28,7 @@ public record PullRequest(
     Objects.requireNonNull(repository);
     Objects.requireNonNull(base);
     Objects.requireNonNull(head);
-    Objects.requireNonNull(prBase);
+    Objects.requireNonNull(mergeBase);
     Objects.requireNonNull(baseBranch);
     Objects.requireNonNull(headBranch);
   }

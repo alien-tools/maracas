@@ -69,7 +69,7 @@ class GitHubForgeTest {
     PullRequest pr = github.fetchPullRequest(repo, 2);
     assertEquals(2, pr.number());
     assertEquals(new Commit(repo, "43463c9c73933ae0e791dbf8d1d6e152101a4ba9"), pr.head());
-    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.prBase());
+    assertEquals(new Commit(repo, "00dde47b0bf583c4a9320e2968d5fbad0af81265"), pr.mergeBase());
     assertEquals("main", pr.baseBranch());
     assertEquals("prepare-v2", pr.headBranch());
     assertEquals("alien-tools", pr.repository().owner());
@@ -83,11 +83,25 @@ class GitHubForgeTest {
     PullRequest pr = github.fetchPullRequest(repo, 4625);
     assertEquals(4625, pr.number());
     assertEquals(new Commit(repo, "1ef7b095d58ff671b74f5eef7186c96aa573304e"), pr.head());
-    assertEquals(new Commit(repo, "3f3557e2ec95d4a2a552bdf0cc322c4e6d054725"), pr.prBase());
+    assertEquals(new Commit(repo, "6095f1ba4c6eb98ad5e251f9c5d0aaedff3a1637"), pr.mergeBase());
     assertEquals("master", pr.baseBranch());
     assertEquals("regression-resource", pr.headBranch());
     assertEquals("INRIA", pr.repository().owner());
     assertEquals("spoon", pr.repository().name());
+    assertEquals("master", pr.repository().branch());
+  }
+
+  @Test
+  void fetchPullRequest_that_was_synchronized() {
+    Repository repo = github.fetchRepository("javaparser", "javaparser");
+    PullRequest pr = github.fetchPullRequest(repo, 3320);
+    assertEquals(3320, pr.number());
+    assertEquals(new Commit(repo, "dfb238b9de62242d433decc118c19db1fbe0dd1d"), pr.head());
+    assertEquals(new Commit(repo, "c2531bbaa671c854bf57b8dc3bb679f20190ded3"), pr.mergeBase());
+    assertEquals("master", pr.baseBranch());
+    assertEquals("support-jimfs", pr.headBranch());
+    assertEquals("javaparser", pr.repository().owner());
+    assertEquals("javaparser", pr.repository().name());
     assertEquals("master", pr.repository().branch());
   }
 
