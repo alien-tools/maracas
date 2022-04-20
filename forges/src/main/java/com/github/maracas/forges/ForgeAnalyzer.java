@@ -41,9 +41,9 @@ public class ForgeAnalyzer {
     Optional<Path> jarV2 = futureV2.get();
 
     if (jarV1.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v1);
+      throw new BuildException("Couldn't build a JAR from " + v1.getCommit());
     if (jarV2.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v2);
+      throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
     Delta delta = Maracas.computeDelta(jarV1.get(), jarV2.get(), options);
     if (delta.getBreakingChanges().isEmpty())
