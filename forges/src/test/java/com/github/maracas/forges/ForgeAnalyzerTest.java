@@ -3,8 +3,11 @@ package com.github.maracas.forges;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.build.BuildConfig;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -18,6 +21,11 @@ import static org.hamcrest.Matchers.hasSize;
 
 class ForgeAnalyzerTest {
   final Path CLONES = Paths.get(System.getProperty("java.io.tmpdir")).resolve("clones");
+
+  @BeforeEach
+  void setUp() throws IOException {
+    FileUtils.deleteDirectory(CLONES.toFile());
+  }
 
   @Test
   void analyzeCommits_CompChanges() throws InterruptedException, ExecutionException {
