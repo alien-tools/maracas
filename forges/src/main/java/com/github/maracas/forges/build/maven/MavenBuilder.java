@@ -104,12 +104,12 @@ public class MavenBuilder extends AbstractBuilder {
 			String vid = model.getVersion();
 			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
 
-			System.out.println("Looking for " + jar);
-
 			if (Files.exists(jar))
 				return Optional.of(jar);
-			else
+			else {
+				logger.warn("Couldn't find JAR at " + jar);
 				return Optional.empty();
+			}
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
