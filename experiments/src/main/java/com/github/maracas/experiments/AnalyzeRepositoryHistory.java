@@ -56,6 +56,8 @@ public class AnalyzeRepositoryHistory {
 	private final Map<String, Repository> clientRepositories = new HashMap<>();
 	private final ClientsManager clientsManager = new ClientsManager();
 	private final Properties buildProperties;
+	private final Path module;
+	private final Path sources;
 
 	private final Path workingDirectory;
 	private final Path clonesPath;
@@ -69,12 +71,16 @@ public class AnalyzeRepositoryHistory {
 		String name,
 		List<String> clients,
 		Properties buildProperties,
+		Path module,
+		Path sources,
 		Path workingDirectory
 	) throws IOException {
 		this.owner = owner;
 		this.name = name;
 		this.fullName = owner + "/" + name;
 		this.buildProperties = buildProperties;
+		this.module = module;
+		this.sources = sources;
 
 		this.workingDirectory = workingDirectory;
 		this.clonesPath = workingDirectory.resolve("clones");
@@ -114,23 +120,6 @@ public class AnalyzeRepositoryHistory {
 				.list()
 				.withPageSize(100)
 				.iterator();
-//			ghRepository.getPullRequests(GHIssueState.ALL)
-//				.stream()
-//				.filter(this::affectsJavaFiles)
-//				.limit(limit)
-//				.toList();
-//			List.of(
-//				ghRepository.getPullRequest(4669),
-//				ghRepository.getPullRequest(4600),
-//				ghRepository.getPullRequest(4202),
-//				ghRepository.getPullRequest(3425),
-//				ghRepository.getPullRequest(3248),
-//				ghRepository.getPullRequest(2173),
-//				ghRepository.getPullRequest(2152),
-//				ghRepository.getPullRequest(1090),
-//				ghRepository.getPullRequest(444),
-//				ghRepository.getPullRequest(21)
-//			);
 
 		while (iterator.hasNext()) {
 			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
@@ -157,14 +146,16 @@ public class AnalyzeRepositoryHistory {
 						var forgePr = forge.fetchPullRequest(forgeRepository, pr.getNumber());
 						var cloneV1 = prClone.resolve("base-" + forgePr.prBase().sha());
 						var cloneV2 = prClone.resolve("head-" + forgePr.head().sha());
-						var configV1 = new BuildConfig(cloneV1);
-						var configV2 = new BuildConfig(cloneV2);
+						var configV1 = new BuildConfig(cloneV1, module);
+						var configV2 = new BuildConfig(cloneV2, module);
 						buildProperties.forEach((k, v) -> {
 							configV1.setProperty(k.toString(), v.toString());
 							configV2.setProperty(k.toString(), v.toString());
 						});
 						var buildV1 = new CommitBuilder(forgePr.prBase(), cloneV1, configV1);
 						var buildV2 = new CommitBuilder(forgePr.head(), cloneV2, configV2);
+						buildV1.setSources(sources);
+						buildV2.setSources(sources);
 
 						var reportFile = reportsPath.resolve(pr.getNumber() + "-report.json");
 
@@ -329,7 +320,9 @@ public class AnalyzeRepositoryHistory {
 				.build();
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void spoon() throws IOException {
+		Path spoonModule = Paths.get("");
+		Path spoonSources = null;
 		var spoonProps = new Properties();
 		spoonProps.setProperty("maven.test.skip", "true");
 		spoonProps.setProperty("skipDepClean", "true");
@@ -356,7 +349,76 @@ public class AnalyzeRepositoryHistory {
 			"KTH/spork"
 		);
 
-		new AnalyzeRepositoryHistory("INRIA", "spoon", spoonClients, spoonProps, Paths.get("./data"))
+		new AnalyzeRepositoryHistory(
+			"INRIA", "spoon", spoonClients, spoonProps, spoonModule, spoonSources, Paths.get("./data"))
 			.analyzePRs(2000, 4);
+	}
+
+	public static void javaparser() throws IOException {
+		var jpModule = Paths.get("javaparser-core");
+		var jpSources = Paths.get("javaparser-core/src/main/java");
+		var jpProps = new Properties();
+		jpProps.setProperty("maven.test.skip", "true");
+
+		var jpClients = List.of(
+			"OpenAPITools/openapi-generator",
+			"quarkusio/quarkus",
+			"facebookarchive/nuclide",
+			"mybatis/generator",
+			"lettuce-io/lettuce-core",
+			"kiegroup/drools",
+			"apache/camel",
+			"javaparser/javaparser",
+			"Col-E/Recaf",
+			"JCTools/JCTools",
+			"fabric8io/kubernetes-client",
+			"Azure/azure-sdk-for-java",
+			"umlet/umlet",
+			"zstackio/zstack",
+			"artur-shaik/vim-javacomplete2",
+			"infinispan/infinispan",
+			"tech-srl/code2vec",
+			"javalite/javalite",
+			"actframework/actframework",
+			"junkdog/artemis-odb",
+			"apache/isis",
+			"structr/structr",
+			"spawpaw/mybatis-generator-gui-extension",
+			"tensorflow/java",
+			"youngyangyang04/PowerVim",
+			"tech-srl/code2seq",
+			"moditect/moditect",
+			"kiegroup/kogito-runtimes",
+			"sdaschner/jaxrs-analyzer",
+			"didi/super-jacoco",
+			"kiegroup/droolsjbpm-build-bootstrap",
+			"VueGWT/vue-gwt",
+			"xgdsmileboy/SimFix",
+			"helios-decompiler/standalone-app",
+			"kklisura/chrome-devtools-java-client",
+			"benas/jql",
+			"abstracta/jmeter-java-dsl",
+			"hussien89aa/MigrationMiner",
+			"dodie/scott",
+			"ecmnet/MAVGCL",
+			"gwt-test-utils/gwt-test-utils",
+			"RepreZen/KaiZen-OpenApi-Parser",
+			"liuzhengyang/lets-hotfix",
+			"davidmoten/state-machine",
+			"kiegroup/droolsjbpm-knowledge",
+			"Col-E/JRemapper",
+			"danielzuegner/code-transformer",
+			"STAMP-project/dspot",
+			"ftomassetti/turin-programming-language"
+		);
+
+		new AnalyzeRepositoryHistory(
+			"javaparser", "javaparser", jpClients, jpProps, jpModule, jpSources, Paths.get("./data"))
+			.analyzePRs(2000, 4);
+	}
+
+	public static void main(String[] args) throws Exception {
+		//spoon();
+		javaparser();
 	}
 }
