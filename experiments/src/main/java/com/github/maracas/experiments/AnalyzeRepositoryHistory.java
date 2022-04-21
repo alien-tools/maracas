@@ -144,7 +144,7 @@ public class AnalyzeRepositoryHistory {
 
 						var prClone = clonesPath.resolve(String.valueOf(pr.getNumber()));
 						var forgePr = forge.fetchPullRequest(forgeRepository, pr.getNumber());
-						var cloneV1 = prClone.resolve("base-" + forgePr.prBase().sha());
+						var cloneV1 = prClone.resolve("base-" + forgePr.mergeBase().sha());
 						var cloneV2 = prClone.resolve("head-" + forgePr.head().sha());
 						var configV1 = new BuildConfig(cloneV1, module);
 						var configV2 = new BuildConfig(cloneV2, module);
@@ -152,7 +152,7 @@ public class AnalyzeRepositoryHistory {
 							configV1.setProperty(k.toString(), v.toString());
 							configV2.setProperty(k.toString(), v.toString());
 						});
-						var buildV1 = new CommitBuilder(forgePr.prBase(), cloneV1, configV1);
+						var buildV1 = new CommitBuilder(forgePr.mergeBase(), cloneV1, configV1);
 						var buildV2 = new CommitBuilder(forgePr.head(), cloneV2, configV2);
 						buildV1.setSources(sources);
 						buildV2.setSources(sources);
