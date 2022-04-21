@@ -128,7 +128,7 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr, pr.prBase(), config);
+			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
 			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
@@ -187,7 +187,7 @@ public class PullRequestService {
 			);
 
 			return new MaracasReport(
-				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.prBase())),
+				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.mergeBase())),
 				clientReports
 			);
 		} catch (ExecutionException | InterruptedException e) {
