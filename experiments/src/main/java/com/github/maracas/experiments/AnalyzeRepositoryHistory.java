@@ -7,6 +7,7 @@ import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.github.GitHubForge;
 import com.opencsv.CSVWriter;
 import okhttp3.Cache;
@@ -106,17 +107,13 @@ public class AnalyzeRepositoryHistory {
 			gh.getRateLimit().getRemaining(), gh.getRateLimit().getLimit(), gh.getRateLimit().getResetDate());
 		logger.info("Fetching PRs for {}", fullName);
 
-		var prs =
+		var iterator =
 			ghRepository.queryPullRequests()
 				.state(GHIssueState.ALL)
 				.direction(GHDirection.DESC)
 				.list()
 				.withPageSize(100)
-				.toList()
-				.stream()
-				.limit(limit)
-				.filter(this::affectsJavaFiles)
-				.toList();
+				.iterator();
 //			ghRepository.getPullRequests(GHIssueState.ALL)
 //				.stream()
 //				.filter(this::affectsJavaFiles)
@@ -135,106 +132,115 @@ public class AnalyzeRepositoryHistory {
 //				ghRepository.getPullRequest(21)
 //			);
 
-		var analyzer = new ForgeAnalyzer();
-		var executor = Executors.newFixedThreadPool(threads);
-		var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
-		var csvFile = new File(csvPath.toAbsolutePath().toString());
-		logger.info("Analyzing {}: {} PRs found", fullName, prs.size());
+		while (iterator.hasNext()) {
+			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
+			var analyzer = new ForgeAnalyzer();
+			var executor = Executors.newFixedThreadPool(threads);
+			var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
+			var csvFile = new File(csvPath.toAbsolutePath().toString());
+			logger.info("Analyzing {}: {} PRs found", fullName, prs.size());
 
-		try (var csvWriter = new CSVWriter(new FileWriter(csvFile))) {
-			csvWriter.writeNext((
-				"owner,name,number,state,title,mergeable,created,merged,closed,url,commits," +
-					"baseRef,base,headRef,head,author,labels,additions,deletions,changedFiles,changedJavaFiles," +
-					"comments,bcs,checkedClients,brokenClients,brokenUses,report,message,errors").split(","));
-			csvWriter.flush();
+			try (var csvWriter = new CSVWriter(new FileWriter(csvFile))) {
+				csvWriter.writeNext((
+					"owner,name,number,state,title,mergeable,created,merged,closed,url,commits," +
+						"baseRef,base,headRef,head,author,labels,additions,deletions,changedFiles,changedJavaFiles," +
+						"comments,bcs,checkedClients,brokenClients,brokenUses,report,message,errors").split(","));
+				csvWriter.flush();
 
-			var tasks = new ArrayList<Callable<Object>>(prs.size());
-			for (var pr : prs) {
-				tasks.add(Executors.callable(() -> {
-					var prId = "%s#%d".formatted(fullName, pr.getNumber());
-					logger.info("Analyzing {} [{}]: {} [{}]", prId, pr.getState(), pr.getTitle(), pr.getClosedAt());
+				var tasks = new ArrayList<Callable<Object>>(prs.size());
+				for (var pr : prs) {
+					tasks.add(Executors.callable(() -> {
+						var prId = "%s#%d".formatted(fullName, pr.getNumber());
+						logger.info("Analyzing {} [{}]: {} [{}]", prId, pr.getState(), pr.getTitle(), pr.getClosedAt());
 
-					var prClone = clonesPath.resolve(String.valueOf(pr.getNumber()));
-					var forgePr = forge.fetchPullRequest(forgeRepository, pr.getNumber());
-					var buildV1 = new CommitBuilder(forgePr.prBase(), prClone.resolve("base-" + forgePr.prBase().sha()));
-					var buildV2 = new CommitBuilder(forgePr.head(), prClone.resolve("head-" + forgePr.head().sha()));
-					buildV1.setBuildProperties(buildProperties);
-					buildV2.setBuildProperties(buildProperties);
+						var prClone = clonesPath.resolve(String.valueOf(pr.getNumber()));
+						var forgePr = forge.fetchPullRequest(forgeRepository, pr.getNumber());
+						var cloneV1 = prClone.resolve("base-" + forgePr.prBase().sha());
+						var cloneV2 = prClone.resolve("head-" + forgePr.head().sha());
+						var configV1 = new BuildConfig(cloneV1);
+						var configV2 = new BuildConfig(cloneV2);
+						buildProperties.forEach((k, v) -> {
+							configV1.setProperty(k.toString(), v.toString());
+							configV2.setProperty(k.toString(), v.toString());
+						});
+						var buildV1 = new CommitBuilder(forgePr.prBase(), cloneV1, configV1);
+						var buildV2 = new CommitBuilder(forgePr.head(), cloneV2, configV2);
 
-					var reportFile = reportsPath.resolve(pr.getNumber() + "-report.json");
+						var reportFile = reportsPath.resolve(pr.getNumber() + "-report.json");
 
-					try {
-						// Compute delta
-						Delta delta = analyzer.computeDelta(buildV1, buildV2, MaracasOptions.newDefault());
-						int bcs = delta.getBreakingChanges().size();
+						try {
+							// Compute delta
+							Delta delta = analyzer.computeDelta(buildV1, buildV2, MaracasOptions.newDefault());
+							int bcs = delta.getBreakingChanges().size();
 
-						// We got something, look at the clients
-						if (bcs > 0) {
-							logger.info("Retrieving potentially impacted clients");
-							var clientCommits = clientsManager.clientsAtDate(pr.getClosedAt());
-							var buildClients = buildersFor(clientCommits);
+							// We got something, look at the clients
+							if (bcs > 0) {
+								logger.info("Retrieving potentially impacted clients");
+								var clientCommits = clientsManager.clientsAtDate(pr.getClosedAt());
+								var buildClients = buildersFor(clientCommits);
 
-							logger.info("Potentially impacted clients [{}/{}]:",
-								clientCommits.size(), clientRepositories.size());
-							clientCommits.forEach((name, commit) -> {
-								try {
-									logger.info("\t{}@{}: {} [{}]", name, commit.getSHA1(),
-										commit.getCommitShortInfo().getMessage().split("\n")[0],
-										commit.getCommitDate());
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							});
+								logger.info("Potentially impacted clients [{}/{}]:",
+									clientCommits.size(), clientRepositories.size());
+								clientCommits.forEach((name, commit) -> {
+									try {
+										logger.info("\t{}@{}: {} [{}]", name, commit.getSHA1(),
+											commit.getCommitShortInfo().getMessage().split("\n")[0],
+											commit.getCommitDate());
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								});
 
-							var result = analyzer.computeImpact(delta, buildClients);
-							int checkedClients = result.deltaImpacts().size();
-							int brokenClients = result.brokenClients().size();
-							int allBrokenUses = result.allBrokenUses().size();
-							logger.info("{}: found {} BCs, {}/{} broken clients, and {} broken uses",
-								prId, bcs, brokenClients, checkedClients, allBrokenUses);
-							logger.info("Serializing report to {}", reportFile);
-							Files.write(reportFile, result.toJson().getBytes());
+								var result = analyzer.computeImpact(delta, buildClients);
+								int checkedClients = result.deltaImpacts().size();
+								int brokenClients = result.brokenClients().size();
+								int allBrokenUses = result.allBrokenUses().size();
+								logger.info("{}: found {} BCs, {}/{} broken clients, and {} broken uses",
+									prId, bcs, brokenClients, checkedClients, allBrokenUses);
+								logger.info("Serializing report to {}", reportFile);
+								Files.write(reportFile, result.toJson().getBytes());
 
-							String clientErrors = result.deltaImpacts().values().stream().map(
-								i ->
-									i.getThrowable() != null
-										? i.getThrowable().getClass().toString() + ":" + i.getThrowable().getMessage()
-										: "none"
-							).collect(joining("+"));
+								String clientErrors = result.deltaImpacts().values().stream().map(
+									i ->
+										i.getThrowable() != null
+											? i.getThrowable().getClass().toString() + ":" + i.getThrowable().getMessage()
+											: "none"
+								).collect(joining("+"));
 
-							writeLine(csvWriter, pr, bcs, checkedClients, brokenClients, allBrokenUses,
-								reportFile.toAbsolutePath().toString(), "ok", clientErrors);
+								writeLine(csvWriter, pr, bcs, checkedClients, brokenClients, allBrokenUses,
+									reportFile.toAbsolutePath().toString(), "ok", clientErrors);
+							}
+							// We got nothing, write report
+							else {
+								logger.info("{}: No breaking change", prId);
+								logger.info("Serializing report to {}", reportFile);
+								Files.write(reportFile, AnalysisResult.noImpact(delta, Collections.emptyList()).toJson().getBytes());
+
+								writeLine(csvWriter, pr, bcs, -1, -1, -1,
+									reportFile.toAbsolutePath().toString(), "no-bc", "");
+							}
+						} catch (Exception e) {
+							logger.error("Error analyzing {}: {}", prId, e);
+							writeLine(csvWriter, pr, -1, -1, -1, -1,
+								"-1", e.getMessage(), "-1");
 						}
-						// We got nothing, write report
-						else {
-							logger.info("{}: No breaking change", prId);
-							logger.info("Serializing report to {}", reportFile);
-							Files.write(reportFile, AnalysisResult.noImpact(delta, Collections.emptyList()).toJson().getBytes());
+					}));
+				}
 
-							writeLine(csvWriter, pr, bcs, -1, -1, -1,
-								reportFile.toAbsolutePath().toString(), "no-bc", "");
-						}
-					} catch (Exception e) {
-						logger.error("Error analyzing {}: {}", prId, e);
-						writeLine(csvWriter, pr, -1, -1, -1, -1,
-							"-1", e.getMessage(), "-1");
+				executor.invokeAll(tasks);
+				logger.info("Analysis is over!");
+
+				executor.shutdown();
+				try {
+					if (!executor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+						executor.shutdownNow();
 					}
-				}));
-			}
-
-			executor.invokeAll(tasks);
-			logger.info("Analysis is over!");
-
-			executor.shutdown();
-			try {
-				if (!executor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+				} catch (InterruptedException e) {
 					executor.shutdownNow();
 				}
-			} catch (InterruptedException e) {
-				executor.shutdownNow();
+			} catch (Exception e) {
+				logger.error("Error", e);
 			}
-		} catch (Exception e) {
-			logger.error("Error", e);
 		}
 	}
 
