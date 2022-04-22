@@ -53,7 +53,9 @@ public class CompChangesCase {
         MatcherOptions opts = new MatcherOptions();
 
         // Coming from Maracas broken uses (unimplemented)
+        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC, "classNoLongerPublic");
         opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED, "classTypeChanged");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT, "methodAbstractNowDefault");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE, "methodLessAccessible");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_STATIC, "methodNoLongerStatic");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_STATIC, "methodNowStatic");

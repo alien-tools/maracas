@@ -196,6 +196,8 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                                 .withText("Reviewed")
                         ),
                         p(
+                        	join(b("ID:"), c.id().toString()),
+                        	br(),
                             join(
                                 b("Path:"),
                                 a()
@@ -251,6 +253,8 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                                 .withText("Reviewed")
                         ),
                         p(
+                        	join(b("ID:"), c.id().toString()),
+                        	br(),
                             join(
                                 b("Path:"),
                                 a()
@@ -305,6 +309,8 @@ public class HTMLReportVisualizer extends ReportVisualizer {
                                 ),
                                 h5("Broken use:"),
                                 p(
+                                	join(b("ID:"), c.id().toString()),
+                                	br(),
                                     join(
                                         b("Path:"),
                                         a()

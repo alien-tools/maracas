@@ -10,7 +10,6 @@ import static japicmp.model.JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-// TODO
 public class AnnotationDeprecatedAddedTests extends CompChangesTest {
 
 	@Test
