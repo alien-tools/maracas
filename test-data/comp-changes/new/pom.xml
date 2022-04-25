@@ -12,7 +12,7 @@
 	<artifactId>comp-changes-new</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
-	<name>comp-changes v2</name>
+	<name>Maracas comp-changes v2</name>
 
 	<build>
 		<sourceDirectory>src/</sourceDirectory>
