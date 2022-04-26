@@ -24,6 +24,7 @@ import static j2html.TagCreator.style;
 import static j2html.TagCreator.title;
 import static j2html.TagCreator.ul;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -89,7 +90,9 @@ public class HTMLReportVisualizer extends ReportVisualizer {
 
     @Override
     public void generate() {
-        try (Writer writer = new FileWriter(path.toFile())) {
+    	File file = path.toFile();
+    	file.getParentFile().mkdirs();
+        try (Writer writer = new FileWriter(file)) {
             HtmlTag html = html(
                 head(
                     title(REPORT_TITLE),

@@ -76,10 +76,10 @@ public record MavenBuildConfig(
     public void validate() {
         File srcDirFile = new File(srcDir);
         if (!srcDirFile.exists())
-           throw new BuildException("The source directory cannot be found");
+           throw new BuildException(String.format("The source directory cannot be found: %s", srcDir));
 
         File pomFile = srcDirFile.toPath().resolve(Paths.get(pom)).toFile();
         if (!pomFile.exists())
-            throw new BuildException("The POM file of the projcet cannot be found");
+            throw new BuildException(String.format("The POM file of the project cannot be found: %s", pomFile.toString()));
     }
 }
