@@ -12,27 +12,19 @@ import com.github.maracas.validator.matchers.MissingJApiCompatibilityChange;
 
 import japicmp.model.JApiCompatibilityChange;
 
-/**
- * Maracas validator on the CompChanges project.
- */
-public class CompChangesCase {
-    /**
-     * Main method with the CompChanges pipeline.
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        Path srcApi1 = Paths.get("../test-data/comp-changes/old/");
-        Path srcApi2 = Paths.get("../test-data/comp-changes/new/");;
-        Path srcClient = Paths.get("../test-data/comp-changes/client/");
-        Path report = Paths.get("src/main/resources/comp-changes/report.html");
+public class APIEvolutionDataCorpusCase {
+	public static void main(String[] args) {
+		Path srcApi1 = Paths.get("../test-data/api-evolution-data-corpus/lib-v1/");
+        Path srcApi2 = Paths.get("../test-data/api-evolution-data-corpus/lib-v2/");;
+        Path srcClient = Paths.get("../test-data/api-evolution-data-corpus/client/");
+        Path report = Paths.get("src/main/resources/api-evolution-data-corpus/report.html");
         MavenArtifactUpgrade upgrade = new MavenArtifactUpgrade(null, null,
-            "comp-changes-old", "comp-changes-new", null, null);
+            "api-evolution-data-corpus-lib-v1", "api-evolution-data-corpus-lib-v2", null, null);
 
         MatcherOptions opts = defaultOptions();
         MaracasValidator validator = new MaracasValidator(srcApi1, srcApi2, srcClient,
             null, upgrade, opts, true);
-        MatcherFilter filter = new CompChangesMatcherFilter(opts);
+        MatcherFilter filter = new APIEvolutionDataCorpusMatchFilter(opts);
         validator.validate(filter);
 
         // Compute metrics
@@ -41,9 +33,9 @@ public class CompChangesCase {
 
         // Create report
         validator.createHTMLReport(report);
-    }
+	}
 
-    /**
+	/**
      * Returns a default instance of the class excluding unsupported breaking
      * changes in Maracas core. It shows the current state of Maracas implementation.
      *
@@ -53,7 +45,7 @@ public class CompChangesCase {
     	MatcherOptions opts = new MatcherOptions();
 
         // Coming from Maracas broken uses (unimplemented)
-        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC, "classNoLongerPublic");
+        //opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC, "classNoLongerPublic");
         opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED, "classTypeChanged");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT, "methodAbstractNowDefault");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE, "methodLessAccessible");
