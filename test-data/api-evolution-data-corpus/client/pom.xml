@@ -13,7 +13,7 @@
   <dependencies>
     <dependency>
       <groupId>com.github.maracas</groupId>
-      <artifactId>api-evolution-data-corpus-lib-v2</artifactId>
+      <artifactId>api-evolution-data-corpus-lib-v1</artifactId>
       <version>0.0.1</version>
     </dependency>
   </dependencies>
