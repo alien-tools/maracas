@@ -1,0 +1,1 @@
+revapi.sh --extensions=org.revapi:revapi-java:0.8.0,org.revapi:revapi-reporting-text:0.4.1 --old=../../testing-lib-v1/target/testing-lib-v1-0.0.1.jar --new=../../testing-lib-v1/target/testing-lib-v2-0.0.2.jar -D revapi.reporter.text.minSeverity=NON_BREAKING > revapiReport.txt
