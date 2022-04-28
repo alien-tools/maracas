@@ -1,3 +1,0 @@
-[submodule "test-data/api-evolution-data-corpus"]
-	path = test-data/api-evolution-data-corpus
-	url = https://github.com/lmove/api-evolution-data-corpus
