@@ -3,6 +3,7 @@ package com.github.maracas.validator.cases;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.maracas.validator.MaracasValidator;
 import com.github.maracas.validator.build.MavenArtifactUpgrade;
@@ -38,6 +39,8 @@ public class APIEvolutionDataCorpusCase {
 	/**
      * Returns a default instance of the class excluding unsupported breaking
      * changes in Maracas core. It shows the current state of Maracas implementation.
+     * Using {@code null} as value if there are no specific cases reported in
+     * the corpus for the given breaking change.
      *
      * @return default matcher options
      */
@@ -45,30 +48,41 @@ public class APIEvolutionDataCorpusCase {
     	MatcherOptions opts = new MatcherOptions();
 
         // Coming from Maracas broken uses (unimplemented)
-        //opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC, "classNoLongerPublic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED, "classTypeChanged");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT, "methodAbstractNowDefault");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE, "methodLessAccessible");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_STATIC, "methodNoLongerStatic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_STATIC, "methodNowStatic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_THROWS_CHECKED_EXCEPTION, "methodNowThrosCheckedException");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION, "methodNoLongerThrowsCheckedException");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_TO_CLASS, "methodAbstractAddedToClass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NEW_DEFAULT, "methodNewDefault");
-        opts.excludeBreakingChange(JApiCompatibilityChange.CONSTRUCTOR_LESS_ACCESSIBLE, "constructorLessAccessible");
+        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC);
+        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED);
+        opts.excludeBreakingChange(JApiCompatibilityChange.CONSTRUCTOR_LESS_ACCESSIBLE);
+        opts.excludeCompilerMessage("accessModifierClazzConstructorAccessDecrease.*");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT);
+        opts.excludeCompilerMessage("membersIfazeMethodDefaultAdd");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE);
+        opts.excludeCompilerMessage("accessModifierClazzMethodAccessDecrease.*");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_STATIC);
+        opts.excludeCompilerMessage("modifierMethodStaticToNonStatic");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_STATIC);
+        opts.excludeCompilerMessage("modifierMethodNonStaticToStatic");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_THROWS_CHECKED_EXCEPTION);
+        opts.excludeCompilerMessage(Set.of("exceptionClazzMethodThrowCheckedAdd", "exceptionClazzMethodTryCatchToThrowChecked"));
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION);
+        opts.excludeCompilerMessage(Set.of("exceptionClazzMethodThrowCheckedDelete", "exceptionClazzMethodThrowCheckedToTryCatch"));
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_TO_CLASS);
+        opts.excludeCompilerMessage(Set.of("membersClazzMethodAbstractAdd", "membersIfazeMethodAdd"));
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NEW_DEFAULT);
+        opts.excludeCompilerMessage("membersIfazeMethodDefaultAdd");
 
         // Coming from Maracas delta by design
-        opts.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_MODIFIED_INCOMPATIBLE, "superclassModifiedIncompatible");
-        //opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS, "methodRemovedInSuperclass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS, "methodAddedToPublicClass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS, "methodAbstractAddedInSuperclass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE, "methodAbstractAddedInImplementedInterface");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE, "methodDefaultAddedInImplementedInterface");
-        opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS, "fieldLessAccessibleThanInSuperclass");
-        //opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS, "fieldRemovedInSuperclass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_MODIFIED_INCOMPATIBLE);
+        //opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS);
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE);
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
+        opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS);
+        //opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS);
 
         // Missing JApiCmp breaking changes
-        opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE, "methodMoreAccessible");
+        opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE);
+        opts.excludeCompilerMessage(Set.of("accessModifierClazzMethodAccessIncrease.*", "accessModifierClazzConstructorAccessIncreasee.*"));
+        opts.excludeCompilerMessage("generics*");
 
         return opts;
     }

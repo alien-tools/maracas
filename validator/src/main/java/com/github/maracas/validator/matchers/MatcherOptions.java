@@ -1,7 +1,7 @@
 package com.github.maracas.validator.matchers;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +13,8 @@ import japicmp.model.JApiCompatibilityChange;
  */
 @SuppressWarnings("rawtypes")
 public record MatcherOptions(
-    Map<Enum, String> excludedBreakingChanges) {
+	Set<Enum> excludedBreakingChanges,
+    Set<String> excludedCompilerMessage) {
     /**
      * Class logger
      */
@@ -23,7 +24,7 @@ public record MatcherOptions(
      * Creates a MatcherOptions instance.
      */
     public MatcherOptions() {
-        this(new HashMap<Enum, String>());
+        this(new HashSet<Enum>(), new HashSet<String>());
     }
 
     /**
@@ -32,10 +33,29 @@ public record MatcherOptions(
      *
      * @param change {@link JApiCompatibilityChange} or {@link MissingJApiCompatibilityChange}
      *               instance to exclude
+     */
+    public void excludeBreakingChange(Enum change) {
+    	excludedBreakingChanges.add(change);
+    }
+
+    /**
+     * Exclude a compiler message from the matching process based on a regex pattern.
+     *
      * @param regex  RegEx pattern to match the breaking change against a
      *               compiler message
      */
-    public void excludeBreakingChange(Enum change, String regex) {
-        excludedBreakingChanges.put(change, regex);
+    public void excludeCompilerMessage(String regex) {
+    	excludedCompilerMessage.add(regex);
+    }
+
+    /**
+     * Exclude compiler messages from the matching process based on a set of
+     * regex patterns.
+     *
+     * @param regexes  Set of RegEx patterns to match breaking changes against
+     *                 compiler messages
+     */
+    public void excludeCompilerMessage(Set<String> regexes) {
+    	excludedCompilerMessage.addAll(regexes);
     }
 }

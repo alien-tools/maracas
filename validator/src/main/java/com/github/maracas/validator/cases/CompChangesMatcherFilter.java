@@ -62,12 +62,13 @@ public class CompChangesMatcherFilter extends MatcherFilter {
         if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
             for (CompilerMessage message : messages) {
                 boolean include = true;
-                for (String pattern : opts.excludedBreakingChanges().values()) {
+                Set<String> patterns = opts.excludedCompilerMessage();
+
+                for (String pattern : patterns)
                     if (message.path().contains(pattern)) {
                         include = false;
                         break;
                     }
-                }
 
                 if (include)
                     filteredMessages.add(message);

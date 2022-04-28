@@ -53,30 +53,50 @@ public class CompChangesCase {
     	MatcherOptions opts = new MatcherOptions();
 
         // Coming from Maracas broken uses (unimplemented)
-        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC, "classNoLongerPublic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED, "classTypeChanged");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT, "methodAbstractNowDefault");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE, "methodLessAccessible");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_STATIC, "methodNoLongerStatic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_STATIC, "methodNowStatic");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_THROWS_CHECKED_EXCEPTION, "methodNowThrosCheckedException");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION, "methodNoLongerThrowsCheckedException");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_TO_CLASS, "methodAbstractAddedToClass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NEW_DEFAULT, "methodNewDefault");
-        opts.excludeBreakingChange(JApiCompatibilityChange.CONSTRUCTOR_LESS_ACCESSIBLE, "constructorLessAccessible");
+        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC);
+        opts.excludeCompilerMessage("classNoLongerPublic");
+        opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED);
+        opts.excludeCompilerMessage("classTypeChanged");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT);
+        opts.excludeCompilerMessage("methodAbstractNowDefault");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_LESS_ACCESSIBLE);
+        opts.excludeCompilerMessage("methodLessAccessible");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_STATIC);
+        opts.excludeCompilerMessage("methodNoLongerStatic");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_STATIC);
+        opts.excludeCompilerMessage("methodNowStatic");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NOW_THROWS_CHECKED_EXCEPTION);
+        opts.excludeCompilerMessage("methodNowThrosCheckedException");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION);
+        opts.excludeCompilerMessage("methodNoLongerThrowsCheckedException");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_TO_CLASS);
+        opts.excludeCompilerMessage("methodAbstractAddedToClass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NEW_DEFAULT);
+        opts.excludeCompilerMessage("methodNewDefault");
+        opts.excludeBreakingChange(JApiCompatibilityChange.CONSTRUCTOR_LESS_ACCESSIBLE);
+        opts.excludeCompilerMessage("constructorLessAccessible");
 
         // Coming from Maracas delta by design
-        opts.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_MODIFIED_INCOMPATIBLE, "superclassModifiedIncompatible");
-        //opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS, "methodRemovedInSuperclass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS, "methodAddedToPublicClass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS, "methodAbstractAddedInSuperclass");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE, "methodAbstractAddedInImplementedInterface");
-        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE, "methodDefaultAddedInImplementedInterface");
-        opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS, "fieldLessAccessibleThanInSuperclass");
-        //opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS, "fieldRemovedInSuperclass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_MODIFIED_INCOMPATIBLE);
+        opts.excludeCompilerMessage("superclassModifiedIncompatible");
+        //opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
+        //opts.excludeCompilerMessage("methodRemovedInSuperclass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ADDED_TO_PUBLIC_CLASS);
+        opts.excludeCompilerMessage("methodAddedToPublicClass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
+        opts.excludeCompilerMessage("methodAbstractAddedInSuperclass");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE);
+        opts.excludeCompilerMessage("methodAbstractAddedInImplementedInterface");
+        opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
+        opts.excludeCompilerMessage("methodDefaultAddedInImplementedInterface");
+        opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE_THAN_IN_SUPERCLASS);
+        opts.excludeCompilerMessage("fieldLessAccessibleThanInSuperclass");
+        //opts.excludeBreakingChange(JApiCompatibilityChange.FIELD_REMOVED_IN_SUPERCLASS);
+        //opts.excludeCompilerMessage("fieldRemovedInSuperclass");
 
         // Missing JApiCmp breaking changes
-        opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE, "methodMoreAccessible");
+        opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE);
+        opts.excludeCompilerMessage("methodMoreAccessible");
 
         return opts;
     }
