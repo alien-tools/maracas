@@ -33,7 +33,9 @@ public class CasesDefaultMatcherFilter extends MatcherFilter {
         if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
             for (BrokenUse bu : brokenUses) {
                 JApiCompatibilityChange bc = bu.change();
-                if (!opts.excludedBreakingChanges().contains(bc))
+                String path = bu.element().getPosition().getFile().getAbsolutePath();
+                if (!opts.excludedBreakingChanges().contains(bc)
+                	&& !matchesPattern(path, opts.excludedCompilerMessage()))
                     filteredBrokenUses.add(bu);
             }
         }
@@ -45,23 +47,20 @@ public class CasesDefaultMatcherFilter extends MatcherFilter {
         Set<CompilerMessage> filteredMessages = new HashSet<CompilerMessage>();
 
         if (opts != null && !opts.excludedCompilerMessage().isEmpty()) {
-            for (CompilerMessage message : messages) {
-                boolean include = true;
-                Set<String> regexes = opts.excludedCompilerMessage();
-
-                for (String regex : regexes) {
-                	Pattern pattern = Pattern.compile(regex);
-                	Matcher matcher = pattern.matcher(message.path());
-                    if (matcher.matches()) {
-                        include = false;
-                        break;
-                    }
-                }
-
-                if (include)
+            for (CompilerMessage message : messages)
+                if (!matchesPattern(message.path(), opts.excludedCompilerMessage()))
                     filteredMessages.add(message);
-            }
         }
         return filteredMessages;
+    }
+
+    private boolean matchesPattern(String path, Set<String> regexes) {
+    	for (String regex : regexes) {
+        	Pattern pattern = Pattern.compile(regex);
+        	Matcher matcher = pattern.matcher(path);
+            if (matcher.matches())
+                return true;
+        }
+    	return false;
     }
 }

@@ -50,6 +50,7 @@ public class APIEvolutionDataCorpusCase {
         // Coming from Maracas broken uses (unimplemented)
         opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC);
         opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_TYPE_CHANGED);
+        opts.excludeCompilerMessage(Set.of(".+otherIfazeToClass.+", ".+otherClazzToIfaze.+"));
         opts.excludeBreakingChange(JApiCompatibilityChange.CONSTRUCTOR_LESS_ACCESSIBLE);
         opts.excludeCompilerMessage(".+accessModifierClazzConstructorAccessDecrease.+");
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_NOW_DEFAULT);
@@ -69,6 +70,7 @@ public class APIEvolutionDataCorpusCase {
         opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_NEW_DEFAULT);
         opts.excludeCompilerMessage(".+membersIfazeMethodDefaultAdd.+");
 
+
         // Coming from Maracas delta by design
         opts.excludeBreakingChange(JApiCompatibilityChange.SUPERCLASS_MODIFIED_INCOMPATIBLE);
         //opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED_IN_SUPERCLASS);
@@ -83,6 +85,9 @@ public class APIEvolutionDataCorpusCase {
         opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE);
         opts.excludeCompilerMessage(Set.of(".+accessModifierClazzMethodAccessIncrease.+", ".+accessModifierClazzConstructorAccessIncreasee.+"));
         opts.excludeCompilerMessage(".+generics.+");
+        opts.excludeCompilerMessage(".+Native.+");
+        opts.excludeCompilerMessage(".+Strictfp.+");
+
 
         return opts;
     }
