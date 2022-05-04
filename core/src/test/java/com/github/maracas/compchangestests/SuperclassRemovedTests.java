@@ -12,7 +12,7 @@ public class SuperclassRemovedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(SUPERCLASS_REMOVED, 16);
+		assertNumberBrokenUses(SUPERCLASS_REMOVED, 15);
 	}
 
 	@Test
