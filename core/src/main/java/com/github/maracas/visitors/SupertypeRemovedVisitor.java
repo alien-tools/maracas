@@ -107,7 +107,8 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 			if (declType != null &&
 				((declType.isSubtypeOf(clsRef) && declTypeField == null) ||
 				// A no static invocation has an invalid position
-				(supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition())))
+				(!declType.getQualifiedName().equals("java.lang.Object") &&
+					supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition())))
 				brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
@@ -125,7 +126,7 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 		CtTypeReference<?> declType = methRef.getDeclaringType();
 		try {
 			if ((declType.isSubtypeOf(clsRef) && declType.getDeclaredExecutables().contains(methRef)) ||
-				supertypes.contains(declType))
+				(!declType.getQualifiedName().equals("java.lang.Object") && supertypes.contains(declType)))
 				brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
