@@ -83,11 +83,10 @@ public class APIEvolutionDataCorpusCase {
 
         // Missing JApiCmp breaking changes
         opts.excludeBreakingChange(MissingJApiCompatibilityChange.METHOD_MORE_ACCESSIBLE);
-        opts.excludeCompilerMessage(Set.of(".+accessModifierClazzMethodAccessIncrease.+", ".+accessModifierClazzConstructorAccessIncreasee.+"));
+        opts.excludeCompilerMessage(".+accessModifierClazz\\w+AccessIncrease.+");
         opts.excludeCompilerMessage(".+generics.+");
         opts.excludeCompilerMessage(".+Native.+");
         opts.excludeCompilerMessage(".+Strictfp.+");
-
 
         return opts;
     }
