@@ -47,21 +47,6 @@ public class CommitBuilder {
 		return buildCommit();
 	}
 
-	public void setSources(Path sources) {
-		this.sources = sources;
-	}
-
-	public Path getSources() {
-		if (sources != null && Files.exists(clonePath.resolve(sources)))
-			return clonePath.resolve(sources);
-		if (Files.exists(clonePath.resolve("src/main/java")))
-			return clonePath.resolve("src/main/java");
-		if (Files.exists(clonePath.resolve("src")))
-			return clonePath.resolve("src");
-		else
-			return clonePath;
-	}
-
 	public Commit getCommit() {
 		return this.commit;
 	}

@@ -5,6 +5,7 @@ import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
 import spoon.Launcher;
+import spoon.MavenLauncher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -31,28 +32,28 @@ public final class SpoonHelpers {
 	private SpoonHelpers() {
 	}
 
-	public static CtModel buildSpoonModel(Path clientSources, Path libraryJar) {
+	public static CtModel buildSpoonModelMaven(Path sources) {
+		MavenLauncher launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
+		return launcher.buildModel();
+	}
+
+	public static CtModel buildSpoonModelJar(Path jar) {
 		Launcher launcher = new Launcher();
-		launcher.getEnvironment().setComplianceLevel(11);
 
-		if (libraryJar != null)
-			try {
-				// Spoon will prioritize the JVM's classpath over our own
-				// custom classpath in case of conflict. Not what we want,
-				// so we use a custom child-first classloader instead.
-				// cf. https://github.com/INRIA/spoon/issues/3789
-				//String[] javaCp = { cp.toAbsolutePath().toString() };
-				//launcher.getEnvironment().setSourceClasspath(javaCp);
+		try {
+			// Spoon will prioritize the JVM's classpath over our own
+			// custom classpath in case of conflict. Not what we want,
+			// so we use a custom child-first classloader instead.
+			// cf. https://github.com/INRIA/spoon/issues/3789
+			//String[] javaCp = { cp.toAbsolutePath().toString() };
+			//launcher.getEnvironment().setSourceClasspath(javaCp);
 
-				URL[] cp = {new URL("file:" + libraryJar.toAbsolutePath())};
-				ClassLoader cl = new ParentLastURLClassLoader(cp);
-				launcher.getEnvironment().setInputClassLoader(cl);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-
-		if (clientSources != null)
-			launcher.addInputResource(clientSources.toAbsolutePath().toString());
+			URL[] cp = {new URL("file:" + jar.toAbsolutePath())};
+			ClassLoader cl = new ParentLastURLClassLoader(cp);
+			launcher.getEnvironment().setInputClassLoader(cl);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 
 		return launcher.buildModel();
 	}

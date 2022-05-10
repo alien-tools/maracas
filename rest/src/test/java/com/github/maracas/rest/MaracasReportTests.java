@@ -42,8 +42,8 @@ class MaracasReportTests {
 	void setUp() {
 		Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c1 = Paths.get("../test-data/comp-changes/client/src");
-		Path sources = Paths.get("../test-data/comp-changes/old/src");
+		Path c1 = Paths.get("../test-data/comp-changes/client/");
+		Path sources = Paths.get("../test-data/comp-changes/old/");
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)

@@ -12,6 +12,7 @@ import com.google.common.base.Stopwatch;
 import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import spoon.SpoonException;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtNamedElement;
@@ -65,6 +66,7 @@ public class Delta {
 	 * @param classes the list of changes extracted using
 	 *                {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
 	 * @param options Maracas' options
+	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
 	 * @return a corresponding new delta model
 	 */
 	public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes, MaracasOptions options) {
@@ -80,7 +82,7 @@ public class Delta {
 		// to our own. Building an empty model with the right
 		// classpath allows us to create these references.
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModel(null, oldJar);
+		CtModel model = SpoonHelpers.buildSpoonModelJar(oldJar);
 		CtPackage root = model.getRootPackage();
 		logger.info("Building Spoon model from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
 
@@ -99,13 +101,14 @@ public class Delta {
 	 * location for every breaking change.
 	 *
 	 * @param sources a {@link java.nio.file.Path} to the old library's source code
+	 * @throws SpoonException if we cannot build the Spoon model from {@code sources}
 	 */
 	public void populateLocations(Path sources) {
 		if (!PathHelpers.isValidDirectory(sources))
 			throw new IllegalArgumentException("sources isn't a valid directory");
 
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModel(sources, null);
+		CtModel model = SpoonHelpers.buildSpoonModelMaven(sources);
 		CtPackage root = model.getRootPackage();
 		BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
 		logger.info("Building Spoon model from {} took {}ms", sources, sw.elapsed().toMillis());

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
@@ -59,10 +60,13 @@ class PopularLibrariesTest {
 
   @ParameterizedTest
   @MethodSource("interestingLibraries")
-  void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) {
-    Path oldJar = downloadJAR(coordinatesToJarURL(gid, aid, v1));
-    Path newJar = downloadJAR(coordinatesToJarURL(gid, aid, v2));
+  void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) throws IOException {
+    Path oldJar = download(coordinatesToJarURL(gid, aid, v1));
+    Path newJar = download(coordinatesToJarURL(gid, aid, v2));
+    Path pom = download(coordinatesToPomURL(gid, aid, v1));
     Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
+    if (!Files.exists(sources.resolve("pom.xml")))
+      Files.move(pom, sources.resolve("pom.xml"));
 
     // Since we're using the libraries as clients themselves (so all package names clash),
     // the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
@@ -118,7 +122,12 @@ class PopularLibrariesTest {
       gid.replaceAll("\\.", "/"), aid, v, aid, v);
   }
 
-  static Path downloadJAR(String uri) {
+  String coordinatesToPomURL(String gid, String aid, String v) {
+    return "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom".formatted(
+      gid.replaceAll("\\.", "/"), aid, v, aid, v);
+  }
+
+  static Path download(String uri) {
     try {
       URL url = new URL(uri);
       String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1);
@@ -134,14 +143,15 @@ class PopularLibrariesTest {
   }
 
   static Path downloadAndExtractSources(String uri) {
-    Path sourcesJar = downloadJAR(uri);
+    Path sourcesJar = download(uri);
     String filename = sourcesJar.getFileName().toString();
     Path dest = TMP_PATH.resolve(filename.substring(0, filename.length() - 4));
-    dest.toFile().mkdirs();
+    Path srcPath = dest.resolve("src/main/java");
+    srcPath.toFile().mkdir();
 
     try {
       ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString());
-      zipFile.extractAll(dest.toAbsolutePath().toString());
+      zipFile.extractAll(srcPath.toAbsolutePath().toString());
     } catch (ZipException e) {
       e.printStackTrace();
     }
