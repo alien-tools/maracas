@@ -108,7 +108,7 @@ public class Delta {
 			throw new IllegalArgumentException("sources isn't a valid directory");
 
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModelMaven(sources);
+		CtModel model = SpoonHelpers.buildSpoonModelMaven(sources, null);
 		CtPackage root = model.getRootPackage();
 		BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
 		logger.info("Building Spoon model from {} took {}ms", sources, sw.elapsed().toMillis());
