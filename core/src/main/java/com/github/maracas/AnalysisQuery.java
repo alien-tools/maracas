@@ -130,7 +130,7 @@ public class AnalysisQuery {
 		}
 
 		/**
-		 * Sets the library's source code.
+		 * Sets the library's source code. Must point to a Maven project (ie. contains a {@code pom.xml}).
 		 *
 		 * @param sources Valid path to the directory containing the source code
 		 *                of the old version of the library.
@@ -138,7 +138,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder sources(Path sources) {
-			if (!PathHelpers.isValidDirectory(sources))
+			if (!PathHelpers.isValidMavenDirectory(sources))
 				throw new IllegalArgumentException("sources isn't a valid directory: " + sources);
 
 			this.sources = sources.toAbsolutePath();
@@ -146,7 +146,7 @@ public class AnalysisQuery {
 		}
 
 		/**
-		 * Includes a client into the analysis.
+		 * Includes a client into the analysis. Must point to a Maven project (ie. contains a {@code pom.xml}).
 		 *
 		 * @param client Valid path to the directory containing the source code of
 		 *               a client
@@ -154,7 +154,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the path isn't valid
 		 */
 		public Builder client(Path client) {
-			if (!PathHelpers.isValidDirectory(client))
+			if (!PathHelpers.isValidMavenDirectory(client))
 				throw new IllegalArgumentException("client isn't a valid directory: " + client);
 
 			if (!this.clients.contains(client.toAbsolutePath()))

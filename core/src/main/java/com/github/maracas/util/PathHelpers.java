@@ -28,4 +28,14 @@ public final class PathHelpers {
 				Files.exists(p) &&
 				Files.isDirectory(p);
 	}
+
+	/**
+	 * Checks whether {@code p} is a non-null {@link Path} to an existing directory
+	 * containing a {@code pom.xml} file.
+	 */
+	public static boolean isValidMavenDirectory(Path p) {
+		return
+			isValidDirectory(p) &&
+				Files.exists(p.resolve("pom.xml"));
+	}
 }

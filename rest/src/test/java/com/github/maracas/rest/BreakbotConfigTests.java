@@ -14,7 +14,6 @@ class BreakbotConfigTests {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
 		assertThat(c.build().module(), is(""));
-		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), is(empty()));
 		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), nullValue());
@@ -105,7 +104,6 @@ class BreakbotConfigTests {
 			    skipDepClean: true""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().module(), is("submodule/"));
-		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
 		assertThat(c.build().properties(), allOf(
 			aMapWithSize(2),
@@ -123,7 +121,6 @@ class BreakbotConfigTests {
 			  sources: module/src/main/java""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().module(), is("module/"));
-		assertThat(c.build().sources(), is("module/src/main/java"));
 	}
 
 	@Test
