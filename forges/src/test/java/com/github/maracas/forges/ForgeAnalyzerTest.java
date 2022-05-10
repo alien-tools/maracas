@@ -41,11 +41,11 @@ class ForgeAnalyzerTest {
       "https://github.com/alien-tools/comp-changes-client.git",
       "main"
     );
-    Commit v1 = new Commit(compChanges, "ac4e0e53af92cc5fbb45549c113b6626d4f982d2");
-    Commit v2 = new Commit(compChanges, "6c19cc73f549a71f5c8a808f336883d3a7a981f3");
+    Commit v1 = new Commit(compChanges, "089d6129244bca3f13686e53c5968dea9c882613");
+    Commit v2 = new Commit(compChanges, "a30d9d23a2d61776aeef88aa327753bd45b991a6");
     Path v1Clone = CLONES.resolve("v1");
     Path v2Clone = CLONES.resolve("v2");
-    Commit client = new Commit(compChangesClient, "6a019052348cd8916c17ffcce67b16d5dbfe0a4f");
+    Commit client = new Commit(compChangesClient, "9741eb8a8f9d9c92dc4d0125acbe64c1265cb07b");
 
     ForgeAnalyzer analyzer = new ForgeAnalyzer();
     AnalysisResult result = analyzer.analyzeCommits(

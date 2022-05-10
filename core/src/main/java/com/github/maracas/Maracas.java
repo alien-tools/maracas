@@ -112,18 +112,18 @@ public class Maracas {
 	 * @param client valid path to the client's source code to analyze
 	 * @param delta  the delta model
 	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
-	 * @throws IllegalArgumentException if client isn't a valid directory
+	 * @throws IllegalArgumentException if client isn't a valid Maven directory
 	 * @throws NullPointerException     if delta is null
 	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
 	 */
 	public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
-		if (!PathHelpers.isValidDirectory(client))
-			throw new IllegalArgumentException("client isn't a valid directory: " + client);
+		if (!PathHelpers.isValidMavenDirectory(client))
+			throw new IllegalArgumentException("client isn't a valid Maven directory: " + client);
 		Objects.requireNonNull(delta);
 
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
-			CtModel model = SpoonHelpers.buildSpoonModelMaven(client);
+			CtModel model = SpoonHelpers.buildSpoonModelMaven(client, delta.getOldJar());
 			logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
 
 			sw.reset();

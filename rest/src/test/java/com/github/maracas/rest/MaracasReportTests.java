@@ -54,7 +54,7 @@ class MaracasReportTests {
 		AnalysisResult result = Maracas.analyze(query);
 
 		GitHubForge forge = new GitHubForge(github);
-		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 2);
+		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 6);
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(

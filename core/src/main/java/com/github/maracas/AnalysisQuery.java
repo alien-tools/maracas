@@ -139,7 +139,7 @@ public class AnalysisQuery {
 		 */
 		public Builder sources(Path sources) {
 			if (!PathHelpers.isValidMavenDirectory(sources))
-				throw new IllegalArgumentException("sources isn't a valid directory: " + sources);
+				throw new IllegalArgumentException("sources isn't a valid Maven directory: " + sources);
 
 			this.sources = sources.toAbsolutePath();
 			return this;
@@ -155,7 +155,7 @@ public class AnalysisQuery {
 		 */
 		public Builder client(Path client) {
 			if (!PathHelpers.isValidMavenDirectory(client))
-				throw new IllegalArgumentException("client isn't a valid directory: " + client);
+				throw new IllegalArgumentException("client isn't a valid Maven directory: " + client);
 
 			if (!this.clients.contains(client.toAbsolutePath()))
 				this.clients.add(client.toAbsolutePath());
