@@ -51,24 +51,24 @@ public class ForgeAnalyzer {
         delta,
         clients.stream()
           .collect(Collectors.toMap(
-            builder -> builder.getClonePath(),
-            builder -> new DeltaImpact(builder.getClonePath(), delta, Collections.emptySet())
+            builder -> builder.getClonePath2(),
+            builder -> new DeltaImpact(builder.getModulePath(), delta, Collections.emptySet())
           ))
       );
 
-    delta.populateLocations(v1.getClonePath());
+    delta.populateLocations(v1.getClonePath2());
 
     Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
       clients.stream()
         .collect(Collectors.toMap(
-          c -> c.getClonePath(),
+          c -> c.getClonePath2(),
           c -> CompletableFuture.supplyAsync(
             () -> {
               c.cloneCommit();
-              return Maracas.computeDeltaImpact(c.getClonePath(), delta);
+              return Maracas.computeDeltaImpact(c.getModulePath(), delta);
             },
             executorService
-          ).exceptionally(t -> new DeltaImpact(c.getClonePath(), delta, t))
+          ).exceptionally(t -> new DeltaImpact(c.getModulePath(), delta, t))
       ));
 
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();

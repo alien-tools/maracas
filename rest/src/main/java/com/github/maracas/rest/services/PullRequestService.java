@@ -140,17 +140,22 @@ public class PullRequestService {
 
 				try {
 					Repository clientRepo =
-						StringUtils.isEmpty(c.branch()) ?
-							forge.fetchRepository(clientOwner, clientName) :
-							forge.fetchRepository(clientOwner, clientName, c.branch());
+						StringUtils.isEmpty(c.branch())
+							? forge.fetchRepository(clientOwner, clientName)
+							: forge.fetchRepository(clientOwner, clientName, c.branch());
 
 					String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
 					Commit clientCommit =
-						StringUtils.isEmpty(c.sha()) ?
-							new Commit(clientRepo, clientSha) :
-							new Commit(clientRepo, c.sha());
+						StringUtils.isEmpty(c.sha())
+							? new Commit(clientRepo, clientSha)
+							: new Commit(clientRepo, c.sha());
 					Path clientClone = clonePath(pr, clientCommit);
-					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
+					Path clientModule =
+						c.module() != null
+							? Paths.get(c.module())
+							: Paths.get("");
+
+					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
 					clientBuilders.put(clientClone, clientBuilder);
 				} catch (Exception e) {
 					clientReports.add(ClientReport.error(clientName, e));

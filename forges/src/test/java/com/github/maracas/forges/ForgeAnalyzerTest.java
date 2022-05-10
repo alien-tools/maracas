@@ -51,7 +51,7 @@ class ForgeAnalyzerTest {
     AnalysisResult result = analyzer.analyzeCommits(
       new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone)),
       new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone)),
-      Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"))),
+      Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Paths.get(""))),
       MaracasOptions.newDefault()
     );
 

@@ -6,28 +6,34 @@ import com.github.maracas.forges.build.Builder;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
 public class CommitBuilder {
 	private final Commit commit;
 	private final Path clonePath;
-	private Path sources;
-	private BuildConfig buildConfig;
+	private final Path module;
+	private final BuildConfig buildConfig;
 
-	public CommitBuilder(Commit commit, Path clonePath) {
+	public CommitBuilder(Commit commit, Path clonePath, Path module) {
 		Objects.requireNonNull(commit);
 		Objects.requireNonNull(clonePath);
+		Objects.requireNonNull(module);
 		this.commit = commit;
 		this.clonePath = clonePath;
+		this.module = module;
+		this.buildConfig = null;
 	}
 
 	public CommitBuilder(Commit commit, Path clonePath, BuildConfig buildConfig) {
-		this(commit, clonePath);
+		Objects.requireNonNull(commit);
+		Objects.requireNonNull(clonePath);
 		Objects.requireNonNull(buildConfig);
-
+		this.commit = commit;
+		this.clonePath = clonePath;
+		this.module = Paths.get("");
 		this.buildConfig = buildConfig;
 	}
 
@@ -51,11 +57,15 @@ public class CommitBuilder {
 		return this.commit;
 	}
 
-	public BuildConfig getBuildConfig() {
-		return this.buildConfig;
+	public Path getClonePath2() {
+		return clonePath;
 	}
 
-	public Path getClonePath() {
-		return clonePath;
+	public Path getModule() {
+		return module;
+	}
+
+	public Path getModulePath() {
+		return clonePath.resolve(module);
 	}
 }

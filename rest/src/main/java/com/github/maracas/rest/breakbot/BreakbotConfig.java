@@ -34,8 +34,8 @@ public record BreakbotConfig(
 
 	public record GitHubRepository(
 		String repository,
-		String sources,
 		String branch,
+		String module,
 		String sha
 	) {
 

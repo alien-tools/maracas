@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-import japicmp.config.Options;
 import japicmp.filter.AnnotationClassFilter;
 import japicmp.filter.JavadocLikeBehaviorFilter;
 import japicmp.filter.JavadocLikePackageFilter;
@@ -36,16 +35,16 @@ class AnalysisQueryTest {
 		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
-			.client(validDirectory)
-			.sources(validDirectory)
+			.client(validMavenDirectory)
+			.sources(validMavenDirectory2)
 			.options(opts)
 			.build();
 
 		assertThat(query.getOldJar(), is(equalTo(validJar.toAbsolutePath())));
 		assertThat(query.getNewJar(), is(equalTo(validJar.toAbsolutePath())));
 		assertThat(query.getClients(), hasSize(1));
-		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
-		assertThat(query.getSources(), is(equalTo(validDirectory.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
+		assertThat(query.getSources(), is(equalTo(validMavenDirectory2.toAbsolutePath())));
 		assertThat(query.getMaracasOptions(), is(equalTo(opts)));
 	}
 
@@ -54,14 +53,14 @@ class AnalysisQueryTest {
 		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
-			.client(validDirectory)
-			.client(validDirectory2)
-			.client(validDirectory)
+			.client(validMavenDirectory)
+			.client(validMavenDirectory2)
+			.client(validMavenDirectory)
 			.build();
 
 		assertThat(query.getClients(), hasSize(2));
-		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
-		assertThat(query.getClients(), hasItem(equalTo(validDirectory2.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory2.toAbsolutePath())));
 	}
 
 	@Test
@@ -69,12 +68,12 @@ class AnalysisQueryTest {
 		AnalysisQuery query = builder
 			.oldJar(validJar)
 			.newJar(validJar)
-			.clients(Lists.newArrayList(validDirectory, validDirectory2, validDirectory))
+			.clients(Lists.newArrayList(validMavenDirectory, validMavenDirectory2, validMavenDirectory))
 			.build();
 
 		assertThat(query.getClients(), hasSize(2));
-		assertThat(query.getClients(), hasItem(equalTo(validDirectory.toAbsolutePath())));
-		assertThat(query.getClients(), hasItem(equalTo(validDirectory2.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory2.toAbsolutePath())));
 	}
 
 	@Test
@@ -153,7 +152,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidSources_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.sources(invalidDirectory)
+			builder.sources(invalidMavenDirectory)
 		);
 	}
 
@@ -167,7 +166,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidClient_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.client(invalidDirectory)
+			builder.client(invalidMavenDirectory)
 		);
 	}
 
@@ -181,7 +180,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.clients(Collections.singleton(invalidDirectory))
+			builder.clients(Collections.singleton(invalidMavenDirectory))
 		);
 	}
 

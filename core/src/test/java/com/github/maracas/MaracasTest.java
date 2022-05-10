@@ -207,7 +207,7 @@ class MaracasTest {
 	void computeDeltaImpact_invalidPaths_throwsException() {
 		Delta d = Maracas.computeDelta(v1, v2);
 		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDeltaImpact(TestData.invalidDirectory, d)
+			Maracas.computeDeltaImpact(TestData.invalidMavenDirectory, d)
 		);
 
 		assertThrows(IllegalArgumentException.class, () ->
