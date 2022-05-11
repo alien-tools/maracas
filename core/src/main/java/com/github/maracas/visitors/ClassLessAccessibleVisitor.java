@@ -1,5 +1,7 @@
 package com.github.maracas.visitors;
 
+import java.util.Set;
+
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
 
@@ -41,10 +43,14 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 			// Protected fails if not a subtype and packages do not match
 			case PROTECTED:
 				CtTypeInformation parent = reference.getParent(CtType.class);
-				if ((parent == null && use.equals(APIUse.IMPORT))
-					|| (parent != null && !parent.isSubtypeOf(clsRef)
+				boolean refersToClass = parent != null && parent.isSubtypeOf(clsRef)
+					&& Set.of(APIUse.IMPLEMENTS, APIUse.EXTENDS, APIUse.TYPE_DEPENDENCY).contains(use);
+				boolean importsClass = parent == null && use.equals(APIUse.IMPORT);
+				boolean usesClassInBreakingManner = parent != null && !parent.isSubtypeOf(clsRef)
 					&& !parent.isSubtypeOf(clsRef.getTopLevelType())
-					&& !enclosingPkg.equals(expectedPkg)))
+					&& !enclosingPkg.equals(expectedPkg);
+
+				if (refersToClass || importsClass || usesClassInBreakingManner)
 					brokenUse(reference.getParent(), reference, clsRef, use);
 				break;
 			default:
