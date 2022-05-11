@@ -54,6 +54,84 @@ public final class SpoonTypeHelpers {
 	}
 
 	/**
+	 * Verifies if a type narrows a reference type. It checks both for primitive
+	 * and reference types. If the types are the same it returns {@code true}.
+	 * The implementation that verifies narrowing for primitive types is based
+	 * on the Java Language Specification (JLS) v10 chapter 5.1.3 and 5.1.4
+	 * {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.3}}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the reference type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isNarrowedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.equals(ref))
+			return true;
+
+		if (type.isPrimitive()) {
+			String typeName = type.getSimpleName();
+			String refNAme = ref.getSimpleName();
+
+			if (typeName.equals("byte"))
+				return Set.of("char").contains(refNAme);
+			else if (typeName.equals("short"))
+				return Set.of("byte", "char").contains(refNAme);
+			else if(typeName.equals("char"))
+				return Set.of("byte", "short").contains(refNAme);
+			else if (typeName.equals("int"))
+				return Set.of("byte", "short", "char").contains(refNAme);
+			else if (typeName.equals("long"))
+				return Set.of("byte", "short", "char", "int").contains(refNAme);
+			else if (typeName.equals("float"))
+				return Set.of("byte", "short", "char", "int", "long").contains(refNAme);
+			else if (typeName.equals("double"))
+				return Set.of("byte", "short", "char", "int", "long", "float").contains(refNAme);
+		}
+
+		return type.isSubtypeOf(ref);
+	}
+
+	/**
+	 * Verifies if a type widens a reference type. It checks both for primitive
+	 * and reference types. If the types are the same it returns {@code true}.
+	 * The implementation that verifies narrowing for primitive types is based
+	 * on the Java Language Specification (JLS) v10 chapter 5.1.2
+	 * {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.2}}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the reference type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isWidenedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.equals(ref))
+			return true;
+
+		if (type.isPrimitive()) {
+			String typeName = type.getSimpleName();
+			String refNAme = ref.getSimpleName();
+
+			if (typeName.equals("byte"))
+				return Set.of("short", "int", "long", "float", "double").contains(refNAme);
+			else if (typeName.equals("short"))
+				return Set.of("int", "long", "float", "double").contains(refNAme);
+			else if(typeName.equals("char"))
+				return Set.of("int", "long", "float", "double").contains(refNAme);
+			else if (typeName.equals("int"))
+				return Set.of("long", "float", "double").contains(refNAme);
+			else if (typeName.equals("long"))
+				return Set.of("float", "double").contains(refNAme);
+			else if (typeName.equals("float"))
+				return Set.of("double").contains(refNAme);
+			else if (typeName.equals("double"))
+				return Set.of("byte", "short", "char", "int", "long", "float").contains(refNAme);
+		}
+
+		return ref.isSubtypeOf(type);
+	}
+
+	/**
 	 * Verifies if the given type is assignable to the expected type. Boxing and
 	 * unboxing cases are considered as {@code false} cases (non-assignable).
 	 *
@@ -62,7 +140,7 @@ public final class SpoonTypeHelpers {
 	 * @return {@code true} if the given type is assignable to the expected type;
 	 *         {@code false} otherwise
 	 */
-	public static boolean isAssignableFromNoBoxing(CtTypeReference<?> expected, CtTypeReference<?> given) {
+	public static boolean isAssignableFromOverride(CtTypeReference<?> expected, CtTypeReference<?> given) {
 		if (isBoxedType(expected, given) || isUnboxedType(expected, given))
 			return false;
 		else

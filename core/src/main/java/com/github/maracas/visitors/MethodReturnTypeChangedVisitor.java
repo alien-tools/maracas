@@ -78,7 +78,7 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
 		if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method)
-			&& !SpoonTypeHelpers.isAssignableFromNoBoxing(newType, expectedType))
+			&& !SpoonTypeHelpers.isAssignableFromOverride(newType, expectedType))
 			brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
 	}
 }
