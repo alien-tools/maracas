@@ -8,7 +8,6 @@ import com.github.maracas.util.SpoonHelpers;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -42,15 +41,18 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 				break;
 			// Protected fails if not a subtype and packages do not match
 			case PROTECTED:
-				CtTypeInformation parent = reference.getParent(CtType.class);
-				boolean refersToClass = parent != null && parent.isSubtypeOf(clsRef)
+				CtType<?> parent = reference.getParent(CtType.class);
+				boolean refersToClassTopLevel = parent != null
+					&& parent.isTopLevel()
+					&& parent.isSubtypeOf(clsRef)
 					&& Set.of(APIUse.IMPLEMENTS, APIUse.EXTENDS, APIUse.TYPE_DEPENDENCY).contains(use);
 				boolean importsClass = parent == null && use.equals(APIUse.IMPORT);
-				boolean usesClassInBreakingManner = parent != null && !parent.isSubtypeOf(clsRef)
+				boolean usesClassInBreakingManner = parent != null
+					&& !parent.isSubtypeOf(clsRef)
 					&& !parent.isSubtypeOf(clsRef.getTopLevelType())
 					&& !enclosingPkg.equals(expectedPkg);
 
-				if (refersToClass || importsClass || usesClassInBreakingManner)
+				if (importsClass || refersToClassTopLevel || usesClassInBreakingManner)
 					brokenUse(reference.getParent(), reference, clsRef, use);
 				break;
 			default:
