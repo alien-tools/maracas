@@ -141,7 +141,7 @@ public final class SpoonTypeHelpers {
 	 *         {@code false} otherwise
 	 */
 	public static boolean isAssignableFromOverride(CtTypeReference<?> expected, CtTypeReference<?> given) {
-		if (isBoxedType(expected, given) || isUnboxedType(expected, given))
+		if (isBoxedType(expected, given) || isUnboxedType(expected, given) || isWidenedType(expected, given))
 			return false;
 		else
 			return isAssignableFrom(expected, given);
