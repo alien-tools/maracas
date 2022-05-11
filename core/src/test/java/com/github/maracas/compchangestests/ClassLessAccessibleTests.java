@@ -294,6 +294,7 @@ class ClassLessAccessibleTests extends CompChangesTest {
     void testPub2ProInnerExt2() {
         assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 9, "new main.classLessAccessible.ClassLessAccessiblePub2Pro.ClassLessAccessiblePub2ProExtInner()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
     }
+
 	@Test
     void testPub2ProInnerExt3() {
         assertNoBrokenUse("ClassLessAccessiblePub2ProExt.java", 12, "ClassLessAccessiblePub2ProExtInner", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
