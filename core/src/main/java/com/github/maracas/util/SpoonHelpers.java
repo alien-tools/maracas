@@ -22,6 +22,7 @@ import spoon.reflect.reference.CtTypeReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -32,8 +33,17 @@ public final class SpoonHelpers {
 	private SpoonHelpers() {
 	}
 
-	public static CtModel buildSpoonModelMaven(Path sources, Path libraryJar) {
-		MavenLauncher launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
+	public static CtModel buildSpoonModelFromSources(Path sources, Path libraryJar) {
+		Launcher launcher;
+		if (Files.exists(sources.resolve("pom.xml")))
+			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
+		else if (Files.exists(sources.resolve("build.gradle")))
+			launcher = new GradleLauncher(sources);
+		else {
+			launcher = new Launcher();
+			launcher.getEnvironment().setComplianceLevel(11);
+			launcher.addInputResource(sources.toAbsolutePath().toString());
+		}
 
 		if (libraryJar != null)
 			try {
@@ -54,7 +64,7 @@ public final class SpoonHelpers {
 		return launcher.buildModel();
 	}
 
-	public static CtModel buildSpoonModelJar(Path jar) {
+	public static CtModel buildSpoonModelFromJar(Path jar) {
 		Launcher launcher = new Launcher();
 
 		try {

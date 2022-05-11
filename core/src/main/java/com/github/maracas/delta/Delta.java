@@ -82,7 +82,7 @@ public class Delta {
 		// to our own. Building an empty model with the right
 		// classpath allows us to create these references.
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModelJar(oldJar);
+		CtModel model = SpoonHelpers.buildSpoonModelFromJar(oldJar);
 		CtPackage root = model.getRootPackage();
 		logger.info("Building Spoon model from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
 
@@ -108,7 +108,7 @@ public class Delta {
 			throw new IllegalArgumentException("sources isn't a valid directory");
 
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModelMaven(sources, null);
+		CtModel model = SpoonHelpers.buildSpoonModelFromSources(sources, null);
 		CtPackage root = model.getRootPackage();
 		BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
 		logger.info("Building Spoon model from {} took {}ms", sources, sw.elapsed().toMillis());
