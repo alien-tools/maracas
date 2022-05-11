@@ -28,6 +28,48 @@ public final class SpoonTypeHelpers {
 	}
 
 	/**
+	 * Verifies if the given type {@code type} is the unboxed version of the
+	 * reference type {@code ref}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type is the unboxed version of the
+	 *         reference type; {@code false} otherwise
+	 */
+	public static boolean isUnboxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		return type.equals(ref.unbox());
+	}
+
+	/**
+	 * Verifies if the given type {@code type} is the boxed version of the
+	 * reference type {@code ref}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type is the boxed version of the
+	 *         reference type; {@code false} otherwise
+	 */
+	public static boolean isBoxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		return type.unbox().equals(ref);
+	}
+
+	/**
+	 * Verifies if the given type is assignable to the expected type. Boxing and
+	 * unboxing cases are considered as {@code false} cases (non-assignable).
+	 *
+	 * @param expected expected type
+	 * @param given    given type
+	 * @return {@code true} if the given type is assignable to the expected type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isAssignableFromNoBoxing(CtTypeReference<?> expected, CtTypeReference<?> given) {
+		if (isBoxedType(expected, given) || isUnboxedType(expected, given))
+			return false;
+		else
+			return isAssignableFrom(expected, given);
+	}
+
+	/**
 	 * Couldn't find a built-in utility to check all cases.
 	 * This implementation most likely messes up.
 	 */
