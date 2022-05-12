@@ -152,7 +152,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidSources_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.sources(invalidMavenDirectory)
+			builder.sources(invalidDirectory)
 		);
 	}
 
@@ -166,7 +166,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidClient_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.client(invalidMavenDirectory)
+			builder.client(invalidDirectory)
 		);
 	}
 
@@ -180,7 +180,7 @@ class AnalysisQueryTest {
 	@Test
 	void invalidClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.clients(Collections.singleton(invalidMavenDirectory))
+			builder.clients(Collections.singleton(invalidDirectory))
 		);
 	}
 

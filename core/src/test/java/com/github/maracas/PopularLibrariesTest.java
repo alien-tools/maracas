@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
@@ -63,10 +62,7 @@ class PopularLibrariesTest {
   void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) throws IOException {
     Path oldJar = download(coordinatesToJarURL(gid, aid, v1));
     Path newJar = download(coordinatesToJarURL(gid, aid, v2));
-    Path pom = download(coordinatesToPomURL(gid, aid, v1));
     Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
-    if (!Files.exists(sources.resolve("pom.xml")))
-      Files.move(pom, sources.resolve("pom.xml"));
 
     // Since we're using the libraries as clients themselves (so all package names clash),
     // the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
@@ -119,11 +115,6 @@ class PopularLibrariesTest {
 
   String coordinatesToSourcesURL(String gid, String aid, String v) {
     return "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s-sources.jar".formatted(
-      gid.replaceAll("\\.", "/"), aid, v, aid, v);
-  }
-
-  String coordinatesToPomURL(String gid, String aid, String v) {
-    return "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom".formatted(
       gid.replaceAll("\\.", "/"), aid, v, aid, v);
   }
 
