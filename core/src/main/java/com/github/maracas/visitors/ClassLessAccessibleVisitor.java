@@ -61,11 +61,6 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 		}
 	}
 
-	private void m() {
-		var a = clsRef.getElements(new TypeFilter<>(CtExecutableReference.class));
-		var o = 0;
-	}
-
 	/**
 	 * Uncomment if we want to include broken uses for every access to a field or
 	 * invocation of a method that is declared by the no-more-visible class.
