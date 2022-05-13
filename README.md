@@ -4,10 +4,10 @@
 
 Maracas is a source code and bytecode analysis framework⁠—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—designed to analyze how Java libraries evolve and how their evolution impact their clients.
 
-Currently, Maracas consists of two main components:
+Currently, Maracas consists of three main components:
   - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
-  - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [break-bot](https://github.com/break-bot/breakbot) to analyze pull requests on GitHub and report their impact
-
+  - The [forges API](forges/) handles communication with software forges (currently GitHub only) and build systems (currently Maven and Gradle) to gather source code and build JARs that are then analyzed by the core API
+  - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [BreakBot](https://github.com/alien-tools/breakbot) to analyze pull requests on GitHub and report their impact
 
 ## Content
 
@@ -31,7 +31,7 @@ Then, declare the following dependency:
 <dependency>
   <groupId>com.github.maracas</groupId>
   <artifactId>maracas-core</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
@@ -100,6 +100,7 @@ oauth=<GITHUB_TOKEN>
 The preferred way to run the Maracas REST server is using Docker:
 ```bash
 $ cd rest/
+$ docker-compose build
 $ docker-compose up
 ```
 

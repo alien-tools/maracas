@@ -41,9 +41,9 @@ public class ForgeAnalyzer {
     Optional<Path> jarV2 = futureV2.get();
 
     if (jarV1.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v1);
+      throw new BuildException("Couldn't build a JAR from " + v1.getCommit());
     if (jarV2.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v2);
+      throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
     Delta delta = Maracas.computeDelta(jarV1.get(), jarV2.get(), options);
     if (delta.getBreakingChanges().isEmpty())
@@ -51,8 +51,8 @@ public class ForgeAnalyzer {
         delta,
         clients.stream()
           .collect(Collectors.toMap(
-            CommitBuilder::getClonePath,
-            c -> new DeltaImpact(c.getSources(), delta, Collections.emptySet())
+            builder -> builder.getClonePath(),
+            builder -> new DeltaImpact(builder.getSources(), delta, Collections.emptySet())
           ))
       );
 
@@ -74,8 +74,8 @@ public class ForgeAnalyzer {
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
     Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (Path client : clientFutures.keySet()) {
-      impacts.put(client, clientFutures.get(client).get());
+    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
+      impacts.put(entry.getKey(), entry.getValue().get());
     }
 
     return new AnalysisResult(delta, impacts);

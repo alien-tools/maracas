@@ -14,20 +14,20 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 class BuilderTest {
   final Path mavenProject = Paths.get("src/test/resources/maven-project/");
   final Path gradleProject = Paths.get("src/test/resources/gradle-project/");
-  final Path unknownProject = Paths.get("src/test/resources/maven-project/src");
+  final Path invalidProject = Paths.get("src/test/resources/");
 
   @Test
   void build_From_MavenProject() {
-    assertThat(Builder.of(mavenProject), instanceOf(MavenBuilder.class));
+    assertThat(Builder.of(new BuildConfig(mavenProject)), instanceOf(MavenBuilder.class));
   }
 
   @Test
   void build_From_GradleProject() {
-    assertThat(Builder.of(gradleProject), instanceOf(GradleBuilder.class));
+    assertThat(Builder.of(new BuildConfig(gradleProject)), instanceOf(GradleBuilder.class));
   }
 
   @Test
   void build_From_UnknownProject() {
-    assertThrows(BuildException.class, () -> Builder.of(unknownProject));
+    assertThrows(BuildException.class, () -> Builder.of(new BuildConfig(invalidProject)));
   }
 }

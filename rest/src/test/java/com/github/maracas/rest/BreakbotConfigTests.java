@@ -13,11 +13,10 @@ class BreakbotConfigTests {
 	void testDefaultConfiguration() {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
-		assertThat(c.build().pom(), is("pom.xml"));
+		assertThat(c.build().module(), is(""));
 		assertThat(c.build().sources(), is(emptyString()));
-		assertThat(c.build().goals(), both(hasSize(1)).and(contains("package")));
-		assertThat(c.build().properties(), hasSize(2));
-		assertThat(c.build().properties(), contains("maven.test.skip", "assembly.skipAssembly"));
+		assertThat(c.build().goals(), is(empty()));
+		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), nullValue());
 		assertThat(c.clients(), empty());
 	}
@@ -99,14 +98,20 @@ class BreakbotConfigTests {
 	void testCustomBuild() {
 		String s = """
 			build:
-			  pom: anotherpom.xml
+			  module: submodule/
 			  goals: [a, b]
-			  properties: [skipTests, skipDepClean]""";
+			  properties:
+			    skipTests: true
+			    skipDepClean: true""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().pom(), is("anotherpom.xml"));
+		assertThat(c.build().module(), is("submodule/"));
 		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
-		assertThat(c.build().properties(), allOf(iterableWithSize(2), hasItem("skipTests"), hasItem("skipDepClean")));
+		assertThat(c.build().properties(), allOf(
+			aMapWithSize(2),
+			hasEntry("skipTests", "true"),
+			hasEntry("skipDepClean", "true"))
+		);
 		assertThat(c.build().jar(), nullValue());
 	}
 
@@ -114,10 +119,10 @@ class BreakbotConfigTests {
 	void testCustomSources() {
 		String s = """
 			build:
-			  pom: module/pom.xml
+			  module: module/
 			  sources: module/src/main/java""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().pom(), is("module/pom.xml"));
+		assertThat(c.build().module(), is("module/"));
 		assertThat(c.build().sources(), is("module/src/main/java"));
 	}
 
@@ -127,10 +132,9 @@ class BreakbotConfigTests {
 			build:
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().pom(), is("pom.xml"));
-		assertThat(c.build().goals(), hasItem("package"));
-		assertThat(c.build().properties(), hasItem("maven.test.skip"));
-		assertThat(c.build().properties(), hasItem("assembly.skipAssembly"));
+		assertThat(c.build().module(), is(""));
+		assertThat(c.build().goals(), is(empty()));
+		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), is("build/out.jar"));
 	}
 
@@ -138,14 +142,15 @@ class BreakbotConfigTests {
 	void testCustomBuildOutput() {
 		String s = """
 			build:
-			  pom: anotherpom.xml
+			  module: sub/
 			  goals: [custom]
-			  properties: [prop]
+			  properties:
+			    -x: test
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().pom(), is("anotherpom.xml"));
+		assertThat(c.build().module(), is("sub/"));
 		assertThat(c.build().goals(), allOf(iterableWithSize(1), hasItem("custom")));
-		assertThat(c.build().properties(), allOf(iterableWithSize(1), hasItem("prop")));
+		assertThat(c.build().properties(), allOf(aMapWithSize(1), hasEntry("-x", "test")));
 		assertThat(c.build().jar(), is("build/out.jar"));
 	}
 

@@ -9,6 +9,7 @@ import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.BrokenUse;
@@ -34,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -128,7 +128,7 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr, pr.prBase(), config);
+			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
 			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
@@ -187,7 +187,7 @@ public class PullRequestService {
 			);
 
 			return new MaracasReport(
-				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.prBase())),
+				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.mergeBase())),
 				clientReports
 			);
 		} catch (ExecutionException | InterruptedException e) {
@@ -198,13 +198,12 @@ public class PullRequestService {
 	}
 
 	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
-		Properties buildProperties = new Properties();
-		config.build().properties().forEach(p -> buildProperties.put(p, "true"));
+		Path clonePath = clonePath(pr, c);
+		BuildConfig buildConfig = new BuildConfig(clonePath.resolve(config.build().module()));
+		config.build().goals().forEach(g -> buildConfig.addGoal(g));
+		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-		CommitBuilder builder = new CommitBuilder(c, clonePath(pr, c));
-		builder.setBuildFile(Paths.get(config.build().pom()));
-		builder.setBuildGoals(config.build().goals());
-		builder.setBuildProperties(buildProperties);
+		CommitBuilder builder = new CommitBuilder(c, clonePath, buildConfig);
 		if (!StringUtils.isEmpty(config.build().sources()))
 			builder.setSources(Paths.get(config.build().sources()));
 
