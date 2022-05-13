@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<installed>
+  <addon api-version="" name="org.ow2.asm:asm" version="5.0.4"/>
+  <addon api-version="" name="org.revapi:revapi-java-spi" version="0.6.0"/>
+  <addon api-version="" name="org.slf4j:slf4j-api" version="1.7.5"/>
+  <addon api-version="" name="com.google.code.findbugs:annotations" version="3.0.0"/>
+  <addon api-version="" name="org.revapi:revapi" version="0.5.2"/>
+  <addon api-version="" name="org.revapi:revapi-java" version="0.8.0"/>
+  <addon api-version="" name="org.revapi:revapi-site-base" version="1"/>
+  <addon api-version="" name="org.revapi:revapi-reporting-text" version="0.4.1"/>
+</installed>

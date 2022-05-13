@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<addon>
+  <dependencies>
+    <dependency export="true" name="org.revapi:revapi" optional="false" version="0.5.1"/>
+    <dependency export="false" name="com.google.code.findbugs:annotations" optional="false" version="3.0.0"/>
+  </dependencies>
+</addon>

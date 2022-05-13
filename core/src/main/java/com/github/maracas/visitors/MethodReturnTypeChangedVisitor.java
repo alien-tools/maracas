@@ -2,6 +2,7 @@ package com.github.maracas.visitors;
 
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonTypeHelpers;
+
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
@@ -76,7 +77,8 @@ public class MethodReturnTypeChangedVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method) && !SpoonTypeHelpers.isAssignableFrom(newType, expectedType))
+		if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method)
+			&& !SpoonTypeHelpers.isAssignableFromOverride(newType, expectedType))
 			brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
 	}
 }

@@ -4,27 +4,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.github.maracas.brokenuse.BrokenUse;
-import com.github.maracas.validator.build.CompilerMessage;
-import com.github.maracas.validator.matchers.MatcherFilter;
 import com.github.maracas.validator.matchers.MatcherOptions;
 
 import japicmp.model.JApiCompatibilityChange;
 
-/**
- * CompChanges matcher filter to filter out broken uses and compiler messages
- * based on package naming conventions
- */
-public class CompChangesMatcherFilter extends MatcherFilter {
-    /**
-     * Creates a CompChangesMatcherFilter instance.
-     *
-     * @param opts set of {@link MatcherOptions}
-     */
-    public CompChangesMatcherFilter(MatcherOptions opts) {
-        super(opts);
-    }
+public class CompChangesMatcherFilter extends CasesDefaultMatcherFilter {
 
-    /**
+	public CompChangesMatcherFilter(MatcherOptions opts) {
+		super(opts);
+	}
+
+	/**
      * Transforms a JApiCmp breaking change enum into a package name given the
      * CompChanges project.
      *
@@ -46,33 +36,16 @@ public class CompChangesMatcherFilter extends MatcherFilter {
 
         if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
             for (BrokenUse bu : brokenUses) {
+            	JApiCompatibilityChange bc = bu.change();
+            	if (opts.excludedBreakingChanges().contains(bc))
+                    continue;
+
                 String path = bu.element().getPosition().getFile().getAbsolutePath();
-                String bc = bcToPkgName(bu.change());
-                if (path.contains(bc))
+                String pkg = bcToPkgName(bc);
+                if (path.contains(pkg))
                     filteredBrokenUses.add(bu);
             }
         }
         return filteredBrokenUses;
-    }
-
-    @Override
-    public Set<CompilerMessage> filterCompilerMessages(Set<CompilerMessage> messages) {
-        Set<CompilerMessage> filteredMessages = new HashSet<CompilerMessage>();
-
-        if (opts != null && !opts.excludedBreakingChanges().isEmpty()) {
-            for (CompilerMessage message : messages) {
-                boolean include = true;
-                for (String pattern : opts.excludedBreakingChanges().values()) {
-                    if (message.path().contains(pattern)) {
-                        include = false;
-                        break;
-                    }
-                }
-
-                if (include)
-                    filteredMessages.add(message);
-            }
-        }
-        return filteredMessages;
     }
 }

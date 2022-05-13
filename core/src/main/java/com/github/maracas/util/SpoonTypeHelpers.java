@@ -1,5 +1,9 @@
 package com.github.maracas.util;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtIf;
@@ -8,13 +12,11 @@ import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtSynchronized;
 import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtArrayTypeReference;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * Helper in charge of verifying the compatibility between
@@ -23,6 +25,154 @@ import java.util.Set;
  */
 public final class SpoonTypeHelpers {
 	private SpoonTypeHelpers() {
+	}
+
+	/**
+	 * Verifies if the given type {@code type} is the unboxed version of the
+	 * reference type {@code ref}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type is the unboxed version of the
+	 *         reference type; {@code false} otherwise
+	 */
+	public static boolean isUnboxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		return type.equals(ref.unbox());
+	}
+
+	/**
+	 * Verifies if the given type {@code type} is the boxed version of the
+	 * reference type {@code ref}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type is the boxed version of the
+	 *         reference type; {@code false} otherwise
+	 */
+	public static boolean isBoxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		return type.unbox().equals(ref);
+	}
+
+	/**
+	 * Verifies if a type narrows a reference type. It checks both for primitive
+	 * and reference types. If the types are the same it returns {@code true}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the reference type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isNarrowedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.isPrimitive())
+			return isWidenedPrimitiveType(type, ref);
+
+		return type.equals(ref) || type.isSubtypeOf(ref);
+	}
+
+	/**
+	 * Verifies if a type narrows a primitive type. If the types are the same it
+	 * returns {@code true}. The implementation that verifies narrowing for
+	 * primitive types is based on the Java Language Specification (JLS) v10
+	 * chapter 5.1.3 and 5.1.4 {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.3}}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the primitive reference
+	 *         type; {@code false} otherwise
+	 */
+	public static boolean isNarrowedPrimitiveType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.isPrimitive()) {
+			String typeName = type.getSimpleName();
+			String refNAme = ref.getSimpleName();
+
+			if (type.equals(ref))
+				return true;
+			else if (typeName.equals("byte"))
+				return Set.of("char").contains(refNAme);
+			else if (typeName.equals("short"))
+				return Set.of("byte", "char").contains(refNAme);
+			else if(typeName.equals("char"))
+				return Set.of("byte", "short").contains(refNAme);
+			else if (typeName.equals("int"))
+				return Set.of("byte", "short", "char").contains(refNAme);
+			else if (typeName.equals("long"))
+				return Set.of("byte", "short", "char", "int").contains(refNAme);
+			else if (typeName.equals("float"))
+				return Set.of("byte", "short", "char", "int", "long").contains(refNAme);
+			else if (typeName.equals("double"))
+				return Set.of("byte", "short", "char", "int", "long", "float").contains(refNAme);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Verifies if a type widens a reference type. It checks both for primitive
+	 * and reference types. If the types are the same it returns {@code true}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the reference type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isWidenedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.isPrimitive())
+			return isWidenedPrimitiveType(type, ref);
+
+		return type.equals(ref) || ref.isSubtypeOf(type);
+	}
+
+	/**
+	 * Verifies if a type widens a primitive type. If the types are the same it
+	 * returns {@code true}. The implementation that verifies narrowing for
+	 * primitive types is based on the Java Language Specification (JLS) v10 chapter 5.1.2
+	 * {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.2}}.
+	 *
+	 * @param type given type
+	 * @param ref  reference type to checked against
+	 * @return {@code true} if the given type narrows the primitive reference
+	 *         type; {@code false} otherwise
+	 */
+	public static boolean isWidenedPrimitiveType(CtTypeReference<?> type, CtTypeReference<?> ref) {
+		if (type.isPrimitive()) {
+			String typeName = type.getSimpleName();
+			String refNAme = ref.getSimpleName();
+
+			if (type.equals(ref))
+				return true;
+			else if (typeName.equals("byte"))
+				return Set.of("short", "int", "long", "float", "double").contains(refNAme);
+			else if (typeName.equals("short"))
+				return Set.of("int", "long", "float", "double").contains(refNAme);
+			else if(typeName.equals("char"))
+				return Set.of("int", "long", "float", "double").contains(refNAme);
+			else if (typeName.equals("int"))
+				return Set.of("long", "float", "double").contains(refNAme);
+			else if (typeName.equals("long"))
+				return Set.of("float", "double").contains(refNAme);
+			else if (typeName.equals("float"))
+				return Set.of("double").contains(refNAme);
+			else if (typeName.equals("double"))
+				return Set.of("byte", "short", "char", "int", "long", "float").contains(refNAme);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Verifies if the given type is assignable to the expected type. Boxing and
+	 * unboxing cases are considered as {@code false} cases (non-assignable).
+	 *
+	 * @param expected expected type
+	 * @param given    given type
+	 * @return {@code true} if the given type is assignable to the expected type;
+	 *         {@code false} otherwise
+	 */
+	public static boolean isAssignableFromOverride(CtTypeReference<?> expected, CtTypeReference<?> given) {
+		if (isBoxedType(expected, given) || isUnboxedType(expected, given) || isWidenedPrimitiveType(expected, given))
+			return false;
+		else
+			return isAssignableFrom(expected, given);
 	}
 
 	/**
@@ -104,36 +254,71 @@ public final class SpoonTypeHelpers {
 		return false;
 	}
 
+	public static boolean isSubtype(CtTypeReference<?> typeRef, CtTypeReference<?> superRef) {
+	    if (typeRef != null)
+	        return isSubtype(Set.of(typeRef), superRef);
+	    else
+	        return false;
+	}
+
 	/**
-	 * Verifies if a set of type references are subtypes of the clsRef.
+	 * Verifies if a set of type references are subtypes of the typeRef.
+	 * TODO: Don't see the point of this method anymore. Might need to go away.
 	 *
-	 * @param superRefs set of type references
-	 * @param typeRef   reference super type
-	 * @return <code>true</code> if any of the types is a
-	 * subtype of the clsRef;
-	 * <code>false</code> otherwise.
+	 * @param typeRefs set of type references
+	 * @param superRef reference super type
+	 * @return <code>true</code> if any of the types is a subtype of the clsRef;
+	 *         <code>false</code> otherwise.
 	 */
-	public static boolean isSubtype(Set<CtTypeReference<?>> superRefs, CtTypeReference<?> typeRef) {
-		for (CtTypeReference<?> superRef : superRefs) {
-			if (superRef == null || superRef.getTypeDeclaration() == null)
+	public static boolean isSubtype(Set<CtTypeReference<?>> typeRefs, CtTypeReference<?> superRef) {
+		for (CtTypeReference<?> ref : typeRefs) {
+			if (ref == null || ref.getTypeDeclaration() == null)
 				return false;
 
-			if (superRef.equals(typeRef))
+			if (ref.equals(superRef))
 				return true;
 
-			if ((superRef.getTypeDeclaration().isAbstract() || superRef.isInterface())
-				&& superRef.isSubtypeOf(typeRef)) {
+			if ((ref.getTypeDeclaration().isAbstract() || ref.isInterface())
+				&& ref.isSubtypeOf(superRef)) {
 				// FIXME: interfaces extending other interfaces are not considered
 				// by the isSubtypeOf() method
-				Set<CtTypeReference<?>> clsSupers = new HashSet<>(superRef.getSuperInterfaces());
-				clsSupers.add(superRef.getSuperclass());
-				return isSubtype(clsSupers, typeRef);
+				Set<CtTypeReference<?>> supers = new HashSet<>(ref.getSuperInterfaces());
+				supers.add(ref.getSuperclass());
+				return isSubtype(supers, superRef);
 			} else {
 				return false;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Verifies if a set of {@link CtTypeReference} objects declare at least one
+	 * abstract method that has not been implemented along the type hierarchy.
+	 *
+	 * @param types {@link CtTypeReference} objects to analyze
+	 * @return {@code true} if there is at least one unimplemented abstract
+	 *         method declared by the types passed as parameter; otherwise
+	 *         {@code false}
+	 */
+	public static boolean haveUnimplAbstractMethods(Set<CtTypeReference<?>> types) {
+	    for (CtTypeReference<?> sup : types) {
+            CtType<?> decl = sup.getTypeDeclaration();
+            if (decl == null)
+                return true; // Over-approximate
+            else
+                for (CtExecutableReference<?> e : sup.getAllExecutables()) {
+                    CtBlock<?> body = e.getExecutableDeclaration().getBody();
+                    CtExecutableReference<?> overriden = e.getOverridingExecutable();
+
+                    // Broken use if there is an abstract supermethod with
+                    // no concrete implementation
+                    if (body == null && overriden == null)
+                        return true;
+                }
+        }
+        return false;
 	}
 
 	// Oof

@@ -1,0 +1,149 @@
+<project default="jar">
+
+
+    <!-- with the run-experiment target, this class is then executed with both the old and the new version of the 3rd party lib -->
+    <property name="package" value="accessModifierClazzAccessDecrease"/>
+    <property name="error1" value="clear"/>
+
+    <property name="main" value="${package}.Main"/>
+    <property name="client" value="client"/>
+    <property name="lib.old" value="lib-v1"/>
+    <property name="lib.new" value="lib-v2"/>
+
+    <!-- sources -->
+    <property name="client.src" value="${client}/src/"/>
+    <property name="lib.new.src" value="${lib.new}/src/"/>
+    <property name="lib.old.src" value="${lib.old}/src/"/>
+
+    <!-- tmp folders for compilation -->
+    <property name="client.bin" value="bin/bin-client"/>
+    <property name="client.old.bin" value="bin/bin-client-old"/>
+    <property name="client.new.bin" value="bin/bin-client-new"/>
+    <property name="lib.old.bin" value="bin/bin-lib1"/>
+    <property name="lib.new.bin" value="bin/bin-lib2"/>
+
+    <!-- jar file names -->
+    <property name="client.jar" value="${client}.jar"/>
+    <property name="lib.new.jar" value="${lib.new}.jar"/>
+    <property name="lib.old.jar" value="${lib.old}.jar"/>
+
+    <!-- output file names -->
+    <property name="binary.file" value="binary.txt"/>
+    <property name="source.file" value="source.txt"/>
+
+
+    <!-- Compile sources to classes -->
+    <target name="compile" description="Compile source files to classes">
+        <mkdir dir="${client.bin}"/>
+        <mkdir dir="${lib.old.bin}"/>
+        <mkdir dir="${lib.new.bin}"/>
+
+        <javac srcdir="${lib.old.src}"
+               destdir="${lib.old.bin}"
+               debug="on"
+               source="1.8"
+               includeAntRuntime="false"/>
+
+        <javac srcdir="${lib.new.src}"
+               destdir="${lib.new.bin}"
+               debug="on"
+               source="1.8"
+               includeAntRuntime="false"/>
+
+        <javac srcdir="${client.src}"
+               destdir="${client.bin}"
+               classpath="${lib.old.bin}"
+               debug="on"
+               source="1.8"
+               includeAntRuntime="false"/>
+    </target>
+
+    <!-- Clean script direcrtion -->
+    <target name="clean" description="Clean script direcrtion">
+        <delete file="${binary.file}"/>
+        <delete file="${source.file}"/>
+        <delete dir="${client.bin}"/>
+        <delete dir="${client.old}"/>
+        <delete dir="${client.new}"/>
+        <delete dir="${lib.old.bin}"/>
+        <delete dir="${lib.new.bin}"/>
+    </target>
+
+    <!-- build the jars -->
+    <target name="jar" depends="clean,compile" description="Create the jar files">
+        <jar jarfile="${lib.old.jar}" basedir="${lib.old.bin}"/>
+        <jar jarfile="${lib.new.jar}" basedir="${lib.new.bin}"/>
+        <jar jarfile="${client.jar}" basedir="${client.bin}"/>
+    </target>
+
+    <!-- print instructions -->
+    <target name="instructions" depends="jar" description="Print instructions">
+        <echo>Run experiments as follows:</echo>
+        <echo>each example corresponds to one package in ${program.project}/src - for instance pck":</echo>
+        <echo>with original library: java -cp ${client.jar}:${lib.old.jar} pck.Main</echo>
+        <echo>with updated library: java -cp ${client.jar}:${lib.new.jar} pck.Main</echo>
+    </target>
+
+    <!-- run experiment with class defined in main -->
+    <target name="run-experiments"
+            depends="clean,run-with-lib-version1,run-with-lib-version2,compile-with-lib-version1,compile-with-lib-version2"
+            description="run experiments">
+        <echo>Done - main class used was ${package}.Main</echo>
+    </target>
+
+    <!-- run experiment with old lib version -->
+    <target name="run-with-lib-version1" description="run experiment with old lib version">
+        <echo>===Executing ${main} with original library (${lib.old.jar})===</echo>
+        <java classname="${main}">
+            <classpath>
+                <pathelement location="${client.jar}"/>
+                <pathelement location="${lib.old.jar}"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="compile-with-lib-version1" description="compile against old lib version">
+        <echo>***Compiling program with original library (${lib.old.jar})***</echo>
+        <mkdir dir="${client.old.bin}"/>
+        <javac srcdir="${client.src}"
+               destdir="${client.old.bin}"
+               classpath="${lib.old.jar}"
+               includes="${package}/**"
+               debug="on"
+               source="1.8"
+               includeAntRuntime="false"/>
+    </target>
+
+    <!-- run experiment with new lib version -->
+    <target name="run-with-lib-version2" description="run experiment with new lib version">
+        <echo>===Executing ${main} with updated library (${lib.new.jar})===</echo>
+		<record name="${binary.file}" action="start"/>
+		<record name="binary/${main}.txt" action="start"/>
+        <java classname="${main}">
+            <classpath>
+                <pathelement location="${client.jar}"/>
+                <pathelement location="${lib.new.jar}"/>
+            </classpath>
+        </java>
+		<record name="binary/${main}.txt" action="stop"/>
+		<record name="${binary.file}" action="stop"/>
+
+    </target>
+
+    <target name="compile-with-lib-version2" description="compile against new lib version">
+        <echo>***Compiling program with updated library (${lib.new.jar})***</echo>
+        <record name="${source.file}" action="start"/>
+        <mkdir dir="${client.new.bin}"/>
+        <javac srcdir="${client.src}"
+               destdir="${client.new.bin}"
+               classpath="${lib.new.jar}"
+               includes="${package}/**"
+               debug="on"
+               source="1.8"
+               includeAntRuntime="false"
+               failonerror="false"
+        />
+        <record name="${source.file}" action="stop"/>
+    </target>
+
+</project>
