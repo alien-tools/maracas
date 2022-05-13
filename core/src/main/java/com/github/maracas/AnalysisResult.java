@@ -35,7 +35,7 @@ public record AnalysisResult(
 	/**
 	 * Creates an {@link AnalysisResult} where the delta doesn't impact any client
 	 *
-	 * @param delta the computed delta model
+	 * @param delta   the computed delta model
 	 * @param clients a collection of Path-identified clients
 	 * @return the newly-created {@link AnalysisResult}
 	 */

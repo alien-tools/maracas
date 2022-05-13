@@ -8,11 +8,7 @@ import spoon.Launcher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
-import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
@@ -164,7 +160,7 @@ public final class SpoonHelpers {
 	}
 
 	/**
-	 * cf https://stackoverflow.com/a/5446671
+	 * cf <a href="https://stackoverflow.com/a/5446671">this SO question</a>
 	 * <p>
 	 * A parent-last classloader that will try the child classloader first and then the parent.
 	 * This takes a fair bit of doing because java really prefers parent-first.

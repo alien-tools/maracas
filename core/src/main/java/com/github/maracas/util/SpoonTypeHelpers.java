@@ -1,22 +1,16 @@
 package com.github.maracas.util;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
-import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtIf;
-import spoon.reflect.code.CtLoop;
-import spoon.reflect.code.CtReturn;
-import spoon.reflect.code.CtSynchronized;
-import spoon.reflect.code.CtThrow;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Helper in charge of verifying the compatibility between
@@ -34,7 +28,7 @@ public final class SpoonTypeHelpers {
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type is the unboxed version of the
-	 *         reference type; {@code false} otherwise
+	 * reference type; {@code false} otherwise
 	 */
 	public static boolean isUnboxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		return type.equals(ref.unbox());
@@ -47,7 +41,7 @@ public final class SpoonTypeHelpers {
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type is the boxed version of the
-	 *         reference type; {@code false} otherwise
+	 * reference type; {@code false} otherwise
 	 */
 	public static boolean isBoxedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		return type.unbox().equals(ref);
@@ -60,7 +54,7 @@ public final class SpoonTypeHelpers {
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type narrows the reference type;
-	 *         {@code false} otherwise
+	 * {@code false} otherwise
 	 */
 	public static boolean isNarrowedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		if (type.isPrimitive())
@@ -72,13 +66,13 @@ public final class SpoonTypeHelpers {
 	/**
 	 * Verifies if a type narrows a primitive type. If the types are the same it
 	 * returns {@code true}. The implementation that verifies narrowing for
-	 * primitive types is based on the Java Language Specification (JLS) v10
-	 * chapter 5.1.3 and 5.1.4 {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.3}}.
+	 * primitive types is based on the <a href="https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.3">
+	 * Java Language Specification (JLS) v10 chapter 5.1.3 and 5.1.4.</a>.
 	 *
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type narrows the primitive reference
-	 *         type; {@code false} otherwise
+	 * type; {@code false} otherwise
 	 */
 	public static boolean isNarrowedPrimitiveType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		if (type.isPrimitive()) {
@@ -91,7 +85,7 @@ public final class SpoonTypeHelpers {
 				return Set.of("char").contains(refNAme);
 			else if (typeName.equals("short"))
 				return Set.of("byte", "char").contains(refNAme);
-			else if(typeName.equals("char"))
+			else if (typeName.equals("char"))
 				return Set.of("byte", "short").contains(refNAme);
 			else if (typeName.equals("int"))
 				return Set.of("byte", "short", "char").contains(refNAme);
@@ -113,7 +107,7 @@ public final class SpoonTypeHelpers {
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type narrows the reference type;
-	 *         {@code false} otherwise
+	 * {@code false} otherwise
 	 */
 	public static boolean isWidenedType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		if (type.isPrimitive())
@@ -125,13 +119,13 @@ public final class SpoonTypeHelpers {
 	/**
 	 * Verifies if a type widens a primitive type. If the types are the same it
 	 * returns {@code true}. The implementation that verifies narrowing for
-	 * primitive types is based on the Java Language Specification (JLS) v10 chapter 5.1.2
-	 * {@link https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.2}}.
+	 * primitive types is based on the <a href="https://docs.oracle.com/javase/specs/jls/se10/html/jls-5.html#jls-5.1.2">
+	 * Java Language Specification (JLS) v10 chapter 5.1.2</a>.
 	 *
 	 * @param type given type
 	 * @param ref  reference type to checked against
 	 * @return {@code true} if the given type narrows the primitive reference
-	 *         type; {@code false} otherwise
+	 * type; {@code false} otherwise
 	 */
 	public static boolean isWidenedPrimitiveType(CtTypeReference<?> type, CtTypeReference<?> ref) {
 		if (type.isPrimitive()) {
@@ -144,7 +138,7 @@ public final class SpoonTypeHelpers {
 				return Set.of("short", "int", "long", "float", "double").contains(refNAme);
 			else if (typeName.equals("short"))
 				return Set.of("int", "long", "float", "double").contains(refNAme);
-			else if(typeName.equals("char"))
+			else if (typeName.equals("char"))
 				return Set.of("int", "long", "float", "double").contains(refNAme);
 			else if (typeName.equals("int"))
 				return Set.of("long", "float", "double").contains(refNAme);
@@ -166,7 +160,7 @@ public final class SpoonTypeHelpers {
 	 * @param expected expected type
 	 * @param given    given type
 	 * @return {@code true} if the given type is assignable to the expected type;
-	 *         {@code false} otherwise
+	 * {@code false} otherwise
 	 */
 	public static boolean isAssignableFromOverride(CtTypeReference<?> expected, CtTypeReference<?> given) {
 		if (isBoxedType(expected, given) || isUnboxedType(expected, given) || isWidenedPrimitiveType(expected, given))
@@ -255,10 +249,10 @@ public final class SpoonTypeHelpers {
 	}
 
 	public static boolean isSubtype(CtTypeReference<?> typeRef, CtTypeReference<?> superRef) {
-	    if (typeRef != null)
-	        return isSubtype(Set.of(typeRef), superRef);
-	    else
-	        return false;
+		if (typeRef != null)
+			return isSubtype(Set.of(typeRef), superRef);
+		else
+			return false;
 	}
 
 	/**
@@ -268,7 +262,7 @@ public final class SpoonTypeHelpers {
 	 * @param typeRefs set of type references
 	 * @param superRef reference super type
 	 * @return <code>true</code> if any of the types is a subtype of the clsRef;
-	 *         <code>false</code> otherwise.
+	 * <code>false</code> otherwise.
 	 */
 	public static boolean isSubtype(Set<CtTypeReference<?>> typeRefs, CtTypeReference<?> superRef) {
 		for (CtTypeReference<?> ref : typeRefs) {
@@ -299,26 +293,26 @@ public final class SpoonTypeHelpers {
 	 *
 	 * @param types {@link CtTypeReference} objects to analyze
 	 * @return {@code true} if there is at least one unimplemented abstract
-	 *         method declared by the types passed as parameter; otherwise
-	 *         {@code false}
+	 * method declared by the types passed as parameter; otherwise
+	 * {@code false}
 	 */
 	public static boolean haveUnimplAbstractMethods(Set<CtTypeReference<?>> types) {
-	    for (CtTypeReference<?> sup : types) {
-            CtType<?> decl = sup.getTypeDeclaration();
-            if (decl == null)
-                return true; // Over-approximate
-            else
-                for (CtExecutableReference<?> e : sup.getAllExecutables()) {
-                    CtBlock<?> body = e.getExecutableDeclaration().getBody();
-                    CtExecutableReference<?> overriden = e.getOverridingExecutable();
+		for (CtTypeReference<?> sup : types) {
+			CtType<?> decl = sup.getTypeDeclaration();
+			if (decl == null)
+				return true; // Over-approximate
+			else
+				for (CtExecutableReference<?> e : sup.getAllExecutables()) {
+					CtBlock<?> body = e.getExecutableDeclaration().getBody();
+					CtExecutableReference<?> overriden = e.getOverridingExecutable();
 
-                    // Broken use if there is an abstract supermethod with
-                    // no concrete implementation
-                    if (body == null && overriden == null)
-                        return true;
-                }
-        }
-        return false;
+					// Broken use if there is an abstract supermethod with
+					// no concrete implementation
+					if (body == null && overriden == null)
+						return true;
+				}
+		}
+		return false;
 	}
 
 	// Oof

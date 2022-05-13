@@ -1,16 +1,13 @@
 package com.github.maracas.visitors;
 
-import java.util.Set;
-
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.util.SpoonHelpers;
-
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.filter.TypeFilter;
+
+import java.util.Set;
 
 public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
@@ -30,33 +27,33 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 			String expectedPkg = SpoonHelpers.getEnclosingPkgName(clsRef.getTypeDeclaration());
 
 			switch (newAccessModifier) {
-			// Private always breaks
-			case PRIVATE:
-				brokenUse(reference.getParent(), reference, clsRef, use);
-				break;
-			// Package-private breaks if packages do not match
-			case PACKAGE_PROTECTED:
-				if (!enclosingPkg.equals(expectedPkg))
+				// Private always breaks
+				case PRIVATE:
 					brokenUse(reference.getParent(), reference, clsRef, use);
-				break;
-			// Protected fails if not a subtype and packages do not match
-			case PROTECTED:
-				CtType<?> parent = reference.getParent(CtType.class);
-				boolean refersToClassTopLevel = parent != null
-					&& parent.isTopLevel()
-					&& parent.isSubtypeOf(clsRef)
-					&& Set.of(APIUse.IMPLEMENTS, APIUse.EXTENDS, APIUse.TYPE_DEPENDENCY).contains(use);
-				boolean importsClass = parent == null && use.equals(APIUse.IMPORT);
-				boolean usesClassInBreakingManner = parent != null
-					&& !parent.isSubtypeOf(clsRef)
-					&& !parent.isSubtypeOf(clsRef.getTopLevelType())
-					&& !enclosingPkg.equals(expectedPkg);
+					break;
+				// Package-private breaks if packages do not match
+				case PACKAGE_PROTECTED:
+					if (!enclosingPkg.equals(expectedPkg))
+						brokenUse(reference.getParent(), reference, clsRef, use);
+					break;
+				// Protected fails if not a subtype and packages do not match
+				case PROTECTED:
+					CtType<?> parent = reference.getParent(CtType.class);
+					boolean refersToClassTopLevel = parent != null
+						&& parent.isTopLevel()
+						&& parent.isSubtypeOf(clsRef)
+						&& Set.of(APIUse.IMPLEMENTS, APIUse.EXTENDS, APIUse.TYPE_DEPENDENCY).contains(use);
+					boolean importsClass = parent == null && use.equals(APIUse.IMPORT);
+					boolean usesClassInBreakingManner = parent != null
+						&& !parent.isSubtypeOf(clsRef)
+						&& !parent.isSubtypeOf(clsRef.getTopLevelType())
+						&& !enclosingPkg.equals(expectedPkg);
 
-				if (importsClass || refersToClassTopLevel || usesClassInBreakingManner)
-					brokenUse(reference.getParent(), reference, clsRef, use);
-				break;
-			default:
-				// Can't happen
+					if (importsClass || refersToClassTopLevel || usesClassInBreakingManner)
+						brokenUse(reference.getParent(), reference, clsRef, use);
+					break;
+				default:
+					// Can't happen
 			}
 		}
 	}

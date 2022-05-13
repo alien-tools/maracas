@@ -1,7 +1,6 @@
 package com.github.maracas.visitors;
 
 import com.github.maracas.brokenuse.APIUse;
-
 import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.reference.CtFieldReference;
 
