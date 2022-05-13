@@ -15,13 +15,13 @@ import spoon.reflect.reference.CtFieldReference;
  *      </pre>
  * </ul>
  */
-public class AnnotationDeprecatedAddedToCFieldVisitor extends FieldReferenceVisitor {
+public class AnnotationDeprecatedAddedToFieldVisitor extends FieldReferenceVisitor {
 	/**
-	 * Creates a {@link AnnotationDeprecatedAddedToCFieldVisitor} instance.
+	 * Creates a {@link AnnotationDeprecatedAddedToFieldVisitor} instance.
 	 *
 	 * @param fRef the now-deprecated field
 	 */
-	public AnnotationDeprecatedAddedToCFieldVisitor(CtFieldReference<?> fRef) {
+	public AnnotationDeprecatedAddedToFieldVisitor(CtFieldReference<?> fRef) {
 		super(fRef, JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED);
 	}
 }
