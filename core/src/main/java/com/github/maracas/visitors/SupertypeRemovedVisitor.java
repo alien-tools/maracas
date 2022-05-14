@@ -3,12 +3,8 @@ package com.github.maracas.visitors;
 import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
 import spoon.SpoonException;
-import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -98,14 +94,17 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 		if (!superFields.contains(fieldRef.getSimpleName()))
 			return;
 
-		CtTypeReference<?> typeRef = fieldRef.getDeclaringType();
+		CtTypeReference<?> declType = fieldRef.getDeclaringType();
+		CtFieldReference<?> declTypeField = (declType != null)
+			? declType.getDeclaredField(fieldRef.getSimpleName())
+			: null;
 		try {
-			if (typeRef != null && typeRef.isSubtypeOf(clsRef)) {
-				CtFieldReference<?> declRef = typeRef.getDeclaredField(fieldRef.getSimpleName());
-
-				if (declRef == null)
-					brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
-			}
+			if (declType != null &&
+				((declType.isSubtypeOf(clsRef) && declTypeField == null) ||
+					// A no static invocation has an invalid position
+					(!declType.getQualifiedName().equals("java.lang.Object") &&
+						supertypes.contains(declType) && !fieldRef.getPosition().isValidPosition())))
+				brokenUse(fieldRef, fieldRef, clsRef, APIUse.FIELD_ACCESS);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
 		}
@@ -113,31 +112,43 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 
 	@Override
 	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
-		if (!superMethods.contains(invocation.getExecutable()))
+		// FIXME: Assumption-All static methods from the removed supertype are
+		// being called in a static way.
+		CtExecutableReference<?> methRef = invocation.getExecutable();
+		if (!superMethods.contains(methRef) || isStaticInvocation(invocation))
 			return;
 
-		CtTypeReference<?> typeRef = ((CtType<?>) invocation.getParent(CtType.class)).getReference();
-
+		CtTypeReference<?> declType = methRef.getDeclaringType();
 		try {
-			if (typeRef.isSubtypeOf(clsRef)) {
-				brokenUse(invocation, invocation.getExecutable(), clsRef, APIUse.METHOD_INVOCATION);
-			}
+			if ((declType.isSubtypeOf(clsRef) && declType.getDeclaredExecutables().contains(methRef)) ||
+				(!declType.getQualifiedName().equals("java.lang.Object") && supertypes.contains(declType)))
+				brokenUse(invocation, methRef, clsRef, APIUse.METHOD_INVOCATION);
 		} catch (SpoonException e) {
 			// FIXME: Find fancier solution. A declaration cannot be resolved
 		}
+	}
 
-		// FIXME: cases where a static access is performed via the supertype
-		// must not be registered as a broken use.
-
-		// var target = invocation.getTarget();
-		// if (methRef.isStatic() && target instanceof CtTypeAccess<?>
-		// && supertypes.contains(((CtTypeAccess<?>) target).getAccessedType()))
-		// return;
+	/**
+	 * Verifies if there is a static invocation to a method of a removed supertype.
+	 *
+	 * @param invocation method invocation
+	 * @return true if there is a static invocation of a method of one of the
+	 * removed supertypes; otherwise, false.
+	 */
+	private <T> boolean isStaticInvocation(CtInvocation<T> invocation) {
+		CtExecutableReference<?> methRef = invocation.getExecutable();
+		CtExpression<?> target = invocation.getTarget();
+		if (methRef.isStatic() && target instanceof CtTypeAccess<?> ta
+			&& ta.getPosition().isValidPosition()) {
+			CtTypeReference<?> refType = ((CtTypeAccess<?>) target).getAccessedType();
+			return supertypes.contains(refType);
+		}
+		return false;
 	}
 
 	@Override
 	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (!superMethods.stream().anyMatch(superM -> superM.getSignature().equals(m.getSignature())))
+		if (superMethods.stream().noneMatch(superM -> superM.getSignature().equals(m.getSignature())))
 			return;
 
 		try {

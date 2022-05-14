@@ -3,8 +3,6 @@ package com.github.maracas.brokenuse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.delta.Delta;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -37,8 +35,6 @@ public class DeltaImpact {
 	 * The {@link Throwable} we got in case the analysis failed
 	 */
 	private final Throwable throwable;
-
-	private static final Logger logger = LogManager.getLogger(DeltaImpact.class);
 
 	/**
 	 * Creates a {@link DeltaImpact} instance.

@@ -1,0 +1,1 @@
+java -jar japi-checker-cli-0.2.1-SNAPSHOT.jar ../../testing-lib-v1/target/testing-lib-v1-0.0.1.jar ../../testing-lib-v2/target/testing-lib-v2-0.0.2.jar -bin > japiCheckerReport.txt

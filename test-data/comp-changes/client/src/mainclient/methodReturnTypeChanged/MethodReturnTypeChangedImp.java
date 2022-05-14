@@ -16,4 +16,14 @@ public class MethodReturnTypeChangedImp implements IMethodReturnTypeChanged {
 		return 1;
 	}
 
+	@Override
+	public int methodReturnTypeChangedBox() {
+		return 0;
+	}
+
+	@Override
+	public Integer methodReturnTypeChangedUnbox() {
+		return 0;
+	}
+
 }

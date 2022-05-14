@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-import japicmp.config.Options;
 import japicmp.filter.AnnotationClassFilter;
 import japicmp.filter.JavadocLikeBehaviorFilter;
 import japicmp.filter.JavadocLikePackageFilter;

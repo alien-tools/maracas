@@ -1,0 +1,1 @@
+java -jar sigtestdev.jar SetupAndTest -reference ../../testing-lib-v1/target/testing-lib-v1-0.0.1.jar;../lib_dependencies/rt.jar -test ../../testing-lib-v2/target/testing-lib-v2-0.0.2.jar;../lib_dependencies/rt.jar -H -package testing_lib  -out sigtestReport.txt

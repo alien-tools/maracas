@@ -49,18 +49,21 @@ public class SupertypeAddedVisitor extends BreakingChangeVisitor {
 	// e.g. by starting with some stricter conditions on the classes we want to look at
 	@Override
 	public <T> void visitCtClass(CtClass<T> cls) {
-		if (!cls.isAbstract()) {
-			CtTypeReference<?> typeRef = cls.getReference();
+		CtTypeReference<?> typeRef = cls.getReference();
+
+		if (typeRef != null && !cls.isAbstract()) {
 			Set<CtTypeReference<?>> interfaces = typeRef.getSuperInterfaces().stream()
 				.filter(ref -> ref.getTypeDeclaration() != null)
 				.collect(Collectors.toSet());
+			CtTypeReference<?> superclass = typeRef.getSuperclass();
 
-			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef))
+			if (SpoonTypeHelpers.isSubtype(interfaces, clsRef) &&
+				SpoonTypeHelpers.haveUnimplAbstractMethods(newTypes))
 				brokenUse(cls, cls, clsRef, APIUse.IMPLEMENTS);
 
-			if (typeRef.getSuperclass() != null)
-				if (SpoonTypeHelpers.isSubtype(Set.of(typeRef.getSuperclass()), clsRef))
-					brokenUse(cls, cls, clsRef, APIUse.EXTENDS);
+			if (superclass != null && superclass.isSubtypeOf(clsRef) &&
+				SpoonTypeHelpers.haveUnimplAbstractMethods(newTypes))
+				brokenUse(cls, cls, clsRef, APIUse.EXTENDS);
 		}
 	}
 }

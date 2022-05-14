@@ -31,11 +31,11 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
-	Path v1 = TestData.compChangesV1;
-	Path v2 = TestData.compChangesV2;
-	Path client = TestData.compChangesClient;
-	Path client2 = TestData.compChangesSources;
-	Path sources = TestData.compChangesSources;
+	final Path v1 = TestData.compChangesV1;
+	final Path v2 = TestData.compChangesV2;
+	final Path client = TestData.compChangesClient;
+	final Path client2 = TestData.compChangesSources;
+	final Path sources = TestData.compChangesSources;
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {

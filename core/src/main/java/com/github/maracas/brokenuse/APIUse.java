@@ -10,7 +10,6 @@ package com.github.maracas.brokenuse;
  */
 public enum APIUse {
 	ANNOTATION,
-	DECLARATION,
 	EXTENDS,
 	FIELD_ACCESS,
 	IMPLEMENTS,
