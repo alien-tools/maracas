@@ -1,26 +1,34 @@
 package com.github.maracas.experiments;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.client.RestTemplate;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FetchGitHubRepositories {
 	public static final int REPO_MIN_STARS = 10;
 	public static final String REPO_LAST_PUSHED_DATE = "2022-02-12";
 	public static final int PR_LAST_MERGED_IN_DAYS = 90;
+	public static final int LAST_PUSH_IN_DAYS = 90;
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 
 	record Repository(String owner, String name, int stars, int mergedPRs, boolean maven, boolean gradle) {}
@@ -67,24 +75,24 @@ public class FetchGitHubRepositories {
 			    %s
 			  ) {
 			    repositoryCount
-					   
+
 			    edges {
 			      node {
 			        ... on Repository {
 			          nameWithOwner
 			          stargazerCount
-			          
+
 			          pom: object(expression: "HEAD:pom.xml") {
 			            oid
 			          }
-			          
+
 			          gradle: object(expression: "HEAD:build.gradle") {
 			            oid
 			          }
-					   
+
 			          pullRequests(states: [MERGED], last: 1) {
 			            mergedPRs: totalCount
-			            
+
 			            edges {
 			              node {
 			                mergedAt
@@ -94,7 +102,7 @@ public class FetchGitHubRepositories {
 			        }
 			      }
 			    }
-			    
+
 			    pageInfo {
 			      hasNextPage
 			      endCursor
@@ -163,10 +171,103 @@ public class FetchGitHubRepositories {
 		return repos;
 	}
 
+	private ResponseEntity<String> postQuery(String query) {
+		RestTemplate rest = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "Bearer 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");
+		headers.add("Content-Type", "application/graphql");
+		String jsonQuery = graphqlAsJson(query);
+		ResponseEntity<String> response = rest.postForEntity(GITHUB_GRAPHQL,
+			new HttpEntity<>(jsonQuery, headers), String.class);
+		return response;
+	}
+
+	private boolean isActive(String lastActivity, int lastAllowedActivity) {
+		if (!lastActivity.isEmpty()) {
+			LocalDate date = Date.from(Instant.parse(lastActivity)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			return isActive(date, lastAllowedActivity);
+		}
+		return false;
+	}
+
+	private boolean isActive(LocalDate lastActivity, int lastAllowedActivity) {
+		LocalDate now = LocalDate.now();
+		Duration duration = Duration.between(lastActivity.atStartOfDay(), now.atStartOfDay());
+		return duration.toDays() <= lastAllowedActivity;
+	}
+
+	private boolean isValidClient(String owner, String repo, int minStars, int maxStars) {
+		String query = """
+			query {
+			  repository(owner:%s, name:%s) {
+			    isArchived
+			    isDisabled
+			  	isEmpty
+			    isFork
+			    isLocked
+			  	languages(first:100) {
+			      nodes {
+			        name
+			      }
+			  	}
+			    pushedAt
+			    stargazerCount
+			    pom: object(expression: "HEAD:pom.xml") {
+			      oid
+			    }
+			    gradle: object(expression: "HEAD:build.gradle") {
+			      oid
+			    }
+			  }
+			}
+			""".formatted(owner, repo);
+
+		ResponseEntity<String> response = postQuery(query);
+		boolean valid = true;
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode repoJson = search.get("repository");
+
+			boolean isArchived = repoJson.get("isArchived").asBoolean();
+			boolean isDisabled = repoJson.get("isDisabled").asBoolean();
+			boolean isEmpty = repoJson.get("isEmpty").asBoolean();
+			boolean isFork = repoJson.get("isFork").asBoolean();
+			boolean isLocked = repoJson.get("isLocked").asBoolean();
+			String lastPush = repoJson.get("pushedAt").asText();
+			int stars = repoJson.get("stargazerCount").asInt();
+			boolean isMaven = repoJson.get("pom").hasNonNull("oid");
+			boolean isGradle = repoJson.get("gradle").hasNonNull("oid");
+			JsonNode languagesJson = repoJson.get("languages");
+			List<String> languages = languagesJson.findValuesAsText("name");
+
+			if (!isMaven || !isGradle)
+				return false;
+
+			if (isArchived || isDisabled || isEmpty || isFork || isLocked)
+				return false;
+
+			if (stars < minStars || stars > maxStars)
+				return false;
+
+			if (!isActive(lastPush, LAST_PUSH_IN_DAYS))
+				return false;
+
+			if (!languages.contains("Java"))
+				return false;
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+
+		return valid;
+	}
+
 	private Map<String, Integer> fetchClientsPerPackage(Repository repo) {
 		var res = new HashMap<String, Integer>();
 		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.owner(), repo.name());
-
 		var doc = fetchPage(url);
 
 		if (doc != null) {
