@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FetchGitHubRepositories {
 	public static final int REPO_MIN_STARS = 10;
+	public static final int REPO_MAX_STARS = 100;
 	public static final String REPO_LAST_PUSHED_DATE = "2022-02-12";
 	public static final int PR_LAST_MERGED_IN_DAYS = 90;
 	public static final int LAST_PUSH_IN_DAYS = 90;
@@ -196,7 +197,7 @@ public class FetchGitHubRepositories {
 		return duration.toDays() <= lastAllowedActivity;
 	}
 
-	private boolean isValidClient(String owner, String repo, int minStars, int maxStars) {
+	private boolean isRelevantClient(String owner, String repo, int minStars, int maxStars) {
 		String query = """
 			query {
 			  repository(owner:%s, name:%s) {
@@ -278,16 +279,28 @@ public class FetchGitHubRepositories {
 
 				if (pkgPage != null) {
 					var pkgName = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
-					var element = pkgPage.select("#dependents .table-list-header-toggle a").first();
+					var clients = pkgPage.select("#dependents #dg-repo-pkg-dependent");
 
-					if (element != null) {
-						try {
-							var count = Integer.parseInt(element.text().substring(0, element.text().indexOf(" ")).replace(",", ""));
-							res.put(pkgName, count);
-						} catch (NumberFormatException e) {
-							e.printStackTrace();
-						}
+					//var element = pkgPage.select("#dependents .table-list-header-toggle a").first();
+					//if (element != null) {
+					//	try {
+					//		var count = Integer.parseInt(element.text().substring(0, element.text().indexOf(" ")).replace(",", ""));
+					//		res.put(pkgName, count);
+					//	} catch (NumberFormatException e) {
+					//		e.printStackTrace();
+					//	}
+					//}
+
+					// Only report relevant clients
+					var count = 0;
+					for (var client : clients) {
+						var clientOwner = client.select("#dependents a").first().text();
+						var clientRepo = client.select("#dependents a").last().text();
+						if (isRelevantClient(clientOwner, clientRepo, REPO_MIN_STARS, REPO_MAX_STARS))
+							count++;
 					}
+
+					res.put(pkgName, count);
 				}
 			}
 		}
