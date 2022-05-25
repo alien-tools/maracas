@@ -23,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.experiments.utils.Queries;
 
 public class FetchGitHubRepositories {
 	public static final int REPO_MIN_STARS = 10;
@@ -67,57 +68,15 @@ public class FetchGitHubRepositories {
 			? ", after: \"" + cursor + "\""
 			: "";
 
-		var graphqlQuery = """
-			query {
-			  search(
-			    type: REPOSITORY,
-			    query: "java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false sort:stars-desc",
-			    first: 100
-			    %s
-			  ) {
-			    repositoryCount
-
-			    edges {
-			      node {
-			        ... on Repository {
-			          nameWithOwner
-			          stargazerCount
-
-			          pom: object(expression: "HEAD:pom.xml") {
-			            oid
-			          }
-
-			          gradle: object(expression: "HEAD:build.gradle") {
-			            oid
-			          }
-
-			          pullRequests(states: [MERGED], last: 1) {
-			            mergedPRs: totalCount
-
-			            edges {
-			              node {
-			                mergedAt
-			              }
-			            }
-			          }
-			        }
-			      }
-			    }
-
-			    pageInfo {
-			      hasNextPage
-			      endCursor
-			    }
-			  }
-			}""".formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
-
-		System.out.println(graphqlQuery);
+		var query = Queries.GRAPHQL_LIBRARIES_QUERY
+			.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
+		System.out.println(query);
 
 		var rest = new RestTemplate();
 		var headers = new HttpHeaders();
 		headers.add("Authorization", "Bearer token");
 		headers.add("Content-Type", "application/graphql");
-		var jsonQuery = graphqlAsJson(graphqlQuery);
+		var jsonQuery = graphqlAsJson(query);
 		var response = rest.postForEntity(GITHUB_GRAPHQL, new HttpEntity<>(jsonQuery, headers), String.class);
 		System.out.println(response);
 
@@ -165,9 +124,9 @@ public class FetchGitHubRepositories {
 
 			if (hasNextPage)
 				repos.addAll(readPage(endCursor, minStars, maxStars));
-			else if (nextStars > minStars) {
+			else if (nextStars > minStars)
 				repos.addAll(readPage(null, minStars, nextStars));
-			}
+
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -181,7 +140,6 @@ public class FetchGitHubRepositories {
 		headers.add("Authorization", "Bearer token");
 		headers.add("Content-Type", "application/graphql");
 		String jsonQuery = graphqlAsJson(query);
-		HttpEntity w = new HttpEntity<>(jsonQuery, headers);
 		ResponseEntity<String> response = rest.postForEntity(GITHUB_GRAPHQL,
 			new HttpEntity<>(jsonQuery, headers), String.class);
 		return response;
@@ -202,33 +160,8 @@ public class FetchGitHubRepositories {
 //	}
 
 	private boolean isRelevantClient(String owner, String repo, int minStars, int maxStars) {
-		String query = """
-			{
-			  search(
-			    type: REPOSITORY
-			    query: "repo:%s/%s java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false "
-			    first: 100
-			  ) {
-			    repositoryCount
-			    edges {
-			      node {
-			        ... on Repository {
-			          stargazerCount
-			          isDisabled
-			          isEmpty
-			          isLocked
-			          pushedAt
-			          pom: object(expression: "HEAD:pom.xml") {
-			            oid
-			          }
-			          gradle: object(expression: "HEAD:build.gradle") {
-			            oid
-			          }
-			        }
-			      }
-			    }
-			  }
-			}""".formatted(owner, repo, minStars, maxStars, REPO_LAST_PUSHED_DATE);
+		String query = Queries.GRAPHQL_CLIENT_QUERY
+			.formatted(owner, repo, minStars, maxStars, REPO_LAST_PUSHED_DATE);
 		System.out.println(query);
 
 		ResponseEntity<String> response = postQuery(query);
