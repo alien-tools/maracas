@@ -39,43 +39,21 @@ public class Repository {
 
 	/**
 	 * Indicates if the repository has a Maven nature
+	 * TODO: move to Package?
 	 */
 	private final boolean maven;
 
 	/**
 	 * Indicates if the repository has a Gradle nature
+	 * TODO: move to Package?
 	 */
 	private final boolean gradle;
 
 	/**
-	 * Number of total clients
+	 * List of packages in the repository
 	 */
-	private int clients;
+	private List<Package> packages;
 
-	/**
-	 * List of relevant clients
-	 */
-	private List<Repository> relevantClients;
-
-
-	/**
-	 * Creates an instance of the {@link Repository} class. The number of clients
-	 * of the repository is set to -1.
-	 *
-	 * @param owner     Owner of the repository
-	 * @param name      Name of the repository
-	 * @param stars     Number of stars of the repository
-	 * @param lastPush  {@link LocalDate} of the last push
-	 * @param mergedPRs Number of merged pulls requests
-	 * @param maven     {@code true} if it is a Maven project, {@code false}
-	 *                  otherwise
-	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
-	 *                  otherwise
-	 */
-	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		int mergedPRs, boolean maven, boolean gradle) {
-		this(owner, name, stars, lastPush, mergedPRs, maven, gradle, -1);
-	}
 
 	/**
 	 * Creates an instance of the {@link Repository} class.
@@ -89,10 +67,9 @@ public class Repository {
 	 *                  otherwise
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
-	 * @param clients   Number of clients
 	 */
 	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		int mergedPRs, boolean maven, boolean gradle, int clients) {
+		int mergedPRs, boolean maven, boolean gradle) {
 		this.owner = owner;
 		this.name = name;
 		this.stars = stars;
@@ -100,27 +77,7 @@ public class Repository {
 		this.mergedPRs = mergedPRs;
 		this.maven = maven;
 		this.gradle = gradle;
-		this.clients = clients;
-		this.relevantClients = new ArrayList<Repository>();
-	}
-
-	/**
-	 * Creates an instance of the {@link Repository} class. The number of clients
-	 * of the repository is set to -1.
-	 *
-	 * @param owner     Owner of the repository
-	 * @param name      Name of the repository
-	 * @param stars     Number of stars of the repository
-	 * @param lastPush  String representing the date of the last push
-	 * @param mergedPRs Number of merged pulls requests
-	 * @param maven     {@code true} if it is a Maven project, {@code false}
-	 *                  otherwise
-	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
-	 *                  otherwise
-	 */
-	public Repository(String owner, String name, int stars, String lastPush,
-		int mergedPRs, boolean maven, boolean gradle) {
-		this(owner, name, stars, lastPush, mergedPRs, maven, gradle, -1);
+		this.packages = new ArrayList<Package>();
 	}
 
 	/**
@@ -135,32 +92,12 @@ public class Repository {
 	 *                  otherwise
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
-	 * @param clients   Number of clients
 	 */
 	public Repository(String owner, String name, int stars, String lastPush,
-		int mergedPRs, boolean maven, boolean gradle, int clients) {
+		int mergedPRs, boolean maven, boolean gradle) {
 		this(owner, name, stars,
 			Date.from(Instant.parse(lastPush)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-			mergedPRs, maven, gradle, clients);
-	}
-
-	/**
-	 * Returns the number of total clients. Returns -1 if the field has not been
-	 * modified since the creation of the {@link Repository} instance.
-	 *
-	 * @return number of clients
-	 */
-	public int getClients() {
-		return clients;
-	}
-
-	/**
-	 * Sets the number of total clients.
-	 *
-	 * @param clients Number of total clients
-	 */
-	public void setClients(int clients) {
-		this.clients = clients;
+			mergedPRs, maven, gradle);
 	}
 
 	/**
@@ -226,24 +163,6 @@ public class Repository {
 	 */
 	public boolean isGradle() {
 		return gradle;
-	}
-
-	/**
-	 * Returns the list of relevant clients of the repository.
-	 *
-	 * @return list of relevant clients of the repository
-	 */
-	public List<Repository> getRelevantClients() {
-		return relevantClients;
-	}
-
-	/**
-	 * Sets the list of relevant clients of the repository.
-	 *
-	 * @param relevantClients List of relevant clients of the repository
-	 */
-	public void setRelevantClients(List<Repository> relevantClients) {
-		this.relevantClients = relevantClients;
 	}
 
 }
