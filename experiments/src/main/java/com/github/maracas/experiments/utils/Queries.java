@@ -67,7 +67,15 @@ public final class Queries {
 
 		            edges {
 		              node {
+		                baseRepository
+		                closedAt
+		                createdAt
+		                id
+		                isDraft
 		                mergedAt
+		                publishedAt
+		                state
+		                title
 		              }
 		            }
 		          }
@@ -123,9 +131,11 @@ public final class Queries {
 		          isEmpty
 		          isLocked
 		          pushedAt
+
 		          pom: object(expression: "HEAD:pom.xml") {
 		            oid
 		          }
+
 		          gradle: object(expression: "HEAD:build.gradle") {
 		            oid
 		          }

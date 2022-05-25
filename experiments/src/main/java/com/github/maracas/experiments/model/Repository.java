@@ -50,13 +50,18 @@ public class Repository {
 	private final boolean gradle;
 
 	/**
-	 * List of packages in the repository
+	 * List of {@link Package} instances in the repository
 	 */
 	private List<Package> packages;
 
+	/**
+	 * List of {@link PullRequest} instances of the repository
+	 */
+	private List<PullRequest> pullRequests;
 
 	/**
-	 * Creates an instance of the {@link Repository} class.
+	 * Creates an instance of the {@link Repository} class. The {@code packages}
+	 * and {@code pullRequests} fields are initialized as empty lists.
 	 *
 	 * @param owner     Owner of the repository
 	 * @param name      Name of the repository
@@ -78,6 +83,7 @@ public class Repository {
 		this.maven = maven;
 		this.gradle = gradle;
 		this.packages = new ArrayList<Package>();
+		this.pullRequests = new ArrayList<PullRequest>();
 	}
 
 	/**
@@ -163,6 +169,42 @@ public class Repository {
 	 */
 	public boolean isGradle() {
 		return gradle;
+	}
+
+	/**
+	 * Returns the list of {@link Package} instances of the repository.
+	 *
+	 * @return the list of {@link Package} instances
+	 */
+	public List<Package> getPackages() {
+		return packages;
+	}
+
+	/**
+	 * Sets the list of {@link Package} instances of the repository.
+	 *
+	 * @param packages List of {@link Package} instances
+	 */
+	public void setPackages(List<Package> packages) {
+		this.packages = packages;
+	}
+
+	/**
+	 * Returns the list of {@link PullRequest} instances of the repository.
+	 *
+	 * @return the list of {@link PullRequest} instances
+	 */
+	public List<PullRequest> getPullRequests() {
+		return pullRequests;
+	}
+
+	/**
+	 * Sets the list of {@link PullRequest} instances of the repository.
+	 *
+	 * @param pullRequests List of {@link PullRequest} instances of the repository
+	 */
+	public void setPullRequests(List<PullRequest> pullRequests) {
+		this.pullRequests = pullRequests;
 	}
 
 }
