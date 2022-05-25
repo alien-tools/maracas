@@ -46,13 +46,13 @@ public class FetchGitHubRepositories {
 				var packages = fetchClientsPerPackage(repo);
 				var total = packages.values().stream().reduce(0, Integer::sum);
 				System.out.printf("%s has %d clients%n", repo, total);
-				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.owner(), repo.name(), repo.stars(), "total", total,
-					repo.mergedPRs(), repo.maven(), repo.gradle()));
+				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(), repo.getName(), repo.getStars(), "total", total,
+					repo.getMergedPRs(), repo.isMaven(), repo.isGradle()));
 
 				for (var pkg : packages.entrySet()) {
 					System.out.printf("\t%s: %s", pkg.getKey(), pkg.getValue());
-					csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.owner(), repo.name(), repo.stars(), pkg.getKey(), pkg.getValue(),
-						repo.mergedPRs(), repo.maven(), repo.gradle()));
+					csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(), repo.getName(), repo.getStars(), pkg.getKey(), pkg.getValue(),
+						repo.getMergedPRs(), repo.isMaven(), repo.isGradle()));
 				}
 
 				csv.flush();
@@ -95,13 +95,14 @@ public class FetchGitHubRepositories {
 				var fields = nameWithOwner.split("/");
 				var owner = fields[0];
 				var name = fields[1];
+				var lastPush = repoJson.get("pushedAt").asText();
 				var prs = repoJson.get("pullRequests");
 				var lastPR = prs.findValuesAsText("mergedAt");
 				var mergedPRs = prs.get("mergedPRs").asInt();
 				var isMaven = repoJson.get("pom").hasNonNull("oid");
 				var isGradle = repoJson.get("gradle").hasNonNull("oid");
 				var stars = repoJson.get("stargazerCount").asInt();
-				var repo = new Repository(owner, name, stars, mergedPRs, isMaven, isGradle);
+				var repo = new Repository(owner, name, stars, lastPush, mergedPRs, isMaven, isGradle);
 
 				if (stars < nextStars)
 					nextStars = stars;
@@ -198,7 +199,7 @@ public class FetchGitHubRepositories {
 
 	private Map<String, Integer> fetchClientsPerPackage(Repository repo) {
 		var res = new HashMap<String, Integer>();
-		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.owner(), repo.name());
+		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.getOwner(), repo.getName());
 		// TODO: test purposes
 		//String url = "https://github.com/forge/roaster/network/dependents";
 		var doc = fetchPage(url);
