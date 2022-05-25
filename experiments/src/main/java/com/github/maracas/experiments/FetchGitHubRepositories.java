@@ -23,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.utils.Queries;
 
 public class FetchGitHubRepositories {
@@ -32,8 +33,6 @@ public class FetchGitHubRepositories {
 	public static final int PR_LAST_MERGED_IN_DAYS = 90;
 	public static final int LAST_PUSH_IN_DAYS = 90;
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
-
-	record Repository(String owner, String name, int stars, int mergedPRs, boolean maven, boolean gradle) {}
 
 	public void run() {
 		var repos = readPage(null, REPO_MIN_STARS, 9999999);
