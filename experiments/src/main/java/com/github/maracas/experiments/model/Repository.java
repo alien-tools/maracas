@@ -34,6 +34,7 @@ public class Repository {
 
 	/**
 	 * Number of merged pull requests
+	 * TODO: remove after refactoring the FetchGitHubRepositories class
 	 */
 	private final int mergedPRs;
 

@@ -33,8 +33,10 @@ public class FetchGitHubRepositories {
 	public static final int PR_LAST_MERGED_IN_DAYS = 90;
 	public static final int LAST_PUSH_IN_DAYS = 90;
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
+	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
 
 	public void run() {
+		System.out.println("GITHUB: " + GITHUB_ACCESS_TOKEN);
 		var repos = readPage(null, REPO_MIN_STARS, 9999999);
 		System.out.println("Found " + repos.size());
 
@@ -73,7 +75,7 @@ public class FetchGitHubRepositories {
 
 		var rest = new RestTemplate();
 		var headers = new HttpHeaders();
-		headers.add("Authorization", "Bearer token");
+		headers.add("Authorization", String.join(" ", new String[]{"Bearer", GITHUB_ACCESS_TOKEN}));
 		headers.add("Content-Type", "application/graphql");
 		var jsonQuery = graphqlAsJson(query);
 		var response = rest.postForEntity(GITHUB_GRAPHQL, new HttpEntity<>(jsonQuery, headers), String.class);
@@ -137,7 +139,7 @@ public class FetchGitHubRepositories {
 	private ResponseEntity<String> postQuery(String query) {
 		RestTemplate rest = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", "Bearer token");
+		headers.add("Authorization", String.join(" ", new String[]{"Bearer", GITHUB_ACCESS_TOKEN}));
 		headers.add("Content-Type", "application/graphql");
 		String jsonQuery = graphqlAsJson(query);
 		ResponseEntity<String> response = rest.postForEntity(GITHUB_GRAPHQL,
