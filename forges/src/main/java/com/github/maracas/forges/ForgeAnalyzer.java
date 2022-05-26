@@ -8,12 +8,7 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +28,16 @@ public class ForgeAnalyzer {
     Objects.requireNonNull(v2);
     Objects.requireNonNull(options);
 
+    Delta delta = computeDelta(v1, v2, options);
+    return computeImpact(delta, clients);
+  }
+
+  public Delta computeDelta(CommitBuilder v1, CommitBuilder v2, MaracasOptions options)
+    throws InterruptedException, ExecutionException {
+    Objects.requireNonNull(v1);
+    Objects.requireNonNull(v2);
+    Objects.requireNonNull(options);
+
     CompletableFuture<Optional<Path>> futureV1 = CompletableFuture.supplyAsync(v1::cloneAndBuildCommit, executorService);
     CompletableFuture<Optional<Path>> futureV2 = CompletableFuture.supplyAsync(v2::cloneAndBuildCommit, executorService);
 
@@ -46,22 +51,24 @@ public class ForgeAnalyzer {
       throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
     Delta delta = Maracas.computeDelta(jarV1.get(), jarV2.get(), options);
-    if (delta.getBreakingChanges().isEmpty())
-      return new AnalysisResult(
-        delta,
-        clients.stream()
-          .collect(Collectors.toMap(
-            builder -> builder.getClonePath2(),
-            builder -> new DeltaImpact(builder.getModulePath(), delta, Collections.emptySet())
-          ))
-      );
+    delta.populateLocations(v1.getClonePath());
+    return delta;
+  }
 
-    delta.populateLocations(v1.getClonePath2());
+  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients)
+    throws InterruptedException, ExecutionException {
+    Objects.requireNonNull(delta);
+
+    if (delta.getBreakingChanges().isEmpty())
+      return AnalysisResult.noImpact(
+        delta,
+        clients.stream().map(CommitBuilder::getClonePath).toList()
+      );
 
     Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
       clients.stream()
         .collect(Collectors.toMap(
-          c -> c.getClonePath2(),
+          c -> c.getClonePath(),
           c -> CompletableFuture.supplyAsync(
             () -> {
               c.cloneCommit();

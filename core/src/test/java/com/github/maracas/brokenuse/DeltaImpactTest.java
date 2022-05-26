@@ -16,10 +16,10 @@ import com.github.maracas.Maracas;
 import com.github.maracas.TestData;
 
 class DeltaImpactTest {
-  Path v1 = TestData.compChangesV1;
-  Path v2 = TestData.compChangesV2;
-  Path sources = TestData.compChangesSources;
-  Path client = TestData.compChangesClient;
+  final Path v1 = TestData.compChangesV1;
+  final Path v2 = TestData.compChangesV2;
+  final Path sources = TestData.compChangesSources;
+  final Path client = TestData.compChangesClient;
 
   @Test
   void testJsonSerialization() throws IOException {

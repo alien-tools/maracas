@@ -12,7 +12,7 @@
 	<artifactId>comp-changes-client</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
-	<name>comp-changes client</name>
+	<name>Maracas comp-changes client</name>
 
 	<build>
 		<sourceDirectory>src/</sourceDirectory>

@@ -30,4 +30,10 @@ public class InterfaceAddedTests extends CompChangesTest {
 	void testImplementsMultiInter() {
 		assertBrokenUse("InterfaceAddedImpMulti.java", 5, INTERFACE_ADDED, IMPLEMENTS);
 	}
+
+	@Disabled("Shadow objects. Missing information.")
+    @Test
+    void testExtendsAbsClassNoMethods() {
+        assertNoBrokenUse("InterfaceAddedExt.java", 8, INTERFACE_ADDED, EXTENDS);
+    }
 }

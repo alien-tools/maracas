@@ -170,7 +170,7 @@ public class Delta {
 	 * Returns a JSON representation of the delta.
 	 *
 	 * @return string with the JSON representation of the object
-	 * @throws IOException
+	 * @throws JsonProcessingException
 	 */
 	public String toJson() throws JsonProcessingException {
 		return new ObjectMapper()

@@ -1,9 +1,6 @@
 package com.github.maracas.visitors;
 
-import com.github.maracas.brokenuse.APIUse;
 import japicmp.model.JApiCompatibilityChange;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 
 /**
@@ -22,36 +19,13 @@ import spoon.reflect.reference.CtExecutableReference;
  *      </pre>
  * </ul>
  */
-public class MethodRemovedVisitor extends BreakingChangeVisitor {
-	/**
-	 * Spoon reference to the removed method.
-	 */
-	private final CtExecutableReference<?> mRef;
-
+public class MethodRemovedVisitor extends MethodReferenceVisitor {
 	/**
 	 * Creates a MethodRemovedVisitor instance.
 	 *
 	 * @param mRef the now-removed method
 	 */
 	public MethodRemovedVisitor(CtExecutableReference<?> mRef) {
-		super(JApiCompatibilityChange.METHOD_REMOVED);
-		this.mRef = mRef;
-	}
-
-	@Override
-	public <T> void visitCtInvocation(CtInvocation<T> invocation) {
-		if (mRef.equals(invocation.getExecutable())) {
-			brokenUse(invocation, invocation.getExecutable(), mRef, APIUse.METHOD_INVOCATION);
-		}
-	}
-
-	@Override
-	public <T> void visitCtMethod(CtMethod<T> m) {
-		if (mRef.getExecutableDeclaration() instanceof CtMethod<?> method) {
-			// Redundant check, but the signature equality check + short-circuiting
-			// avoids invoking the super-expensive isOverriding() on every CtMethod
-			if (m.getSignature().equals(method.getSignature()) && m.isOverriding(method))
-				brokenUse(m, method, mRef, APIUse.METHOD_OVERRIDE);
-		}
+		super(mRef, JApiCompatibilityChange.METHOD_REMOVED);
 	}
 }

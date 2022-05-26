@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<addon>
+  <dependencies>
+    <dependency export="true" name="org.revapi:revapi" optional="false" version="0.5.2"/>
+    <dependency export="false" name="com.google.code.findbugs:annotations" optional="false" version="3.0.0"/>
+    <dependency export="false" name="org.slf4j:slf4j-api" optional="false" version="1.7.5"/>
+    <dependency export="true" name="org.ow2.asm:asm" optional="false" version="5.0.4"/>
+    <dependency export="true" name="org.revapi:revapi-java-spi" optional="false" version="0.6.0"/>
+  </dependencies>
+</addon>

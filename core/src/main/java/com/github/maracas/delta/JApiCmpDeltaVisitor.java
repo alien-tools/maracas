@@ -1,12 +1,6 @@
 package com.github.maracas.delta;
 
-import japicmp.model.JApiAnnotation;
-import japicmp.model.JApiClass;
-import japicmp.model.JApiConstructor;
-import japicmp.model.JApiField;
-import japicmp.model.JApiImplementedInterface;
-import japicmp.model.JApiMethod;
-import japicmp.model.JApiSuperclass;
+import japicmp.model.*;
 import japicmp.output.Filter;
 import japicmp.output.Filter.FilterVisitor;
 

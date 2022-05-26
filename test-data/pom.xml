@@ -14,6 +14,7 @@
 	<name>Maracas test data</name>
 
 	<modules>
+		<module>api-evolution-data-corpus</module>
 		<module>comp-changes</module>
 	</modules>
 

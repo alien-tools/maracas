@@ -1,11 +1,13 @@
 package com.github.maracas.delta;
 
+import com.github.maracas.visitors.AnnotationDeprecatedAddedToMethodVisitor;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.ConstructorRemovedVisitor;
 import com.github.maracas.visitors.MethodNowAbstractVisitor;
 import com.github.maracas.visitors.MethodNowFinalVisitor;
 import com.github.maracas.visitors.MethodRemovedVisitor;
 import com.github.maracas.visitors.MethodReturnTypeChangedVisitor;
+
 import japicmp.model.JApiBehavior;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiMethod;
@@ -59,7 +61,7 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 				case METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION -> null; // TODO: To be implemented
 				case METHOD_ABSTRACT_NOW_DEFAULT -> null; // TODO: To be implemented
 				case CONSTRUCTOR_LESS_ACCESSIBLE -> null; // TODO: To be implemented
-				case ANNOTATION_DEPRECATED_ADDED -> null; // TODO: To be implemented
+				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToMethodVisitor(mRef);
 				default -> throw new IllegalStateException(this + " was somehow associated to a non-method-level breaking change: " + change);
 			};
 	}

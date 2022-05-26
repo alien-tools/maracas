@@ -7,6 +7,8 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Set;
+
 public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	private final CtTypeReference<?> clsRef;
 	private final AccessModifier newAccessModifier;
@@ -21,7 +23,6 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
 		if (clsRef.equals(reference)) {
 			APIUse use = getAPIUseByRole(reference);
-
 			String enclosingPkg = SpoonHelpers.getEnclosingPkgName(reference);
 			String expectedPkg = SpoonHelpers.getEnclosingPkgName(clsRef.getTypeDeclaration());
 
@@ -37,8 +38,18 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 					break;
 				// Protected fails if not a subtype and packages do not match
 				case PROTECTED:
-					if (!reference.getParent(CtType.class).isSubtypeOf(clsRef) &&
-						!enclosingPkg.equals(expectedPkg))
+					CtType<?> parent = reference.getParent(CtType.class);
+					boolean refersToClassTopLevel = parent != null
+						&& parent.isTopLevel()
+						&& parent.isSubtypeOf(clsRef)
+						&& Set.of(APIUse.IMPLEMENTS, APIUse.EXTENDS, APIUse.TYPE_DEPENDENCY).contains(use);
+					boolean importsClass = parent == null && use.equals(APIUse.IMPORT);
+					boolean usesClassInBreakingManner = parent != null
+						&& !parent.isSubtypeOf(clsRef)
+						&& !parent.isSubtypeOf(clsRef.getTopLevelType())
+						&& !enclosingPkg.equals(expectedPkg);
+
+					if (importsClass || refersToClassTopLevel || usesClassInBreakingManner)
 						brokenUse(reference.getParent(), reference, clsRef, use);
 					break;
 				default:
@@ -48,17 +59,18 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 	}
 
 	/**
-	 * Uncomment if we want to include broken uses for every access to a field
-	 * or invocation of a method that is declared by the no-more-visible class.
+	 * Uncomment if we want to include broken uses for every access to a field or
+	 * invocation of a method that is declared by the no-more-visible class.
 	 *
-	 @Override public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
-	 if (clsRef.equals(reference.getDeclaringType()))
-	 brokenUse(reference.getParent(), reference.getFieldDeclaration(), clsRef, APIUse.FIELD_ACCESS);
-	 }
-
-	 @Override public <T> void visitCtExecutableReference(CtExecutableReference<T> reference) {
-	 if (clsRef.equals(reference.getDeclaringType()))
-	 brokenUse(reference.getParent(), reference.getExecutableDeclaration(), clsRef, APIUse.METHOD_INVOCATION);
-	 }
+	 * @Override public <T> void visitCtFieldReference(CtFieldReference<T>
+	 *           reference) { if (clsRef.equals(reference.getDeclaringType()))
+	 *           brokenUse(reference.getParent(), reference.getFieldDeclaration(),
+	 *           clsRef, APIUse.FIELD_ACCESS); }
+	 *
+	 * @Override public <T> void visitCtExecutableReference(CtExecutableReference<T>
+	 *           reference) { if (clsRef.equals(reference.getDeclaringType()))
+	 *           brokenUse(reference.getParent(),
+	 *           reference.getExecutableDeclaration(), clsRef,
+	 *           APIUse.METHOD_INVOCATION); }
 	 */
 }

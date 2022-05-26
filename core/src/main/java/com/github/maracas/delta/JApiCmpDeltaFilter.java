@@ -1,13 +1,7 @@
 package com.github.maracas.delta;
 
 import com.github.maracas.MaracasOptions;
-import japicmp.model.JApiAnnotation;
-import japicmp.model.JApiClass;
-import japicmp.model.JApiConstructor;
-import japicmp.model.JApiField;
-import japicmp.model.JApiImplementedInterface;
-import japicmp.model.JApiMethod;
-import japicmp.model.JApiSuperclass;
+import japicmp.model.*;
 import japicmp.output.OutputFilter;
 
 import java.util.Iterator;
@@ -31,7 +25,7 @@ public class JApiCmpDeltaFilter extends OutputFilter {
 		filter(jApiClasses, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {
-				if (jApiClass.getFullyQualifiedName().matches(".*\\$[0-9].*"))
+				if (jApiClass.getFullyQualifiedName().matches(".*\\$\\d.*"))
 					iterator.remove();
 
 				jApiClass.getCompatibilityChanges().removeAll(maracasOptions.getExcludedBreakingChanges());

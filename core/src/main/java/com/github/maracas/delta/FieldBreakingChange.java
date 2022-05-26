@@ -1,5 +1,6 @@
 package com.github.maracas.delta;
 
+import com.github.maracas.visitors.AnnotationDeprecatedAddedToFieldVisitor;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.FieldLessAccessibleVisitor;
 import com.github.maracas.visitors.FieldNoLongerStaticVisitor;
@@ -7,6 +8,7 @@ import com.github.maracas.visitors.FieldNowFinalVisitor;
 import com.github.maracas.visitors.FieldNowStaticVisitor;
 import com.github.maracas.visitors.FieldRemovedVisitor;
 import com.github.maracas.visitors.FieldTypeChangedVisitor;
+
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiField;
 import javassist.NotFoundException;
@@ -52,7 +54,7 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 					}
 				}
 				case FIELD_STATIC_AND_OVERRIDES_STATIC -> null; // TODO: To be implemented
-				case ANNOTATION_DEPRECATED_ADDED -> null; // TODO: To be implemented
+				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToFieldVisitor(fRef);
 				default -> throw new IllegalStateException(this + " was somehow associated to a non-field-level breaking change: " + change);
 			};
 	}

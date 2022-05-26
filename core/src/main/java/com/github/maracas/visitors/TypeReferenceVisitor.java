@@ -10,9 +10,9 @@ import spoon.reflect.reference.CtTypeReference;
  * It creates a broken use for every reference to the supplied {code clsRef}.
  * The visitor detects the following cases:
  * <ul>
- * <li> Any reference to the now-removed class. Example:
+ * <li> Any reference to the referenced class. Example:
  *      <pre>
- *      public void method(RemovedClass cls) { }
+ *      public void method(RefClass cls) { }
  *      </pre>
  * </ul>
  */

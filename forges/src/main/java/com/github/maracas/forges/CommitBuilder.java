@@ -57,7 +57,7 @@ public class CommitBuilder {
 		return this.commit;
 	}
 
-	public Path getClonePath2() {
+	public Path getClonePath() {
 		return clonePath;
 	}
 

@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.github.maracas</groupId>
+		<artifactId>maracas-test-data</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>api-evolution-data-corpus-parent</artifactId>
+	<packaging>pom</packaging>
+	<name>API evolution data corpus</name>
+
+	<modules>
+		<module>lib-v1</module>
+		<module>lib-v2</module>
+		<module>client</module>
+	</modules>
+
+</project>

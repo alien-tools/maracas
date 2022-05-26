@@ -11,8 +11,7 @@ public class MethodReturnTypeChangedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(METHOD_RETURN_TYPE_CHANGED, 5);
-		// FIXME: After fixing the skipped test
+		assertNumberBrokenUses(METHOD_RETURN_TYPE_CHANGED, 7);
 	}
 
 	@Test
@@ -23,7 +22,7 @@ public class MethodReturnTypeChangedTests extends CompChangesTest {
 	@Disabled("Not all casts generate a compilation error")
 	@Test
     void testInvokeWidenedCast() {
-        assertNoBrokenUse("MethodReturnTypeChangedMI.java",26, METHOD_RETURN_TYPE_CHANGED, METHOD_INVOCATION);
+        assertNoBrokenUse("MethodReturnTypeChangedMI.java", 26, METHOD_RETURN_TYPE_CHANGED, METHOD_INVOCATION);
     }
 
 	@Test
@@ -39,5 +38,20 @@ public class MethodReturnTypeChangedTests extends CompChangesTest {
 	@Test
 	void testOverrideNarrowedMeth() {
 		assertBrokenUse("MethodReturnTypeChangedImp.java", 15, METHOD_RETURN_TYPE_CHANGED, METHOD_OVERRIDE);
+	}
+
+	@Test
+	void testOverrideWidenedMeth() {
+		assertNoBrokenUse("MethodReturnTypeChangedImp.java", 10, METHOD_RETURN_TYPE_CHANGED, METHOD_OVERRIDE);
+	}
+
+	@Test
+	void testOverrideBoxedMeth() {
+		assertBrokenUse("MethodReturnTypeChangedImp.java", 20, METHOD_RETURN_TYPE_CHANGED, METHOD_OVERRIDE);
+	}
+
+	@Test
+	void testOverrideUnboxedMeth() {
+		assertBrokenUse("MethodReturnTypeChangedImp.java", 25, METHOD_RETURN_TYPE_CHANGED, METHOD_OVERRIDE);
 	}
 }
