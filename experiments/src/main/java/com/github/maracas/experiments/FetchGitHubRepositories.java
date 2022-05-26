@@ -3,11 +3,8 @@ package com.github.maracas.experiments;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,17 +12,21 @@ import java.util.Map;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.experiments.model.PullRequest;
+import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Repository;
+import com.github.maracas.experiments.utils.GitHubUtil;
 import com.github.maracas.experiments.utils.Queries;
+import com.github.maracas.experiments.utils.Util;
 
+/**
+ *
+ */
 public class FetchGitHubRepositories {
 	public static final int REPO_MIN_STARS = 10;
 	public static final int REPO_MAX_STARS = 9999999;
@@ -35,9 +36,17 @@ public class FetchGitHubRepositories {
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
 
+	/**
+	 * List of GitHub repositories considered for the experiment
+	 */
+	private List<Repository> repositories;
+
+	public FetchGitHubRepositories() {
+		this.repositories = new ArrayList<Repository>();
+	}
+
 	public void run() {
-		System.out.println("GITHUB: " + GITHUB_ACCESS_TOKEN);
-		var repos = readPage(null, REPO_MIN_STARS, 9999999);
+		var repos = fetchRepositories(null, REPO_MIN_STARS, REPO_MAX_STARS);
 		System.out.println("Found " + repos.size());
 
 		try (FileWriter csv = new FileWriter("output.csv")) {
@@ -64,22 +73,13 @@ public class FetchGitHubRepositories {
 		}
 	}
 
-	private List<Repository> readPage(String cursor, int minStars, int maxStars) {
+	private List<Repository> fetchRepositories(String cursor, int minStars, int maxStars) {
 		var cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
 			: "";
 
-		var query = Queries.GRAPHQL_LIBRARIES_QUERY
-			.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
-		System.out.println(query);
-
-		var rest = new RestTemplate();
-		var headers = new HttpHeaders();
-		headers.add("Authorization", String.join(" ", new String[]{"Bearer", GITHUB_ACCESS_TOKEN}));
-		headers.add("Content-Type", "application/graphql");
-		var jsonQuery = graphqlAsJson(query);
-		var response = rest.postForEntity(GITHUB_GRAPHQL, new HttpEntity<>(jsonQuery, headers), String.class);
-		System.out.println(response);
+		var query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
+		var response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		var repos = new ArrayList<Repository>();
 		try {
@@ -91,8 +91,8 @@ public class FetchGitHubRepositories {
 			var endCursor = pageInfo.get("endCursor").asText();
 
 			var nextStars = maxStars;
-			for (var edge: search.withArray("edges")) {
-				var repoJson = edge.get("node");
+			for (var repoEdge: search.withArray("edges")) {
+				var repoJson = repoEdge.get("node");
 				var nameWithOwner = repoJson.get("nameWithOwner").asText();
 				var fields = nameWithOwner.split("/");
 				var owner = fields[0];
@@ -104,16 +104,15 @@ public class FetchGitHubRepositories {
 				var isMaven = repoJson.get("pom").hasNonNull("oid");
 				var isGradle = repoJson.get("gradle").hasNonNull("oid");
 				var stars = repoJson.get("stargazerCount").asInt();
-				var repo = new Repository(owner, name, stars, lastPush, mergedPRs, isMaven, isGradle);
+
+				Repository repo = new Repository(owner, name, stars, lastPush, mergedPRs, isMaven, isGradle);
+				repo.setPullRequests(extractPRs(prs));
 
 				if (stars < nextStars)
 					nextStars = stars;
 
 				if (!lastPR.isEmpty() && (isMaven || isGradle)) {
-					var lastMerged = Date.from(Instant.parse(lastPR.get(0)))
-						.toInstant()
-						.atZone(ZoneId.systemDefault())
-						.toLocalDate();
+					var lastMerged = Util.stringToLocalDate(lastPR.get(0));
 					var now = LocalDate.now();
 					var between = Duration.between(lastMerged.atStartOfDay(), now.atStartOfDay());
 
@@ -125,9 +124,9 @@ public class FetchGitHubRepositories {
 			}
 
 			if (hasNextPage)
-				repos.addAll(readPage(endCursor, minStars, maxStars));
+				repos.addAll(fetchRepositories(endCursor, minStars, maxStars));
 			else if (nextStars > minStars)
-				repos.addAll(readPage(null, minStars, nextStars));
+				repos.addAll(fetchRepositories(null, minStars, nextStars));
 
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -136,15 +135,25 @@ public class FetchGitHubRepositories {
 		return repos;
 	}
 
-	private ResponseEntity<String> postQuery(String query) {
-		RestTemplate rest = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", String.join(" ", new String[]{"Bearer", GITHUB_ACCESS_TOKEN}));
-		headers.add("Content-Type", "application/graphql");
-		String jsonQuery = graphqlAsJson(query);
-		ResponseEntity<String> response = rest.postForEntity(GITHUB_GRAPHQL,
-			new HttpEntity<>(jsonQuery, headers), String.class);
-		return response;
+	private List<PullRequest> extractPRs(JsonNode pullRequests) {
+		List<PullRequest> prs = new ArrayList<PullRequest>();
+		for (JsonNode prEdge: pullRequests.withArray("edges")) {
+			JsonNode prJson = prEdge.get("node");
+			String title = prJson.get("title").asText();
+			int number = prJson.get("number").asInt();
+			String state = prJson.get("state").asText();
+			boolean draft = prJson.get("isDraft").asBoolean();
+			String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
+			String createdAt = prJson.get("createdAt").asText();
+			String publishedAt = prJson.get("publishedAt").asText();
+			String mergedAt = prJson.get("mergedAt").asText();
+			String closedAt = prJson.get("closedAt").asText();
+
+			PullRequest pr = new PullRequest(title, number, baseRepository,
+				State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
+			prs.add(pr);
+		}
+		return prs;
 	}
 
 //	private boolean isActive(String lastActivity, int lastAllowedActivity) {
@@ -166,7 +175,7 @@ public class FetchGitHubRepositories {
 			.formatted(owner, repo, minStars, maxStars, REPO_LAST_PUSHED_DATE);
 		System.out.println(query);
 
-		ResponseEntity<String> response = postQuery(query);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 		boolean valid = true;
 
 		try {
@@ -270,11 +279,7 @@ public class FetchGitHubRepositories {
 		return null;
 	}
 
-	private String graphqlAsJson(String query) {
-		return "{ \"query\": \"" + query.replace("\n", "")
-			.replace("\t", "")
-			.replace("\"", "\\\"") + "\"";
-	}
+
 
 	public static void main(String[] args) {
 		new FetchGitHubRepositories().run();

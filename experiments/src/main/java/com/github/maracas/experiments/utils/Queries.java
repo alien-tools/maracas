@@ -67,12 +67,14 @@ public final class Queries {
 
 		            edges {
 		              node {
-		                baseRepository
+		                baseRepository {
+		                	nameWithOwner
+		                }
 		                closedAt
 		                createdAt
-		                id
 		                isDraft
 		                mergedAt
+		                number
 		                publishedAt
 		                state
 		                title

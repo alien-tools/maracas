@@ -2,16 +2,12 @@ package com.github.maracas.experiments.model;
 
 import java.time.LocalDate;
 
+import com.github.maracas.experiments.utils.Util;
+
 /**
  * Represents a Pull Request (PR) in the repository.
  */
 public class PullRequest {
-
-	/**
-	 * Main repository where the PR is being merged
-	 */
-	private final Repository repository;
-
 	/**
 	 * Base repository of the PR
 	 */
@@ -23,9 +19,9 @@ public class PullRequest {
 	private final String title;
 
 	/**
-	 * ID of the PR
+	 * Number of the PR
 	 */
-	private final int id;
+	private final int number;
 
 	/**
 	 * State of the PR
@@ -60,7 +56,7 @@ public class PullRequest {
 	/**
 	 * Constants representing the state of a PR
 	 */
-	enum State {
+	public enum State {
 		OPEN, MERGED, CLOSED;
 	}
 
@@ -68,21 +64,28 @@ public class PullRequest {
 	 * Crates a {@link PullRequest} instance. {@link LocalDate} fields are
 	 * initialized to
 	 *
-	 * @param repository     Repository where the PR is created
-	 * @param baseRepository Base repository of the PR
+	 * @param number         Number of the PR
 	 * @param title          Title of the PR
-	 * @param id             ID of the PR
+	 * @param baseRepository Base repository of the PR represented by the owner/repo
+	 *                       string (e.g. "google/guava")
 	 * @param state          {@link State} of the PR
 	 * @param draft          Flag indicating if the PR is a draft
+	 * @param createdAt      String representing the PR creation date (e.g. "2022-01-01T20:00:00Z")
+	 * @param publishedAt    String representing the PR publication date (e.g. "2022-01-01T20:00:00Z")
+	 * @param mergedAt       String representing the PR merge date (e.g. "2022-01-31T20:00:00Z")
+	 * @param closedAt       String representing the PR closing date (e.g. "2022-01-31T20:00:00Z")
 	 */
-	public PullRequest(Repository repository, String baseRepository, String title,
-		int id, State state, boolean draft) {
-		this.repository = repository;
-		this.baseRepository = baseRepository;
+	public PullRequest(String title, int number, String baseRepository, State state,
+		boolean draft, String createdAt, String publishedAt, String mergedAt, String closedAt) {
 		this.title = title;
-		this.id = id;
+		this.number = number;
+		this.baseRepository = baseRepository;
 		this.state = state;
 		this.draft = draft;
+		setCreatedAt(createdAt);
+		setPublishedAt(publishedAt);
+		setMergedAt(mergedAt);
+		setClosedAt(closedAt);
 	}
 
 	/**
@@ -104,6 +107,16 @@ public class PullRequest {
 	}
 
 	/**
+	 * Sets the PR creation {@link LocalDate}.
+	 *
+	 * @param createdAt String representing the PR creation date
+	 */
+	public void setCreatedAt(String createdAt) {
+		if (!createdAt.isEmpty())
+			this.createdAt = Util.stringToLocalDate(createdAt);
+	}
+
+	/**
 	 * Returns the PR publication {@link LocalDate}.
 	 *
 	 * @return the PR publication {@link LocalDate}
@@ -119,6 +132,16 @@ public class PullRequest {
 	 */
 	public void setPublishedAt(LocalDate publishedAt) {
 		this.publishedAt = publishedAt;
+	}
+
+	/**
+	 * Sets the PR publication {@link LocalDate}.
+	 *
+	 * @param publishedAt String representing the PR publication date
+	 */
+	public void setPublishedAt(String publishedAt) {
+		if (!publishedAt.isEmpty())
+			this.publishedAt = Util.stringToLocalDate(publishedAt);
 	}
 
 	/**
@@ -140,6 +163,16 @@ public class PullRequest {
 	}
 
 	/**
+	 * Sets the PR merge {@link LocalDate}.
+	 *
+	 * @param mergedAt String representing the PR merge date
+	 */
+	public void setMergedAt(String mergedAt) {
+		if (!mergedAt.isEmpty())
+			this.mergedAt = Util.stringToLocalDate(mergedAt);
+	}
+
+	/**
 	 * Returns the PR closing {@link LocalDate}.
 	 *
 	 * @return the PR closing {@link LocalDate}
@@ -158,12 +191,13 @@ public class PullRequest {
 	}
 
 	/**
-	 * Returns the PR {@link Repository}.
+	 * Sets the PR closing {@link LocalDate}.
 	 *
-	 * @return the PR {@link Repository}
+	 * @param closedAt String representing the PR closing date
 	 */
-	public Repository getRepository() {
-		return repository;
+	public void setClosedAt(String closedAt) {
+		if (!closedAt.isEmpty())
+			this.closedAt = Util.stringToLocalDate(closedAt);
 	}
 
 	/**
@@ -190,7 +224,7 @@ public class PullRequest {
 	 * @return the PR ID
 	 */
 	public int getId() {
-		return id;
+		return number;
 	}
 
 	/**
