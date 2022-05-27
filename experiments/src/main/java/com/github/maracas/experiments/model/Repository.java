@@ -33,12 +33,6 @@ public class Repository {
 	private final LocalDate lastPush;
 
 	/**
-	 * Number of merged pull requests
-	 * TODO: remove after refactoring the FetchGitHubRepositories class
-	 */
-	private final int mergedPRs;
-
-	/**
 	 * Indicates if the repository has a Maven nature
 	 * TODO: move to Package?
 	 */
@@ -51,9 +45,9 @@ public class Repository {
 	private final boolean gradle;
 
 	/**
-	 * List of {@link Package} instances in the repository
+	 * List of {@link RepositoryPackage} instances in the repository
 	 */
-	private List<Package> packages;
+	private List<RepositoryPackage> packages;
 
 	/**
 	 * List of {@link PullRequest} instances of the repository
@@ -75,15 +69,14 @@ public class Repository {
 	 *                  otherwise
 	 */
 	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		int mergedPRs, boolean maven, boolean gradle) {
+		boolean maven, boolean gradle) {
 		this.owner = owner;
 		this.name = name;
 		this.stars = stars;
 		this.lastPush = lastPush;
-		this.mergedPRs = mergedPRs;
 		this.maven = maven;
 		this.gradle = gradle;
-		this.packages = new ArrayList<Package>();
+		this.packages = new ArrayList<RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 	}
 
@@ -101,10 +94,10 @@ public class Repository {
 	 *                  otherwise
 	 */
 	public Repository(String owner, String name, int stars, String lastPush,
-		int mergedPRs, boolean maven, boolean gradle) {
+		boolean maven, boolean gradle) {
 		this(owner, name, stars,
 			Date.from(Instant.parse(lastPush)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-			mergedPRs, maven, gradle);
+			maven, gradle);
 	}
 
 	/**
@@ -144,15 +137,6 @@ public class Repository {
 	}
 
 	/**
-	 * Returns the number of merged pull requests.
-	 *
-	 * @return the number of merged pull requests
-	 */
-	public int getMergedPRs() {
-		return mergedPRs;
-	}
-
-	/**
 	 * Indicates if the repository has a Maven nature.
 	 *
 	 * @return {@code true} if the repository has a Maven nature, {@code false}
@@ -173,20 +157,20 @@ public class Repository {
 	}
 
 	/**
-	 * Returns the list of {@link Package} instances of the repository.
+	 * Returns the list of {@link RepositoryPackage} instances of the repository.
 	 *
-	 * @return the list of {@link Package} instances
+	 * @return the list of {@link RepositoryPackage} instances
 	 */
-	public List<Package> getPackages() {
+	public List<RepositoryPackage> getPackages() {
 		return packages;
 	}
 
 	/**
-	 * Sets the list of {@link Package} instances of the repository.
+	 * Sets the list of {@link RepositoryPackage} instances of the repository.
 	 *
-	 * @param packages List of {@link Package} instances
+	 * @param packages List of {@link RepositoryPackage} instances
 	 */
-	public void setPackages(List<Package> packages) {
+	public void setPackages(List<RepositoryPackage> packages) {
 		this.packages = packages;
 	}
 
@@ -206,6 +190,11 @@ public class Repository {
 	 */
 	public void setPullRequests(List<PullRequest> pullRequests) {
 		this.pullRequests = pullRequests;
+	}
+
+	public void addPackage(RepositoryPackage pkg) {
+		if (pkg != null)
+			packages.add(pkg);
 	}
 
 }
