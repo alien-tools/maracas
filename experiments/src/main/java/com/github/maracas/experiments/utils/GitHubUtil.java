@@ -1,5 +1,10 @@
 package com.github.maracas.experiments.utils;
 
+import java.io.IOException;
+
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +51,38 @@ public final class GitHubUtil {
 			.replace("\t", "")         // Remove tab characters
 			.replace("\"", "\\\"")     // Escape double-quotes character
 			+ "\"";
+	}
+
+	/**
+	 * Returns a {@link Document} instance representing a page given a URL.
+	 *
+	 * @param url URL to fetch
+	 * @return {@link Document} instance
+	 */
+	public static Document fetchPage(String url) {
+		var ua = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+		var ref = "http://www.google.com";
+
+		try {
+			Thread.sleep(250);
+			return Jsoup.connect(url).userAgent(ua).referrer(ref).get();
+		} catch (HttpStatusException e) {
+			if (e.getStatusCode() == 429) {
+				System.out.println("Too many requests, sleeping...");
+				try {
+					Thread.sleep(30000);
+				} catch (InterruptedException ee) {
+					ee.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+				return fetchPage(url);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			Thread.currentThread().interrupt();
+		}
+		return null;
 	}
 }

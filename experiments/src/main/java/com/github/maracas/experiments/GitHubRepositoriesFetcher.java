@@ -180,13 +180,13 @@ public class GitHubRepositoriesFetcher {
 		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.getOwner(), repo.getName());
 		// TODO: test purposes
 		//String url = "https://github.com/forge/roaster/network/dependents";
-		Document doc = Util.fetchPage(url);
+		Document doc = GitHubUtil.fetchPage(url);
 
 		if (doc != null) {
 			List<String> packageUrls = doc.select("#dependents .select-menu-item").eachAttr("href");
 
 			for (String packageUrl: packageUrls) {
-				Document pkgPage = Util.fetchPage("https://github.com" + packageUrl);
+				Document pkgPage = GitHubUtil.fetchPage("https://github.com" + packageUrl);
 
 				if (pkgPage != null) {
 					String name = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
