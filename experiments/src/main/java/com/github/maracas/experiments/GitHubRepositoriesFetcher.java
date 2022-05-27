@@ -2,8 +2,6 @@ package com.github.maracas.experiments;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +21,9 @@ import com.github.maracas.experiments.utils.Queries;
 import com.github.maracas.experiments.utils.Util;
 
 /**
- *
+ * Class in charge of fetching popular Java repositories from GitHub.
  */
-public class FetchGitHubRepositories {
+public class GitHubRepositoriesFetcher {
 	public static final int REPO_MIN_STARS = 10;
 	public static final int REPO_MAX_STARS = 9999999;
 	public static final String REPO_LAST_PUSHED_DATE = "2022-02-12";
@@ -39,41 +37,52 @@ public class FetchGitHubRepositories {
 	 */
 	private List<Repository> repositories;
 
-	public FetchGitHubRepositories() {
+	/**
+	 * Creates a {@link GitHubRepositoriesFetcher} instance.
+	 */
+	public GitHubRepositoriesFetcher() {
 		this.repositories = new ArrayList<Repository>();
 	}
 
-	public void run() {
-		var repos = fetchRepositories(null, REPO_MIN_STARS, REPO_MAX_STARS);
-		System.out.println("Found " + repos.size());
-
-		try (FileWriter csv = new FileWriter("output.csv")) {
-			csv.write("owner,name,stars,package,clients,maven,gradle\n");
-			csv.flush();
-
-			for (var repo : repos) {
-				fetchClientsPerPackage(repo);
-				var packages = repo.getPackages();
-				var total = packages.size();
-				System.out.printf("%s has %d clients%n", repo, total);
-				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
-					repo.getName(), repo.getStars(), "total", total,
-					repo.isMaven(), repo.isGradle()));
-
-				for (var pkg : packages) {
-					System.out.printf("\t%s: %s", pkg.name(), pkg.relevantClients().size());
-					csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
-						repo.getName(), repo.getStars(), pkg.name(), pkg.relevantClients().size(),
-						repo.isMaven(), repo.isGradle()));
-				}
-
-				csv.flush();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	/**
+	 * Returns the list of fetched repositories from GitHub. Use it after calling
+	 * the {@link GitHubRepositoriesFetcher#fetchRepositories(int, int)}
+	 * method.
+	 *
+	 * @return List of fetched GitHub {@link Repository} instances
+	 */
+	public List<Repository> getRepositories() {
+		return repositories;
 	}
 
+	/**
+	 * Sets the list of {@link Repository} instances.
+	 *
+	 * @param repositories List of GitHub {@link Repository} instances
+	 */
+	public void setRepositories(List<Repository> repositories) {
+		this.repositories = repositories;
+	}
+
+	/**
+	 * Fetches the list of popular GitHub repositories based on certain criteria.
+	 * As side effect, the {@link #repositories} list is populated.
+	 *
+	 * @param minStars Minimum number of stars per repository
+	 * @param maxStars Maximum number of stars per repository
+	 */
+	public void fetchRepositories(int minStars, int maxStars) {
+		repositories = fetchRepositories(null, minStars, maxStars);
+	}
+
+	/**
+	 * Fetches the list of popular GitHub repositories based on certain criteria.
+	 *
+	 * @param cursor   GraphQL query cursor
+	 * @param minStars Minimum number of stars per repository
+	 * @param maxStars Maximum number of stars per repository
+	 * @return List of {@link Repository} instances
+	 */
 	private List<Repository> fetchRepositories(String cursor, int minStars, int maxStars) {
 		var cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
@@ -101,22 +110,19 @@ public class FetchGitHubRepositories {
 				var lastPush = repoJson.get("pushedAt").asText();
 				var prs = repoJson.get("pullRequests");
 				var lastPR = prs.findValuesAsText("mergedAt");
-				var isMaven = repoJson.get("pom").hasNonNull("oid");
-				var isGradle = repoJson.get("gradle").hasNonNull("oid");
+				var maven = repoJson.get("pom").hasNonNull("oid");
+				var gradle = repoJson.get("gradle").hasNonNull("oid");
 				var stars = repoJson.get("stargazerCount").asInt();
 
-				Repository repo = new Repository(owner, name, stars, lastPush, isMaven, isGradle);
+				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
 				repo.setPullRequests(extractPRs(prs));
 
 				if (stars < nextStars)
 					nextStars = stars;
 
-				if (!lastPR.isEmpty() && (isMaven || isGradle)) {
+				if (!lastPR.isEmpty() && (maven || gradle)) {
 					var lastMerged = Util.stringToLocalDate(lastPR.get(0));
-					var now = LocalDate.now();
-					var between = Duration.between(lastMerged.atStartOfDay(), now.atStartOfDay());
-
-					if (between.toDays() <= PR_LAST_MERGED_IN_DAYS)
+					if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS))
 						repos.add(repo);
 					else
 						System.out.printf("%s last PR merged on %s, skipping.%n", repo, lastMerged);
@@ -135,6 +141,14 @@ public class FetchGitHubRepositories {
 		return repos;
 	}
 
+	/**
+	 * Extracts the list of pull requests from a repository "pullRequests" JSON
+	 * node. For more information about the structure, check the
+	 * {@link Queries#GRAPHQL_LIBRARIES_QUERY}.
+	 *
+	 * @param pullRequests "pullRequests" JSON node
+	 * @return List of {@link PullRequest} instances of a repository
+	 */
 	private List<PullRequest> extractPRs(JsonNode pullRequests) {
 		List<PullRequest> prs = new ArrayList<PullRequest>();
 		for (JsonNode prEdge: pullRequests.withArray("edges")) {
@@ -156,21 +170,13 @@ public class FetchGitHubRepositories {
 		return prs;
 	}
 
-//	private boolean isActive(String lastActivity, int lastAllowedActivity) {
-//		if (!lastActivity.isEmpty()) {
-//			LocalDate date = Date.from(Instant.parse(lastActivity)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-//			return isActive(date, lastAllowedActivity);
-//		}
-//		return false;
-//	}
-//
-//	private boolean isActive(LocalDate lastActivity, int lastAllowedActivity) {
-//		LocalDate now = LocalDate.now();
-//		Duration duration = Duration.between(lastActivity.atStartOfDay(), now.atStartOfDay());
-//		return duration.toDays() <= lastAllowedActivity;
-//	}
-
-	private void fetchClientsPerPackage(Repository repo) {
+	/**
+	 * Fetches the list of packages and package clients of a given repository.
+	 * As a side effect, the {@link Repository} packages list is modified.
+	 *
+	 * @param repo Target {@link Repository} instance
+	 */
+	private void fetchPackagesAndClients(Repository repo) {
 		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.getOwner(), repo.getName());
 		// TODO: test purposes
 		//String url = "https://github.com/forge/roaster/network/dependents";
@@ -202,6 +208,16 @@ public class FetchGitHubRepositories {
 		}
 	}
 
+	/**
+	 * Extracts the list of relevant clients given a list of strings representing
+	 * the client repositories (e.g. {"google/guava", "alien-tools/maracas"}).
+	 *
+	 * @param clientRepos List of string representing client repositories
+	 *                    (e.g. {"google/guava", "alien-tools/maracas"})
+	 * @param minStars    Minimum number of stars per client repository
+	 * @param maxStars    Maximum number of stars per client repository
+	 * @return List of client {@link Repository} instances
+	 */
 	private List<Repository> extractRelevantClients(List<String> clientRepos, int minStars, int maxStars) {
 		List<Repository> relevantClients = new ArrayList<Repository>();
 		for (String clientRepo : clientRepos) {
@@ -243,7 +259,39 @@ public class FetchGitHubRepositories {
 		return relevantClients;
 	}
 
+	// TODO: remove after refactoring
+	public void run() {
+		var repos = fetchRepositories(null, REPO_MIN_STARS, REPO_MAX_STARS);
+		System.out.println("Found " + repos.size());
+
+		try (FileWriter csv = new FileWriter("output.csv")) {
+			csv.write("owner,name,stars,package,clients,maven,gradle\n");
+			csv.flush();
+
+			for (var repo : repos) {
+				fetchPackagesAndClients(repo);
+				var packages = repo.getPackages();
+				var total = packages.size();
+				System.out.printf("%s has %d clients%n", repo, total);
+				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
+					repo.getName(), repo.getStars(), "total", total,
+					repo.isMaven(), repo.isGradle()));
+
+				for (var pkg : packages) {
+					System.out.printf("\t%s: %s", pkg.name(), pkg.relevantClients().size());
+					csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
+						repo.getName(), repo.getStars(), pkg.name(), pkg.relevantClients().size(),
+						repo.isMaven(), repo.isGradle()));
+				}
+				csv.flush();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	// TODO: Remove after refactoring
 	public static void main(String[] args) {
-		new FetchGitHubRepositories().run();
+		new GitHubRepositoriesFetcher().run();
 	}
 }

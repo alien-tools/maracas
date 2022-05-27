@@ -1,6 +1,7 @@
 package com.github.maracas.experiments.utils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -33,6 +34,26 @@ public final class Util {
 			.toLocalDate();
 	}
 
+	/**
+	 * Indicates if a {@link LocalDate} instance lays within the boundaries of
+	 * the current date and an arbitrary number of passed days.
+	 *
+	 * @param lastActivity        {@link LocalDate} instance
+	 * @param lastAllowedActivity Number of days to consider back
+	 * @return {@code true} if the {@link LocalDate} instance lays within the
+	 *         boundaries; {@code false} otherwise
+	 */
+	public static boolean isActive(LocalDate lastActivity, int lastAllowedActivity) {
+		LocalDate now = LocalDate.now();
+		Duration duration = Duration.between(lastActivity.atStartOfDay(), now.atStartOfDay());
+		return duration.toDays() <= lastAllowedActivity;
+	}
+
+	/**
+	 *
+	 * @param url
+	 * @return
+	 */
 	public static Document fetchPage(String url) {
 		var ua = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 		var ref = "http://www.google.com";
