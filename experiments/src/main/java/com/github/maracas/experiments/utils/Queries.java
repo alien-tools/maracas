@@ -121,8 +121,8 @@ public final class Queries {
 		{
 		  search(
 		    type: REPOSITORY
-		    query: "repo:%s/%s java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false "
-		    first: 100
+		    query: "repo:%s/%s java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false"
+		    first: 1
 		  ) {
 		    repositoryCount
 		    edges {
@@ -140,6 +140,63 @@ public final class Queries {
 
 		          gradle: object(expression: "HEAD:build.gradle") {
 		            oid
+		          }
+		        }
+		      }
+		    }
+		  }
+		}""";
+
+	/**
+	 *
+	 */
+	public final static String GRAPHQL_PRS_QUERY = """
+		query {
+		  search(
+		    type: REPOSITORY
+		    query: "repo:%s/%s"
+		    first: 1
+		  ) {
+		    repositoryCount
+
+		    edges {
+		      node {
+		        ... on Repository {
+		          pullRequests(states:[%s] %s) {
+		            edges {
+		              node {
+		                baseRepository {
+		                	nameWithOwner
+		                }
+		                closedAt
+		                createdAt
+		                isDraft
+		                mergedAt
+		                number
+		                publishedAt
+		                state
+		                title
+
+		                files(first:100 %s) {
+                          edges {
+                            node {
+                              path
+                            }
+                            cursor
+                          }
+
+                          pageInfo {
+                            endCursor
+                            hasNextPage
+                          }
+                        }
+		              }
+		            }
+
+		            pageInfo {
+                      endCursor
+                      hasNextPage
+                    }
 		          }
 		        }
 		      }

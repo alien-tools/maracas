@@ -197,4 +197,8 @@ public class Repository {
 			packages.add(pkg);
 	}
 
+	public void addPullRequest(PullRequest pr) {
+		if (pr != null)
+			pullRequests.add(pr);
+	}
 }

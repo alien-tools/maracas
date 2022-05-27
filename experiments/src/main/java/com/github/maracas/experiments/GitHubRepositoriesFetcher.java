@@ -76,7 +76,8 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Fetches the list of popular GitHub repositories based on certain criteria.
+	 * Recursively fetches the list of popular GitHub repositories based on
+	 * certain criteria.
 	 *
 	 * @param cursor   GraphQL query cursor
 	 * @param minStars Minimum number of stars per repository
@@ -84,14 +85,14 @@ public class GitHubRepositoriesFetcher {
 	 * @return List of {@link Repository} instances
 	 */
 	private List<Repository> fetchRepositories(String cursor, int minStars, int maxStars) {
-		var cursorQuery = cursor != null
+		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
 			: "";
 
-		var query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
-		var response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+		List<Repository> repos = new ArrayList<Repository>();
 
-		var repos = new ArrayList<Repository>();
 		try {
 			var mapper = new ObjectMapper();
 			var json = mapper.readTree(response.getBody());
@@ -115,7 +116,7 @@ public class GitHubRepositoriesFetcher {
 				var stars = repoJson.get("stargazerCount").asInt();
 
 				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
-				repo.setPullRequests(extractPRs(prs));
+				fetchPullRequests(repo);
 
 				if (stars < nextStars)
 					nextStars = stars;
@@ -142,32 +143,72 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Extracts the list of pull requests from a repository "pullRequests" JSON
-	 * node. For more information about the structure, check the
-	 * {@link Queries#GRAPHQL_LIBRARIES_QUERY}.
+	 * Fetches the pull requests of a given repository.
 	 *
-	 * @param pullRequests "pullRequests" JSON node
-	 * @return List of {@link PullRequest} instances of a repository
+	 * @param repo Target repository
 	 */
-	private List<PullRequest> extractPRs(JsonNode pullRequests) {
-		List<PullRequest> prs = new ArrayList<PullRequest>();
-		for (JsonNode prEdge: pullRequests.withArray("edges")) {
-			JsonNode prJson = prEdge.get("node");
-			String title = prJson.get("title").asText();
-			int number = prJson.get("number").asInt();
-			String state = prJson.get("state").asText();
-			boolean draft = prJson.get("isDraft").asBoolean();
-			String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
-			String createdAt = prJson.get("createdAt").asText();
-			String publishedAt = prJson.get("publishedAt").asText();
-			String mergedAt = prJson.get("mergedAt").asText();
-			String closedAt = prJson.get("closedAt").asText();
+	private void fetchPullRequests(Repository repo) {
+		fetchPullRequests(null, repo);
+	}
 
-			PullRequest pr = new PullRequest(title, number, baseRepository,
-				State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
-			prs.add(pr);
+	/**
+	 * Recursively fetches the pull requests of a given repository.
+	 *
+	 * @param repo   Target repository
+	 * @param cursor GraphQL query cursor
+	 */
+	private void fetchPullRequests(String cursor, Repository repo) {
+		String cursorQuery = cursor != null
+			? ", after: \"" + cursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PRS_QUERY.formatted(repo.getOwner(),
+			repo.getName(), String.join(", ", new String[] {State.OPEN.toString(), State.MERGED.toString(), State.CLOSED.toString()}),
+			cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode pageInfo = search.get("pageInfo");
+			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+			String endCursor = pageInfo.get("endCursor").asText();
+			JsonNode pullRequestsJson = search.get("edges").get("node").get("pullRequests");
+
+			for (JsonNode prEdge: pullRequestsJson.withArray("edges")) {
+				PullRequest pr = extractPRs(prEdge);
+				repo.addPullRequest(pr);
+			}
+
+			if (hasNextPage)
+				fetchPullRequests(endCursor, repo);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
 		}
-		return prs;
+	}
+
+	/**
+	 * Extracts a pull requests from a repository pull request edge JSON node.
+	 * For more information about the structure, check the
+	 * {@link Queries#GRAPHQL_PRS_QUERY}.
+	 *
+	 * @param prEdge JSON node pointing to a "pullRequests" edge
+	 * @return {@link PullRequest} instance
+	 */
+	private PullRequest extractPRs(JsonNode prEdge) {
+		JsonNode prJson = prEdge.get("node");
+		String title = prJson.get("title").asText();
+		int number = prJson.get("number").asInt();
+		String state = prJson.get("state").asText();
+		boolean draft = prJson.get("isDraft").asBoolean();
+		String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
+		String createdAt = prJson.get("createdAt").asText();
+		String publishedAt = prJson.get("publishedAt").asText();
+		String mergedAt = prJson.get("mergedAt").asText();
+		String closedAt = prJson.get("closedAt").asText();
+
+		return new PullRequest(title, number, baseRepository,
+			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
 	}
 
 	/**
