@@ -11,6 +11,11 @@ import com.github.maracas.experiments.utils.Util;
  */
 public class PullRequest {
 	/**
+	 * Repository where the PR is being merged
+	 */
+	private final Repository repository;
+
+	/**
 	 * Base repository of the PR
 	 */
 	private final String baseRepository;
@@ -73,6 +78,7 @@ public class PullRequest {
 	 *
 	 * @param number         Number of the PR
 	 * @param title          Title of the PR
+	 * @param repository     Repository where the PR is being merged
 	 * @param baseRepository Base repository of the PR represented by the owner/repo
 	 *                       string (e.g. "google/guava")
 	 * @param state          {@link State} of the PR
@@ -82,10 +88,11 @@ public class PullRequest {
 	 * @param mergedAt       String representing the PR merge date (e.g. "2022-01-31T20:00:00Z")
 	 * @param closedAt       String representing the PR closing date (e.g. "2022-01-31T20:00:00Z")
 	 */
-	public PullRequest(String title, int number, String baseRepository, State state,
+	public PullRequest(String title, int number, Repository repository, String baseRepository, State state,
 		boolean draft, String createdAt, String publishedAt, String mergedAt, String closedAt) {
 		this.title = title;
 		this.number = number;
+		this.repository = repository;
 		this.baseRepository = baseRepository;
 		this.state = state;
 		this.draft = draft;
@@ -120,7 +127,7 @@ public class PullRequest {
 	 * @param createdAt String representing the PR creation date
 	 */
 	public void setCreatedAt(String createdAt) {
-		if (!createdAt.isEmpty())
+		if (createdAt != null && !createdAt.isEmpty())
 			this.createdAt = Util.stringToLocalDate(createdAt);
 	}
 
@@ -148,7 +155,7 @@ public class PullRequest {
 	 * @param publishedAt String representing the PR publication date
 	 */
 	public void setPublishedAt(String publishedAt) {
-		if (!publishedAt.isEmpty())
+		if (publishedAt != null && !publishedAt.isEmpty())
 			this.publishedAt = Util.stringToLocalDate(publishedAt);
 	}
 
@@ -176,7 +183,7 @@ public class PullRequest {
 	 * @param mergedAt String representing the PR merge date
 	 */
 	public void setMergedAt(String mergedAt) {
-		if (!mergedAt.isEmpty())
+		if (mergedAt != null && !mergedAt.isEmpty())
 			this.mergedAt = Util.stringToLocalDate(mergedAt);
 	}
 
@@ -204,7 +211,7 @@ public class PullRequest {
 	 * @param closedAt String representing the PR closing date
 	 */
 	public void setClosedAt(String closedAt) {
-		if (!closedAt.isEmpty())
+		if (closedAt != null && !closedAt.isEmpty())
 			this.closedAt = Util.stringToLocalDate(closedAt);
 	}
 
@@ -289,4 +296,12 @@ public class PullRequest {
 		return number;
 	}
 
+	/**
+	 * Returns the repository where the PR is being merged.
+	 *
+	 * @return Repository where the PR is being merged
+	 */
+	public Repository getRepository() {
+		return repository;
+	}
 }

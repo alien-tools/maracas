@@ -192,11 +192,23 @@ public class Repository {
 		this.pullRequests = pullRequests;
 	}
 
+	/**
+	 * Adds a new package to the list of {@link RepositoryPackage} instances of
+	 * the repository.
+	 *
+	 * @param pkg {@link RepositoryPackage} instance to add to the packages list
+	 */
 	public void addPackage(RepositoryPackage pkg) {
 		if (pkg != null)
 			packages.add(pkg);
 	}
 
+	/**
+	 * Adds a new pull request to the list of {@link PullRequest} instances of
+	 * the repository.
+	 *
+	 * @param pkg {@link PullRequest} instance to add to the pull requests list
+	 */
 	public void addPullRequest(PullRequest pr) {
 		if (pr != null)
 			pullRequests.add(pr);

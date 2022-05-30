@@ -161,13 +161,14 @@ public class GitHubRepositoriesFetcher {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
-			JsonNode pullRequests = search.get("edges").get("node").get("pullRequests");
+			JsonNode pullRequests = search.withArray("edges").get(0)
+				.get("node").get("pullRequests");
 			JsonNode pageInfo = pullRequests.get("pageInfo");
 			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 			String endCursor = pageInfo.get("endCursor").asText();
 
 			for (JsonNode prEdge: pullRequests.withArray("edges")) {
-				PullRequest pr = extractPRs(prEdge);
+				PullRequest pr = extractPRs(prEdge, repo);
 				repo.addPullRequest(pr);
 			}
 
@@ -184,9 +185,10 @@ public class GitHubRepositoriesFetcher {
 	 * {@link Queries#GRAPHQL_PRS_QUERY}.
 	 *
 	 * @param prEdge JSON node pointing to a "pullRequests" edge
+	 * @param repo   Repository where the PR is being merged
 	 * @return {@link PullRequest} instance
 	 */
-	private PullRequest extractPRs(JsonNode prEdge) {
+	private PullRequest extractPRs(JsonNode prEdge, Repository repo) {
 		JsonNode prJson = prEdge.get("node");
 		String title = prJson.get("title").asText();
 		int number = prJson.get("number").asInt();
@@ -198,7 +200,7 @@ public class GitHubRepositoriesFetcher {
 		String mergedAt = prJson.get("mergedAt").asText();
 		String closedAt = prJson.get("closedAt").asText();
 
-		PullRequest pullRequest = new PullRequest(title, number, baseRepository,
+		PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
 			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
 		fetchPRFiles(null, pullRequest);
 		return pullRequest;
@@ -212,18 +214,19 @@ public class GitHubRepositoriesFetcher {
 	 * @param pullRequest Target pull request
 	 */
 	private void fetchPRFiles(String cursor, PullRequest pullRequest) {
+		Repository repo = pullRequest.getRepository();
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
 			: "";
-		String query = Queries.GRAPHQL_PRS_QUERY.formatted(pullRequest.getNumber(), cursorQuery);
+		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
+			pullRequest.getNumber(), cursorQuery);
 		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
-			JsonNode pr = search.get("edges").get("node").get("pullRequests")
-				.withArray("edges").get(0).get("node");
+			JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
 			JsonNode files = pr.get("files");
 			JsonNode pageInfo = files.get("pageInfo");
 			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();

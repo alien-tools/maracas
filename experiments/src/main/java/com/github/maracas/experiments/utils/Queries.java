@@ -162,7 +162,7 @@ public final class Queries {
 		    edges {
 		      node {
 		        ... on Repository {
-		          pullRequests(states:[%s] %s) {
+		          pullRequests(states:[%s] first:100 %s) {
 		            edges {
 		              node {
 
@@ -179,20 +179,6 @@ public final class Queries {
 		                publishedAt
 		                state
 		                title
-
-		                files(first:100 %s) {
-                          edges {
-                            node {
-                              path
-                            }
-                            cursor
-                          }
-
-                          pageInfo {
-                            endCursor
-                            hasNextPage
-                          }
-                        }
 		              }
 		            }
 
@@ -214,27 +200,20 @@ public final class Queries {
 		    query: "repo:%s/%s"
 		    first: 1
 		  ) {
-		    repositoryCount
-
 		    edges {
 		      node {
 		        ... on Repository {
-		          pullRequests(number:%s first:1) {
-		            edges {
-		              node {
-		                files(first:100 %s) {
-                          edges {
-                            node {
-                              path
-                            }
-                            cursor
-                          }
-
-                          pageInfo {
-                            endCursor
-                            hasNextPage
-                          }
-                        }
+		          pr: pullRequest(number:%d) {
+		            files(first: 100) {
+		              edges {
+		                node {
+		                  path
+		                }
+		                cursor
+		              }
+		              pageInfo {
+		                endCursor
+		                hasNextPage
 		              }
 		            }
 		          }
@@ -243,4 +222,5 @@ public final class Queries {
 		    }
 		  }
 		}""";
+
 }
