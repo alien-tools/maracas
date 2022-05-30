@@ -1,6 +1,8 @@
 package com.github.maracas.experiments.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.github.maracas.experiments.utils.Util;
 
@@ -54,6 +56,11 @@ public class PullRequest {
 	private LocalDate closedAt;
 
 	/**
+	 * List with the relative paths of the modified files
+	 */
+	private List<String> files;
+
+	/**
 	 * Constants representing the state of a PR
 	 */
 	public enum State {
@@ -86,6 +93,7 @@ public class PullRequest {
 		setPublishedAt(publishedAt);
 		setMergedAt(mergedAt);
 		setClosedAt(closedAt);
+		this.files = new ArrayList<String>();
 	}
 
 	/**
@@ -242,6 +250,43 @@ public class PullRequest {
 	 */
 	public boolean isDraft() {
 		return draft;
+	}
+
+	/**
+	 * Returns the list of paths of the modified files.
+	 *
+	 * @return List of paths of the modified files
+	 */
+	public List<String> getFiles() {
+		return files;
+	}
+
+	/**
+	 * Sets the list of paths of the modified files.
+	 *
+	 * @param files List of paths of the modified files
+	 */
+	public void setFiles(List<String> files) {
+		this.files = files;
+	}
+
+	/**
+	 * Adds a new file relative path to the files list.
+	 *
+	 * @param file Relative path to the new file.
+	 */
+	public void addFile(String file) {
+		if (file != null && !file.isEmpty())
+			files.add(file);
+	}
+
+	/**
+	 * Returns the PR number.
+	 *
+	 * @return PR number
+	 */
+	public int getNumber() {
+		return number;
 	}
 
 }

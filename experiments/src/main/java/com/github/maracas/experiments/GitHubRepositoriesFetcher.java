@@ -116,7 +116,7 @@ public class GitHubRepositoriesFetcher {
 				var stars = repoJson.get("stargazerCount").asInt();
 
 				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
-				fetchPullRequests(repo);
+				fetchPullRequests(null, repo);
 
 				if (stars < nextStars)
 					nextStars = stars;
@@ -143,19 +143,10 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Fetches the pull requests of a given repository.
-	 *
-	 * @param repo Target repository
-	 */
-	private void fetchPullRequests(Repository repo) {
-		fetchPullRequests(null, repo);
-	}
-
-	/**
 	 * Recursively fetches the pull requests of a given repository.
 	 *
-	 * @param repo   Target repository
 	 * @param cursor GraphQL query cursor
+	 * @param repo   Target repository
 	 */
 	private void fetchPullRequests(String cursor, Repository repo) {
 		String cursorQuery = cursor != null
@@ -170,12 +161,12 @@ public class GitHubRepositoriesFetcher {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
-			JsonNode pageInfo = search.get("pageInfo");
+			JsonNode pullRequests = search.get("edges").get("node").get("pullRequests");
+			JsonNode pageInfo = pullRequests.get("pageInfo");
 			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 			String endCursor = pageInfo.get("endCursor").asText();
-			JsonNode pullRequestsJson = search.get("edges").get("node").get("pullRequests");
 
-			for (JsonNode prEdge: pullRequestsJson.withArray("edges")) {
+			for (JsonNode prEdge: pullRequests.withArray("edges")) {
 				PullRequest pr = extractPRs(prEdge);
 				repo.addPullRequest(pr);
 			}
@@ -207,8 +198,48 @@ public class GitHubRepositoriesFetcher {
 		String mergedAt = prJson.get("mergedAt").asText();
 		String closedAt = prJson.get("closedAt").asText();
 
-		return new PullRequest(title, number, baseRepository,
+		PullRequest pullRequest = new PullRequest(title, number, baseRepository,
 			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
+		fetchPRFiles(null, pullRequest);
+		return pullRequest;
+	}
+
+	/**
+	 * Recursively fetches the relative paths of files modified in a given pull
+	 * request.
+	 *
+	 * @param cursor      GraphQL query cursor
+	 * @param pullRequest Target pull request
+	 */
+	private void fetchPRFiles(String cursor, PullRequest pullRequest) {
+		String cursorQuery = cursor != null
+			? ", after: \"" + cursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PRS_QUERY.formatted(pullRequest.getNumber(), cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode pr = search.get("edges").get("node").get("pullRequests")
+				.withArray("edges").get(0).get("node");
+			JsonNode files = pr.get("files");
+			JsonNode pageInfo = files.get("pageInfo");
+			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+			String endCursor = pageInfo.get("endCursor").asText();
+
+			for (JsonNode fileEdge: files.withArray("edges")) {
+				String file = fileEdge.get("node").get("path").asText();
+				pullRequest.addFile(file);
+			}
+
+			if (hasNextPage)
+				fetchPRFiles(endCursor, pullRequest);
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

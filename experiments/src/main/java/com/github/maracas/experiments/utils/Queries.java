@@ -165,11 +165,14 @@ public final class Queries {
 		          pullRequests(states:[%s] %s) {
 		            edges {
 		              node {
+
 		                baseRepository {
 		                	nameWithOwner
 		                }
+
 		                closedAt
 		                createdAt
+		                id
 		                isDraft
 		                mergedAt
 		                number
@@ -197,6 +200,43 @@ public final class Queries {
                       endCursor
                       hasNextPage
                     }
+		          }
+		        }
+		      }
+		    }
+		  }
+		}""";
+
+	public final static String GRAPHQL_PRS_FILES_QUERY = """
+		query {
+		  search(
+		    type: REPOSITORY
+		    query: "repo:%s/%s"
+		    first: 1
+		  ) {
+		    repositoryCount
+
+		    edges {
+		      node {
+		        ... on Repository {
+		          pullRequests(number:%s first:1) {
+		            edges {
+		              node {
+		                files(first:100 %s) {
+                          edges {
+                            node {
+                              path
+                            }
+                            cursor
+                          }
+
+                          pageInfo {
+                            endCursor
+                            hasNextPage
+                          }
+                        }
+		              }
+		            }
 		          }
 		        }
 		      }
