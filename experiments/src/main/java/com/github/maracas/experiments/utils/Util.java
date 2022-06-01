@@ -43,4 +43,15 @@ public final class Util {
 		Duration duration = Duration.between(lastActivity.atStartOfDay(), now.atStartOfDay());
 		return duration.toDays() <= lastAllowedActivity;
 	}
+
+	/**
+	 * Indicates if a string is a null value--that is, if the string is equal
+	 * to the string "null".
+	 *
+	 * @param value Target string
+	 * @return {@code true} if the string is equal to "null", {@code false} otherwise
+	 */
+	public static boolean isNullValue(String value) {
+		return value.equalsIgnoreCase("null");
+	}
 }

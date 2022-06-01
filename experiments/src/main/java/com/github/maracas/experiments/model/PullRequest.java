@@ -15,6 +15,8 @@ public class PullRequest {
 	 */
 	private final Repository repository;
 
+	private Release release;
+
 	/**
 	 * Base repository of the PR
 	 */
@@ -127,7 +129,7 @@ public class PullRequest {
 	 * @param createdAt String representing the PR creation date
 	 */
 	public void setCreatedAt(String createdAt) {
-		if (createdAt != null && !createdAt.isEmpty())
+		if (createdAt != null && !createdAt.isEmpty() && !Util.isNullValue(createdAt))
 			this.createdAt = Util.stringToLocalDate(createdAt);
 	}
 
@@ -155,7 +157,7 @@ public class PullRequest {
 	 * @param publishedAt String representing the PR publication date
 	 */
 	public void setPublishedAt(String publishedAt) {
-		if (publishedAt != null && !publishedAt.isEmpty())
+		if (publishedAt != null && !publishedAt.isEmpty() && !Util.isNullValue(publishedAt))
 			this.publishedAt = Util.stringToLocalDate(publishedAt);
 	}
 
@@ -183,7 +185,7 @@ public class PullRequest {
 	 * @param mergedAt String representing the PR merge date
 	 */
 	public void setMergedAt(String mergedAt) {
-		if (mergedAt != null && !mergedAt.isEmpty())
+		if (mergedAt != null && !mergedAt.isEmpty() && !Util.isNullValue(mergedAt))
 			this.mergedAt = Util.stringToLocalDate(mergedAt);
 	}
 
@@ -211,7 +213,7 @@ public class PullRequest {
 	 * @param closedAt String representing the PR closing date
 	 */
 	public void setClosedAt(String closedAt) {
-		if (closedAt != null && !closedAt.isEmpty())
+		if (closedAt != null && !closedAt.isEmpty() && !Util.isNullValue(closedAt))
 			this.closedAt = Util.stringToLocalDate(closedAt);
 	}
 
@@ -231,15 +233,6 @@ public class PullRequest {
 	 */
 	public String getTitle() {
 		return title;
-	}
-
-	/**
-	 * Returns the PR ID.
-	 *
-	 * @return the PR ID
-	 */
-	public int getId() {
-		return number;
 	}
 
 	/**
@@ -303,5 +296,13 @@ public class PullRequest {
 	 */
 	public Repository getRepository() {
 		return repository;
+	}
+
+	public Release getRelease() {
+		return release;
+	}
+
+	public void setRelease(Release release) {
+		this.release = release;
 	}
 }

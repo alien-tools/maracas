@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a GitHub repository. Includes the fields required for the
@@ -47,12 +49,19 @@ public class Repository {
 	/**
 	 * List of {@link RepositoryPackage} instances in the repository
 	 */
-	private List<RepositoryPackage> packages;
+	private List<RepositoryPackage> repoPackages;
 
 	/**
 	 * List of {@link PullRequest} instances of the repository
 	 */
 	private List<PullRequest> pullRequests;
+
+	/**
+	 * List of {@link Release} instances ordered by date
+	 */
+	private Map<String, Release> releases;
+
+	private Map<String, List<Package>> packages;
 
 	/**
 	 * Creates an instance of the {@link Repository} class. The {@code packages}
@@ -76,8 +85,10 @@ public class Repository {
 		this.lastPush = lastPush;
 		this.maven = maven;
 		this.gradle = gradle;
-		this.packages = new ArrayList<RepositoryPackage>();
+		this.repoPackages = new ArrayList<RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
+		this.releases = new HashMap<String, Release>();
+		this.packages = new HashMap<String, List<Package>>();
 	}
 
 	/**
@@ -157,24 +168,6 @@ public class Repository {
 	}
 
 	/**
-	 * Returns the list of {@link RepositoryPackage} instances of the repository.
-	 *
-	 * @return the list of {@link RepositoryPackage} instances
-	 */
-	public List<RepositoryPackage> getPackages() {
-		return packages;
-	}
-
-	/**
-	 * Sets the list of {@link RepositoryPackage} instances of the repository.
-	 *
-	 * @param packages List of {@link RepositoryPackage} instances
-	 */
-	public void setPackages(List<RepositoryPackage> packages) {
-		this.packages = packages;
-	}
-
-	/**
 	 * Returns the list of {@link PullRequest} instances of the repository.
 	 *
 	 * @return the list of {@link PullRequest} instances
@@ -200,7 +193,7 @@ public class Repository {
 	 */
 	public void addPackage(RepositoryPackage pkg) {
 		if (pkg != null)
-			packages.add(pkg);
+			repoPackages.add(pkg);
 	}
 
 	/**
@@ -212,5 +205,57 @@ public class Repository {
 	public void addPullRequest(PullRequest pr) {
 		if (pr != null)
 			pullRequests.add(pr);
+	}
+
+	/**
+	 * Returns the list of {@link RepositoryPackage} instances of the repository.
+	 *
+	 * @return the list of {@link RepositoryPackage} instances
+	 */
+	public List<RepositoryPackage> getRepoPackages() {
+		return repoPackages;
+	}
+
+	/**
+	 * Sets the list of {@link RepositoryPackage} instances of the repository.
+	 *
+	 * @param packages List of {@link RepositoryPackage} instances
+	 */
+	public void setRepoPackages(List<RepositoryPackage> repoPackages) {
+		this.repoPackages = repoPackages;
+	}
+
+	public Map<String, Release> getReleases() {
+		return releases;
+	}
+
+	public void setReleases(Map<String, Release> releases) {
+		this.releases = releases;
+	}
+
+	public boolean releaseExists(String version) {
+		return releases.containsKey(version);
+	}
+
+	public Release getRelease(String version) {
+		return releases.getOrDefault(version, null);
+	}
+
+	public void addRelease(Release release) {
+		if (release != null)
+			releases.putIfAbsent(release.getVersion(), release);
+	}
+
+	public Map<String, List<Package>> getPackages() {
+		return packages;
+	}
+
+	public void setPackages(Map<String, List<Package>> packages) {
+		this.packages = packages;
+	}
+
+	public void addPackage(Package pkg) {
+		if (pkg != null)
+			packages.get(pkg.getName()).add(pkg);
 	}
 }

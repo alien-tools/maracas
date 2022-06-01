@@ -2,6 +2,7 @@ package com.github.maracas.experiments;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +13,10 @@ import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.experiments.model.Package;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
+import com.github.maracas.experiments.model.Release;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
 import com.github.maracas.experiments.utils.GitHubUtil;
@@ -117,6 +120,7 @@ public class GitHubRepositoriesFetcher {
 
 				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
 				fetchPullRequests(null, repo);
+				fetchPackages(null, repo);
 
 				if (stars < nextStars)
 					nextStars = stars;
@@ -167,10 +171,8 @@ public class GitHubRepositoriesFetcher {
 			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 			String endCursor = pageInfo.get("endCursor").asText();
 
-			for (JsonNode prEdge: pullRequests.withArray("edges")) {
-				PullRequest pr = extractPRs(prEdge, repo);
-				repo.addPullRequest(pr);
-			}
+			for (JsonNode prEdge: pullRequests.withArray("edges"))
+				extractPRs(prEdge, repo);
 
 			if (hasNextPage)
 				fetchPullRequests(endCursor, repo);
@@ -186,9 +188,8 @@ public class GitHubRepositoriesFetcher {
 	 *
 	 * @param prEdge JSON node pointing to a "pullRequests" edge
 	 * @param repo   Repository where the PR is being merged
-	 * @return {@link PullRequest} instance
 	 */
-	private PullRequest extractPRs(JsonNode prEdge, Repository repo) {
+	private void extractPRs(JsonNode prEdge, Repository repo) {
 		JsonNode prJson = prEdge.get("node");
 		String title = prJson.get("title").asText();
 		int number = prJson.get("number").asInt();
@@ -203,7 +204,95 @@ public class GitHubRepositoriesFetcher {
 		PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
 			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
 		fetchPRFiles(null, pullRequest);
-		return pullRequest;
+		// TODO: 1. find PR release; 2. add it to the PR; 3. add it to the repo
+		repo.addPullRequest(pullRequest);
+	}
+
+	private void fetchPackages(String cursor, Repository repo) {
+		String cursorQuery = cursor != null
+			? ", after: \"" + cursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PACKAGES_QUERY.formatted(repo.getOwner(),
+			repo.getName(), cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode packages = search.withArray("edges").get(0)
+				.get("node").get("packages");
+			JsonNode pageInfo = packages.get("pageInfo");
+			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+			String endCursor = pageInfo.get("endCursor").asText();
+
+			for (JsonNode pkgNode: packages.withArray("nodes"))
+				extractPackage(pkgNode, repo);
+
+			if (hasNextPage)
+				fetchPackages(endCursor, repo);
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void extractPackage(JsonNode pkgNode, Repository repo) {
+		String name = pkgNode.get("name").asText();
+		Package pkg = new Package(name, repo);
+		fetchReleases(null, pkg, repo);
+	}
+
+	private void fetchReleases(String cursor, Package pkg, Repository repo) {
+		String cursorQuery = cursor != null
+			? ", after: \"" + cursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PACKAGES_QUERY.formatted(repo.getOwner(),
+			repo.getName(), pkg.getName(), cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode pkgJson = search.withArray("edges").get(0)
+				.get("node").get("pkg");
+			JsonNode versions = pkgJson.get("versions");
+			JsonNode pageInfo = versions.get("pageInfo");
+			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+			String endCursor = pageInfo.get("endCursor").asText();
+
+			for (JsonNode versionNode: versions.withArray("nodes"))
+				extractRelease(versionNode, pkg, repo);
+
+			if (hasNextPage)
+				fetchReleases(endCursor, pkg, repo);
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void extractRelease(JsonNode versionNode, Package pkg, Repository repo) {
+		String version = versionNode.get("version").asText();
+		Release release = null;
+
+		if (!repo.releaseExists(version)) {
+			JsonNode file = versionNode.get("f").get("nodes");
+			if (file != null) {
+				String dateString = file.get(0).get("updatedAt").asText();
+				LocalDate date = Util.stringToLocalDate(dateString);
+				release = new Release(version, date, repo);
+			}
+		} else {
+			release = repo.getRelease(version);
+		}
+
+		if (release != null) {
+			pkg.setRelease(release);
+			release.addPackage(pkg);
+			repo.addPackage(pkg);
+		}
 	}
 
 	/**
@@ -251,7 +340,7 @@ public class GitHubRepositoriesFetcher {
 	 *
 	 * @param repo Target {@link Repository} instance
 	 */
-	private void fetchPackagesAndClients(Repository repo) {
+	private void fetchRepoPackagesAndClients(Repository repo) {
 		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.getOwner(), repo.getName());
 		// TODO: test purposes
 		//String url = "https://github.com/forge/roaster/network/dependents";
@@ -344,8 +433,8 @@ public class GitHubRepositoriesFetcher {
 			csv.flush();
 
 			for (var repo : repos) {
-				fetchPackagesAndClients(repo);
-				var packages = repo.getPackages();
+				fetchRepoPackagesAndClients(repo);
+				var packages = repo.getRepoPackages();
 				var total = packages.size();
 				System.out.printf("%s has %d clients%n", repo, total);
 				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),

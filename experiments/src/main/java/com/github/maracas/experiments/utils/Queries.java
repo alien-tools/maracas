@@ -38,7 +38,7 @@ public final class Queries {
 		query {
 		  search(
 		    type: REPOSITORY,
-		    query: "java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false sort:stars-desc",
+		    query: "java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false",
 		    first: 100
 		    %s
 		  ) {
@@ -148,7 +148,25 @@ public final class Queries {
 		}""";
 
 	/**
-	 *
+	 * TODO: Refactor query based on type=ISSUE
+	 * {
+		  search(
+		    type: ISSUE
+		    query: "repo:alien-tools/maracas CLOSED in:states is:pr is:public archived:false sort:created-desc"
+		    first: 100
+		  ) {
+		    issueCount
+		    edges {
+		      node {
+		        ... on PullRequest {
+		          number
+		          title
+		          createdAt
+		        }
+		      }
+		    }
+		  }
+		}
 	 */
 	public final static String GRAPHQL_PRS_QUERY = """
 		query {
@@ -157,8 +175,6 @@ public final class Queries {
 		    query: "repo:%s/%s"
 		    first: 1
 		  ) {
-		    repositoryCount
-
 		    edges {
 		      node {
 		        ... on Repository {
@@ -196,14 +212,15 @@ public final class Queries {
 	public final static String GRAPHQL_PRS_FILES_QUERY = """
 		query {
 		  search(
-		    type: REPOSITORY
-		    query: "repo:%s/%s"
+		    type: REPOSITORY,
+		    query: "repo:%s/%s",
 		    first: 1
 		  ) {
 		    edges {
 		      node {
 		        ... on Repository {
-		          pr: pullRequest(number:%d) {
+		          pr: pullRequest(number: %d) {
+
 		            files(first: 100) {
 		              edges {
 		                node {
@@ -211,6 +228,7 @@ public final class Queries {
 		                }
 		                cursor
 		              }
+
 		              pageInfo {
 		                endCursor
 		                hasNextPage
@@ -223,4 +241,64 @@ public final class Queries {
 		  }
 		}""";
 
+	public final static String GRAPHQL_PACKAGES_QUERY = """
+		query {
+		  search(type: REPOSITORY,
+		    query: "repo:%s/%s",
+		    first: 1
+		  ) {
+		    edges {
+		      node {
+		        ... on Repository {
+
+		          packages(first: 100 %s) {
+		            nodes {
+		              name
+		            }
+
+		            pageInfo {
+		              endCursor
+		              hasNextPage
+		            }
+		          }
+
+		        }
+		      }
+		    }
+		  }
+		}""";
+
+	public final static String GRAPHQL_RELEASES_QUERY = """
+		query {
+		  search(type: REPOSITORY,
+		    query: "repo:%s/%s",
+		    first: 1
+		  ) {
+		    edges {
+		      node {
+		        ... on Repository {
+
+		          pkg: package(name: %s) {
+
+		            versions(first: 100 %s) {
+		              nodes {
+		              	version
+		                f: files (first: 1) {
+			              nodes {
+			                updatedAt
+			              }
+			            }
+		              }
+
+		              pageInfo {
+			            endCursor
+			            hasNextPage
+			          }
+		            }
+		          }
+		        }
+		      }
+		    }
+		  }
+		}""";
 }
