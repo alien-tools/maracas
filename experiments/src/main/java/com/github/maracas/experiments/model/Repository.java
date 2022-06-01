@@ -61,8 +61,6 @@ public class Repository {
 	 */
 	private Map<String, Release> releases;
 
-	private Map<String, List<Package>> packages;
-
 	/**
 	 * Creates an instance of the {@link Repository} class. The {@code packages}
 	 * and {@code pullRequests} fields are initialized as empty lists.
@@ -88,7 +86,6 @@ public class Repository {
 		this.repoPackages = new ArrayList<RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 		this.releases = new HashMap<String, Release>();
-		this.packages = new HashMap<String, List<Package>>();
 	}
 
 	/**
@@ -244,18 +241,5 @@ public class Repository {
 	public void addRelease(Release release) {
 		if (release != null)
 			releases.putIfAbsent(release.getVersion(), release);
-	}
-
-	public Map<String, List<Package>> getPackages() {
-		return packages;
-	}
-
-	public void setPackages(Map<String, List<Package>> packages) {
-		this.packages = packages;
-	}
-
-	public void addPackage(Package pkg) {
-		if (pkg != null)
-			packages.get(pkg.getName()).add(pkg);
 	}
 }

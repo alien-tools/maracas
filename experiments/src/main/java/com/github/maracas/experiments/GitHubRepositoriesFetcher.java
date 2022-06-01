@@ -291,7 +291,6 @@ public class GitHubRepositoriesFetcher {
 		if (release != null) {
 			pkg.setRelease(release);
 			release.addPackage(pkg);
-			repo.addPackage(pkg);
 		}
 	}
 
