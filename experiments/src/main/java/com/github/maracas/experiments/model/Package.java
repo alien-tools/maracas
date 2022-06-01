@@ -1,18 +1,19 @@
 package com.github.maracas.experiments.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Package {
 	private final String name;
 	private final Repository repository;
 	private Release release;
-	private List<PackageFile> files;
+	private String srcUrl;
+
+	public enum PackageSourceType {
+		UNDEFINED
+	}
 
 	public Package(String name, Repository repository) {
 		this.name = name;
 		this.repository = repository;
-		this.files = new ArrayList<PackageFile>();
+		this.srcUrl = PackageSourceType.UNDEFINED.toString();
 	}
 
 	public Release getRelease() {
@@ -23,24 +24,19 @@ public class Package {
 		this.release = release;
 	}
 
-	public List<PackageFile> getFiles() {
-		return files;
-	}
-
-	public void setFiles(List<PackageFile> files) {
-		this.files = files;
-	}
-
-	public void addFile(PackageFile file) {
-		if (file != null)
-			files.add(file);
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public Repository getRepository() {
 		return repository;
+	}
+
+	public String getSrcUrl() {
+		return srcUrl;
+	}
+
+	public void setSrcUrl(String srcUrl) {
+		this.srcUrl = srcUrl;
 	}
 }

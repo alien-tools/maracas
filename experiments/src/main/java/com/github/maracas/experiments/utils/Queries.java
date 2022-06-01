@@ -244,24 +244,21 @@ public final class Queries {
 	public final static String GRAPHQL_PACKAGES_QUERY = """
 		query {
 		  search(type: REPOSITORY,
-		    query: "repo:%s/%s",
-		    first: 1
-		  ) {
+		  query: "repo:%s/%s",
+		  first: 1
+		) {
 		    edges {
 		      node {
 		        ... on Repository {
-
 		          packages(first: 100 %s) {
 		            nodes {
 		              name
 		            }
-
 		            pageInfo {
 		              endCursor
 		              hasNextPage
 		            }
 		          }
-
 		        }
 		      }
 		    }
@@ -271,29 +268,61 @@ public final class Queries {
 	public final static String GRAPHQL_RELEASES_QUERY = """
 		query {
 		  search(type: REPOSITORY,
-		    query: "repo:%s/%s",
-		    first: 1
-		  ) {
+		  query: "repo:%s/%s",
+		  first: 1
+		) {
 		    edges {
 		      node {
 		        ... on Repository {
-
-		          pkg: package(name: %s) {
-
-		            versions(first: 100 %s) {
-		              nodes {
-		              	version
-		                f: files (first: 1) {
-			              nodes {
-			                updatedAt
-			              }
-			            }
+		          packages(names: "%s" first: 1) {
+		            nodes {
+		              versions(first: 100 %s) {
+		                nodes {
+		                  version
+		                  files(first: 1) {
+		                    nodes {
+		                      updatedAt
+		                    }
+		                    pageInfo {
+		                      endCursor
+		                      hasNextPage
+		                    }
+		                  }
+		                }
 		              }
+		            }
+		          }
+		        }
+		      }
+		    }
+		  }
+		}""";
 
-		              pageInfo {
-			            endCursor
-			            hasNextPage
-			          }
+	public final static String GRAPHQL_PACKAGE_SRC_QUERY = """
+		query {
+		  search(type: REPOSITORY,
+		  query: "repo:%s/%s",
+		  first: 1) {
+		    edges {
+		      node {
+		        ... on Repository {
+		          packages(
+		          names: "%s",
+		          first: 1
+		          ) {
+		            nodes {
+		              version(version: "%s") {
+		                files(first: 100 %s) {
+		                  nodes {
+		                    name
+		                    url
+		                  }
+		                  pageInfo {
+		                    endCursor
+		                    hasNextPage
+		                  }
+		                }
+		              }
 		            }
 		          }
 		        }

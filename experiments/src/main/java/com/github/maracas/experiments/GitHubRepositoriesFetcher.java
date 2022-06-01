@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.experiments.model.Package;
+import com.github.maracas.experiments.model.Package.PackageSourceType;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Release;
@@ -241,13 +242,16 @@ public class GitHubRepositoriesFetcher {
 		String name = pkgNode.get("name").asText();
 		Package pkg = new Package(name, repo);
 		fetchReleases(null, pkg, repo);
+
+		if (pkg.getRelease() != null)
+			fetchPkgSource(null, pkg, repo);
 	}
 
 	private void fetchReleases(String cursor, Package pkg, Repository repo) {
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
 			: "";
-		String query = Queries.GRAPHQL_PACKAGES_QUERY.formatted(repo.getOwner(),
+		String query = Queries.GRAPHQL_RELEASES_QUERY.formatted(repo.getOwner(),
 			repo.getName(), pkg.getName(), cursorQuery);
 		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
@@ -291,6 +295,47 @@ public class GitHubRepositoriesFetcher {
 		if (release != null) {
 			pkg.setRelease(release);
 			release.addPackage(pkg);
+		}
+	}
+
+	private void fetchPkgSource(String cursor, Package pkg, Repository repo) {
+		String cursorQuery = cursor != null
+			? ", after: \"" + cursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PACKAGE_SRC_QUERY.formatted(repo.getOwner(),
+			repo.getName(), pkg.getName(), pkg.getRelease().getVersion(), cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode search = json.get("data").get("search");
+			JsonNode packages = search.withArray("edges").get(0)
+				.get("node").get("packages");
+			JsonNode version = packages.withArray("nodes").get(0);
+			JsonNode files = version.get("files");
+			JsonNode pageInfo = version.get("pageInfo");
+			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+			String endCursor = pageInfo.get("endCursor").asText();
+
+			for (JsonNode fileNode: files.withArray("nodes"))
+				extractPackageSource(fileNode, pkg);
+
+			if (pkg.getSrcUrl().equals(PackageSourceType.UNDEFINED.toString())
+				&& hasNextPage)
+				fetchPkgSource(endCursor, pkg, repo);
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void extractPackageSource(JsonNode fileNode, Package pkg) {
+		String name = fileNode.get("name").asText();
+
+		if (name.endsWith("-sources.jar")) {
+			String url = fileNode.get("url").asText();
+			pkg.setSrcUrl(url);
 		}
 	}
 
