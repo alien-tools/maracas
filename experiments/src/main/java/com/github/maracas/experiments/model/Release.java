@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class Release {
 	private final String version;
 	private final LocalDate date; //updatedAt

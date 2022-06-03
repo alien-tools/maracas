@@ -121,6 +121,8 @@ public class GitHubRepositoriesFetcher {
 
 				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
 				fetchPullRequests(null, repo);
+				// FIXME: Using packages won't work here. Only repositories making use of
+				// GitHub packages will be part of the dataset.
 				fetchPackages(null, repo);
 
 				if (stars < nextStars)
@@ -209,6 +211,7 @@ public class GitHubRepositoriesFetcher {
 		repo.addPullRequest(pullRequest);
 	}
 
+	@Deprecated
 	private void fetchPackages(String cursor, Repository repo) {
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
@@ -238,6 +241,7 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	@Deprecated
 	private void extractPackage(JsonNode pkgNode, Repository repo) {
 		String name = pkgNode.get("name").asText();
 		Package pkg = new Package(name, repo);
@@ -247,6 +251,7 @@ public class GitHubRepositoriesFetcher {
 			fetchPkgSource(null, pkg, repo);
 	}
 
+	@Deprecated
 	private void fetchReleases(String cursor, Package pkg, Repository repo) {
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
@@ -277,6 +282,7 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	@Deprecated
 	private void extractRelease(JsonNode versionNode, Package pkg, Repository repo) {
 		String version = versionNode.get("version").asText();
 		Release release = null;
@@ -298,6 +304,7 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	@Deprecated
 	private void fetchPkgSource(String cursor, Package pkg, Repository repo) {
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
@@ -330,6 +337,7 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	@Deprecated
 	private void extractPackageSource(JsonNode fileNode, Package pkg) {
 		String name = fileNode.get("name").asText();
 
