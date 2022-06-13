@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.maven.model.Model;
@@ -102,8 +103,10 @@ public class GitHubRepositoriesFetcher {
 			? ", after: \"" + cursor + "\""
 			: "";
 
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars, REPO_LAST_PUSHED_DATE, cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars,
+			REPO_LAST_PUSHED_DATE, cursorQuery);
+		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL,
+			GITHUB_ACCESS_TOKEN);
 
 		try {
 			var mapper = new ObjectMapper();
@@ -113,7 +116,6 @@ public class GitHubRepositoriesFetcher {
 			var hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 			var endCursor = pageInfo.get("endCursor").asText();
 
-			var nextStars = maxStars;
 			for (var repoEdge: search.withArray("edges")) {
 				var repoJson = repoEdge.get("node");
 				var nameWithOwner = repoJson.get("nameWithOwner").asText();
@@ -127,38 +129,33 @@ public class GitHubRepositoriesFetcher {
 				var gradle = repoJson.get("gradle").hasNonNull("oid");
 				var stars = repoJson.get("stargazerCount").asInt();
 
-				Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
+				if (!lastPR.isEmpty() && (maven || gradle)) {
+					LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
 
-				System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
-				fetchPullRequests(null, repo);
+					if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS)) {
+						Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
 
-				System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
-				fetchPomFiles(repo);
-				fetchRepoPackagesAndClients(repo);
-				repositories.add(repo);
+						System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
+						fetchPullRequests(null, repo);
+
+						System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
+						fetchPomFiles(repo);
+						fetchRepoPackagesAndClients(repo);
+						repositories.add(repo);
+
+					} else {
+						System.out.printf("%s:%s last PR merged on %s, skipping.%n",
+							owner, name, lastMerged);
+					}
+				}
 
 				// FIXME: Using packages won't work here. Only repositories making use of
 				// GitHub packages will be part of the dataset.
 				//fetchPackages(null, repo);
-
-				break;
-
-//				if (stars < nextStars)
-//					nextStars = stars;
-//
-//				if (!lastPR.isEmpty() && (maven || gradle)) {
-//					var lastMerged = Util.stringToLocalDate(lastPR.get(0));
-//					if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS))
-//						repos.add(repo);
-//					else
-//						System.out.printf("%s last PR merged on %s, skipping.%n", repo, lastMerged);
-//				}
 			}
 
-//			if (hasNextPage)
-//				repos.addAll(fetchRepositories(endCursor, minStars, maxStars));
-//			else if (nextStars > minStars)
-//				repos.addAll(fetchRepositories(null, minStars, nextStars));
+			if (hasNextPage)
+				fetchRepositories(endCursor, minStars, maxStars);
 
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -525,7 +522,7 @@ public class GitHubRepositoriesFetcher {
 					boolean maven = repoJson.get("pom").hasNonNull("oid");
 					boolean gradle = repoJson.get("gradle").hasNonNull("oid");
 
-					if ((maven || gradle) && (isDisabled || isEmpty || isLocked)) {
+					if (maven && (isDisabled || isEmpty || isLocked)) {
 						Repository client = new Repository(owner, repo, stars, lastPush, maven, gradle);
 						relevantClients.add(client);
 					}
@@ -544,22 +541,22 @@ public class GitHubRepositoriesFetcher {
 		System.out.println("Found " + repositories.size());
 
 		try (FileWriter csv = new FileWriter("output.csv")) {
-			csv.write("owner,name,stars,package,clients,maven,gradle\n");
+			csv.write("owner,name,stars,groupId,artifactId,currentVersion,relativePath,clients,"
+				+ "relevantClients,cowner,cname,cstars\n");
 			csv.flush();
 
-			for (var repo : repositories) {
-				var packages = repo.getRepoPackages();
-				var total = packages.size();
-				System.out.printf("%s has %d clients%n", repo, total);
-				csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
-					repo.getName(), repo.getStars(), "total", total,
-					repo.isMaven(), repo.isGradle()));
+			for (Repository repo : repositories) {
+				Collection<RepositoryPackage> packages = repo.getRepoPackages().values();
 
-				for (var pkg : packages.values()) {
-					System.out.printf("\t%s: %s", pkg.getArtifact(), pkg.getRelevantClients().size());
-					csv.write("%s,%s,%d,%s,%d,%d,%b,%b%n".formatted(repo.getOwner(),
-						repo.getName(), repo.getStars(), pkg.getArtifact(), pkg.getRelevantClients().size(),
-						repo.isMaven(), repo.isGradle()));
+				for (RepositoryPackage pkg : packages) {
+					List<Repository> clients = pkg.getRelevantClients();
+
+					for (Repository client : clients) {
+						csv.write("%s,%d,%s,%d,%s,%s,%s,%s,%d,%d,%s,%s,%s,%s,%d\n".formatted(repo.getOwner(),
+							repo.getName(), repo.getStars(), pkg.getGroup(), pkg.getArtifact(),
+							pkg.getCurrentVersion(), pkg.getRelativePath(), pkg.getClients(),
+							clients.size(), client.getOwner(), client.getName(), client.getStars()));
+					}
 				}
 				csv.flush();
 			}
