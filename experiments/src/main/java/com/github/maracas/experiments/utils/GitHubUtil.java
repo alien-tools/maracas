@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,6 +37,22 @@ public final class GitHubUtil {
 		String jsonQuery = graphqlAsJson(graphqlQuery);
 		ResponseEntity<String> response = rest.postForEntity(url,
 			new HttpEntity<>(jsonQuery, headers), String.class);
+		return response;
+	}
+
+	/**
+	 * Returns a response out from a REST get to the GitHub API.
+	 *
+	 * @param url         URL pointing to the GitHub service (e.g. https://api.github.com/search)
+	 * @param githubToken GitHub access token
+	 * @return REST response
+	 */
+	public static ResponseEntity<String> getQuery(String url, String githubToken) {
+		RestTemplate rest = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", String.join(" ", new String[]{"token", githubToken}));
+		ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET,
+			new HttpEntity<Object>(headers), String.class);
 		return response;
 	}
 

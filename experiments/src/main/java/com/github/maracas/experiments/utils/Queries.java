@@ -171,40 +171,35 @@ public final class Queries {
 	public final static String GRAPHQL_PRS_QUERY = """
 		query {
 		  search(
-		    type: REPOSITORY
-		    query: "repo:%s/%s"
-		    first: 1
+		    type: ISSUE
+		    query: "repo:%s/%s is:pr created:%s",
+		    first: 100
+		    %s
 		  ) {
 		    edges {
 		      node {
-		        ... on Repository {
-		          pullRequests(states:[%s] first:100 %s) {
-		            edges {
-		              node {
+		        ... on PullRequest {
 
-		                baseRepository {
-		                	nameWithOwner
-		                }
-
-		                closedAt
-		                createdAt
-		                id
-		                isDraft
-		                mergedAt
-		                number
-		                publishedAt
-		                state
-		                title
-		              }
-		            }
-
-		            pageInfo {
-                      endCursor
-                      hasNextPage
-                    }
+		          baseRepository {
+		            nameWithOwner
 		          }
+
+		          closedAt
+		          createdAt
+		          id
+		          isDraft
+		          mergedAt
+		          number
+		          publishedAt
+		          state
+		          title
 		        }
 		      }
+		    }
+
+		    pageInfo {
+		      endCursor
+		      hasNextPage
 		    }
 		  }
 		}""";
@@ -221,7 +216,7 @@ public final class Queries {
 		        ... on Repository {
 		          pr: pullRequest(number: %d) {
 
-		            files(first: 100) {
+		            files(first: 100 %s) {
 		              edges {
 		                node {
 		                  path

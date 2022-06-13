@@ -47,9 +47,10 @@ public class Repository {
 	private final boolean gradle;
 
 	/**
-	 * List of {@link RepositoryPackage} instances in the repository
+	 * Map of {@link RepositoryPackage} instances in the repository. Keys are
+	 * the combination of the object ID and the artifact ID (i.e. objectID:artifactID)
 	 */
-	private List<RepositoryPackage> repoPackages;
+	private Map<String, RepositoryPackage> repoPackages;
 
 	/**
 	 * List of {@link PullRequest} instances of the repository
@@ -83,7 +84,7 @@ public class Repository {
 		this.lastPush = lastPush;
 		this.maven = maven;
 		this.gradle = gradle;
-		this.repoPackages = new ArrayList<RepositoryPackage>();
+		this.repoPackages = new HashMap<String, RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 		this.releases = new HashMap<String, Release>();
 	}
@@ -190,7 +191,7 @@ public class Repository {
 	 */
 	public void addPackage(RepositoryPackage pkg) {
 		if (pkg != null)
-			repoPackages.add(pkg);
+			repoPackages.put(pkg.getName(), pkg);
 	}
 
 	/**
@@ -205,20 +206,24 @@ public class Repository {
 	}
 
 	/**
-	 * Returns the list of {@link RepositoryPackage} instances of the repository.
+	 * Returns the map of {@link RepositoryPackage} instances of the repository.
 	 *
-	 * @return the list of {@link RepositoryPackage} instances
+	 * @return the map of {@link RepositoryPackage} instances
 	 */
-	public List<RepositoryPackage> getRepoPackages() {
+	public Map<String, RepositoryPackage> getRepoPackages() {
 		return repoPackages;
 	}
 
+	public RepositoryPackage getRepoPackage(String name) {
+		return repoPackages.getOrDefault(name, null);
+	}
+
 	/**
-	 * Sets the list of {@link RepositoryPackage} instances of the repository.
+	 * Sets the map of {@link RepositoryPackage} instances of the repository.
 	 *
-	 * @param packages List of {@link RepositoryPackage} instances
+	 * @param packages Map of {@link RepositoryPackage} instances
 	 */
-	public void setRepoPackages(List<RepositoryPackage> repoPackages) {
+	public void setRepoPackages(Map<String, RepositoryPackage> repoPackages) {
 		this.repoPackages = repoPackages;
 	}
 
