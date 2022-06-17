@@ -46,6 +46,8 @@ public class Repository {
 	 */
 	private final boolean gradle;
 
+	private final String cursor;
+
 	/**
 	 * Map of {@link RepositoryPackage} instances in the repository. Keys are
 	 * the combination of the object ID and the artifact ID (i.e. objectID:artifactID)
@@ -75,15 +77,17 @@ public class Repository {
 	 *                  otherwise
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
+	 * @param cursor    Cursor returned by the GitHub API (used in case of errors)
 	 */
 	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		boolean maven, boolean gradle) {
+		boolean maven, boolean gradle, String cursor) {
 		this.owner = owner;
 		this.name = name;
 		this.stars = stars;
 		this.lastPush = lastPush;
 		this.maven = maven;
 		this.gradle = gradle;
+		this.cursor = cursor;
 		this.repoPackages = new HashMap<String, RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 		this.releases = new HashMap<String, Release>();
@@ -101,12 +105,13 @@ public class Repository {
 	 *                  otherwise
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
+	 * @param cursor    Cursor returned by the GitHub API (used in case of errors)
 	 */
 	public Repository(String owner, String name, int stars, String lastPush,
-		boolean maven, boolean gradle) {
+		boolean maven, boolean gradle, String cursor) {
 		this(owner, name, stars,
 			Date.from(Instant.parse(lastPush)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-			maven, gradle);
+			maven, gradle, cursor);
 	}
 
 	/**
@@ -163,6 +168,10 @@ public class Repository {
 	 */
 	public boolean isGradle() {
 		return gradle;
+	}
+
+	public String getCursor() {
+		return cursor;
 	}
 
 	/**

@@ -38,13 +38,14 @@ public final class Queries {
 		query {
 		  search(
 		    type: REPOSITORY,
-		    query: "java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false",
+		    query: "java in:language stars:>%d pushed:>%s archived:false fork:false mirror:false",
 		    first: 100
 		    %s
 		  ) {
 		    repositoryCount
 
 		    edges {
+		      cursor
 		      node {
 		        ... on Repository {
 		          nameWithOwner
@@ -121,11 +122,12 @@ public final class Queries {
 		{
 		  search(
 		    type: REPOSITORY
-		    query: "repo:%s/%s java in:language stars:%d..%d pushed:>%s archived:false fork:false mirror:false"
+		    query: "repo:%s/%s java in:language stars:>%d pushed:>%s archived:false fork:false mirror:false"
 		    first: 1
 		  ) {
 		    repositoryCount
 		    edges {
+		      cursor
 		      node {
 		        ... on Repository {
 		          stargazerCount
