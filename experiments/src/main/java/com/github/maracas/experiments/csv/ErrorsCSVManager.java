@@ -1,4 +1,4 @@
-package com.github.maracas.experiments;
+package com.github.maracas.experiments.csv;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.apache.commons.csv.CSVPrinter;
 
-import com.github.maracas.experiments.model.ExperimentError;
 import com.github.maracas.experiments.utils.Constants;
 
 public class ErrorsCSVManager extends CSVManager {
@@ -36,7 +35,7 @@ public class ErrorsCSVManager extends CSVManager {
 
 	@Override
 	public void writeRecord(Object obj) {
-		if (obj instanceof ExperimentError error) {
+		if (obj instanceof ErrorRecord error) {
 			File csv = new File(Constants.ERRORS_CSV_PATH);
 			try (Writer writer = new FileWriter(csv);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {

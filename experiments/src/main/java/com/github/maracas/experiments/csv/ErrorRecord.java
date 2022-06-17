@@ -1,8 +1,8 @@
-package com.github.maracas.experiments.model;
+package com.github.maracas.experiments.csv;
 
-import com.github.maracas.experiments.model.ExperimentError.ExperimentErrorCode;
+import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
 
-public record ExperimentError(
+public record ErrorRecord(
 	String cursor,
 	String owner,
 	String name,

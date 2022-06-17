@@ -1,4 +1,4 @@
-package com.github.maracas.experiments;
+package com.github.maracas.experiments.csv;
 
 import java.io.File;
 import java.io.FileReader;

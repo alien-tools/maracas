@@ -21,8 +21,11 @@ import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.maracas.experiments.model.ExperimentError;
-import com.github.maracas.experiments.model.ExperimentError.ExperimentErrorCode;
+import com.github.maracas.experiments.csv.CSVManager;
+import com.github.maracas.experiments.csv.ClientsCSVManager;
+import com.github.maracas.experiments.csv.ErrorsCSVManager;
+import com.github.maracas.experiments.csv.ErrorRecord;
+import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
 import com.github.maracas.experiments.model.Package;
 import com.github.maracas.experiments.model.Package.PackageSourceType;
 import com.github.maracas.experiments.model.PullRequest;
@@ -74,7 +77,7 @@ public class GitHubRepositoriesFetcher {
 
 	private void registerError(String cursor, String owner, String name,
 		ExperimentErrorCode code,  String comments) {
-		ExperimentError error = new ExperimentError(cursor, owner, name, code, comments);
+		ErrorRecord error = new ErrorRecord(cursor, owner, name, code, comments);
 		error.printLog();
 		errorsCsv.writeRecord(error);
 	}

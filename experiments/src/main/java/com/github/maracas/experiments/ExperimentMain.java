@@ -2,6 +2,7 @@ package com.github.maracas.experiments;
 
 import java.io.IOException;
 
+import com.github.maracas.experiments.csv.ClientsCSVManager;
 import com.github.maracas.experiments.utils.Constants;
 
 public class ExperimentMain {
