@@ -30,14 +30,18 @@ public final class GitHubUtil {
 	 */
 	public static ResponseEntity<String> postQuery(String graphqlQuery, String url,
 		String githubToken) {
-		RestTemplate rest = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", String.join(" ", new String[]{"Bearer", githubToken}));
-		headers.add("Content-Type", "application/graphql");
-		String jsonQuery = graphqlAsJson(graphqlQuery);
-		ResponseEntity<String> response = rest.postForEntity(url,
-			new HttpEntity<>(jsonQuery, headers), String.class);
-		return response;
+		try {
+			RestTemplate rest = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Authorization", String.join(" ", new String[]{"Bearer", githubToken}));
+			headers.add("Content-Type", "application/graphql");
+			String jsonQuery = graphqlAsJson(graphqlQuery);
+			ResponseEntity<String> response = rest.postForEntity(url,
+				new HttpEntity<>(jsonQuery, headers), String.class);
+			return response;
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
 	}
 
 	/**

@@ -10,17 +10,21 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.experiments.model.ExperimentError;
+import com.github.maracas.experiments.model.ExperimentError.ExperimentErrorCode;
 import com.github.maracas.experiments.model.Package;
 import com.github.maracas.experiments.model.Package.PackageSourceType;
 import com.github.maracas.experiments.model.PullRequest;
@@ -37,8 +41,9 @@ import com.github.maracas.experiments.utils.Util;
  */
 public class GitHubRepositoriesFetcher {
 	public static final int REPO_MIN_STARS = 10;
-	public static final int REPO_MAX_STARS = 9999999;
-	public static final String REPO_LAST_PUSHED_DATE = "2022-02-12";
+	public static final int CLIENT_MIN_STARS = 2;
+	public static final String REPO_LAST_PUSHED_DATE = "2022-03-15";
+	public static final String CLIENT_LAST_PUSHED_DATE = "2021-06-15";
 	public static final int PR_LAST_MERGED_IN_DAYS = 90;
 	public static final int LAST_PUSH_IN_DAYS = 90;
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
@@ -50,11 +55,35 @@ public class GitHubRepositoriesFetcher {
 	 */
 	private List<Repository> repositories;
 
+	private List<ExperimentError> errors;
+
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
 	 */
 	public GitHubRepositoriesFetcher() {
 		this.repositories = new ArrayList<Repository>();
+		this.errors = new ArrayList<ExperimentError>();
+	}
+
+	private void registerError(ExperimentErrorCode code, String libOwner,
+		String libName, String comments) {
+		ExperimentError error = new ExperimentError(code ,libOwner, libName, comments);
+		errors.add(error);
+		error.printLog();
+	}
+
+	private void writeErrors() {
+		try (FileWriter csv = new FileWriter("errors.csv")) {
+			csv.write("code,owner,name,comments\n");
+			csv.flush();
+
+			for (ExperimentError error : errors) {
+				csv.write("%s,%s,%s,%s\n".formatted(error.code().toString(), error.libOwner(), error.libName(), error.comments()));
+				csv.flush();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -84,78 +113,97 @@ public class GitHubRepositoriesFetcher {
 	 * @param minStars Minimum number of stars per repository
 	 * @param maxStars Maximum number of stars per repository
 	 */
-	public void fetchRepositories(int minStars, int maxStars) {
+	public void fetchRepositories(int minStars) {
 		System.out.println("Fetching repositories...");
-		fetchRepositories(null, minStars, maxStars);
+		fetchRepositories(null, minStars);
 	}
 
 	/**
 	 * Recursively fetches the list of popular GitHub repositories based on
 	 * certain criteria.
 	 *
-	 * @param cursor   GraphQL query cursor
+	 * @param currentCursor   GraphQL query cursor
 	 * @param minStars Minimum number of stars per repository
 	 * @param maxStars Maximum number of stars per repository
 	 * @return List of {@link Repository} instances
 	 */
-	private void fetchRepositories(String cursor, int minStars, int maxStars) {
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
+	private void fetchRepositories(String currentCursor, int minStars) {
+		String cursorQuery = currentCursor != null
+			? ", after: \"" + currentCursor + "\""
 			: "";
 
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars, maxStars,
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars,
 			REPO_LAST_PUSHED_DATE, cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL,
-			GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			var mapper = new ObjectMapper();
 			var json = mapper.readTree(response.getBody());
-			var search = json.get("data").get("search");
-			var pageInfo = search.get("pageInfo");
-			var hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			var endCursor = pageInfo.get("endCursor").asText();
+			var data = json.get("data");
+			var count = 0;
 
-			for (var repoEdge: search.withArray("edges")) {
-				var repoJson = repoEdge.get("node");
-				var nameWithOwner = repoJson.get("nameWithOwner").asText();
-				var fields = nameWithOwner.split("/");
-				var owner = fields[0];
-				var name = fields[1];
-				var lastPush = repoJson.get("pushedAt").asText();
-				var prs = repoJson.get("pullRequests");
-				var lastPR = prs.findValuesAsText("mergedAt");
-				var maven = repoJson.get("pom").hasNonNull("oid");
-				var gradle = repoJson.get("gradle").hasNonNull("oid");
-				var stars = repoJson.get("stargazerCount").asInt();
+			if (data != null) {
+				var search = data.get("search");
+				var pageInfo = search.get("pageInfo");
+				var hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+				var endCursor = pageInfo.get("endCursor").asText();
 
-				if (!lastPR.isEmpty() && (maven || gradle)) {
-					LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
+				for (var repoEdge: search.withArray("edges")) {
+					if (count == 5)
+						break;
+					var cursor = repoEdge.get("cursor").asText();
+					var repoJson = repoEdge.get("node");
+					var nameWithOwner = repoJson.get("nameWithOwner").asText();
+					var fields = nameWithOwner.split("/");
+					var owner = fields[0];
+					var name = fields[1];
+					var disabled = repoJson.get("isDisabled").asBoolean();
+					var empty = repoJson.get("isEmpty").asBoolean();
+					var locked = repoJson.get("isLocked").asBoolean();
+					var stars = repoJson.get("stargazerCount").asInt();
+					var lastPush = repoJson.get("pushedAt").asText();
+					var maven = repoJson.get("pom").hasNonNull("oid");
+					var gradle = repoJson.get("gradle").hasNonNull("oid");
 
-					if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS)) {
-						Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle);
+					var prs = repoJson.get("pullRequests");
+					var lastPR = prs.findValuesAsText("mergedAt");
 
-						System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
-						fetchPullRequests(null, repo);
+					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()) {
+						LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
 
-						System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
-						fetchPomFiles(repo);
-						fetchRepoPackagesAndClients(repo);
-						repositories.add(repo);
+						if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS)) {
+							Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle, cursor);
 
+							//System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
+							//fetchPullRequests(null, repo);
+
+							System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
+							fetchPomFiles(repo);
+
+							System.out.println("Fetching %s/%s clients...".formatted(owner, name));
+							fetchRepoPackagesAndClients(repo);
+							repositories.add(repo);
+							count++;
+
+						} else {
+							registerError(ExperimentErrorCode.INACTIVE_REPO, owner,
+								name, "{lastMerged: %s}".formatted(lastMerged.toString()));
+						}
 					} else {
-						System.out.printf("%s:%s last PR merged on %s, skipping.%n",
-							owner, name, lastMerged);
+						registerError(ExperimentErrorCode.IRRELEVANT_REPO, owner,
+							name, "{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
+							.formatted(disabled, empty, locked, maven, lastPR.isEmpty()));
 					}
+
+					// FIXME: Using packages won't work here. Only repositories making use of
+					// GitHub packages will be part of the dataset.
+					//fetchPackages(null, repo);
 				}
 
-				// FIXME: Using packages won't work here. Only repositories making use of
-				// GitHub packages will be part of the dataset.
-				//fetchPackages(null, repo);
+				if (hasNextPage)
+					fetchRepositories(endCursor, minStars);
 			}
-
-			if (hasNextPage)
-				fetchRepositories(endCursor, minStars, maxStars);
 
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -174,9 +222,10 @@ public class GitHubRepositoriesFetcher {
 			: "";
 		String query = Queries.GRAPHQL_PRS_QUERY.formatted(repo.getOwner(),
 			repo.getName(), ">=2022-05-01", cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
@@ -240,7 +289,7 @@ public class GitHubRepositoriesFetcher {
 				JsonNode pomJson = mapper.readTree(pomResponse.getBody());
 				String downloadUrl = pomJson.get("download_url").asText();
 
-				if (downloadUrl != null) {
+				if (downloadUrl != null && !path.isEmpty() && path.contains("pom.xml")) {
 					MavenXpp3Reader pomReader = new MavenXpp3Reader();
 
 					try {
@@ -253,12 +302,31 @@ public class GitHubRepositoriesFetcher {
 						String version = model.getVersion();
 						String relativePath = path.substring(0, path.indexOf("pom.xml"));
 
-						RepositoryPackage pkg = new RepositoryPackage(groupId, artifactId, version, relativePath, repo);
+						if (groupId == null || version == null) {
+							Parent parent = model.getParent();
+
+							if (parent != null) {
+								groupId = (groupId == null) ? parent.getGroupId() : groupId;
+								version = (version == null) ? parent.getVersion() : version;
+							}
+						}
+
+						if (groupId == null || artifactId == null) {
+							registerError(ExperimentErrorCode.INCOMPLETE_POM, repo.getOwner(),
+								repo.getName(), "{groupId: %s, artifactId: %s}"
+								.formatted(groupId, artifactId));
+							continue;
+						}
+
+						RepositoryPackage pkg = new RepositoryPackage(groupId,
+							artifactId, version, relativePath, repo);
 						repo.addPackage(pkg);
 
 						System.out.println("   %s:%s:%s - %s".formatted(groupId,
 							artifactId, version, path));
 					} catch (XmlPullParserException | IOException e) {
+						registerError(ExperimentErrorCode.POM_DOWNLOAD_ISSUE, repo.getOwner(),
+							repo.getName(), "{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
 						e.printStackTrace();
 					}
 				}
@@ -275,9 +343,10 @@ public class GitHubRepositoriesFetcher {
 			: "";
 		String query = Queries.GRAPHQL_PACKAGES_QUERY.formatted(repo.getOwner(),
 			repo.getName(), cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
@@ -315,9 +384,10 @@ public class GitHubRepositoriesFetcher {
 			: "";
 		String query = Queries.GRAPHQL_RELEASES_QUERY.formatted(repo.getOwner(),
 			repo.getName(), pkg.getName(), cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
@@ -368,9 +438,10 @@ public class GitHubRepositoriesFetcher {
 			: "";
 		String query = Queries.GRAPHQL_PACKAGE_SRC_QUERY.formatted(repo.getOwner(),
 			repo.getName(), pkg.getName(), pkg.getRelease().getVersion(), cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
@@ -418,9 +489,10 @@ public class GitHubRepositoriesFetcher {
 			: "";
 		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
 			pullRequest.getNumber(), cursorQuery);
-		ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 
 		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
 			JsonNode search = json.get("data").get("search");
@@ -469,18 +541,35 @@ public class GitHubRepositoriesFetcher {
 
 					if (element != null) {
 						try {
-							int clients = Integer.parseInt(element.text().substring(0, element.text().indexOf(" ")).replace(",", ""));
-							List<Repository> relevantClients = extractRelevantClients(clientRepos, REPO_MIN_STARS, REPO_MAX_STARS);
-
 							RepositoryPackage pkg = repo.getRepoPackage(name);
-							pkg.setClients(clients);
-							pkg.setRelevantClients(relevantClients);
+
+							if (pkg != null) {
+								String clientsStr = element.text().substring(0, element.text().indexOf(" ")).replace(",", "");
+								int clients = Integer.parseInt(clientsStr);
+								List<Repository> relevantClients = extractRelevantClients(clientRepos);
+								pkg.setClients(clients);
+								pkg.setRelevantClients(relevantClients);
+							} else {
+								registerError(ExperimentErrorCode.NO_PKG_IN_REPO, repo.getOwner(),
+									repo.getName(), "{name: %s}".formatted(name));
+							}
 						} catch (NumberFormatException e) {
+							registerError(ExperimentErrorCode.CLIENTS_NUM_FORMAT_ERROR, repo.getOwner(),
+								repo.getName(), "{element: %s}".formatted(element.toString()));
 							e.printStackTrace();
 						}
+					} else {
+						registerError(ExperimentErrorCode.NO_PKG_DEPENDANTS, repo.getOwner(),
+							repo.getName(), "{packageUrl: %s}".formatted(packageUrl));
 					}
+				} else {
+					registerError(ExperimentErrorCode.EMPTY_PKG_PAGE, repo.getOwner(),
+						repo.getName(), "{url: %s}".formatted(url));
 				}
 			}
+		} else {
+			registerError(ExperimentErrorCode.NO_DEPENDANTS_PAGE, repo.getOwner(),
+				repo.getName(), "{url: %s}".formatted(url));
 		}
 	}
 
@@ -494,7 +583,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param maxStars    Maximum number of stars per client repository
 	 * @return List of client {@link Repository} instances
 	 */
-	private List<Repository> extractRelevantClients(List<String> clientRepos, int minStars, int maxStars) {
+	private List<Repository> extractRelevantClients(List<String> clientRepos) {
 		List<Repository> relevantClients = new ArrayList<Repository>();
 		for (String clientRepo : clientRepos) {
 			String[] clientArray = clientRepo.split(" ");
@@ -502,32 +591,38 @@ public class GitHubRepositoriesFetcher {
 			String repo = clientArray[2];
 
 			String query = Queries.GRAPHQL_CLIENT_QUERY
-				.formatted(owner, repo, minStars, maxStars, REPO_LAST_PUSHED_DATE);
-			ResponseEntity<String> response = GitHubUtil.postQuery(query, GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+				.formatted(owner, repo, CLIENT_MIN_STARS, CLIENT_LAST_PUSHED_DATE);
 			boolean valid = true;
 
 			try {
+				ResponseEntity<String> response = GitHubUtil.postQuery(query,
+					GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 				ObjectMapper mapper = new ObjectMapper();
 				JsonNode json = mapper.readTree(response.getBody());
-				JsonNode search = json.get("data").get("search");
+				JsonNode data = json.get("data");
 
-				// Expect only one edge
-				for (JsonNode edge: search.withArray("edges")) {
-					JsonNode repoJson = edge.get("node");
-					boolean isDisabled = repoJson.get("isDisabled").asBoolean();
-					boolean isEmpty = repoJson.get("isEmpty").asBoolean();
-					boolean isLocked = repoJson.get("isLocked").asBoolean();
-					String lastPush = repoJson.get("pushedAt").asText();
-					int stars = repoJson.get("stargazerCount").asInt();
-					boolean maven = repoJson.get("pom").hasNonNull("oid");
-					boolean gradle = repoJson.get("gradle").hasNonNull("oid");
+				if (response.getStatusCode().equals(HttpStatus.OK) && data != null) {
+					JsonNode search = json.get("data").get("search");
 
-					if (maven && (isDisabled || isEmpty || isLocked)) {
-						Repository client = new Repository(owner, repo, stars, lastPush, maven, gradle);
-						relevantClients.add(client);
+					// Expect only one edge
+					for (JsonNode edge: search.withArray("edges")) {
+						var cursor = edge.get("cursor").asText();
+						JsonNode repoJson = edge.get("node");
+						boolean isDisabled = repoJson.get("isDisabled").asBoolean();
+						boolean isEmpty = repoJson.get("isEmpty").asBoolean();
+						boolean isLocked = repoJson.get("isLocked").asBoolean();
+						String lastPush = repoJson.get("pushedAt").asText();
+						int stars = repoJson.get("stargazerCount").asInt();
+						boolean maven = repoJson.get("pom").hasNonNull("oid");
+						boolean gradle = repoJson.get("gradle").hasNonNull("oid");
+
+						if (maven && !isDisabled && !isEmpty && !isLocked) {
+							Repository client = new Repository(owner, repo, stars, lastPush, maven, gradle, cursor);
+							relevantClients.add(client);
+							System.out.println("   %s:%s".formatted(owner, repo));
+						}
 					}
 				}
-
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -537,9 +632,10 @@ public class GitHubRepositoriesFetcher {
 
 	// TODO: remove after refactoring
 	public void run() {
-		fetchRepositories(REPO_MIN_STARS, REPO_MAX_STARS);
-		System.out.println("Found " + repositories.size());
+		fetchRepositories(REPO_MIN_STARS);
+		writeErrors();
 
+		System.out.println("Found " + repositories.size());
 		try (FileWriter csv = new FileWriter("output.csv")) {
 			csv.write("owner,name,stars,groupId,artifactId,currentVersion,relativePath,clients,"
 				+ "relevantClients,cowner,cname,cstars\n");
@@ -552,10 +648,11 @@ public class GitHubRepositoriesFetcher {
 					List<Repository> clients = pkg.getRelevantClients();
 
 					for (Repository client : clients) {
-						csv.write("%s,%d,%s,%d,%s,%s,%s,%s,%d,%d,%s,%s,%s,%s,%d\n".formatted(repo.getOwner(),
-							repo.getName(), repo.getStars(), pkg.getGroup(), pkg.getArtifact(),
-							pkg.getCurrentVersion(), pkg.getRelativePath(), pkg.getClients(),
-							clients.size(), client.getOwner(), client.getName(), client.getStars()));
+						csv.write("%s,%s,%d,%s,%s,%s,%s,%d,%d,%s,%s,%d\n"
+							.formatted(repo.getOwner(), repo.getName(), repo.getStars(),
+								pkg.getGroup(), pkg.getArtifact(),pkg.getCurrentVersion(),
+								pkg.getRelativePath(), pkg.getClients(), clients.size(),
+								client.getOwner(), client.getName(), client.getStars()));
 					}
 				}
 				csv.flush();
