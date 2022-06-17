@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.maven.model.Model;
@@ -56,6 +55,8 @@ public class GitHubRepositoriesFetcher {
 	private List<Repository> repositories;
 
 	private List<ExperimentError> errors;
+
+
 
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
@@ -107,18 +108,6 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Fetches the list of popular GitHub repositories based on certain criteria.
-	 * As side effect, the {@link #repositories} list is populated.
-	 *
-	 * @param minStars Minimum number of stars per repository
-	 * @param maxStars Maximum number of stars per repository
-	 */
-	public void fetchRepositories(int minStars) {
-		System.out.println("Fetching repositories...");
-		fetchRepositories(null, minStars);
-	}
-
-	/**
 	 * Recursively fetches the list of popular GitHub repositories based on
 	 * certain criteria.
 	 *
@@ -127,7 +116,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param maxStars Maximum number of stars per repository
 	 * @return List of {@link Repository} instances
 	 */
-	private void fetchRepositories(String currentCursor, int minStars) {
+	public void fetchRepositories(String currentCursor, int minStars) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
 			: "";
@@ -150,7 +139,7 @@ public class GitHubRepositoriesFetcher {
 				var endCursor = pageInfo.get("endCursor").asText();
 
 				for (var repoEdge: search.withArray("edges")) {
-					if (count == 5)
+					if (count == 1)
 						break;
 					var cursor = repoEdge.get("cursor").asText();
 					var repoJson = repoEdge.get("node");
@@ -216,7 +205,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param cursor GraphQL query cursor
 	 * @param repo   Target repository
 	 */
-	private void fetchPullRequests(String cursor, Repository repo) {
+	public void fetchPullRequests(String cursor, Repository repo) {
 		String cursorQuery = cursor != null
 			? ", after: \"" + cursor + "\""
 			: "";
@@ -630,40 +619,4 @@ public class GitHubRepositoriesFetcher {
 		return relevantClients;
 	}
 
-	// TODO: remove after refactoring
-	public void run() {
-		fetchRepositories(REPO_MIN_STARS);
-		writeErrors();
-
-		System.out.println("Found " + repositories.size());
-		try (FileWriter csv = new FileWriter("output.csv")) {
-			csv.write("owner,name,stars,groupId,artifactId,currentVersion,relativePath,clients,"
-				+ "relevantClients,cowner,cname,cstars\n");
-			csv.flush();
-
-			for (Repository repo : repositories) {
-				Collection<RepositoryPackage> packages = repo.getRepoPackages().values();
-
-				for (RepositoryPackage pkg : packages) {
-					List<Repository> clients = pkg.getRelevantClients();
-
-					for (Repository client : clients) {
-						csv.write("%s,%s,%d,%s,%s,%s,%s,%d,%d,%s,%s,%d\n"
-							.formatted(repo.getOwner(), repo.getName(), repo.getStars(),
-								pkg.getGroup(), pkg.getArtifact(),pkg.getCurrentVersion(),
-								pkg.getRelativePath(), pkg.getClients(), clients.size(),
-								client.getOwner(), client.getName(), client.getStars()));
-					}
-				}
-				csv.flush();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	// TODO: Remove after refactoring
-	public static void main(String[] args) {
-		new GitHubRepositoriesFetcher().run();
-	}
 }
