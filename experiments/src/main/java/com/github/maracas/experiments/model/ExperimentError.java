@@ -3,9 +3,10 @@ package com.github.maracas.experiments.model;
 import com.github.maracas.experiments.model.ExperimentError.ExperimentErrorCode;
 
 public record ExperimentError(
+	String cursor,
+	String owner,
+	String name,
 	ExperimentErrorCode code,
-	String libOwner,
-	String libName,
 	String comments) {
 
 	public enum ExperimentErrorCode {
@@ -15,6 +16,6 @@ public record ExperimentError(
 	}
 
 	public void printLog() {
-		System.out.println("[%s] %s:%s: %s".formatted(code, libOwner, libName, comments));
+		System.out.println("[%s] %s:%s: %s".formatted(code, owner, name, comments));
 	}
 }

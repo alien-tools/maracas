@@ -136,4 +136,6 @@ public abstract class CSVManager {
 			}
 		}
 	}
+
+	public abstract void writeRecord(Object obj);
 }

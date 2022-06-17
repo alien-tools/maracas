@@ -1,7 +1,6 @@
 package com.github.maracas.experiments;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
@@ -55,8 +54,6 @@ public class GitHubRepositoriesFetcher {
 	 */
 	private List<Repository> repositories;
 
-	private List<ExperimentError> errors;
-
 	private CSVManager clientsCsv;
 
 	private CSVManager errorsCsv;
@@ -66,7 +63,6 @@ public class GitHubRepositoriesFetcher {
 	 */
 	public GitHubRepositoriesFetcher() {
 		this.repositories = new ArrayList<Repository>();
-		this.errors = new ArrayList<ExperimentError>();
 
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
@@ -76,25 +72,11 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
-	private void registerError(ExperimentErrorCode code, String libOwner,
-		String libName, String comments) {
-		ExperimentError error = new ExperimentError(code ,libOwner, libName, comments);
-		errors.add(error);
+	private void registerError(String cursor, String owner, String name,
+		ExperimentErrorCode code,  String comments) {
+		ExperimentError error = new ExperimentError(cursor, owner, name, code, comments);
 		error.printLog();
-	}
-
-	private void writeErrors() {
-		try (FileWriter csv = new FileWriter("errors.csv")) {
-			csv.write("code,owner,name,comments\n");
-			csv.flush();
-
-			for (ExperimentError error : errors) {
-				csv.write("%s,%s,%s,%s\n".formatted(error.code().toString(), error.libOwner(), error.libName(), error.comments()));
-				csv.flush();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		errorsCsv.writeRecord(error);
 	}
 
 	/**
@@ -186,12 +168,12 @@ public class GitHubRepositoriesFetcher {
 							count++;
 
 						} else {
-							registerError(ExperimentErrorCode.INACTIVE_REPO, owner,
-								name, "{lastMerged: %s}".formatted(lastMerged.toString()));
+							registerError(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,
+								"{lastMerged: %s}".formatted(lastMerged.toString()));
 						}
 					} else {
-						registerError(ExperimentErrorCode.IRRELEVANT_REPO, owner,
-							name, "{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
+						registerError(cursor, owner, name, ExperimentErrorCode.IRRELEVANT_REPO,
+							"{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
 							.formatted(disabled, empty, locked, maven, lastPR.isEmpty()));
 					}
 
@@ -311,8 +293,8 @@ public class GitHubRepositoriesFetcher {
 						}
 
 						if (groupId == null || artifactId == null) {
-							registerError(ExperimentErrorCode.INCOMPLETE_POM, repo.getOwner(),
-								repo.getName(), "{groupId: %s, artifactId: %s}"
+							registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+								ExperimentErrorCode.INCOMPLETE_POM, "{groupId: %s, artifactId: %s}"
 								.formatted(groupId, artifactId));
 							continue;
 						}
@@ -324,8 +306,9 @@ public class GitHubRepositoriesFetcher {
 						System.out.println("   %s:%s:%s - %s".formatted(groupId,
 							artifactId, version, path));
 					} catch (XmlPullParserException | IOException e) {
-						registerError(ExperimentErrorCode.POM_DOWNLOAD_ISSUE, repo.getOwner(),
-							repo.getName(), "{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
+						registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+							ExperimentErrorCode.POM_DOWNLOAD_ISSUE,
+							"{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
 						e.printStackTrace();
 					}
 				}
@@ -549,26 +532,28 @@ public class GitHubRepositoriesFetcher {
 								pkg.setClients(clients);
 								pkg.setRelevantClients(relevantClients);
 							} else {
-								registerError(ExperimentErrorCode.NO_PKG_IN_REPO, repo.getOwner(),
-									repo.getName(), "{name: %s}".formatted(name));
+								registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+									ExperimentErrorCode.NO_PKG_IN_REPO, "{name: %s}".formatted(name));
 							}
 						} catch (NumberFormatException e) {
-							registerError(ExperimentErrorCode.CLIENTS_NUM_FORMAT_ERROR, repo.getOwner(),
-								repo.getName(), "{element: %s}".formatted(element.toString()));
+							registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+								ExperimentErrorCode.CLIENTS_NUM_FORMAT_ERROR, "{element: %s}"
+								.formatted(element.toString()));
 							e.printStackTrace();
 						}
 					} else {
-						registerError(ExperimentErrorCode.NO_PKG_DEPENDANTS, repo.getOwner(),
-							repo.getName(), "{packageUrl: %s}".formatted(packageUrl));
+						registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+							ExperimentErrorCode.NO_PKG_DEPENDANTS, "{packageUrl: %s}"
+							.formatted(packageUrl));
 					}
 				} else {
-					registerError(ExperimentErrorCode.EMPTY_PKG_PAGE, repo.getOwner(),
-						repo.getName(), "{url: %s}".formatted(url));
+					registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+						ExperimentErrorCode.EMPTY_PKG_PAGE, "{url: %s}".formatted(url));
 				}
 			}
 		} else {
-			registerError(ExperimentErrorCode.NO_DEPENDANTS_PAGE, repo.getOwner(),
-				repo.getName(), "{url: %s}".formatted(url));
+			registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+				ExperimentErrorCode.NO_DEPENDANTS_PAGE, "{url: %s}".formatted(url));
 		}
 	}
 
