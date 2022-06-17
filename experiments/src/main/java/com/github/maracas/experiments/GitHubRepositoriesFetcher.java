@@ -31,6 +31,7 @@ import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Release;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
+import com.github.maracas.experiments.utils.Constants;
 import com.github.maracas.experiments.utils.GitHubUtil;
 import com.github.maracas.experiments.utils.Queries;
 import com.github.maracas.experiments.utils.Util;
@@ -56,7 +57,9 @@ public class GitHubRepositoriesFetcher {
 
 	private List<ExperimentError> errors;
 
+	private CSVManager clientsCsv;
 
+	private CSVManager errorsCsv;
 
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
@@ -64,6 +67,13 @@ public class GitHubRepositoriesFetcher {
 	public GitHubRepositoriesFetcher() {
 		this.repositories = new ArrayList<Repository>();
 		this.errors = new ArrayList<ExperimentError>();
+
+		try {
+			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
+			errorsCsv = new ErrorsCSVManager(Constants.ERRORS_CSV_PATH);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void registerError(ExperimentErrorCode code, String libOwner,
