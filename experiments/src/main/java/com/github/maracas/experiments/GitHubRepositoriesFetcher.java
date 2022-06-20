@@ -128,24 +128,21 @@ public class GitHubRepositoriesFetcher {
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
 				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			var mapper = new ObjectMapper();
-			var json = mapper.readTree(response.getBody());
-			var data = json.get("data");
-			var count = 0;
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode data = json.get("data");
 
 			if (data != null) {
-				var search = data.get("search");
-				var pageInfo = search.get("pageInfo");
-				var hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-				var endCursor = pageInfo.get("endCursor").asText();
+				JsonNode search = data.get("search");
+				JsonNode pageInfo = search.get("pageInfo");
+				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+				String endCursor = pageInfo.get("endCursor").asText();
 
 				for (var repoEdge: search.withArray("edges")) {
-					if (count == 1)
-						break;
-					var cursor = repoEdge.get("cursor").asText();
-					var repoJson = repoEdge.get("node");
-					var nameWithOwner = repoJson.get("nameWithOwner").asText();
-					var fields = nameWithOwner.split("/");
+					String cursor = repoEdge.get("cursor").asText();
+					JsonNode repoJson = repoEdge.get("node");
+					String nameWithOwner = repoJson.get("nameWithOwner").asText();
+					String[] fields = nameWithOwner.split("/");
 					String owner = fields[0];
 					String name = fields[1];
 					boolean disabled = repoJson.get("isDisabled").asBoolean();
@@ -158,7 +155,7 @@ public class GitHubRepositoriesFetcher {
 					boolean maven = repoJson.get("pom").hasNonNull("oid");
 					boolean gradle = repoJson.get("gradle").hasNonNull("oid");
 
-					var prs = repoJson.get("pullRequests");
+					JsonNode prs = repoJson.get("pullRequests");
 					List<String> lastPR = prs.findValuesAsText("mergedAt");
 
 					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()) {
@@ -177,7 +174,6 @@ public class GitHubRepositoriesFetcher {
 							System.out.println("Fetching %s/%s clients...".formatted(owner, name));
 							fetchRepoPackagesAndClients(repo);
 							repositories.add(repo);
-							count++;
 
 						} else {
 							writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,

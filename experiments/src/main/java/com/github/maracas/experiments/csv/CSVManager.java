@@ -56,9 +56,11 @@ public abstract class CSVManager {
 				StandardCharsets.UTF_8)) {
 				String line = reader.readLine();
 
-				if (line != null && !header.startsWith(line)) {
+				if (line != null && !line.isEmpty()) {
 					int cursorPos = Arrays.binarySearch(columns, "cursor");
-					return line.split(DELIMETER)[cursorPos];
+					String cursor = line.split(DELIMETER)[cursorPos];
+					if (!cursor.equals("cursor"))
+						return cursor;
 				}
 			}
 		}
@@ -104,7 +106,7 @@ public abstract class CSVManager {
 		if (initialize) {
 			try (FileWriter writer = new FileWriter(path);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
-				printer.printRecord(header);
+				printer.printRecord(columns);
 			}
 		}
 	}

@@ -39,8 +39,8 @@ public class ErrorsCSVManager extends CSVManager {
 			File csv = new File(Constants.ERRORS_CSV_PATH);
 			try (Writer writer = new FileWriter(csv, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
-				printer.printRecord(error.cursor(), error.code(), error.owner(),
-					error.name(), error.comments());
+				printer.printRecord(error.cursor(), error.owner(), error.name(),
+					error.code(), error.comments());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

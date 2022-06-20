@@ -53,7 +53,7 @@ public class ClientsCSVManager extends CSVManager {
 	@Override
 	public void writeRecord(Object obj) {
 		if (obj instanceof RepositoryPackage pkg) {
-			File csv = new File(Constants.ERRORS_CSV_PATH);
+			File csv = new File(Constants.CLIENTS_CSV_PATH);
 			try (Writer writer = new FileWriter(csv, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Repository repo = pkg.getRepository();

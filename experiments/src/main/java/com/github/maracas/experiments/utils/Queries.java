@@ -125,7 +125,7 @@ public final class Queries {
 		  search(
 		    type: REPOSITORY
 		    query: "repo:%s/%s java in:language stars:>%d pushed:>%s archived:false fork:false mirror:false"
-		    first: 1
+		    first: 100
 		  ) {
 		    repositoryCount
 		    edges {
