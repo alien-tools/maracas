@@ -37,7 +37,7 @@ public class ErrorsCSVManager extends CSVManager {
 	public void writeRecord(Object obj) {
 		if (obj instanceof ErrorRecord error) {
 			File csv = new File(Constants.ERRORS_CSV_PATH);
-			try (Writer writer = new FileWriter(csv);
+			try (Writer writer = new FileWriter(csv, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				printer.printRecord(error.cursor(), error.code(), error.owner(),
 					error.name(), error.comments());

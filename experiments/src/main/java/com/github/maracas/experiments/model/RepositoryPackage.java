@@ -26,7 +26,7 @@ public class RepositoryPackage {
 	/**
 	 * Current version of the package as defined in the POM file
 	 */
-	private final String currentVersion;
+	private final String version;
 
 	/**
 	 * Relative path with respect to the repository content
@@ -61,7 +61,7 @@ public class RepositoryPackage {
 		this.name = "%s:%s".formatted(group, artifact);
 		this.group = group;
 		this.artifact = artifact;
-		this.currentVersion = currentVersion;
+		this.version = currentVersion;
 		this.relativePath = relativePath;
 		this.repository = repository;
 		this.clients = 0;
@@ -80,8 +80,8 @@ public class RepositoryPackage {
 		return group;
 	}
 
-	public String getCurrentVersion() {
-		return currentVersion;
+	public String getVersion() {
+		return version;
 	}
 
 	public String getRelativePath() {

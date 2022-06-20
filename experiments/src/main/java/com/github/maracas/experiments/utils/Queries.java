@@ -54,6 +54,8 @@ public final class Queries {
 		          isEmpty
 		          isLocked
 		          pushedAt
+		          sshUrl
+		          url
 
 		          pom: object(expression: "HEAD:pom.xml") {
 		            oid
@@ -135,6 +137,8 @@ public final class Queries {
 		          isEmpty
 		          isLocked
 		          pushedAt
+		          sshUrl
+		          url
 
 		          pom: object(expression: "HEAD:pom.xml") {
 		            oid

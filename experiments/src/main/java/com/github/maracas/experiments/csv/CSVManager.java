@@ -51,13 +51,15 @@ public abstract class CSVManager {
 	private String getLastCursor() throws IOException {
 		File file = new File(path);
 
-		try (ReversedLinesFileReader reader = new ReversedLinesFileReader(file,
-			StandardCharsets.UTF_8)) {
-			String line = reader.readLine();
+		if (file.exists()) {
+			try (ReversedLinesFileReader reader = new ReversedLinesFileReader(file,
+				StandardCharsets.UTF_8)) {
+				String line = reader.readLine();
 
-			if (line != null && !line.startsWith(header)) {
-				int cursorPos = Arrays.binarySearch(columns, "cursor");
-				return line.split(DELIMETER)[cursorPos];
+				if (line != null && !header.startsWith(line)) {
+					int cursorPos = Arrays.binarySearch(columns, "cursor");
+					return line.split(DELIMETER)[cursorPos];
+				}
 			}
 		}
 
@@ -71,7 +73,7 @@ public abstract class CSVManager {
 	}
 
 	private String buildHeader() {
-		return String.join(",", columns) + "\n";
+		return String.join(",", columns);
 	}
 
 	protected abstract String[] buildColumns();
@@ -100,8 +102,9 @@ public abstract class CSVManager {
 		}
 
 		if (initialize) {
-			try (FileWriter writer = new FileWriter(path)) {
-				csvFormat.print(csv, StandardCharsets.UTF_8);
+			try (FileWriter writer = new FileWriter(path);
+				CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
+				printer.printRecord(header);
 			}
 		}
 	}
@@ -120,7 +123,7 @@ public abstract class CSVManager {
 			original.createNewFile();
 
 			try (Reader reader = new FileReader(tmp);
-				Writer writer = new FileWriter(original);
+				Writer writer = new FileWriter(original, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Iterable<CSVRecord> records = csvFormat.parse(reader);
 

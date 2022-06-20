@@ -17,7 +17,7 @@ public class ExperimentMain {
 			String cursor = clientsCsv.getCursor();
 			fetcher.fetchRepositories(cursor, GitHubRepositoriesFetcher.REPO_MIN_STARS);
 		} catch(IOException e) {
-
+			e.printStackTrace();
 		}
 //		writeErrors();
 //

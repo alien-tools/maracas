@@ -2,6 +2,8 @@ package com.github.maracas.experiments;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -23,9 +25,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.experiments.csv.CSVManager;
 import com.github.maracas.experiments.csv.ClientsCSVManager;
-import com.github.maracas.experiments.csv.ErrorsCSVManager;
 import com.github.maracas.experiments.csv.ErrorRecord;
 import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
+import com.github.maracas.experiments.csv.ErrorsCSVManager;
 import com.github.maracas.experiments.model.Package;
 import com.github.maracas.experiments.model.Package.PackageSourceType;
 import com.github.maracas.experiments.model.PullRequest;
@@ -75,11 +77,15 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
-	private void registerError(String cursor, String owner, String name,
+	private void writeCSVErrorRecord(String cursor, String owner, String name,
 		ExperimentErrorCode code,  String comments) {
 		ErrorRecord error = new ErrorRecord(cursor, owner, name, code, comments);
 		error.printLog();
 		errorsCsv.writeRecord(error);
+	}
+
+	private void writeCSVClientRecords(RepositoryPackage pkg) {
+		clientsCsv.writeRecord(pkg);
 	}
 
 	/**
@@ -140,24 +146,27 @@ public class GitHubRepositoriesFetcher {
 					var repoJson = repoEdge.get("node");
 					var nameWithOwner = repoJson.get("nameWithOwner").asText();
 					var fields = nameWithOwner.split("/");
-					var owner = fields[0];
-					var name = fields[1];
-					var disabled = repoJson.get("isDisabled").asBoolean();
-					var empty = repoJson.get("isEmpty").asBoolean();
-					var locked = repoJson.get("isLocked").asBoolean();
-					var stars = repoJson.get("stargazerCount").asInt();
-					var lastPush = repoJson.get("pushedAt").asText();
-					var maven = repoJson.get("pom").hasNonNull("oid");
-					var gradle = repoJson.get("gradle").hasNonNull("oid");
+					String owner = fields[0];
+					String name = fields[1];
+					boolean disabled = repoJson.get("isDisabled").asBoolean();
+					boolean empty = repoJson.get("isEmpty").asBoolean();
+					boolean locked = repoJson.get("isLocked").asBoolean();
+					int stars = repoJson.get("stargazerCount").asInt();
+					String lastPush = repoJson.get("pushedAt").asText();
+					String sshUrl = repoJson.get("sshUrl").asText();
+					String url = repoJson.get("url").asText();
+					boolean maven = repoJson.get("pom").hasNonNull("oid");
+					boolean gradle = repoJson.get("gradle").hasNonNull("oid");
 
 					var prs = repoJson.get("pullRequests");
-					var lastPR = prs.findValuesAsText("mergedAt");
+					List<String> lastPR = prs.findValuesAsText("mergedAt");
 
 					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()) {
 						LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
 
 						if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS)) {
-							Repository repo = new Repository(owner, name, stars, lastPush, maven, gradle, cursor);
+							Repository repo = new Repository(owner, name, stars,
+								lastPush, sshUrl, url, maven, gradle, cursor);
 
 							//System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
 							//fetchPullRequests(null, repo);
@@ -171,11 +180,11 @@ public class GitHubRepositoriesFetcher {
 							count++;
 
 						} else {
-							registerError(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,
+							writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,
 								"{lastMerged: %s}".formatted(lastMerged.toString()));
 						}
 					} else {
-						registerError(cursor, owner, name, ExperimentErrorCode.IRRELEVANT_REPO,
+						writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.IRRELEVANT_REPO,
 							"{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
 							.formatted(disabled, empty, locked, maven, lastPR.isEmpty()));
 					}
@@ -189,7 +198,7 @@ public class GitHubRepositoriesFetcher {
 					fetchRepositories(endCursor, minStars);
 			}
 
-		} catch (JsonProcessingException e) {
+		} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
 			e.printStackTrace();
 		}
 	}
@@ -296,7 +305,7 @@ public class GitHubRepositoriesFetcher {
 						}
 
 						if (groupId == null || artifactId == null) {
-							registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+							writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 								ExperimentErrorCode.INCOMPLETE_POM, "{groupId: %s, artifactId: %s}"
 								.formatted(groupId, artifactId));
 							continue;
@@ -309,7 +318,7 @@ public class GitHubRepositoriesFetcher {
 						System.out.println("   %s:%s:%s - %s".formatted(groupId,
 							artifactId, version, path));
 					} catch (XmlPullParserException | IOException e) {
-						registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+						writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 							ExperimentErrorCode.POM_DOWNLOAD_ISSUE,
 							"{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
 						e.printStackTrace();
@@ -534,28 +543,29 @@ public class GitHubRepositoriesFetcher {
 								List<Repository> relevantClients = extractRelevantClients(clientRepos);
 								pkg.setClients(clients);
 								pkg.setRelevantClients(relevantClients);
+								writeCSVClientRecords(pkg);
 							} else {
-								registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 									ExperimentErrorCode.NO_PKG_IN_REPO, "{name: %s}".formatted(name));
 							}
 						} catch (NumberFormatException e) {
-							registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+							writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 								ExperimentErrorCode.CLIENTS_NUM_FORMAT_ERROR, "{element: %s}"
 								.formatted(element.toString()));
 							e.printStackTrace();
 						}
 					} else {
-						registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+						writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 							ExperimentErrorCode.NO_PKG_DEPENDANTS, "{packageUrl: %s}"
 							.formatted(packageUrl));
 					}
 				} else {
-					registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+					writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 						ExperimentErrorCode.EMPTY_PKG_PAGE, "{url: %s}".formatted(url));
 				}
 			}
 		} else {
-			registerError(repo.getCursor(), repo.getOwner(), repo.getName(),
+			writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
 				ExperimentErrorCode.NO_DEPENDANTS_PAGE, "{url: %s}".formatted(url));
 		}
 	}
@@ -589,7 +599,7 @@ public class GitHubRepositoriesFetcher {
 				JsonNode data = json.get("data");
 
 				if (response.getStatusCode().equals(HttpStatus.OK) && data != null) {
-					JsonNode search = json.get("data").get("search");
+					JsonNode search = data.get("search");
 
 					// Expect only one edge
 					for (JsonNode edge: search.withArray("edges")) {
@@ -600,17 +610,20 @@ public class GitHubRepositoriesFetcher {
 						boolean isLocked = repoJson.get("isLocked").asBoolean();
 						String lastPush = repoJson.get("pushedAt").asText();
 						int stars = repoJson.get("stargazerCount").asInt();
+						String sshUrl = repoJson.get("sshUrl").asText();
+						String url = repoJson.get("url").asText();
 						boolean maven = repoJson.get("pom").hasNonNull("oid");
 						boolean gradle = repoJson.get("gradle").hasNonNull("oid");
 
 						if (maven && !isDisabled && !isEmpty && !isLocked) {
-							Repository client = new Repository(owner, repo, stars, lastPush, maven, gradle, cursor);
+							Repository client = new Repository(owner, repo, stars,
+								lastPush, sshUrl, url, maven, gradle, cursor);
 							relevantClients.add(client);
 							System.out.println("   %s:%s".formatted(owner, repo));
 						}
 					}
 				}
-			} catch (JsonProcessingException e) {
+			} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
 				e.printStackTrace();
 			}
 		}

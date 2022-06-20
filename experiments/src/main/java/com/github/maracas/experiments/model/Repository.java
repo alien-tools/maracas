@@ -1,5 +1,9 @@
 package com.github.maracas.experiments.model;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -33,6 +37,10 @@ public class Repository {
 	 * {@link LocalDate} of the last push of the repository
 	 */
 	private final LocalDate lastPush;
+
+	private final URI sshURL;
+
+	private final URL url;
 
 	/**
 	 * Indicates if the repository has a Maven nature
@@ -72,19 +80,25 @@ public class Repository {
 	 * @param name      Name of the repository
 	 * @param stars     Number of stars of the repository
 	 * @param lastPush  {@link LocalDate} of the last push
+	 * @param sshUrl    SSH URL to clone the repository
+	 * @param url       HTTP URL to clone the repository
 	 * @param mergedPRs Number of merged pulls requests
 	 * @param maven     {@code true} if it is a Maven project, {@code false}
 	 *                  otherwise
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
 	 * @param cursor    Cursor returned by the GitHub API (used in case of errors)
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
 	 */
 	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		boolean maven, boolean gradle, String cursor) {
+		String sshUrl, String url, boolean maven, boolean gradle, String cursor) throws MalformedURLException, URISyntaxException {
 		this.owner = owner;
 		this.name = name;
 		this.stars = stars;
 		this.lastPush = lastPush;
+		this.sshURL = new URI("ssh://" + sshUrl);
+		this.url = new URL(url);
 		this.maven = maven;
 		this.gradle = gradle;
 		this.cursor = cursor;
@@ -106,12 +120,14 @@ public class Repository {
 	 * @param gradle    {@code true} if it is a Gradle project, {@code false}
 	 *                  otherwise
 	 * @param cursor    Cursor returned by the GitHub API (used in case of errors)
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
 	 */
 	public Repository(String owner, String name, int stars, String lastPush,
-		boolean maven, boolean gradle, String cursor) {
+		String sshUrl, String url, boolean maven, boolean gradle, String cursor) throws MalformedURLException, URISyntaxException {
 		this(owner, name, stars,
 			Date.from(Instant.parse(lastPush)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-			maven, gradle, cursor);
+			sshUrl, url, maven, gradle, cursor);
 	}
 
 	/**
@@ -148,6 +164,14 @@ public class Repository {
 	 */
 	public LocalDate getLastPush() {
 		return lastPush;
+	}
+
+	public URI getSshUrl() {
+		return sshURL;
+	}
+
+	public URL getUrl() {
+		return url;
 	}
 
 	/**
