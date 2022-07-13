@@ -9,12 +9,12 @@ public class ExperimentMain {
 
 	public void run() {
 		try {
-			GitHubRepositoriesFetcher fetcher = new GitHubRepositoriesFetcher(0);
+			GitHubRepositoriesFetcher fetcher = new GitHubRepositoriesFetcher();
 			ClientsCSVManager clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
 
 			System.out.println("Fetching repositories...");
 			String cursor = clientsCsv.getCursor();
-			fetcher.fetchRepositories(cursor, GitHubRepositoriesFetcher.REPO_MIN_STARS);
+			fetcher.fetchRepositories(cursor);
 		} catch(IOException e) {
 			e.printStackTrace();
 		}

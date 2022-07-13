@@ -1,6 +1,12 @@
 package com.github.maracas.experiments.utils;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -105,5 +111,14 @@ public final class GitHubUtil {
 			Thread.currentThread().interrupt();
 		}
 		return null;
+	}
+
+	public static String toGitHubDateFormat(LocalDateTime datetime) {
+		LocalDate date = datetime.toLocalDate();
+		LocalTime time = datetime.toLocalTime();
+		ZoneId zone = ZoneId.of("Europe/Amsterdam");
+		ZoneOffset offset = zone.getRules().getOffset(datetime);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		return "%sT%s%s".formatted(date.toString(), time.format(formatter), offset);
 	}
 }

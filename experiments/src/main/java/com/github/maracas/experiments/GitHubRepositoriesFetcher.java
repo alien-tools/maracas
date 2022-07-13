@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +45,10 @@ import com.github.maracas.experiments.utils.Util;
  * Class in charge of fetching popular Java repositories from GitHub.
  */
 public class GitHubRepositoriesFetcher {
-	public static final int REPO_MIN_STARS = 10;
+	public static final int REPO_MIN_STARS = 100;
 	public static final int CLIENT_MIN_STARS = 2;
-	public static final String REPO_LAST_PUSHED_DATE = "2022-01-15";
-	public static final String CLIENT_LAST_PUSHED_DATE = "2016-06-15";
+	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
+	public static final LocalDateTime CLIENT_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
 	public static final int PR_LAST_MERGED_IN_DAYS = 180;
 	public static final int LAST_PUSH_IN_DAYS = 180;
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
@@ -63,14 +64,20 @@ public class GitHubRepositoriesFetcher {
 
 	private CSVManager errorsCsv;
 
+	private LocalDateTime currentDate;
+
 	private int analyzedCases;
+
+	private int totalCases;
 
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
 	 */
-	public GitHubRepositoriesFetcher(int analyzedCases) {
+	public GitHubRepositoriesFetcher() {
 		this.repositories = new ArrayList<Repository>();
-		this.analyzedCases = analyzedCases;
+		this.analyzedCases = 0;
+		this.totalCases = 0;
+		this.currentDate = LocalDateTime.now();
 
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
@@ -116,17 +123,16 @@ public class GitHubRepositoriesFetcher {
 	 * certain criteria.
 	 *
 	 * @param currentCursor   GraphQL query cursor
-	 * @param minStars Minimum number of stars per repository
-	 * @param maxStars Maximum number of stars per repository
 	 * @return List of {@link Repository} instances
 	 */
-	public void fetchRepositories(String currentCursor, int minStars) {
+	public void fetchRepositories(String currentCursor) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
 			: "";
-
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(minStars,
-			REPO_LAST_PUSHED_DATE, cursorQuery);
+		LocalDateTime previousDate = currentDate.minusHours(12);
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(REPO_MIN_STARS,
+			GitHubUtil.toGitHubDateFormat(previousDate),
+			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
 
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
@@ -141,10 +147,12 @@ public class GitHubRepositoriesFetcher {
 				JsonNode pageInfo = search.get("pageInfo");
 				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 				String endCursor = pageInfo.get("endCursor").asText();
+				totalCases += repositoryCount;
 
 				for (var repoEdge: search.withArray("edges")) {
-					System.out.println("Count: %d of %d".formatted(analyzedCases, repositoryCount));
 					analyzedCases++;
+					System.out.println("Count: %d of %d".formatted(analyzedCases, totalCases));
+
 					String cursor = repoEdge.get("cursor").asText();
 					JsonNode repoJson = repoEdge.get("node");
 					String nameWithOwner = repoJson.get("nameWithOwner").asText();
@@ -196,8 +204,12 @@ public class GitHubRepositoriesFetcher {
 					//fetchPackages(null, repo);
 				}
 
-				if (hasNextPage)
-					fetchRepositories(endCursor, minStars);
+				if (hasNextPage) {
+					fetchRepositories(endCursor);
+				} else if (previousDate.isBefore(REPO_LAST_PUSHED_DATE)) {
+					currentDate = previousDate;
+					fetchRepositories(null);
+				}
 			} else {
 				for (JsonNode error: json.withArray("errors")) {
 					String type = error.get("type").asText();
@@ -211,7 +223,7 @@ public class GitHubRepositoriesFetcher {
 
 				try {
 					Thread.sleep(30000);
-					fetchRepositories(currentCursor, minStars);
+					fetchRepositories(currentCursor);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
