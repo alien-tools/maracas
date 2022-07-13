@@ -97,7 +97,7 @@ public abstract class CSVManager {
 
 			if (hasContent) {
 				initialize = false;
-				cleanFile();
+				//cleanFile();
 			}
 		} catch (IOException e) {
 			// Don't do anything

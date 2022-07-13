@@ -46,10 +46,10 @@ import com.github.maracas.experiments.utils.Util;
 public class GitHubRepositoriesFetcher {
 	public static final int REPO_MIN_STARS = 10;
 	public static final int CLIENT_MIN_STARS = 2;
-	public static final String REPO_LAST_PUSHED_DATE = "2022-03-15";
-	public static final String CLIENT_LAST_PUSHED_DATE = "2021-06-15";
-	public static final int PR_LAST_MERGED_IN_DAYS = 90;
-	public static final int LAST_PUSH_IN_DAYS = 90;
+	public static final String REPO_LAST_PUSHED_DATE = "2022-01-15";
+	public static final String CLIENT_LAST_PUSHED_DATE = "2016-06-15";
+	public static final int PR_LAST_MERGED_IN_DAYS = 180;
+	public static final int LAST_PUSH_IN_DAYS = 180;
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
@@ -63,11 +63,14 @@ public class GitHubRepositoriesFetcher {
 
 	private CSVManager errorsCsv;
 
+	private int analyzedCases;
+
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
 	 */
-	public GitHubRepositoriesFetcher() {
+	public GitHubRepositoriesFetcher(int analyzedCases) {
 		this.repositories = new ArrayList<Repository>();
+		this.analyzedCases = analyzedCases;
 
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
@@ -134,11 +137,14 @@ public class GitHubRepositoriesFetcher {
 
 			if (data != null) {
 				JsonNode search = data.get("search");
+				int repositoryCount = search.get("repositoryCount").asInt();
 				JsonNode pageInfo = search.get("pageInfo");
 				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
 				String endCursor = pageInfo.get("endCursor").asText();
 
 				for (var repoEdge: search.withArray("edges")) {
+					System.out.println("Count: %d of %d".formatted(analyzedCases, repositoryCount));
+					analyzedCases++;
 					String cursor = repoEdge.get("cursor").asText();
 					JsonNode repoJson = repoEdge.get("node");
 					String nameWithOwner = repoJson.get("nameWithOwner").asText();
@@ -192,6 +198,24 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchRepositories(endCursor, minStars);
+			} else {
+				for (JsonNode error: json.withArray("errors")) {
+					String type = error.get("type").asText();
+					writeCSVErrorRecord(currentCursor, null, null,
+						ExperimentErrorCode.EXCEEDED_RATE_LIMIT, type);
+				}
+
+				if (!response.getStatusCode().equals(HttpStatus.OK))
+					writeCSVErrorRecord(currentCursor, null, null,
+						ExperimentErrorCode.GITHUB_API_ERROR, response.getBody());
+
+				try {
+					Thread.sleep(30000);
+					fetchRepositories(currentCursor, minStars);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
 			}
 
 		} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
@@ -585,7 +609,6 @@ public class GitHubRepositoriesFetcher {
 
 			String query = Queries.GRAPHQL_CLIENT_QUERY
 				.formatted(owner, repo, CLIENT_MIN_STARS, CLIENT_LAST_PUSHED_DATE);
-			boolean valid = true;
 
 			try {
 				ResponseEntity<String> response = GitHubUtil.postQuery(query,
