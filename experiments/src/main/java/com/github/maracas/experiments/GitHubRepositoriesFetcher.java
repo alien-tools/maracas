@@ -44,10 +44,14 @@ import com.github.maracas.experiments.utils.Util;
 public class GitHubRepositoriesFetcher {
 	public static final int REPO_MIN_STARS = 100;
 	public static final int CLIENT_MIN_STARS = 2;
+
 	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
 	public static final LocalDateTime CLIENT_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
+	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 04, 01, 0, 0);
+
 	public static final int PR_LAST_MERGED_IN_DAYS = 180;
 	public static final int LAST_PUSH_IN_DAYS = 180;
+
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
@@ -68,12 +72,6 @@ public class GitHubRepositoriesFetcher {
 	private CSVManager errorsCsv;
 
 	/**
-	 * Date used to slice the repositories query. It starts with the date when
-	 * the experiment is ran.
-	 */
-	private LocalDateTime currentDate;
-
-	/**
 	 * Number of analyzed repositories
 	 */
 	private int analyzedCases;
@@ -91,7 +89,6 @@ public class GitHubRepositoriesFetcher {
 		this.repositories = new ArrayList<Repository>();
 		this.analyzedCases = 0;
 		this.totalCases = 0;
-		this.currentDate = LocalDateTime.now();
 
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
@@ -153,7 +150,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param currentCursor   GraphQL query cursor
 	 * @return List of {@link Repository} instances
 	 */
-	public void fetchRepositories(String currentCursor) {
+	public void fetchRepositories(String currentCursor, LocalDateTime currentDate) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
 			: "";
@@ -228,12 +225,11 @@ public class GitHubRepositoriesFetcher {
 					}
 				}
 
-				if (hasNextPage) {
-					fetchRepositories(endCursor);
-				} else if (previousDate.isBefore(REPO_LAST_PUSHED_DATE)) {
-					currentDate = previousDate;
-					fetchRepositories(null);
-				}
+				if (hasNextPage)
+					fetchRepositories(endCursor, currentDate);
+				else if (previousDate.isBefore(REPO_LAST_PUSHED_DATE))
+					fetchRepositories(null, previousDate);
+
 			} else {
 				for (JsonNode error: json.withArray("errors")) {
 					String type = error.get("type").asText();
@@ -247,7 +243,7 @@ public class GitHubRepositoriesFetcher {
 
 				try {
 					Thread.sleep(30000);
-					fetchRepositories(currentCursor);
+					fetchRepositories(currentCursor, currentDate);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
@@ -262,31 +258,49 @@ public class GitHubRepositoriesFetcher {
 	/**
 	 * Recursively fetches the pull requests of a given repository.
 	 *
-	 * @param cursor GraphQL query cursor
+	 * @param currentCursor GraphQL query cursor
 	 * @param repo   Target repository
 	 */
-	public void fetchPullRequests(String cursor, Repository repo) {
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
+	public void fetchPullRequests(String currentCursor, LocalDateTime currentDate, Repository repo) {
+		String cursorQuery = currentCursor != null
+			? ", after: \"" + currentCursor + "\""
 			: "";
+		LocalDateTime previousDate = currentDate.minusHours(12);
 		String query = Queries.GRAPHQL_PRS_QUERY.formatted(repo.getOwner(),
-			repo.getName(), ">=2022-05-01", cursorQuery);
+			repo.getName(), GitHubUtil.toGitHubDateFormat(previousDate),
+			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
 
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
 				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode search = json.get("data").get("search");
-			JsonNode pageInfo = search.get("pageInfo");
-			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			String endCursor = pageInfo.get("endCursor").asText();
+			JsonNode data = json.get("data");
 
-			for (JsonNode prEdge: search.withArray("edges"))
-				extractPRs(prEdge, repo);
+			if (data != null) {
+				JsonNode search = data.get("search");
+				JsonNode pageInfo = search.get("pageInfo");
+				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+				String endCursor = pageInfo.get("endCursor").asText();
 
-			if (hasNextPage)
-				fetchPullRequests(endCursor, repo);
+				for (JsonNode prEdge: search.withArray("edges"))
+					extractPRs(prEdge, repo);
+
+				if (hasNextPage)
+					fetchPullRequests(endCursor, currentDate, repo);
+				else if (previousDate.isBefore(PR_LAST_CREATED))
+					fetchPullRequests(null, previousDate, repo);
+			} else {
+				try {
+					Thread.sleep(30000);
+					fetchPullRequests(currentCursor, currentDate, repo);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+			}
+
+
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

@@ -153,32 +153,11 @@ public final class Queries {
 		  }
 		}""";
 
-	/**
-	 * TODO: Refactor query based on type=ISSUE
-	 * {
-		  search(
-		    type: ISSUE
-		    query: "repo:alien-tools/maracas CLOSED in:states is:pr is:public archived:false sort:created-desc"
-		    first: 100
-		  ) {
-		    issueCount
-		    edges {
-		      node {
-		        ... on PullRequest {
-		          number
-		          title
-		          createdAt
-		        }
-		      }
-		    }
-		  }
-		}
-	 */
 	public final static String GRAPHQL_PRS_QUERY = """
 		query {
 		  search(
 		    type: ISSUE
-		    query: "repo:%s/%s is:pr created:%s",
+		    query: "repo:%s/%s is:pr created:%s..%s is:open",
 		    first: 100
 		    %s
 		  ) {
@@ -242,93 +221,4 @@ public final class Queries {
 		  }
 		}""";
 
-	public final static String GRAPHQL_PACKAGES_QUERY = """
-		query {
-		  search(type: REPOSITORY,
-		  query: "repo:%s/%s",
-		  first: 1
-		) {
-		    edges {
-		      node {
-		        ... on Repository {
-		          packages(first: 100 %s) {
-		            nodes {
-		              name
-		            }
-		            pageInfo {
-		              endCursor
-		              hasNextPage
-		            }
-		          }
-		        }
-		      }
-		    }
-		  }
-		}""";
-
-	public final static String GRAPHQL_RELEASES_QUERY = """
-		query {
-		  search(type: REPOSITORY,
-		  query: "repo:%s/%s",
-		  first: 1
-		) {
-		    edges {
-		      node {
-		        ... on Repository {
-		          packages(names: "%s" first: 1) {
-		            nodes {
-		              versions(first: 100 %s) {
-		                nodes {
-		                  version
-		                  files(first: 1) {
-		                    nodes {
-		                      updatedAt
-		                    }
-		                    pageInfo {
-		                      endCursor
-		                      hasNextPage
-		                    }
-		                  }
-		                }
-		              }
-		            }
-		          }
-		        }
-		      }
-		    }
-		  }
-		}""";
-
-	public final static String GRAPHQL_PACKAGE_SRC_QUERY = """
-		query {
-		  search(type: REPOSITORY,
-		  query: "repo:%s/%s",
-		  first: 1) {
-		    edges {
-		      node {
-		        ... on Repository {
-		          packages(
-		          names: "%s",
-		          first: 1
-		          ) {
-		            nodes {
-		              version(version: "%s") {
-		                files(first: 100 %s) {
-		                  nodes {
-		                    name
-		                    url
-		                  }
-		                  pageInfo {
-		                    endCursor
-		                    hasNextPage
-		                  }
-		                }
-		              }
-		            }
-		          }
-		        }
-		      }
-		    }
-		  }
-		}""";
 }
