@@ -16,6 +16,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.gradle.internal.impldep.org.apache.commons.lang.ArrayUtils;
 
 public abstract class CSVManager {
 
@@ -57,7 +58,7 @@ public abstract class CSVManager {
 				String line = reader.readLine();
 
 				if (line != null && !line.isEmpty()) {
-					int cursorPos = Arrays.binarySearch(columns, "cursor");
+					int cursorPos = ArrayUtils.indexOf(columns, "cursor");
 					String cursor = line.split(DELIMETER)[cursorPos];
 					if (!cursor.equals("cursor"))
 						return cursor;
@@ -69,8 +70,8 @@ public abstract class CSVManager {
 	}
 
 	private String buildFormat() {
-		String[] format = columns.clone();
-		Arrays.setAll(format, c -> columnsFormat.get(c));
+		String[] format = new String[columns.length];
+		Arrays.setAll(format, i -> columnsFormat.get(columns[i]));
 		return String.join(",", format) + "\n";
 	}
 

@@ -549,13 +549,16 @@ public class GitHubRepositoriesFetcher {
 	 * @param repo Target {@link Repository} instance
 	 */
 	private void fetchRepoPackagesAndClients(Repository repo) {
-		String url = "https://github.com/%s/%s/network/dependents".formatted(repo.getOwner(), repo.getName());
+
+		String url = "https://github.com/%s/%s/network/dependents"
+			.formatted(repo.getOwner(), repo.getName());
 		// TODO: test purposes
 		//String url = "https://github.com/forge/roaster/network/dependents";
 		Document doc = GitHubUtil.fetchPage(url);
 
 		if (doc != null) {
 			List<String> packageUrls = doc.select("#dependents .select-menu-item").eachAttr("href");
+			repo.setGitHubPackages(packageUrls.size());
 
 			for (String packageUrl: packageUrls) {
 				Document pkgPage = GitHubUtil.fetchPage("https://github.com" + packageUrl);
@@ -575,6 +578,7 @@ public class GitHubRepositoriesFetcher {
 								List<Repository> relevantClients = extractRelevantClients(clientRepos);
 								pkg.setClients(clients);
 								pkg.setRelevantClients(relevantClients);
+								repo.addPackage(pkg);
 								writeCSVClientRecords(pkg);
 							} else {
 								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),

@@ -62,6 +62,8 @@ public class Repository {
 	 */
 	private Map<String, RepositoryPackage> repoPackages;
 
+	private int gitHubPackages;
+
 	/**
 	 * List of {@link PullRequest} instances of the repository
 	 */
@@ -105,6 +107,7 @@ public class Repository {
 		this.repoPackages = new HashMap<String, RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 		this.releases = new HashMap<String, Release>();
+		this.gitHubPackages = -1;
 	}
 
 	/**
@@ -280,4 +283,18 @@ public class Repository {
 		if (release != null)
 			releases.putIfAbsent(release.getVersion(), release);
 	}
+
+	public int getGitHubPackages() {
+		return gitHubPackages;
+	}
+
+	public void setGitHubPackages(int gitHubPackages) {
+		this.gitHubPackages = gitHubPackages;
+	}
+
+	public URI getSshURL() {
+		return sshURL;
+	}
+
+
 }

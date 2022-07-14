@@ -23,8 +23,8 @@ public class ClientsCSVManager extends CSVManager {
 	@Override
 	protected String[] buildColumns() {
 		return new String[] {"cursor", "owner", "name", "sshUrl", "url", "stars",
-			"groupId", "artifactId", "version", "path", "clients", "relevantClients",
-			"cowner", "cname", "csshUrl", "curl", "cstars"};
+			"packages", "groupId", "artifactId", "version", "path", "clients",
+			"relevantClients", "cowner", "cname", "csshUrl", "curl", "cstars"};
 	}
 
 	@Override
@@ -36,6 +36,7 @@ public class ClientsCSVManager extends CSVManager {
 		map.put("sshUrl", "%s");
 		map.put("url", "%s");
 		map.put("stars", "%d");
+		map.put("packages", "%d");
 		map.put("groupId", "%s");
 		map.put("artifactId", "%s");
 		map.put("version", "%s");
@@ -63,6 +64,7 @@ public class ClientsCSVManager extends CSVManager {
 				URI sshUrl = repo.getSshUrl();
 				URL url = repo.getUrl();
 				int stars = repo.getStars();
+				int packages = repo.getGitHubPackages();
 				String groupId = pkg.getGroup();
 				String artifactId = pkg.getArtifact();
 				String version = pkg.getVersion();
@@ -78,7 +80,7 @@ public class ClientsCSVManager extends CSVManager {
 					int cstars = client.getStars();
 
 					printer.printRecord(cursor, owner, name, sshUrl.toString(),
-						url.toString(), stars, groupId, artifactId, version, path,
+						url.toString(), stars, packages, groupId, artifactId, version, path,
 						clients, relevantClients, cowner, cname, csshUrl.toString(),
 						curl.toString(), cstars);
 				}
