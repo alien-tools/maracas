@@ -3,7 +3,6 @@ package com.github.maracas.experiments.model;
 public class Package {
 	private final String name;
 	private final Repository repository;
-	private Release release;
 	private String srcUrl;
 
 	public enum PackageSourceType {
@@ -14,14 +13,6 @@ public class Package {
 		this.name = name;
 		this.repository = repository;
 		this.srcUrl = PackageSourceType.UNDEFINED.toString();
-	}
-
-	public Release getRelease() {
-		return release;
-	}
-
-	public void setRelease(Release release) {
-		this.release = release;
 	}
 
 	public String getName() {

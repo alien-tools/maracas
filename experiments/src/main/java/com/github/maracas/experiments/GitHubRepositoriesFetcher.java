@@ -29,11 +29,8 @@ import com.github.maracas.experiments.csv.ClientsCSVManager;
 import com.github.maracas.experiments.csv.ErrorRecord;
 import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
 import com.github.maracas.experiments.csv.ErrorsCSVManager;
-import com.github.maracas.experiments.model.Package;
-import com.github.maracas.experiments.model.Package.PackageSourceType;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
-import com.github.maracas.experiments.model.Release;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
 import com.github.maracas.experiments.utils.Constants;
@@ -359,145 +356,6 @@ public class GitHubRepositoriesFetcher {
 			}
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
-		}
-	}
-
-	@Deprecated
-	private void fetchPackages(String cursor, Repository repo) {
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
-			: "";
-		String query = Queries.GRAPHQL_PACKAGES_QUERY.formatted(repo.getOwner(),
-			repo.getName(), cursorQuery);
-
-		try {
-			ResponseEntity<String> response = GitHubUtil.postQuery(query,
-				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode search = json.get("data").get("search");
-			JsonNode packages = search.withArray("edges").get(0)
-				.get("node").get("packages");
-			JsonNode pageInfo = packages.get("pageInfo");
-			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			String endCursor = pageInfo.get("endCursor").asText();
-
-			for (JsonNode pkgNode: packages.withArray("nodes"))
-				extractPackage(pkgNode, repo);
-
-			if (hasNextPage)
-				fetchPackages(endCursor, repo);
-
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Deprecated
-	private void extractPackage(JsonNode pkgNode, Repository repo) {
-		String name = pkgNode.get("name").asText();
-		Package pkg = new Package(name, repo);
-		fetchReleases(null, pkg, repo);
-
-		if (pkg.getRelease() != null)
-			fetchPkgSource(null, pkg, repo);
-	}
-
-	@Deprecated
-	private void fetchReleases(String cursor, Package pkg, Repository repo) {
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
-			: "";
-		String query = Queries.GRAPHQL_RELEASES_QUERY.formatted(repo.getOwner(),
-			repo.getName(), pkg.getName(), cursorQuery);
-
-		try {
-			ResponseEntity<String> response = GitHubUtil.postQuery(query,
-				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode search = json.get("data").get("search");
-			JsonNode pkgJson = search.withArray("edges").get(0)
-				.get("node").get("pkg");
-			JsonNode versions = pkgJson.get("versions");
-			JsonNode pageInfo = versions.get("pageInfo");
-			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			String endCursor = pageInfo.get("endCursor").asText();
-
-			for (JsonNode versionNode: versions.withArray("nodes"))
-				extractRelease(versionNode, pkg, repo);
-
-			if (hasNextPage)
-				fetchReleases(endCursor, pkg, repo);
-
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Deprecated
-	private void extractRelease(JsonNode versionNode, Package pkg, Repository repo) {
-		String version = versionNode.get("version").asText();
-		Release release = null;
-
-		if (!repo.releaseExists(version)) {
-			JsonNode file = versionNode.get("f").get("nodes");
-			if (file != null) {
-				String dateString = file.get(0).get("updatedAt").asText();
-				LocalDate date = Util.stringToLocalDate(dateString);
-				release = new Release(version, date, repo);
-			}
-		} else {
-			release = repo.getRelease(version);
-		}
-
-		if (release != null) {
-			pkg.setRelease(release);
-			release.addPackage(pkg);
-		}
-	}
-
-	@Deprecated
-	private void fetchPkgSource(String cursor, Package pkg, Repository repo) {
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
-			: "";
-		String query = Queries.GRAPHQL_PACKAGE_SRC_QUERY.formatted(repo.getOwner(),
-			repo.getName(), pkg.getName(), pkg.getRelease().getVersion(), cursorQuery);
-
-		try {
-			ResponseEntity<String> response = GitHubUtil.postQuery(query,
-				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode search = json.get("data").get("search");
-			JsonNode packages = search.withArray("edges").get(0)
-				.get("node").get("packages");
-			JsonNode version = packages.withArray("nodes").get(0);
-			JsonNode files = version.get("files");
-			JsonNode pageInfo = version.get("pageInfo");
-			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			String endCursor = pageInfo.get("endCursor").asText();
-
-			for (JsonNode fileNode: files.withArray("nodes"))
-				extractPackageSource(fileNode, pkg);
-
-			if (pkg.getSrcUrl().equals(PackageSourceType.UNDEFINED.toString())
-				&& hasNextPage)
-				fetchPkgSource(endCursor, pkg, repo);
-
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Deprecated
-	private void extractPackageSource(JsonNode fileNode, Package pkg) {
-		String name = fileNode.get("name").asText();
-
-		if (name.endsWith("-sources.jar")) {
-			String url = fileNode.get("url").asText();
-			pkg.setSrcUrl(url);
 		}
 	}
 

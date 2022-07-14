@@ -69,10 +69,6 @@ public class Repository {
 	 */
 	private List<PullRequest> pullRequests;
 
-	/**
-	 * List of {@link Release} instances ordered by date
-	 */
-	private Map<String, Release> releases;
 
 	/**
 	 * Creates an instance of the {@link Repository} class. The {@code packages}
@@ -106,7 +102,6 @@ public class Repository {
 		this.cursor = cursor;
 		this.repoPackages = new HashMap<String, RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
-		this.releases = new HashMap<String, Release>();
 		this.gitHubPackages = -1;
 	}
 
@@ -261,27 +256,6 @@ public class Repository {
 	 */
 	public void setRepoPackages(Map<String, RepositoryPackage> repoPackages) {
 		this.repoPackages = repoPackages;
-	}
-
-	public Map<String, Release> getReleases() {
-		return releases;
-	}
-
-	public void setReleases(Map<String, Release> releases) {
-		this.releases = releases;
-	}
-
-	public boolean releaseExists(String version) {
-		return releases.containsKey(version);
-	}
-
-	public Release getRelease(String version) {
-		return releases.getOrDefault(version, null);
-	}
-
-	public void addRelease(Release release) {
-		if (release != null)
-			releases.putIfAbsent(release.getVersion(), release);
 	}
 
 	public int getGitHubPackages() {

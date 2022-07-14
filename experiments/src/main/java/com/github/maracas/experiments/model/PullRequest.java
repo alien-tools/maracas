@@ -15,8 +15,6 @@ public class PullRequest {
 	 */
 	private final Repository repository;
 
-	private Release release;
-
 	/**
 	 * Base repository of the PR
 	 */
@@ -296,13 +294,5 @@ public class PullRequest {
 	 */
 	public Repository getRepository() {
 		return repository;
-	}
-
-	public Release getRelease() {
-		return release;
-	}
-
-	public void setRelease(Release release) {
-		this.release = release;
 	}
 }
