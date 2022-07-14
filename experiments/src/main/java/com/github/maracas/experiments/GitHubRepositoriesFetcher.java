@@ -57,15 +57,32 @@ public class GitHubRepositoriesFetcher {
 	 */
 	private List<Repository> repositories;
 
+	/**
+	 * Clients CSV manager
+	 */
 	private CSVManager clientsCsv;
 
+	/**
+	 * Errors CSV manager
+	 */
 	private CSVManager errorsCsv;
 
+	/**
+	 * Date used to slice the repositories query. It starts with the date when
+	 * the experiment is ran.
+	 */
 	private LocalDateTime currentDate;
 
+	/**
+	 * Number of analyzed repositories
+	 */
 	private int analyzedCases;
 
+	/**
+	 * Number of repositories to be analyzed
+	 */
 	private int totalCases;
+
 
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
@@ -84,6 +101,15 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	/**
+	 * Writes a new record on the errors CSV file.
+	 *
+	 * @param cursor   Cursor associated with the error
+	 * @param owner    Owner of the repository associated with the error
+	 * @param name     Name of the repository associated with the error
+	 * @param code     Code of the error (see {@link ExperimentErrorCode})
+	 * @param comments Additional comments to describe the error
+	 */
 	private void writeCSVErrorRecord(String cursor, String owner, String name,
 		ExperimentErrorCode code,  String comments) {
 		ErrorRecord error = new ErrorRecord(cursor, owner, name, code, comments);
@@ -91,6 +117,11 @@ public class GitHubRepositoriesFetcher {
 		errorsCsv.writeRecord(error);
 	}
 
+	/**
+	 * Writes a new record on the output file.
+	 *
+	 * @param pkg
+	 */
 	private void writeCSVClientRecords(RepositoryPackage pkg) {
 		clientsCsv.writeRecord(pkg);
 	}
@@ -146,7 +177,7 @@ public class GitHubRepositoriesFetcher {
 				String endCursor = pageInfo.get("endCursor").asText();
 				totalCases += repositoryCount;
 
-				for (var repoEdge: search.withArray("edges")) {
+				for (JsonNode repoEdge: search.withArray("edges")) {
 					analyzedCases++;
 					System.out.println("Count: %d of %d".formatted(analyzedCases, totalCases));
 
@@ -195,10 +226,6 @@ public class GitHubRepositoriesFetcher {
 							"{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
 							.formatted(disabled, empty, locked, maven, lastPR.isEmpty()));
 					}
-
-					// FIXME: Using packages won't work here. Only repositories making use of
-					// GitHub packages will be part of the dataset.
-					//fetchPackages(null, repo);
 				}
 
 				if (hasNextPage) {
@@ -294,6 +321,13 @@ public class GitHubRepositoriesFetcher {
 		repo.addPullRequest(pullRequest);
 	}
 
+	/**
+	 * Fetches all POM files within a repository and gather information about
+	 * packages contained in the repository. New packages are added to the
+	 * corresponding repository.
+	 *
+	 * @param repo Target repository
+	 */
 	private void fetchPomFiles(Repository repo) {
 		String url = (GITHUB_SEARCH + "/code?q=repo:%s/%s+filename:pom+extension:xml")
 			.formatted(repo.getOwner(), repo.getName());
@@ -407,11 +441,8 @@ public class GitHubRepositoriesFetcher {
 	 * @param repo Target {@link Repository} instance
 	 */
 	private void fetchRepoPackagesAndClients(Repository repo) {
-
 		String url = "https://github.com/%s/%s/network/dependents"
 			.formatted(repo.getOwner(), repo.getName());
-		// TODO: test purposes
-		//String url = "https://github.com/forge/roaster/network/dependents";
 		Document doc = GitHubUtil.fetchPage(url);
 
 		if (doc != null) {
@@ -436,7 +467,6 @@ public class GitHubRepositoriesFetcher {
 								List<Repository> relevantClients = extractRelevantClients(clientRepos);
 								pkg.setClients(clients);
 								pkg.setRelevantClients(relevantClients);
-								repo.addPackage(pkg);
 								writeCSVClientRecords(pkg);
 							} else {
 								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
@@ -522,5 +552,4 @@ public class GitHubRepositoriesFetcher {
 		}
 		return relevantClients;
 	}
-
 }
