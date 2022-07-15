@@ -13,7 +13,6 @@ import org.apache.commons.csv.CSVPrinter;
 
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
-import com.github.maracas.experiments.utils.Constants;
 
 public class ClientsCSVManager extends CSVManager {
 	public ClientsCSVManager(String path) throws IOException {
@@ -29,7 +28,7 @@ public class ClientsCSVManager extends CSVManager {
 
 	@Override
 	protected Map<String, String> buildColumnsFormat() {
-		HashMap<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<String, String>();
 		map.put("cursor", "%s");
 		map.put("owner", "%s");
 		map.put("name", "%s");
@@ -54,7 +53,7 @@ public class ClientsCSVManager extends CSVManager {
 	@Override
 	public void writeRecord(Object obj) {
 		if (obj instanceof RepositoryPackage pkg) {
-			File csv = new File(Constants.CLIENTS_CSV_PATH);
+			File csv = new File(path);
 			try (Writer writer = new FileWriter(csv, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Repository repo = pkg.getRepository();

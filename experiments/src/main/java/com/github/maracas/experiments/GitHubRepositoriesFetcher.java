@@ -29,6 +29,7 @@ import com.github.maracas.experiments.csv.ClientsCSVManager;
 import com.github.maracas.experiments.csv.ErrorRecord;
 import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
 import com.github.maracas.experiments.csv.ErrorsCSVManager;
+import com.github.maracas.experiments.csv.PullRequestsCSVManager;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Repository;
@@ -72,6 +73,11 @@ public class GitHubRepositoriesFetcher {
 	private CSVManager errorsCsv;
 
 	/**
+	 * Pull requests CSV manager
+	 */
+	private CSVManager pullRequestsCsv;
+
+	/**
 	 * Number of analyzed repositories
 	 */
 	private int analyzedCases;
@@ -93,6 +99,7 @@ public class GitHubRepositoriesFetcher {
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
 			errorsCsv = new ErrorsCSVManager(Constants.ERRORS_CSV_PATH);
+			pullRequestsCsv = new PullRequestsCSVManager(Constants.PRS_CSV_PATH);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -204,15 +211,16 @@ public class GitHubRepositoriesFetcher {
 							Repository repo = new Repository(owner, name, stars,
 								lastPush, sshUrl, url, maven, gradle, cursor);
 
-							//System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
-							//fetchPullRequests(null, repo);
-
 							System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
 							fetchPomFiles(repo);
 
 							System.out.println("Fetching %s/%s clients...".formatted(owner, name));
 							fetchRepoPackagesAndClients(repo);
 							repositories.add(repo);
+
+							System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
+							LocalDateTime datetime = LocalDateTime.now();
+							fetchPullRequests(null, datetime, repo);
 
 						} else {
 							writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,
@@ -331,8 +339,61 @@ public class GitHubRepositoriesFetcher {
 		System.out.println("Fetching %s/%s pull request #%d (%s) files..."
 			.formatted(repo.getOwner(), repo.getName(), number, state));
 		fetchPRFiles(null, pullRequest);
-		// TODO: 1. find PR release; 2. add it to the PR; 3. add it to the repo
+		pullRequest.gatherModifiedPackages();
 		repo.addPullRequest(pullRequest);
+	}
+
+	/**
+	 * Recursively fetches the relative paths of files modified in a given pull
+	 * request.
+	 *
+	 * @param currentCursor      GraphQL query cursor
+	 * @param pullRequest Target pull request
+	 */
+	private void fetchPRFiles(String currentCursor, PullRequest pullRequest) {
+		Repository repo = pullRequest.getRepository();
+		String cursorQuery = currentCursor != null
+			? ", after: \"" + currentCursor + "\""
+			: "";
+		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
+			pullRequest.getNumber(), cursorQuery);
+
+		try {
+			ResponseEntity<String> response = GitHubUtil.postQuery(query,
+				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.getBody());
+			JsonNode data = json.get("data");
+
+			if (data != null) {
+				JsonNode search = data.get("search");
+				JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
+				JsonNode files = pr.get("files");
+				JsonNode pageInfo = files.get("pageInfo");
+				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+				String endCursor = pageInfo.get("endCursor").asText();
+
+				for (JsonNode fileEdge: files.withArray("edges")) {
+					String file = fileEdge.get("node").get("path").asText();
+					pullRequest.addFile(file);
+					System.out.println("   %s".formatted(file));
+				}
+
+				if (hasNextPage)
+					fetchPRFiles(endCursor, pullRequest);
+			} else {
+				try {
+					Thread.sleep(30000);
+					fetchPRFiles(currentCursor, pullRequest);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+			}
+
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -408,47 +469,6 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Recursively fetches the relative paths of files modified in a given pull
-	 * request.
-	 *
-	 * @param cursor      GraphQL query cursor
-	 * @param pullRequest Target pull request
-	 */
-	private void fetchPRFiles(String cursor, PullRequest pullRequest) {
-		Repository repo = pullRequest.getRepository();
-		String cursorQuery = cursor != null
-			? ", after: \"" + cursor + "\""
-			: "";
-		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
-			pullRequest.getNumber(), cursorQuery);
-
-		try {
-			ResponseEntity<String> response = GitHubUtil.postQuery(query,
-				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode search = json.get("data").get("search");
-			JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
-			JsonNode files = pr.get("files");
-			JsonNode pageInfo = files.get("pageInfo");
-			boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-			String endCursor = pageInfo.get("endCursor").asText();
-
-			for (JsonNode fileEdge: files.withArray("edges")) {
-				String file = fileEdge.get("node").get("path").asText();
-				pullRequest.addFile(file);
-				System.out.println("   %s".formatted(file));
-			}
-
-			if (hasNextPage)
-				fetchPRFiles(endCursor, pullRequest);
-
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
 	 * Fetches the list of packages and package clients of a given repository.
 	 * As a side effect, the {@link Repository} packages list is modified.
 	 *
@@ -473,12 +493,12 @@ public class GitHubRepositoriesFetcher {
 
 					if (element != null) {
 						try {
-							RepositoryPackage pkg = repo.getRepoPackage(name);
+							RepositoryPackage pkg = repo.getRepoPackageByName(name);
 
 							if (pkg != null) {
 								String clientsStr = element.text().substring(0, element.text().indexOf(" ")).replace(",", "");
 								int clients = Integer.parseInt(clientsStr);
-								List<Repository> relevantClients = extractRelevantClients(clientRepos);
+								List<Repository> relevantClients = fetchRelevantClients(clientRepos);
 								pkg.setClients(clients);
 								pkg.setRelevantClients(relevantClients);
 								writeCSVClientRecords(pkg);
@@ -518,7 +538,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param maxStars    Maximum number of stars per client repository
 	 * @return List of client {@link Repository} instances
 	 */
-	private List<Repository> extractRelevantClients(List<String> clientRepos) {
+	private List<Repository> fetchRelevantClients(List<String> clientRepos) {
 		List<Repository> relevantClients = new ArrayList<Repository>();
 		for (String clientRepo : clientRepos) {
 			String[] clientArray = clientRepo.split(" ");

@@ -9,8 +9,6 @@ import java.util.Map;
 
 import org.apache.commons.csv.CSVPrinter;
 
-import com.github.maracas.experiments.utils.Constants;
-
 public class ErrorsCSVManager extends CSVManager {
 
 	public ErrorsCSVManager(String path) throws IOException {
@@ -36,7 +34,7 @@ public class ErrorsCSVManager extends CSVManager {
 	@Override
 	public void writeRecord(Object obj) {
 		if (obj instanceof ErrorRecord error) {
-			File csv = new File(Constants.ERRORS_CSV_PATH);
+			File csv = new File(path);
 			try (Writer writer = new FileWriter(csv, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				printer.printRecord(error.cursor(), error.owner(), error.name(),

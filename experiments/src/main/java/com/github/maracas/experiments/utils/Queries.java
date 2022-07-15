@@ -189,6 +189,10 @@ public final class Queries {
 		  }
 		}""";
 
+	/**
+	 * TODO: If the pull requests modifies more than 1000 files, we will only
+	 * get 1000. We need to find a way to slice this query.
+	 */
 	public final static String GRAPHQL_PRS_FILES_QUERY = """
 		query {
 		  search(
@@ -202,6 +206,7 @@ public final class Queries {
 		          pr: pullRequest(number: %d) {
 
 		            files(first: 100 %s) {
+		              totalCount
 		              edges {
 		                node {
 		                  path

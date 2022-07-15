@@ -2,7 +2,10 @@ package com.github.maracas.experiments.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.github.maracas.experiments.utils.Util;
 
@@ -65,6 +68,10 @@ public class PullRequest {
 	 */
 	private List<String> files;
 
+	private Map<String, List<String>> filesPerPackage;
+
+	private List<RepositoryPackage> modifiedPackages;
+
 	/**
 	 * Constants representing the state of a PR
 	 */
@@ -101,6 +108,8 @@ public class PullRequest {
 		setMergedAt(mergedAt);
 		setClosedAt(closedAt);
 		this.files = new ArrayList<String>();
+		this.filesPerPackage = new HashMap<String, List<String>>();
+		this.modifiedPackages = new ArrayList<RepositoryPackage>();
 	}
 
 	/**
@@ -294,5 +303,33 @@ public class PullRequest {
 	 */
 	public Repository getRepository() {
 		return repository;
+	}
+
+	public void gatherModifiedPackages() {
+		Set<String> packagePaths = repository.getRepoPackagesByPath().keySet();
+
+		for (String file : files) {
+			for (String pkgPath : packagePaths) {
+				if (file.startsWith(pkgPath)) {
+					RepositoryPackage pkg = repository.getRepoPackageByPath(pkgPath);
+					List<String> pkgFiles = filesPerPackage.getOrDefault(pkg.getName(), new ArrayList<String>());
+					pkgFiles.add(file);
+					filesPerPackage.put(pkg.getName(), pkgFiles);
+					modifiedPackages.add(repository.getRepoPackageByPath(pkgPath));
+				}
+			}
+		}
+	}
+
+	public List<RepositoryPackage> getModifiedPackages() {
+		return modifiedPackages;
+	}
+
+	public Map<String, List<String>> getFilesPerPackage() {
+		return filesPerPackage;
+	}
+
+	public List<String> getFilesPerPackage(String pkgName) {
+		return filesPerPackage.get(pkgName);
 	}
 }
