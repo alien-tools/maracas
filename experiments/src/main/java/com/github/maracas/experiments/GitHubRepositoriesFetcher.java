@@ -235,7 +235,7 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchRepositories(endCursor, currentDate);
-				else if (previousDate.isBefore(REPO_LAST_PUSHED_DATE))
+				else if (previousDate.isAfter(REPO_LAST_PUSHED_DATE))
 					fetchRepositories(null, previousDate);
 
 			} else {
@@ -269,7 +269,7 @@ public class GitHubRepositoriesFetcher {
 	 * @param currentCursor GraphQL query cursor
 	 * @param repo   Target repository
 	 */
-	public void fetchPullRequests(String currentCursor, LocalDateTime currentDate, Repository repo) {
+	private void fetchPullRequests(String currentCursor, LocalDateTime currentDate, Repository repo) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
 			: "";
@@ -296,7 +296,7 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchPullRequests(endCursor, currentDate, repo);
-				else if (previousDate.isBefore(PR_LAST_CREATED))
+				else if (previousDate.isAfter(PR_LAST_CREATED))
 					fetchPullRequests(null, previousDate, repo);
 			} else {
 				try {
@@ -342,10 +342,10 @@ public class GitHubRepositoriesFetcher {
 		PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
 			baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
 			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
-		System.out.println("Fetching %s/%s pull request #%d (%s) files..."
-			.formatted(repo.getOwner(), repo.getName(), number, state));
+		System.out.println("   Pull request: %s (%d) - %s".formatted(title, number, state));
 		fetchPRFiles(null, pullRequest);
 		pullRequest.gatherModifiedPackages();
+		pullRequestsCsv.writeRecord(pullRequest);
 		repo.addPullRequest(pullRequest);
 	}
 
@@ -382,7 +382,7 @@ public class GitHubRepositoriesFetcher {
 				for (JsonNode fileEdge: files.withArray("edges")) {
 					String file = fileEdge.get("node").get("path").asText();
 					pullRequest.addFile(file);
-					System.out.println("   %s".formatted(file));
+					System.out.println("   PR file: %s".formatted(file));
 				}
 
 				if (hasNextPage)
@@ -459,7 +459,7 @@ public class GitHubRepositoriesFetcher {
 							artifactId, version, relativePath, repo);
 						repo.addPackage(pkg);
 
-						System.out.println("   %s:%s:%s - %s".formatted(groupId,
+						System.out.println("   POM: %s:%s:%s - %s".formatted(groupId,
 							artifactId, version, path));
 					} catch (XmlPullParserException | IOException e) {
 						writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
@@ -582,7 +582,7 @@ public class GitHubRepositoriesFetcher {
 							Repository client = new Repository(owner, repo, stars,
 								lastPush, sshUrl, url, maven, gradle, cursor);
 							relevantClients.add(client);
-							System.out.println("   %s:%s".formatted(owner, repo));
+							System.out.println("   Client: %s:%s".formatted(owner, repo));
 						}
 					}
 				}
