@@ -27,6 +27,7 @@ public class PullRequestsCSVManager extends CSVManager {
 	@Override
 	protected String[] buildColumns() {
 		return new String[] {"cursor", "owner", "name", "sshUrl", "url", "baseRepo",
+			"baseRef", "baseRefPrefix", "headRepo", "headRef", "headRefPrefix",
 			"title", "number", "state", "draft", "files", "createdAt", "publishedAt",
 			"mergedAt", "closedAt", "groupId", "artifactId", "version", "filePath"};
 	}
@@ -40,6 +41,11 @@ public class PullRequestsCSVManager extends CSVManager {
 		map.put("sshUrl", "%s");
 		map.put("url", "%s");
 		map.put("baseRepo", "%s");
+		map.put("baseRef", "%s");
+		map.put("baseRefPrefix", "%s");
+		map.put("headRepo", "%s");
+		map.put("headRef", "%s");
+		map.put("headRefPrefix", "%s");
 		map.put("title", "%s");
 		map.put("number", "%d");
 		map.put("state", "%s");
@@ -69,6 +75,11 @@ public class PullRequestsCSVManager extends CSVManager {
 				URI sshUrl = repo.getSshUrl();
 				URL url = repo.getUrl();
 				String baseRepo = pr.getBaseRepository();
+				String baseRef = pr.getBaseRef();
+				String baseRefPrefix = pr.getBaseRefPrefix();
+				String headRepo = pr.getHeadRepository();
+				String headRef = pr.getHeadRef();
+				String headRefPrefix = pr.getHeadRefPrefix();
 				String title = pr.getTitle();
 				int number = pr.getNumber();
 				State state = pr.getState();
@@ -87,6 +98,7 @@ public class PullRequestsCSVManager extends CSVManager {
 
 					for (String filePath : pkgFiles) {
 						printer.printRecord(cursor, owner, name, sshUrl, url, baseRepo,
+							baseRef, baseRefPrefix, headRepo, headRef, headRefPrefix,
 							title, number, state, draft, createdAt, publishedAt,
 							mergedAt, closedAt, files, groupId, artifactId, version,
 							filePath);

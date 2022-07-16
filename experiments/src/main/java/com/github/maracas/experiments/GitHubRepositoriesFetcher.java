@@ -329,12 +329,18 @@ public class GitHubRepositoriesFetcher {
 		String state = prJson.get("state").asText();
 		boolean draft = prJson.get("isDraft").asBoolean();
 		String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
+		String baseRef = prJson.get("baseRef").get("name").asText();
+		String baseRefPrefix = prJson.get("baseRef").get("prefix").asText();
+		String headRepository = prJson.get("headRepository").get("nameWithOwner").asText();
+		String headRef = prJson.get("headRef").get("name").asText();
+		String headRefPrefix = prJson.get("headRef").get("prefix").asText();
 		String createdAt = prJson.get("createdAt").asText();
 		String publishedAt = prJson.get("publishedAt").asText();
 		String mergedAt = prJson.get("mergedAt").asText();
 		String closedAt = prJson.get("closedAt").asText();
 
 		PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
+			baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
 			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
 		System.out.println("Fetching %s/%s pull request #%d (%s) files..."
 			.formatted(repo.getOwner(), repo.getName(), number, state));

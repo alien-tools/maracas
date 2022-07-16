@@ -165,9 +165,20 @@ public final class Queries {
 		      node {
 		        ... on PullRequest {
 
-		          baseRepository {
-		            nameWithOwner
-		          }
+		          baseRef {
+                    name
+                    prefix
+                  }
+                  baseRepository {
+                    nameWithOwner
+                  }
+                  headRef {
+                    name
+                    prefix
+                  }
+                  headRepository {
+                    nameWithOwner
+                  }
 
 		          closedAt
 		          createdAt

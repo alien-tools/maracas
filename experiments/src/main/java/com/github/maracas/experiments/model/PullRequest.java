@@ -24,6 +24,31 @@ public class PullRequest {
 	private final String baseRepository;
 
 	/**
+	 * Base reference of the PR
+	 */
+	private final String baseRef;
+
+	/**
+	 * Base reference prefix of the PR
+	 */
+	private final String baseRefPrefix;
+
+	/**
+	 * Head repository of the PR
+	 */
+	private final String headRepository;
+
+	/**
+	 * Head reference of the PR
+	 */
+	private final String headRef;
+
+	/**
+	 * Head reference prefix of the PR
+	 */
+	private final String headRefPrefix;
+
+	/**
 	 * Title of the PR
 	 */
 	private final String title;
@@ -95,12 +120,18 @@ public class PullRequest {
 	 * @param mergedAt       String representing the PR merge date (e.g. "2022-01-31T20:00:00Z")
 	 * @param closedAt       String representing the PR closing date (e.g. "2022-01-31T20:00:00Z")
 	 */
-	public PullRequest(String title, int number, Repository repository, String baseRepository, State state,
-		boolean draft, String createdAt, String publishedAt, String mergedAt, String closedAt) {
+	public PullRequest(String title, int number, Repository repository, String baseRepository,
+		String baseRef, String baseRefPrefix, String headRepository, String headRef, String headRefPrefix,
+		State state, boolean draft, String createdAt, String publishedAt, String mergedAt, String closedAt) {
 		this.title = title;
 		this.number = number;
 		this.repository = repository;
 		this.baseRepository = baseRepository;
+		this.baseRef = baseRef;
+		this.baseRefPrefix = baseRefPrefix;
+		this.headRepository = headRepository;
+		this.headRef = headRef;
+		this.headRefPrefix = headRefPrefix;
 		this.state = state;
 		this.draft = draft;
 		setCreatedAt(createdAt);
@@ -230,7 +261,7 @@ public class PullRequest {
 	 * @return the PR base repository
 	 */
 	public String getBaseRepository() {
-		return baseRepository;
+		return headRepository;
 	}
 
 	/**
@@ -332,4 +363,26 @@ public class PullRequest {
 	public List<String> getFilesPerPackage(String pkgName) {
 		return filesPerPackage.get(pkgName);
 	}
+
+	public String getBaseRef() {
+		return baseRef;
+	}
+
+	public String getBaseRefPrefix() {
+		return baseRefPrefix;
+	}
+
+	public String getHeadRepository() {
+		return headRepository;
+	}
+
+	public String getHeadRef() {
+		return headRef;
+	}
+
+	public String getHeadRefPrefix() {
+		return headRefPrefix;
+	}
+
+
 }

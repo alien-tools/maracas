@@ -58,12 +58,16 @@ public final class GitHubUtil {
 	 * @return REST response
 	 */
 	public static ResponseEntity<String> getQuery(String url, String githubToken) {
-		RestTemplate rest = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", String.join(" ", new String[]{"token", githubToken}));
-		ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET,
-			new HttpEntity<Object>(headers), String.class);
-		return response;
+		try {
+			RestTemplate rest = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Authorization", String.join(" ", new String[]{"token", githubToken}));
+			ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET,
+				new HttpEntity<Object>(headers), String.class);
+			return response;
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
 	}
 
 	/**
