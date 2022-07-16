@@ -18,6 +18,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -43,16 +44,6 @@ import com.github.maracas.experiments.utils.Util;
  * Class in charge of fetching popular Java repositories from GitHub.
  */
 public class GitHubRepositoriesFetcher {
-	public static final int REPO_MIN_STARS = 100;
-	public static final int CLIENT_MIN_STARS = 2;
-
-	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
-	public static final LocalDateTime CLIENT_LAST_PUSHED_DATE = LocalDateTime.of(2022, 01, 01, 0, 0);
-	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 04, 01, 0, 0);
-
-	public static final int PR_LAST_MERGED_IN_DAYS = 180;
-	public static final int LAST_PUSH_IN_DAYS = 180;
-
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
@@ -162,7 +153,7 @@ public class GitHubRepositoriesFetcher {
 			? ", after: \"" + currentCursor + "\""
 			: "";
 		LocalDateTime previousDate = currentDate.minusHours(12);
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(REPO_MIN_STARS,
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
 			GitHubUtil.toGitHubDateFormat(previousDate),
 			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
 
@@ -207,7 +198,7 @@ public class GitHubRepositoriesFetcher {
 					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()) {
 						LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
 
-						if (Util.isActive(lastMerged, PR_LAST_MERGED_IN_DAYS)) {
+						if (Util.isActive(lastMerged, Constants.PR_LAST_MERGED_IN_DAYS)) {
 							Repository repo = new Repository(owner, name, stars,
 								lastPush, sshUrl, url, maven, gradle, cursor);
 
@@ -235,7 +226,7 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchRepositories(endCursor, currentDate);
-				else if (previousDate.isAfter(REPO_LAST_PUSHED_DATE))
+				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
 					fetchRepositories(null, previousDate);
 
 			} else {
@@ -296,8 +287,9 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchPullRequests(endCursor, currentDate, repo);
-				else if (previousDate.isAfter(PR_LAST_CREATED))
+				else if (previousDate.isAfter(Constants.PR_LAST_CREATED))
 					fetchPullRequests(null, previousDate, repo);
+
 			} else {
 				try {
 					Thread.sleep(30000);
@@ -307,7 +299,6 @@ public class GitHubRepositoriesFetcher {
 					Thread.currentThread().interrupt();
 				}
 			}
-
 
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -486,15 +477,17 @@ public class GitHubRepositoriesFetcher {
 		Document doc = GitHubUtil.fetchPage(url);
 
 		if (doc != null) {
-			List<String> packageUrls = doc.select("#dependents .select-menu-item").eachAttr("href");
-			repo.setGitHubPackages(packageUrls.size());
+			List<String> packageRelUrls = doc.select("#dependents .select-menu-item").eachAttr("href");
+			repo.setGitHubPackages(packageRelUrls.size());
 
-			for (String packageUrl: packageUrls) {
-				Document pkgPage = GitHubUtil.fetchPage("https://github.com" + packageUrl);
+			for (String packageRelUrl: packageRelUrls) {
+				String packageUrl = "https://github.com" + packageRelUrl;
+				Document pkgPage = GitHubUtil.fetchPage(packageUrl);
 
 				if (pkgPage != null) {
 					String name = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
-					List<String> clientRepos = pkgPage.select("#dependents .Box-row").eachText();
+					List<String> clientRepos = new ArrayList<String>();
+					fetchGitHubClients(packageUrl, clientRepos);
 					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
 
 					if (element != null) {
@@ -534,6 +527,23 @@ public class GitHubRepositoriesFetcher {
 		}
 	}
 
+	private void fetchGitHubClients(String url, List<String> clientRepos) {
+		Document pkgPage = GitHubUtil.fetchPage(url);
+		if (pkgPage != null) {
+			List<String> clients = pkgPage.select("#dependents .Box-row").eachText();
+			clientRepos.addAll(clients);
+			Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
+
+			if (pagination != null && !pagination.isEmpty()) {
+				Element nextBtn = pagination.get(1);
+				String nextUrl = nextBtn.attr("abs:href");
+
+				if (!nextUrl.isEmpty())
+					fetchGitHubClients(nextUrl, clientRepos);
+			}
+		}
+	}
+
 	/**
 	 * Extracts the list of relevant clients given a list of strings representing
 	 * the client repositories (e.g. {"google/guava", "alien-tools/maracas"}).
@@ -552,7 +562,7 @@ public class GitHubRepositoriesFetcher {
 			String repo = clientArray[2];
 
 			String query = Queries.GRAPHQL_CLIENT_QUERY
-				.formatted(owner, repo, CLIENT_MIN_STARS, CLIENT_LAST_PUSHED_DATE);
+				.formatted(owner, repo, Constants.CLIENT_MIN_STARS, Constants.CLIENT_LAST_PUSHED_DATE);
 
 			try {
 				ResponseEntity<String> response = GitHubUtil.postQuery(query,

@@ -99,8 +99,8 @@ public class PullRequestsCSVManager extends CSVManager {
 					for (String filePath : pkgFiles) {
 						printer.printRecord(cursor, owner, name, sshUrl, url, baseRepo,
 							baseRef, baseRefPrefix, headRepo, headRef, headRefPrefix,
-							title, number, state, draft, createdAt, publishedAt,
-							mergedAt, closedAt, files, groupId, artifactId, version,
+							title, number, state, draft, files, createdAt, publishedAt,
+							mergedAt, closedAt, groupId, artifactId, version,
 							filePath);
 					}
 				}
