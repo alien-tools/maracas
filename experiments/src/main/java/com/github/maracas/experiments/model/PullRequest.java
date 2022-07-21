@@ -14,6 +14,16 @@ import com.github.maracas.experiments.utils.Util;
  */
 public class PullRequest {
 	/**
+	 * Title of the PR
+	 */
+	private final String title;
+
+	/**
+	 * Number of the PR
+	 */
+	private final int number;
+
+	/**
 	 * Repository where the PR is being merged
 	 */
 	private final Repository repository;
@@ -47,16 +57,6 @@ public class PullRequest {
 	 * Head reference prefix of the PR
 	 */
 	private final String headRefPrefix;
-
-	/**
-	 * Title of the PR
-	 */
-	private final String title;
-
-	/**
-	 * Number of the PR
-	 */
-	private final int number;
 
 	/**
 	 * State of the PR
@@ -93,8 +93,14 @@ public class PullRequest {
 	 */
 	private List<String> files;
 
+	/**
+	 * Map between modified package names and their modified files.
+	 */
 	private Map<String, List<String>> filesPerPackage;
 
+	/**
+	 * {@link RepositoryPackage} modified by the pull request.
+	 */
 	private List<RepositoryPackage> modifiedPackages;
 
 	/**
@@ -105,20 +111,23 @@ public class PullRequest {
 	}
 
 	/**
-	 * Crates a {@link PullRequest} instance. {@link LocalDate} fields are
-	 * initialized to
+	 * Crates a {@link PullRequest} instance.
 	 *
-	 * @param number         Number of the PR
-	 * @param title          Title of the PR
-	 * @param repository     Repository where the PR is being merged
-	 * @param baseRepository Base repository of the PR represented by the owner/repo
-	 *                       string (e.g. "google/guava")
-	 * @param state          {@link State} of the PR
-	 * @param draft          Flag indicating if the PR is a draft
-	 * @param createdAt      String representing the PR creation date (e.g. "2022-01-01T20:00:00Z")
-	 * @param publishedAt    String representing the PR publication date (e.g. "2022-01-01T20:00:00Z")
-	 * @param mergedAt       String representing the PR merge date (e.g. "2022-01-31T20:00:00Z")
-	 * @param closedAt       String representing the PR closing date (e.g. "2022-01-31T20:00:00Z")
+	 * @param title           Title of the PR
+	 * @param number          Number of the PR
+	 * @param repository      Repository where the PR is being merged
+	 * @param baseRepository  Base repository of the PR
+	 * @param baseRef         Base reference of the PR
+	 * @param baseRefPrefix   Base reference prefix of the PR
+	 * @param headRepository  Head repository of the PR
+	 * @param headRef         Head reference of the PR
+	 * @param headRefPrefix   Head reference prefix of the PR
+	 * @param state           {@link State} of the PR
+	 * @param draft           Flag indicating if the PR is a draft
+	 * @param createdAt       String representing the PR creation date (e.g. "2022-01-01T20:00:00Z")
+	 * @param publishedAt     String representing the PR publication date (e.g. "2022-01-01T20:00:00Z")
+	 * @param mergedAt        String representing the PR merge date (e.g. "2022-01-31T20:00:00Z")
+	 * @param closedAt        String representing the PR closing date (e.g. "2022-01-31T20:00:00Z")
 	 */
 	public PullRequest(String title, int number, Repository repository, String baseRepository,
 		String baseRef, String baseRefPrefix, String headRepository, String headRef, String headRefPrefix,
@@ -141,6 +150,104 @@ public class PullRequest {
 		this.files = new ArrayList<String>();
 		this.filesPerPackage = new HashMap<String, List<String>>();
 		this.modifiedPackages = new ArrayList<RepositoryPackage>();
+	}
+
+	/**
+	 * Returns the PR title.
+	 *
+	 * @return the PR title
+	 */
+	public String getTitle() {
+		return title;
+	}
+
+	/**
+	 * Returns the PR number.
+	 *
+	 * @return PR number
+	 */
+	public int getNumber() {
+		return number;
+	}
+
+	/**
+	 * Returns the repository where the PR is being merged.
+	 *
+	 * @return Repository where the PR is being merged
+	 */
+	public Repository getRepository() {
+		return repository;
+	}
+
+	/**
+	 * Returns the PR base repository.
+	 *
+	 * @return the PR base repository
+	 */
+	public String getBaseRepository() {
+		return baseRepository;
+	}
+
+	/**
+	 * Returns the PR base reference.
+	 *
+	 * @return the PR base reference
+	 */
+	public String getBaseRef() {
+		return baseRef;
+	}
+
+	/**
+	 * Returns the PR base reference prefix.
+	 *
+	 * @return the PR base reference prefix
+	 */
+	public String getBaseRefPrefix() {
+		return baseRefPrefix;
+	}
+
+	/**
+	 * Returns the PR head repository.
+	 *
+	 * @return the PR head repository
+	 */
+	public String getHeadRepository() {
+		return headRepository;
+	}
+
+	/**
+	 * Returns the PR head reference.
+	 *
+	 * @return the PR head reference
+	 */
+	public String getHeadRef() {
+		return headRef;
+	}
+
+	/**
+	 * Returns the PR head reference prefix.
+	 *
+	 * @return the PR head reference prefix
+	 */
+	public String getHeadRefPrefix() {
+		return headRefPrefix;
+	}
+
+	/**
+	 * Returns the PR {@link State}.
+	 *
+	 * @return the PR {@link State}
+	 */
+	public State getState() {
+		return state;
+	}
+
+	/**
+	 * Indicates if the PR is a draft.
+	 * @return {@code true} if the PR is a draft, {@code false} otherwise
+	 */
+	public boolean isDraft() {
+		return draft;
 	}
 
 	/**
@@ -256,41 +363,6 @@ public class PullRequest {
 	}
 
 	/**
-	 * Returns the PR base repository.
-	 *
-	 * @return the PR base repository
-	 */
-	public String getBaseRepository() {
-		return headRepository;
-	}
-
-	/**
-	 * Returns the PR title.
-	 *
-	 * @return the PR title
-	 */
-	public String getTitle() {
-		return title;
-	}
-
-	/**
-	 * Returns the PR {@link State}.
-	 *
-	 * @return the PR {@link State}
-	 */
-	public State getState() {
-		return state;
-	}
-
-	/**
-	 * Indicates if the PR is a draft.
-	 * @return {@code true} if the PR is a drftf, {@code false} otherwise
-	 */
-	public boolean isDraft() {
-		return draft;
-	}
-
-	/**
 	 * Returns the list of paths of the modified files.
 	 *
 	 * @return List of paths of the modified files
@@ -319,23 +391,18 @@ public class PullRequest {
 	}
 
 	/**
-	 * Returns the PR number.
+	 * Returns the packages that have been modified by the pull request.
 	 *
-	 * @return PR number
+	 * @return packages modified by the pull request
 	 */
-	public int getNumber() {
-		return number;
+	public List<RepositoryPackage> getModifiedPackages() {
+		return modifiedPackages;
 	}
 
 	/**
-	 * Returns the repository where the PR is being merged.
-	 *
-	 * @return Repository where the PR is being merged
+	 * Updates the  {@code modifiedPackages} attribute based on the files
+	 * modified by the pull request.
 	 */
-	public Repository getRepository() {
-		return repository;
-	}
-
 	public void gatherModifiedPackages() {
 		Set<String> packagePaths = repository.getRepoPackagesByPath().keySet();
 
@@ -352,37 +419,24 @@ public class PullRequest {
 		}
 	}
 
-	public List<RepositoryPackage> getModifiedPackages() {
-		return modifiedPackages;
-	}
-
+	/**
+	 * Returns the mapping between the modified package name and the list of
+	 * modified files of such package.
+	 *
+	 * @return map between modified package names and their modified files.
+	 */
 	public Map<String, List<String>> getFilesPerPackage() {
 		return filesPerPackage;
 	}
 
+	/**
+	 * Returns the list of modified files of a given package given its name.
+	 *
+	 * @param pkgName  Name of the modified package
+	 * @return modified files of a given package.
+	 */
 	public List<String> getFilesPerPackage(String pkgName) {
 		return filesPerPackage.get(pkgName);
 	}
-
-	public String getBaseRef() {
-		return baseRef;
-	}
-
-	public String getBaseRefPrefix() {
-		return baseRefPrefix;
-	}
-
-	public String getHeadRepository() {
-		return headRepository;
-	}
-
-	public String getHeadRef() {
-		return headRef;
-	}
-
-	public String getHeadRefPrefix() {
-		return headRefPrefix;
-	}
-
 
 }
