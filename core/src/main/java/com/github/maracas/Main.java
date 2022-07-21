@@ -7,7 +7,7 @@ public class Main {
 	public static void main(String[] args) {
 		Path v1 = Paths.get("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 		Path v2 = Paths.get("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c = Paths.get("test-data/comp-changes/client/src/");
+		Path c = Paths.get("test-data/comp-changes/client/");
 		Path sources = Paths.get("test-data/comp-changes/old/");
 
 		AnalysisQuery query = AnalysisQuery.builder()

@@ -81,11 +81,11 @@ class GradleBuilderTest {
 	}
 
 	@Test
-	void build_multi_core_default() {
+	void build_multi_core_default_with_version() {
 		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("core")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
-		assertTrue(builder.locateJar().get().getFileName().endsWith("core.jar"));
+		assertTrue(builder.locateJar().get().getFileName().endsWith("core-0.1.0.jar"));
 	}
 
 	@Test

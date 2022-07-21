@@ -14,7 +14,6 @@ class BreakbotConfigTests {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
 		assertThat(c.build().module(), is(""));
-		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), is(empty()));
 		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), nullValue());
@@ -37,7 +36,7 @@ class BreakbotConfigTests {
 
 		BreakbotConfig.GitHubRepository r = c.clients().get(0);
 		assertThat(r.repository(), is("a/b"));
-		assertThat(r.sources(), nullValue());
+		assertThat(r.module(), nullValue());
 		assertThat(r.branch(), nullValue());
 		assertThat(r.sha(), nullValue());
 	}
@@ -54,19 +53,19 @@ class BreakbotConfigTests {
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
 		assertThat(r1.repository(), is("a/b"));
-		assertThat(r1.sources(), nullValue());
+		assertThat(r1.module(), nullValue());
 		assertThat(r1.branch(), nullValue());
 		assertThat(r1.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r2 = c.clients().get(1);
 		assertThat(r2.repository(), is("a/c"));
-		assertThat(r2.sources(), nullValue());
+		assertThat(r2.module(), nullValue());
 		assertThat(r2.branch(), nullValue());
 		assertThat(r2.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r3 = c.clients().get(2);
 		assertThat(r3.repository(), is("b/d"));
-		assertThat(r3.sources(), nullValue());
+		assertThat(r3.module(), nullValue());
 		assertThat(r3.branch(), nullValue());
 		assertThat(r3.sha(), nullValue());
 	}
@@ -76,20 +75,20 @@ class BreakbotConfigTests {
 		String s = """
 			clients:
 			  - repository: a/b
-			    sources: src
+			    module: sub
 			  - repository: a/c""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.clients(), hasSize(2));
 
 		BreakbotConfig.GitHubRepository r1 = c.clients().get(0);
 		assertThat(r1.repository(), is("a/b"));
-		assertThat(r1.sources(), is("src"));
+		assertThat(r1.module(), is("sub"));
 		assertThat(r1.branch(), nullValue());
 		assertThat(r1.sha(), nullValue());
 
 		BreakbotConfig.GitHubRepository r2 = c.clients().get(1);
 		assertThat(r2.repository(), is("a/c"));
-		assertThat(r2.sources(), nullValue());
+		assertThat(r2.module(), nullValue());
 		assertThat(r2.branch(), nullValue());
 		assertThat(r2.sha(), nullValue());
 	}
@@ -105,7 +104,6 @@ class BreakbotConfigTests {
 			    skipDepClean: true""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().module(), is("submodule/"));
-		assertThat(c.build().sources(), is(emptyString()));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
 		assertThat(c.build().properties(), allOf(
 			aMapWithSize(2),
@@ -119,11 +117,9 @@ class BreakbotConfigTests {
 	void testCustomSources() {
 		String s = """
 			build:
-			  module: module/
-			  sources: module/src/main/java""";
+			  module: module/""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
 		assertThat(c.build().module(), is("module/"));
-		assertThat(c.build().sources(), is("module/src/main/java"));
 	}
 
 	@Test
@@ -159,7 +155,7 @@ class BreakbotConfigTests {
 		String s = """
 			clients:
 			  - repository: a/b
-			    sources: src
+			    module: sub
 			    sha: a3b98f
 			  - repository: a/c
 			    sha: 52f1aa
@@ -170,6 +166,7 @@ class BreakbotConfigTests {
 		assertThat(c.clients(), hasSize(4));
 		assertThat(c.clients().get(0).sha(), is("a3b98f"));
 		assertThat(c.clients().get(0).branch(), nullValue());
+		assertThat(c.clients().get(0).module(), is("sub"));
 		assertThat(c.clients().get(1).sha(), is("52f1aa"));
 		assertThat(c.clients().get(1).branch(), nullValue());
 		assertThat(c.clients().get(2).sha(), nullValue());

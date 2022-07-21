@@ -57,7 +57,6 @@ public class AnalyzeRepositoryHistory {
 	private final ClientsManager clientsManager = new ClientsManager();
 	private final Properties buildProperties;
 	private final Path module;
-	private final Path sources;
 
 	private final Path workingDirectory;
 	private final Path clonesPath;
@@ -72,7 +71,6 @@ public class AnalyzeRepositoryHistory {
 		List<String> clients,
 		Properties buildProperties,
 		Path module,
-		Path sources,
 		Path workingDirectory
 	) throws IOException {
 		this.owner = owner;
@@ -80,7 +78,6 @@ public class AnalyzeRepositoryHistory {
 		this.fullName = owner + "/" + name;
 		this.buildProperties = buildProperties;
 		this.module = module;
-		this.sources = sources;
 
 		this.workingDirectory = workingDirectory;
 		this.clonesPath = workingDirectory.resolve("clones");
@@ -154,8 +151,6 @@ public class AnalyzeRepositoryHistory {
 						});
 						var buildV1 = new CommitBuilder(forgePr.mergeBase(), cloneV1, configV1);
 						var buildV2 = new CommitBuilder(forgePr.head(), cloneV2, configV2);
-						buildV1.setSources(sources);
-						buildV2.setSources(sources);
 
 						var reportFile = reportsPath.resolve(pr.getNumber() + "-report.json");
 
@@ -283,13 +278,13 @@ public class AnalyzeRepositoryHistory {
 						.resolve(f[0])
 						.resolve(f[1])
 						.resolve(commit.getSHA1());
-				var builder = new CommitBuilder(forgeCommit, wd);
+				var builder = new CommitBuilder(forgeCommit, wd, Paths.get(""));
 
 				// FIXME: ;)
 				if ("dspot".equals(f[1]))
-					builder.setSources(Paths.get("dspot/src/main/java"));
+					builder = new CommitBuilder(forgeCommit, wd, Paths.get("dspot"));
 				if ("nopol".equals(f[1]))
-					builder.setSources(Paths.get("nopol/src/main/java"));
+					builder = new CommitBuilder(forgeCommit, wd, Paths.get("nopol"));
 
 				return builder;
 			})
@@ -322,7 +317,6 @@ public class AnalyzeRepositoryHistory {
 
 	public static void spoon() throws IOException {
 		Path spoonModule = Paths.get("");
-		Path spoonSources = null;
 		var spoonProps = new Properties();
 		spoonProps.setProperty("maven.test.skip", "true");
 		spoonProps.setProperty("skipDepClean", "true");
@@ -350,13 +344,12 @@ public class AnalyzeRepositoryHistory {
 		);
 
 		new AnalyzeRepositoryHistory(
-			"INRIA", "spoon", spoonClients, spoonProps, spoonModule, spoonSources, Paths.get("./data"))
+			"INRIA", "spoon", spoonClients, spoonProps, spoonModule, Paths.get("./data"))
 			.analyzePRs(2000, 4);
 	}
 
 	public static void javaparser() throws IOException {
 		var jpModule = Paths.get("javaparser-core");
-		var jpSources = Paths.get("javaparser-core/src/main/java");
 		var jpProps = new Properties();
 		jpProps.setProperty("maven.test.skip", "true");
 
@@ -413,7 +406,7 @@ public class AnalyzeRepositoryHistory {
 		);
 
 		new AnalyzeRepositoryHistory(
-			"javaparser", "javaparser", jpClients, jpProps, jpModule, jpSources, Paths.get("./data"))
+			"javaparser", "javaparser", jpClients, jpProps, jpModule, Paths.get("./data"))
 			.analyzePRs(2000, 4);
 	}
 

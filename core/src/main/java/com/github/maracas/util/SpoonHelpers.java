@@ -4,7 +4,9 @@ import japicmp.model.JApiConstructor;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
+import org.apache.commons.lang3.ArrayUtils;
 import spoon.Launcher;
+import spoon.MavenLauncher;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
@@ -17,7 +19,9 @@ import spoon.reflect.reference.CtTypeReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -27,28 +31,45 @@ public final class SpoonHelpers {
 	private SpoonHelpers() {
 	}
 
-	public static CtModel buildSpoonModel(Path clientSources, Path libraryJar) {
+	public static CtModel buildSpoonModelFromSources(Path sources, Path libraryJar) {
+		Launcher launcher;
+		if (Files.exists(sources.resolve("pom.xml")))
+			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
+		else if (Files.exists(sources.resolve("build.gradle")))
+			launcher = new GradleLauncher(sources);
+		else {
+			launcher = new Launcher();
+			launcher.getEnvironment().setComplianceLevel(11);
+			launcher.addInputResource(sources.toAbsolutePath().toString());
+		}
+
+		if (libraryJar != null) {
+			String[] cp = launcher.getEnvironment().getSourceClasspath();
+			String jar = libraryJar.toAbsolutePath().toString();
+			String[] newCp = ArrayUtils.add(cp, jar);
+			launcher.getEnvironment().setSourceClasspath(newCp);
+		}
+
+		return launcher.buildModel();
+	}
+
+	public static CtModel buildSpoonModelFromJar(Path jar) {
 		Launcher launcher = new Launcher();
-		launcher.getEnvironment().setComplianceLevel(11);
 
-		if (libraryJar != null)
-			try {
-				// Spoon will prioritize the JVM's classpath over our own
-				// custom classpath in case of conflict. Not what we want,
-				// so we use a custom child-first classloader instead.
-				// cf. https://github.com/INRIA/spoon/issues/3789
-				//String[] javaCp = { cp.toAbsolutePath().toString() };
-				//launcher.getEnvironment().setSourceClasspath(javaCp);
+		try {
+			// Spoon will prioritize the JVM's classpath over our own
+			// custom classpath in case of conflict. Not what we want,
+			// so we use a custom child-first classloader instead.
+			// cf. https://github.com/INRIA/spoon/issues/3789
+			//String[] javaCp = { cp.toAbsolutePath().toString() };
+			//launcher.getEnvironment().setSourceClasspath(javaCp);
 
-				URL[] cp = {new URL("file:" + libraryJar.toAbsolutePath())};
-				ClassLoader cl = new ParentLastURLClassLoader(cp);
-				launcher.getEnvironment().setInputClassLoader(cl);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-
-		if (clientSources != null)
-			launcher.addInputResource(clientSources.toAbsolutePath().toString());
+			URL[] cp = {new URL("file:" + jar.toAbsolutePath())};
+			ClassLoader cl = new ParentLastURLClassLoader(cp);
+			launcher.getEnvironment().setInputClassLoader(cl);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 
 		return launcher.buildModel();
 	}
@@ -214,6 +235,11 @@ public final class SpoonHelpers {
 
 		public ParentLastURLClassLoader(URL[] urls) {
 			super(urls, Thread.currentThread().getContextClassLoader());
+			childClassLoader = new ChildURLClassLoader(urls, new FindClassClassLoader(this.getParent()));
+		}
+
+		public ParentLastURLClassLoader(URL[] urls, ClassLoader parent) {
+			super(urls, parent);
 			childClassLoader = new ChildURLClassLoader(urls, new FindClassClassLoader(this.getParent()));
 		}
 

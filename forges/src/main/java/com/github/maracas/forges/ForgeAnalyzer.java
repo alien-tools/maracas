@@ -8,11 +8,7 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -55,7 +51,7 @@ public class ForgeAnalyzer {
       throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
     Delta delta = Maracas.computeDelta(jarV1.get(), jarV2.get(), options);
-    delta.populateLocations(v1.getSources());
+    delta.populateLocations(v1.getClonePath());
     return delta;
   }
 
@@ -76,11 +72,11 @@ public class ForgeAnalyzer {
           c -> CompletableFuture.supplyAsync(
             () -> {
               c.cloneCommit();
-              return Maracas.computeDeltaImpact(c.getSources(), delta);
+              return Maracas.computeDeltaImpact(c.getModulePath(), delta);
             },
             executorService
-          ).exceptionally(t -> new DeltaImpact(c.getSources(), delta, t))
-        ));
+          ).exceptionally(t -> new DeltaImpact(c.getModulePath(), delta, t))
+      ));
 
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 

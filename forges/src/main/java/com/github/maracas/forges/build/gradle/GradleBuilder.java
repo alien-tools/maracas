@@ -3,18 +3,18 @@ package com.github.maracas.forges.build.gradle;
 import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
-import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.io.IoBuilder;
 import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * There doesn't seem to be a way to skip tasks (e.g., "-x test"),
@@ -48,11 +48,8 @@ public class GradleBuilder extends AbstractBuilder {
 				? DEFAULT_PROPERTIES
 				: config.getProperties();
 
-			try {
-				Stopwatch sw = Stopwatch.createStarted();
-				GradleConnector.newConnector()
-					.forProjectDirectory(config.getBasePath().resolve(config.getModule()).toFile())
-					.connect()
+			try (ProjectConnection project = getProjectConnection(config)) {
+				project
 					.newBuild()
 					.setStandardOutput(null)
 					.setStandardError(IoBuilder.forLogger(logger).setLevel(Level.ERROR).buildOutputStream())
@@ -67,15 +64,48 @@ public class GradleBuilder extends AbstractBuilder {
 
 	@Override
 	public Optional<Path> locateJar() {
-		Path workingDirectory = config.getBasePath().resolve(config.getModule());
-		Path jar = workingDirectory
-			.resolve("build")
-			.resolve("libs")
-			.resolve(workingDirectory.getFileName().toString() + ".jar");
+		try (ProjectConnection project = getProjectConnection(config)) {
+			Map<String, String> props = readGradleProperties(project);
+			Path buildPath = Paths.get(props.getOrDefault("buildDir",
+				config.getBasePath().resolve(config.getModule()).toAbsolutePath().toString()));
+			Path libsPath = buildPath.resolve(props.getOrDefault("libsDirName", "libs"));
+			String version = props.get("version");
+			String versionQualifier = (version == null || "unspecified".equals(version))
+				? ""
+				: "-" + props.get("version");
+			String jarName = props.getOrDefault("name", config.getModule().toString()) + versionQualifier + ".jar";
+			Path jar = libsPath.resolve(jarName);
 
-		if (Files.exists(jar))
-			return Optional.of(jar);
-		else
-			return Optional.empty();
+			if (Files.exists(jar))
+				return Optional.of(jar);
+			else
+				return Optional.empty();
+		} catch (org.gradle.tooling.BuildException | org.gradle.tooling.exceptions.UnsupportedBuildArgumentException e) {
+			throw new BuildException("Gradle build failed: %s".formatted(e.getMessage()), e);
+		}
+	}
+
+	private ProjectConnection getProjectConnection(BuildConfig config) {
+		return GradleConnector.newConnector()
+			.forProjectDirectory(config.getBasePath().resolve(config.getModule()).toFile())
+			.connect();
+	}
+
+	private Map<String, String> readGradleProperties(ProjectConnection project) {
+		Map<String, String> props = new HashMap<>();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		project.newBuild()
+			.setStandardOutput(baos)
+			.forTasks("properties")
+			.run();
+
+		baos.toString().lines().forEach(l -> {
+			String[] fields = l.split(": ");
+
+			if (fields.length == 2)
+				props.put(fields[0], fields[1]);
+		});
+
+		return props;
 	}
 }

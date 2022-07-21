@@ -140,20 +140,22 @@ public class PullRequestService {
 
 				try {
 					Repository clientRepo =
-						StringUtils.isEmpty(c.branch()) ?
-							forge.fetchRepository(clientOwner, clientName) :
-							forge.fetchRepository(clientOwner, clientName, c.branch());
+						StringUtils.isEmpty(c.branch())
+							? forge.fetchRepository(clientOwner, clientName)
+							: forge.fetchRepository(clientOwner, clientName, c.branch());
 
 					String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
 					Commit clientCommit =
-						StringUtils.isEmpty(c.sha()) ?
-							new Commit(clientRepo, clientSha) :
-							new Commit(clientRepo, c.sha());
+						StringUtils.isEmpty(c.sha())
+							? new Commit(clientRepo, clientSha)
+							: new Commit(clientRepo, c.sha());
 					Path clientClone = clonePath(pr, clientCommit);
-					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone);
-					if (!StringUtils.isEmpty(c.sources()))
-						clientBuilder.setSources(Paths.get(c.sources()));
+					Path clientModule =
+						c.module() != null
+							? Paths.get(c.module())
+							: Paths.get("");
 
+					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
 					clientBuilders.put(clientClone, clientBuilder);
 				} catch (Exception e) {
 					clientReports.add(ClientReport.error(clientName, e));
@@ -203,11 +205,7 @@ public class PullRequestService {
 		config.build().goals().forEach(g -> buildConfig.addGoal(g));
 		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-		CommitBuilder builder = new CommitBuilder(c, clonePath, buildConfig);
-		if (!StringUtils.isEmpty(config.build().sources()))
-			builder.setSources(Paths.get(config.build().sources()));
-
-		return builder;
+		return new CommitBuilder(c, clonePath, buildConfig);
 	}
 
 	public boolean isProcessing(PullRequest pr) {
