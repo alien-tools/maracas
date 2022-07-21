@@ -31,17 +31,35 @@ public final class Util {
 
 	/**
 	 * Indicates if a {@link LocalDate} instance lays within the boundaries of
-	 * the current date and an arbitrary number of passed days.
+	 * the initial date and an arbitrary number of passed days.
 	 *
-	 * @param lastActivity        {@link LocalDate} instance
+	 * @param lastActivity        Last activity {@link LocalDate}
+	 * @param initialDate         Initial {@link LocalDate}
 	 * @param lastAllowedActivity Number of days to consider back
 	 * @return {@code true} if the {@link LocalDate} instance lays within the
 	 *         boundaries; {@code false} otherwise
 	 */
-	public static boolean isActive(LocalDate lastActivity, int lastAllowedActivity) {
-		LocalDate now = LocalDate.now();
-		Duration duration = Duration.between(lastActivity.atStartOfDay(), now.atStartOfDay());
+	public static boolean isActive(LocalDate lastActivity, LocalDate initialDate,
+		int lastAllowedActivity) {
+		Duration duration = Duration.between(lastActivity.atStartOfDay(),
+			initialDate.atStartOfDay());
 		return duration.toDays() <= lastAllowedActivity;
+	}
+
+	/**
+	 * Indicates if a string in the form of "yyyy-MM-ddThh:mm:ssZ" lays within
+	 * the boundaries of the current date and an arbitrary number of passed days.
+	 *
+	 * @param lastActivity        Last activity in the form of "yyyy-MM-ddThh:mm:ssZ"
+	 * @param initialDate         Initial {@link LocalDate}
+	 * @param lastAllowedActivity Number of days to consider back
+	 * @return {@code true} if the {@link LocalDate} instance lays within the
+	 *         boundaries; {@code false} otherwise
+	 */
+	public static boolean isActive(String lastActivity, LocalDate initialDate,
+		int lastAllowedActivity) {
+		LocalDate lastActivityDate = Util.stringToLocalDate(lastActivity);
+		return isActive(lastActivityDate, initialDate, lastAllowedActivity);
 	}
 
 	/**

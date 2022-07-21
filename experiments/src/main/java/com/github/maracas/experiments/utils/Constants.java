@@ -9,7 +9,6 @@ public final class Constants {
 	private Constants() {}
 
 	public static final String CLIENTS_CSV_PATH = "clients.csv";
-	public static final String ERRORS_CSV_PATH = "errors.csv";
 	public static final String PRS_CSV_PATH = "prs.csv";
 
 	public static final LocalDateTime STARTING_DATE = LocalDateTime.of(2022, 7, 1, 0, 0);

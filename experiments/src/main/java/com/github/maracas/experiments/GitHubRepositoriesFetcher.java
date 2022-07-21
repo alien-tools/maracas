@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -27,11 +29,10 @@ import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.maracas.experiments.csv.CSVManager;
 import com.github.maracas.experiments.csv.ClientsCSVManager;
-import com.github.maracas.experiments.csv.ErrorRecord;
 import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
-import com.github.maracas.experiments.csv.ErrorsCSVManager;
 import com.github.maracas.experiments.csv.PullRequestsCSVManager;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
@@ -46,9 +47,26 @@ import com.github.maracas.experiments.utils.Util;
  * Class in charge of fetching popular Java repositories from GitHub.
  */
 public class GitHubRepositoriesFetcher {
+	/**
+	 * Class logger
+	 */
+	private static final Logger logger = LogManager.getLogger(GitHubRepositoriesFetcher.class);
+
+	/**
+	 * URL to GitHub search
+	 */
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
+
+	/**
+	 * URL to the GraphQL GitHub API
+	 */
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
+
+	/**
+	 * Pointer to the GitHub access token
+	 */
 	private static final String GITHUB_ACCESS_TOKEN = System.getenv("GITHUB_ACCESS_TOKEN");
+
 
 	/**
 	 * List of GitHub repositories considered for the experiment
@@ -59,11 +77,6 @@ public class GitHubRepositoriesFetcher {
 	 * Clients CSV manager
 	 */
 	private CSVManager clientsCsv;
-
-	/**
-	 * Errors CSV manager
-	 */
-	private CSVManager errorsCsv;
 
 	/**
 	 * Pull requests CSV manager
@@ -80,38 +93,27 @@ public class GitHubRepositoriesFetcher {
 	 */
 	private int totalCases;
 
+	/**
+	 * Initial date of the experiment
+	 */
+	private LocalDate initialDate;
+
 
 	/**
 	 * Creates a {@link GitHubRepositoriesFetcher} instance.
 	 */
-	public GitHubRepositoriesFetcher() {
+	public GitHubRepositoriesFetcher(LocalDate initialDate) {
 		this.repositories = new ArrayList<Repository>();
 		this.analyzedCases = 0;
 		this.totalCases = 0;
+		this.initialDate = initialDate;
 
 		try {
 			clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
-			errorsCsv = new ErrorsCSVManager(Constants.ERRORS_CSV_PATH);
 			pullRequestsCsv = new PullRequestsCSVManager(Constants.PRS_CSV_PATH);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
-	}
-
-	/**
-	 * Writes a new record on the errors CSV file.
-	 *
-	 * @param cursor   Cursor associated with the error
-	 * @param owner    Owner of the repository associated with the error
-	 * @param name     Name of the repository associated with the error
-	 * @param code     Code of the error (see {@link ExperimentErrorCode})
-	 * @param comments Additional comments to describe the error
-	 */
-	private void writeCSVErrorRecord(String cursor, String owner, String name,
-		ExperimentErrorCode code,  String comments) {
-		ErrorRecord error = new ErrorRecord(cursor, owner, name, code, comments);
-		error.printLog();
-		errorsCsv.writeRecord(error);
 	}
 
 	/**
@@ -153,7 +155,7 @@ public class GitHubRepositoriesFetcher {
 	public void fetchRepositories(String currentCursor, LocalDateTime currentDate) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
-			: "";
+				: "";
 
 		LocalDateTime previousDate = currentDate.minusHours(12);
 		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
@@ -177,7 +179,7 @@ public class GitHubRepositoriesFetcher {
 
 				for (JsonNode repoEdge: search.withArray("edges")) {
 					analyzedCases++;
-					System.out.println("Count: %d of %d".formatted(analyzedCases, totalCases));
+					logger.info("Count: {} of {}", analyzedCases, totalCases);
 
 					String cursor = repoEdge.get("cursor").asText();
 					JsonNode repoJson = repoEdge.get("node");
@@ -199,32 +201,25 @@ public class GitHubRepositoriesFetcher {
 					JsonNode prs = repoJson.get("pullRequests");
 					List<String> lastPR = prs.findValuesAsText("mergedAt");
 
-					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()) {
-						LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
+					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()
+						&& Util.isActive(lastPR.get(0), initialDate, Constants.PR_LAST_MERGED_IN_DAYS)) {
+						Repository repo = new Repository(owner, name, stars, createdAt,
+							pushedAt, sshUrl, url, maven, gradle, cursor);
 
-						if (Util.isActive(lastMerged, Constants.PR_LAST_MERGED_IN_DAYS)) {
-							Repository repo = new Repository(owner, name, stars, createdAt,
-								pushedAt, sshUrl, url, maven, gradle, cursor);
+						logger.info("Fetching {}/{} POM files...", owner, name);
+						fetchPomFiles(repo);
 
-							System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
-							fetchPomFiles(repo);
+						logger.info("Fetching {}/{} clients...", owner, name);
+						fetchRepoPackagesAndClients(repo);
+						repositories.add(repo);
 
-							System.out.println("Fetching %s/%s clients...".formatted(owner, name));
-							fetchRepoPackagesAndClients(repo);
-							repositories.add(repo);
-
-							System.out.println("Fetching %s/%s pull requests...".formatted(owner, name));
-							LocalDateTime datetime = LocalDateTime.now();
-							fetchPullRequests(null, datetime, repo);
-
-						} else {
-							writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.INACTIVE_REPO,
-								"{lastMerged: %s}".formatted(lastMerged.toString()));
-						}
+						logger.info("Fetching {}/{} pull requests...", owner, name);
+						LocalDateTime datetime = LocalDateTime.now();
+						fetchPullRequests(null, datetime, repo);
 					} else {
-						writeCSVErrorRecord(cursor, owner, name, ExperimentErrorCode.IRRELEVANT_REPO,
-							"{disabled: %b, empty: %b, locked: %b, maven: %b, lastPR: %b}"
-							.formatted(disabled, empty, locked, maven, lastPR.isEmpty()));
+						logger.warn("{} {}/{} cursor:{} [disabled: {}, empty: {}, locked: {}, "
+							+ "maven: {}, active: {}]", ExperimentErrorCode.IRRELEVANT_REPO,
+							owner, name, cursor, disabled, empty, locked, maven, lastPR.isEmpty());
 					}
 				}
 
@@ -236,25 +231,25 @@ public class GitHubRepositoriesFetcher {
 			} else {
 				for (JsonNode error: json.withArray("errors")) {
 					String type = error.get("type").asText();
-					writeCSVErrorRecord(currentCursor, null, null,
-						ExperimentErrorCode.EXCEEDED_RATE_LIMIT, type);
+					logger.error("{}:{} cursor:{}", ExperimentErrorCode.EXCEEDED_RATE_LIMIT,
+						type, currentCursor);
 				}
 
 				if (!response.getStatusCode().equals(HttpStatus.OK))
-					writeCSVErrorRecord(currentCursor, null, null,
-						ExperimentErrorCode.GITHUB_API_ERROR, response.getBody());
+					logger.error("{} cursor:{}: {}/{}", ExperimentErrorCode.GITHUB_API_ERROR,
+						response.getStatusCode(), currentCursor, response.getBody());
 
 				try {
 					Thread.sleep(30000);
 					fetchRepositories(currentCursor, currentDate);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					logger.error(e);
 					Thread.currentThread().interrupt();
 				}
 			}
 
 		} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -267,7 +262,7 @@ public class GitHubRepositoriesFetcher {
 	private void fetchPullRequests(String currentCursor, LocalDateTime currentDate, Repository repo) {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
-			: "";
+				: "";
 		LocalDateTime previousDate = currentDate.minusHours(12);
 		String query = Queries.GRAPHQL_PRS_QUERY.formatted(repo.getOwner(),
 			repo.getName(), GitHubUtil.toGitHubDateFormat(previousDate),
@@ -300,14 +295,14 @@ public class GitHubRepositoriesFetcher {
 						Thread.sleep(30000);
 						fetchPullRequests(currentCursor, currentDate, repo);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						logger.error(e);
 						Thread.currentThread().interrupt();
 					}
 				}
 			}
 
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -340,13 +335,16 @@ public class GitHubRepositoriesFetcher {
 			PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
 				baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
 				State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
-			System.out.println("   Pull request: %s (%d) - %s".formatted(title, number, state));
+
+			logger.info("{}/{} Pull request: {} ({}) - {}", repo.getOwner(), repo.getName(),
+				title, number, state);
+
 			fetchPRFiles(null, pullRequest);
 			pullRequest.gatherModifiedPackages();
 			pullRequestsCsv.writeRecord(pullRequest);
 			repo.addPullRequest(pullRequest);
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -361,7 +359,7 @@ public class GitHubRepositoriesFetcher {
 		Repository repo = pullRequest.getRepository();
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
-			: "";
+				: "";
 		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
 			pullRequest.getNumber(), cursorQuery);
 
@@ -384,7 +382,9 @@ public class GitHubRepositoriesFetcher {
 					for (JsonNode fileEdge: files.withArray("edges")) {
 						String file = fileEdge.get("node").get("path").asText();
 						pullRequest.addFile(file);
-						System.out.println("   PR file: %s".formatted(file));
+
+						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
+							pullRequest.getTitle(), pullRequest.getNumber(), file);
 					}
 
 					if (hasNextPage)
@@ -394,14 +394,13 @@ public class GitHubRepositoriesFetcher {
 						Thread.sleep(30000);
 						fetchPRFiles(currentCursor, pullRequest);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						logger.error(e);
 						Thread.currentThread().interrupt();
 					}
 				}
 			}
-
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -453,9 +452,9 @@ public class GitHubRepositoriesFetcher {
 							}
 
 							if (groupId == null || artifactId == null) {
-								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-									ExperimentErrorCode.INCOMPLETE_POM, "{groupId: %s, artifactId: %s}"
-									.formatted(groupId, artifactId));
+								logger.warn("{} {}/{} cursor:{} [groupId: {}, artifactId: {}]",
+									ExperimentErrorCode.INCOMPLETE_POM, repo.getOwner(),
+									repo.getName(), repo.getCursor(), groupId, artifactId);
 								continue;
 							}
 
@@ -463,20 +462,16 @@ public class GitHubRepositoriesFetcher {
 								artifactId, version, relativePath, repo);
 							repo.addPackage(pkg);
 
-							System.out.println("   POM: %s:%s:%s - %s".formatted(groupId,
-								artifactId, version, path));
+							logger.info("{}/{} POM: {}:{}:{} - {}", repo.getOwner(),
+								repo.getName(), groupId, artifactId, version, path);
 						} catch (XmlPullParserException | IOException e) {
-							writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-								ExperimentErrorCode.POM_DOWNLOAD_ISSUE,
-								"{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
-							e.printStackTrace();
+							logger.error(e);
 						}
 					}
 				}
 			}
-
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -503,7 +498,7 @@ public class GitHubRepositoriesFetcher {
 					String name = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
 					List<String> clientRepos = new ArrayList<String>();
 					fetchGitHubClients(packageUrl, clientRepos);
- 					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
+					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
 
 					if (element != null) {
 						try {
@@ -517,31 +512,37 @@ public class GitHubRepositoriesFetcher {
 								pkg.setRelevantClients(relevantClients);
 								writeCSVClientRecords(pkg);
 							} else {
-								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-									ExperimentErrorCode.NO_PKG_IN_REPO, "{name: %s}".formatted(name));
+								logger.warn("{} {}/{} cursor:{} [name: {}]",
+									ExperimentErrorCode.NO_PKG_IN_REPO, repo.getOwner(),
+									repo.getName(), repo.getCursor(), name);
 							}
 						} catch (NumberFormatException e) {
-							writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-								ExperimentErrorCode.CLIENTS_NUM_FORMAT_ERROR, "{element: %s}"
-								.formatted(element.toString()));
-							e.printStackTrace();
+							logger.error(e);
 						}
 					} else {
-						writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-							ExperimentErrorCode.NO_PKG_DEPENDANTS, "{packageUrl: %s}"
-							.formatted(packageUrl));
+						logger.warn("{} {}/{} cursor:{} [packageUrl: {}]",
+							ExperimentErrorCode.NO_PKG_DEPENDANTS, repo.getOwner(),
+							repo.getName(), repo.getCursor(), packageUrl);
 					}
 				} else {
-					writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-						ExperimentErrorCode.EMPTY_PKG_PAGE, "{url: %s}".formatted(url));
+					logger.warn("{} {}/{} cursor:{} [url: {}]",
+						ExperimentErrorCode.NO_PKG_DEPENDANTS, repo.getOwner(),
+						repo.getName(), repo.getCursor(), url);
 				}
 			}
 		} else {
-			writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-				ExperimentErrorCode.NO_DEPENDANTS_PAGE, "{url: %s}".formatted(url));
+			logger.warn("{} {}/{} cursor:{} [url: {}]", ExperimentErrorCode.NO_DEPENDANTS_PAGE,
+				repo.getOwner(), repo.getName(), repo.getCursor(), url);
 		}
 	}
 
+	/**
+	 * Fetches all client repositories as displayed in the GitHub dependency
+	 * network web page.
+	 *
+	 * @param url          URL pointing to the dependent repositories
+	 * @param clientRepos  List of client repositories
+	 */
 	private void fetchGitHubClients(String url, List<String> clientRepos) {
 		Document pkgPage = GitHubUtil.fetchPage(url);
 		if (pkgPage != null) {
@@ -604,13 +605,15 @@ public class GitHubRepositoriesFetcher {
 							int stars = repository.get("stargazerCount").asInt();
 							String sshUrl = repository.get("sshUrl").asText();
 							String url = repository.get("url").asText();
-							JsonNode languages = repository.get("languages").withArray("edges");
+							ArrayNode languages = repository.get("languages").withArray("edges");
+							List<Object> java = new ArrayList<Object>();
 
-							List<?> java = Arrays
-								.stream(Arrays.asList(languages).toArray())
+							if (!languages.isEmpty())
+								java = Arrays.stream(Arrays.asList(languages.get(0)).toArray())
 								.filter(x -> ((JsonNode) x).get("node")
 									.get("name").asText()
-									.equalsIgnoreCase("Java")).collect(Collectors.toList());
+									.equalsIgnoreCase("Java"))
+								.collect(Collectors.toList());
 
 							boolean maven = repository.get("pom").hasNonNull("oid");
 							boolean gradle = repository.get("gradle").hasNonNull("oid");
@@ -621,14 +624,15 @@ public class GitHubRepositoriesFetcher {
 								Repository client = new Repository(owner, repo, stars,
 									createdAt, pushedAt, sshUrl, url, maven, gradle, null);
 								relevantClients.add(client);
-								System.out.println("   Client: %s:%s".formatted(owner, repo));
+
+								logger.info("   Client: {}/{}", owner, repo);
 							}
 						}
 					}
 				}
 
 			} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 		}
 		return relevantClients;
