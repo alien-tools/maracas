@@ -53,6 +53,7 @@ public final class Queries {
 		          isDisabled
 		          isEmpty
 		          isLocked
+		          createdAt
 		          pushedAt
 		          sshUrl
 		          url
@@ -122,36 +123,35 @@ public final class Queries {
 	 */
 	public final static String GRAPHQL_CLIENT_QUERY = """
 		{
-		  search(
-		    type: REPOSITORY
-		    query: "repo:%s/%s java in:language stars:>%d pushed:>%s archived:false fork:false mirror:false"
-		    first: 1
-		  ) {
-		    repositoryCount
-		    edges {
-		      cursor
-		      node {
-		        ... on Repository {
-		          stargazerCount
-		          isDisabled
-		          isEmpty
-		          isLocked
-		          pushedAt
-		          sshUrl
-		          url
-
-		          pom: object(expression: "HEAD:pom.xml") {
-		            oid
-		          }
-
-		          gradle: object(expression: "HEAD:build.gradle") {
-		            oid
-		          }
+		  repository(owner: "%s", name: "%s") {
+		    stargazerCount
+		    isArchived
+		    isDisabled
+		    isEmpty
+		    isFork
+		    isLocked
+		    isMirror
+		    createdAt
+		    pushedAt
+		    sshUrl
+		    url
+		    languages(first: 100) {
+		      edges {
+		        node {
+		          name
 		        }
 		      }
 		    }
+		    pom: object(expression: "HEAD:pom.xml") {
+		      oid
+		    }
+		    gradle: object(expression: "HEAD:build.gradle") {
+		      oid
+		    }
 		  }
-		}""";
+		}
+		""";
+
 
 	public final static String GRAPHQL_PRS_QUERY = """
 		query {

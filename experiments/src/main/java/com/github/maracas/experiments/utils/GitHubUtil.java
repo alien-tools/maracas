@@ -46,8 +46,15 @@ public final class GitHubUtil {
 				new HttpEntity<>(jsonQuery, headers), String.class);
 			return response;
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
+			try {
+				Thread.sleep(30000);
+				postQuery(graphqlQuery, url, githubToken);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
 		}
+		return null;
 	}
 
 	/**
@@ -66,8 +73,15 @@ public final class GitHubUtil {
 				new HttpEntity<Object>(headers), String.class);
 			return response;
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
+			try {
+				Thread.sleep(30000);
+				getQuery(url, githubToken);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
 		}
+		return null;
 	}
 
 	/**

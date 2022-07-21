@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,11 +21,17 @@ public class ClientsCSVManager extends CSVManager {
 		super(path);
 	}
 
+	public LocalDateTime getCurrentDate() throws IOException {
+		String pushedAt = getLastValue("pushedAt");
+		return (pushedAt == null) ? null : LocalDateTime.parse(pushedAt + "T00:00:00");
+	}
+
 	@Override
 	protected String[] buildColumns() {
 		return new String[] {"cursor", "owner", "name", "sshUrl", "url", "stars",
-			"packages", "groupId", "artifactId", "version", "path", "clients",
-			"relevantClients", "cowner", "cname", "csshUrl", "curl", "cstars"};
+			"createdAt", "pushedAt", "packages", "groupId", "artifactId", "version",
+			"path", "clients", "relevantClients", "cowner", "cname", "csshUrl",
+			"curl", "cstars"};
 	}
 
 	@Override
@@ -35,6 +43,8 @@ public class ClientsCSVManager extends CSVManager {
 		map.put("sshUrl", "%s");
 		map.put("url", "%s");
 		map.put("stars", "%d");
+		map.put("createdAt", "%t");
+		map.put("pushedAt", "%t");
 		map.put("packages", "%d");
 		map.put("groupId", "%s");
 		map.put("artifactId", "%s");
@@ -63,6 +73,8 @@ public class ClientsCSVManager extends CSVManager {
 				URI sshUrl = repo.getSshUrl();
 				URL url = repo.getUrl();
 				int stars = repo.getStars();
+				LocalDate createdAt = repo.getCreatedAt();
+				LocalDate pushedAt = repo.getPushedAt();
 				int packages = repo.getGitHubPackages();
 				String groupId = pkg.getGroup();
 				String artifactId = pkg.getArtifact();
@@ -79,8 +91,9 @@ public class ClientsCSVManager extends CSVManager {
 					int cstars = client.getStars();
 
 					printer.printRecord(cursor, owner, name, sshUrl.toString(),
-						url.toString(), stars, packages, groupId, artifactId, version, path,
-						clients, relevantClients, cowner, cname, csshUrl.toString(),
+						url.toString(), stars, createdAt.toString(), pushedAt.toString(),
+						packages, groupId, artifactId, version, path, clients,
+						relevantClients, cowner, cname, csshUrl.toString(),
 						curl.toString(), cstars);
 				}
 			} catch (IOException e) {

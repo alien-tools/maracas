@@ -44,12 +44,12 @@ public abstract class CSVManager {
 			.setSkipHeaderRecord(true)
 			.setTrim(true)
 			.build();
-		this.cursor = getLastCursor();
+		this.cursor = getLastValue("cursor");
 
 		initializeFile();
 	}
 
-	private String getLastCursor() throws IOException {
+	protected String getLastValue(String column) throws IOException {
 		File file = new File(path);
 
 		if (file.exists()) {
@@ -58,10 +58,10 @@ public abstract class CSVManager {
 				String line = reader.readLine();
 
 				if (line != null && !line.isEmpty()) {
-					int cursorPos = ArrayUtils.indexOf(columns, "cursor");
-					String cursor = line.split(DELIMETER)[cursorPos];
-					if (!cursor.equals("cursor"))
-						return cursor;
+					int columnPos = ArrayUtils.indexOf(columns, column);
+					String value = line.split(DELIMETER)[columnPos];
+					if (!value.equals(column))
+						return value;
 				}
 			}
 		}

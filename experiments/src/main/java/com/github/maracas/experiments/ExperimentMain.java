@@ -1,6 +1,7 @@
 package com.github.maracas.experiments;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import com.github.maracas.experiments.csv.ClientsCSVManager;
 import com.github.maracas.experiments.utils.Constants;
@@ -14,7 +15,10 @@ public class ExperimentMain {
 
 			System.out.println("Fetching repositories...");
 			String cursor = clientsCsv.getCursor();
-			fetcher.fetchRepositories(cursor, Constants.STARTING_DATE);
+			LocalDateTime currentDate = clientsCsv.getCurrentDate();
+			LocalDateTime datetime = (currentDate == null)
+				? Constants.STARTING_DATE : currentDate;
+			fetcher.fetchRepositories(cursor, datetime);
 		} catch(IOException e) {
 			e.printStackTrace();
 		}

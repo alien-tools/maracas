@@ -35,9 +35,14 @@ public class Repository {
 	private final int stars;
 
 	/**
+	 * {@link LocalDate} of the creation of the repository
+	 */
+	private final LocalDate createdAt;
+
+	/**
 	 * {@link LocalDate} of the last push of the repository
 	 */
-	private final LocalDate lastPush;
+	private final LocalDate pushedAt;
 
 	private final URI sshURL;
 
@@ -82,7 +87,7 @@ public class Repository {
 	 * @param owner     Owner of the repository
 	 * @param name      Name of the repository
 	 * @param stars     Number of stars of the repository
-	 * @param lastPush  {@link LocalDate} of the last push
+	 * @param pushedAt  {@link LocalDate} of the last push
 	 * @param sshUrl    SSH URL to clone the repository
 	 * @param url       HTTP URL to clone the repository
 	 * @param mergedPRs Number of merged pulls requests
@@ -94,12 +99,14 @@ public class Repository {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	public Repository(String owner, String name, int stars, LocalDate lastPush,
-		String sshUrl, String url, boolean maven, boolean gradle, String cursor) throws MalformedURLException, URISyntaxException {
+	public Repository(String owner, String name, int stars, LocalDate createdAt,
+		LocalDate pushedAt, String sshUrl, String url, boolean maven, boolean gradle,
+		String cursor) throws MalformedURLException, URISyntaxException {
 		this.owner = owner;
 		this.name = name;
 		this.stars = stars;
-		this.lastPush = lastPush;
+		this.createdAt = createdAt;
+		this.pushedAt = pushedAt;
 		this.sshURL = new URI("ssh://" + sshUrl);
 		this.url = new URL(url);
 		this.maven = maven;
@@ -118,7 +125,7 @@ public class Repository {
 	 * @param owner     Owner of the repository
 	 * @param name      Name of the repository
 	 * @param stars     Number of stars of the repository
-	 * @param lastPush  String representing the date of the last push
+	 * @param pushedAt  String representing the date of the last push
 	 * @param mergedPRs Number of merged pulls requests
 	 * @param maven     {@code true} if it is a Maven project, {@code false}
 	 *                  otherwise
@@ -128,10 +135,12 @@ public class Repository {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	public Repository(String owner, String name, int stars, String lastPush,
-		String sshUrl, String url, boolean maven, boolean gradle, String cursor) throws MalformedURLException, URISyntaxException {
+	public Repository(String owner, String name, int stars, String createdAt,
+		String pushedAt, String sshUrl, String url, boolean maven, boolean gradle,
+		String cursor) throws MalformedURLException, URISyntaxException {
 		this(owner, name, stars,
-			Date.from(Instant.parse(lastPush)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+			Date.from(Instant.parse(createdAt)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+			Date.from(Instant.parse(pushedAt)).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
 			sshUrl, url, maven, gradle, cursor);
 	}
 
@@ -160,15 +169,6 @@ public class Repository {
 	 */
 	public int getStars() {
 		return stars;
-	}
-
-	/**
-	 * Returns the {@link LocalDate} of the repository last push.
-	 *
-	 * @return the {@link LocalDate} of the repository last push
-	 */
-	public LocalDate getLastPush() {
-		return lastPush;
 	}
 
 	public URI getSshUrl() {
@@ -293,5 +293,23 @@ public class Repository {
 
 	public List<RepositoryPackage> getRepoPackages() {
 		return repoPackagesByName.values().stream().collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns the {@link LocalDate} of the repository creation.
+	 *
+	 * @return the {@link LocalDate} of the repository creation
+	 */
+	public LocalDate getCreatedAt() {
+		return createdAt;
+	}
+
+	/**
+	 * Returns the {@link LocalDate} of the repository last push.
+	 *
+	 * @return the {@link LocalDate} of the repository last push
+	 */
+	public LocalDate getPushedAt() {
+		return pushedAt;
 	}
 }

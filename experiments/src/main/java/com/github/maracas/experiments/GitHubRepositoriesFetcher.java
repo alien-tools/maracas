@@ -8,7 +8,9 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -152,6 +154,7 @@ public class GitHubRepositoriesFetcher {
 		String cursorQuery = currentCursor != null
 			? ", after: \"" + currentCursor + "\""
 			: "";
+
 		LocalDateTime previousDate = currentDate.minusHours(12);
 		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
 			GitHubUtil.toGitHubDateFormat(previousDate),
@@ -186,7 +189,8 @@ public class GitHubRepositoriesFetcher {
 					boolean empty = repoJson.get("isEmpty").asBoolean();
 					boolean locked = repoJson.get("isLocked").asBoolean();
 					int stars = repoJson.get("stargazerCount").asInt();
-					String lastPush = repoJson.get("pushedAt").asText();
+					String createdAt = repoJson.get("createdAt").asText();
+					String pushedAt = repoJson.get("pushedAt").asText();
 					String sshUrl = repoJson.get("sshUrl").asText();
 					String url = repoJson.get("url").asText();
 					boolean maven = repoJson.get("pom").hasNonNull("oid");
@@ -199,8 +203,8 @@ public class GitHubRepositoriesFetcher {
 						LocalDate lastMerged = Util.stringToLocalDate(lastPR.get(0));
 
 						if (Util.isActive(lastMerged, Constants.PR_LAST_MERGED_IN_DAYS)) {
-							Repository repo = new Repository(owner, name, stars,
-								lastPush, sshUrl, url, maven, gradle, cursor);
+							Repository repo = new Repository(owner, name, stars, createdAt,
+								pushedAt, sshUrl, url, maven, gradle, cursor);
 
 							System.out.println("Fetching %s/%s POM files...".formatted(owner, name));
 							fetchPomFiles(repo);
@@ -272,31 +276,33 @@ public class GitHubRepositoriesFetcher {
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
 				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode data = json.get("data");
+			if (response != null) {
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode json = mapper.readTree(response.getBody());
+				JsonNode data = json.get("data");
 
-			if (data != null) {
-				JsonNode search = data.get("search");
-				JsonNode pageInfo = search.get("pageInfo");
-				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-				String endCursor = pageInfo.get("endCursor").asText();
+				if (data != null) {
+					JsonNode search = data.get("search");
+					JsonNode pageInfo = search.get("pageInfo");
+					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+					String endCursor = pageInfo.get("endCursor").asText();
 
-				for (JsonNode prEdge: search.withArray("edges"))
-					extractPRs(prEdge, repo);
+					for (JsonNode prEdge: search.withArray("edges"))
+						extractPRs(prEdge, repo);
 
-				if (hasNextPage)
-					fetchPullRequests(endCursor, currentDate, repo);
-				else if (previousDate.isAfter(Constants.PR_LAST_CREATED))
-					fetchPullRequests(null, previousDate, repo);
+					if (hasNextPage)
+						fetchPullRequests(endCursor, currentDate, repo);
+					else if (previousDate.isAfter(Constants.PR_LAST_CREATED))
+						fetchPullRequests(null, previousDate, repo);
 
-			} else {
-				try {
-					Thread.sleep(30000);
-					fetchPullRequests(currentCursor, currentDate, repo);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					Thread.currentThread().interrupt();
+				} else {
+					try {
+						Thread.sleep(30000);
+						fetchPullRequests(currentCursor, currentDate, repo);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						Thread.currentThread().interrupt();
+					}
 				}
 			}
 
@@ -314,30 +320,34 @@ public class GitHubRepositoriesFetcher {
 	 * @param repo   Repository where the PR is being merged
 	 */
 	private void extractPRs(JsonNode prEdge, Repository repo) {
-		JsonNode prJson = prEdge.get("node");
-		String title = prJson.get("title").asText();
-		int number = prJson.get("number").asInt();
-		String state = prJson.get("state").asText();
-		boolean draft = prJson.get("isDraft").asBoolean();
-		String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
-		String baseRef = prJson.get("baseRef").get("name").asText();
-		String baseRefPrefix = prJson.get("baseRef").get("prefix").asText();
-		String headRepository = prJson.get("headRepository").get("nameWithOwner").asText();
-		String headRef = prJson.get("headRef").get("name").asText();
-		String headRefPrefix = prJson.get("headRef").get("prefix").asText();
-		String createdAt = prJson.get("createdAt").asText();
-		String publishedAt = prJson.get("publishedAt").asText();
-		String mergedAt = prJson.get("mergedAt").asText();
-		String closedAt = prJson.get("closedAt").asText();
+		try {
+			JsonNode prJson = prEdge.get("node");
+			String title = prJson.get("title").asText();
+			int number = prJson.get("number").asInt();
+			String state = prJson.get("state").asText();
+			boolean draft = prJson.get("isDraft").asBoolean();
+			String baseRepository = prJson.get("baseRepository").get("nameWithOwner").asText();
+			String baseRef = prJson.get("baseRef").get("name").asText();
+			String baseRefPrefix = prJson.get("baseRef").get("prefix").asText();
+			String headRepository = prJson.get("headRepository").get("nameWithOwner").asText();
+			String headRef = prJson.get("headRef").get("name").asText();
+			String headRefPrefix = prJson.get("headRef").get("prefix").asText();
+			String createdAt = prJson.get("createdAt").asText();
+			String publishedAt = prJson.get("publishedAt").asText();
+			String mergedAt = prJson.get("mergedAt").asText();
+			String closedAt = prJson.get("closedAt").asText();
 
-		PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
-			baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
-			State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
-		System.out.println("   Pull request: %s (%d) - %s".formatted(title, number, state));
-		fetchPRFiles(null, pullRequest);
-		pullRequest.gatherModifiedPackages();
-		pullRequestsCsv.writeRecord(pullRequest);
-		repo.addPullRequest(pullRequest);
+			PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
+				baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
+				State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
+			System.out.println("   Pull request: %s (%d) - %s".formatted(title, number, state));
+			fetchPRFiles(null, pullRequest);
+			pullRequest.gatherModifiedPackages();
+			pullRequestsCsv.writeRecord(pullRequest);
+			repo.addPullRequest(pullRequest);
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -358,33 +368,35 @@ public class GitHubRepositoriesFetcher {
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
 				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode data = json.get("data");
+			if (response != null) {
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode json = mapper.readTree(response.getBody());
+				JsonNode data = json.get("data");
 
-			if (data != null) {
-				JsonNode search = data.get("search");
-				JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
-				JsonNode files = pr.get("files");
-				JsonNode pageInfo = files.get("pageInfo");
-				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-				String endCursor = pageInfo.get("endCursor").asText();
+				if (data != null) {
+					JsonNode search = data.get("search");
+					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
+					JsonNode files = pr.get("files");
+					JsonNode pageInfo = files.get("pageInfo");
+					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+					String endCursor = pageInfo.get("endCursor").asText();
 
-				for (JsonNode fileEdge: files.withArray("edges")) {
-					String file = fileEdge.get("node").get("path").asText();
-					pullRequest.addFile(file);
-					System.out.println("   PR file: %s".formatted(file));
-				}
+					for (JsonNode fileEdge: files.withArray("edges")) {
+						String file = fileEdge.get("node").get("path").asText();
+						pullRequest.addFile(file);
+						System.out.println("   PR file: %s".formatted(file));
+					}
 
-				if (hasNextPage)
-					fetchPRFiles(endCursor, pullRequest);
-			} else {
-				try {
-					Thread.sleep(30000);
-					fetchPRFiles(currentCursor, pullRequest);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					Thread.currentThread().interrupt();
+					if (hasNextPage)
+						fetchPRFiles(endCursor, pullRequest);
+				} else {
+					try {
+						Thread.sleep(30000);
+						fetchPRFiles(currentCursor, pullRequest);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						Thread.currentThread().interrupt();
+					}
 				}
 			}
 
@@ -406,60 +418,63 @@ public class GitHubRepositoriesFetcher {
 		ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
 
 		try {
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
+			if (response != null) {
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode json = mapper.readTree(response.getBody());
 
-			for (JsonNode pomNode: json.withArray("items")) {
-				String path = pomNode.get("path").asText();
-				String pomUrl = pomNode.get("url").asText();
+				for (JsonNode pomNode: json.withArray("items")) {
+					String path = pomNode.get("path").asText();
+					String pomUrl = pomNode.get("url").asText();
 
-				ResponseEntity<String> pomResponse = GitHubUtil.getQuery(pomUrl, GITHUB_ACCESS_TOKEN);
-				JsonNode pomJson = mapper.readTree(pomResponse.getBody());
-				String downloadUrl = pomJson.get("download_url").asText();
+					ResponseEntity<String> pomResponse = GitHubUtil.getQuery(pomUrl, GITHUB_ACCESS_TOKEN);
+					JsonNode pomJson = mapper.readTree(pomResponse.getBody());
+					String downloadUrl = pomJson.get("download_url").asText();
 
-				if (downloadUrl != null && !path.isEmpty() && path.contains("pom.xml")) {
-					MavenXpp3Reader pomReader = new MavenXpp3Reader();
+					if (downloadUrl != null && !path.isEmpty() && path.contains("pom.xml")) {
+						MavenXpp3Reader pomReader = new MavenXpp3Reader();
 
-					try {
-						URL urll = new URL(downloadUrl);
-						Document doc = Jsoup.parse(urll.openStream(), "UTF-8", "", Parser.xmlParser());
+						try {
+							URL urll = new URL(downloadUrl);
+							Document doc = Jsoup.parse(urll.openStream(), "UTF-8", "", Parser.xmlParser());
 
-						Model model = pomReader.read(new ByteArrayInputStream(doc.toString().getBytes()));
-						String groupId = model.getGroupId();
-						String artifactId = model.getArtifactId();
-						String version = model.getVersion();
-						String relativePath = path.substring(0, path.indexOf("pom.xml"));
+							Model model = pomReader.read(new ByteArrayInputStream(doc.toString().getBytes()));
+							String groupId = model.getGroupId();
+							String artifactId = model.getArtifactId();
+							String version = model.getVersion();
+							String relativePath = path.substring(0, path.indexOf("pom.xml"));
 
-						if (groupId == null || version == null) {
-							Parent parent = model.getParent();
+							if (groupId == null || version == null) {
+								Parent parent = model.getParent();
 
-							if (parent != null) {
-								groupId = (groupId == null) ? parent.getGroupId() : groupId;
-								version = (version == null) ? parent.getVersion() : version;
+								if (parent != null) {
+									groupId = (groupId == null) ? parent.getGroupId() : groupId;
+									version = (version == null) ? parent.getVersion() : version;
+								}
 							}
-						}
 
-						if (groupId == null || artifactId == null) {
+							if (groupId == null || artifactId == null) {
+								writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
+									ExperimentErrorCode.INCOMPLETE_POM, "{groupId: %s, artifactId: %s}"
+									.formatted(groupId, artifactId));
+								continue;
+							}
+
+							RepositoryPackage pkg = new RepositoryPackage(groupId,
+								artifactId, version, relativePath, repo);
+							repo.addPackage(pkg);
+
+							System.out.println("   POM: %s:%s:%s - %s".formatted(groupId,
+								artifactId, version, path));
+						} catch (XmlPullParserException | IOException e) {
 							writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-								ExperimentErrorCode.INCOMPLETE_POM, "{groupId: %s, artifactId: %s}"
-								.formatted(groupId, artifactId));
-							continue;
+								ExperimentErrorCode.POM_DOWNLOAD_ISSUE,
+								"{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
+							e.printStackTrace();
 						}
-
-						RepositoryPackage pkg = new RepositoryPackage(groupId,
-							artifactId, version, relativePath, repo);
-						repo.addPackage(pkg);
-
-						System.out.println("   POM: %s:%s:%s - %s".formatted(groupId,
-							artifactId, version, path));
-					} catch (XmlPullParserException | IOException e) {
-						writeCSVErrorRecord(repo.getCursor(), repo.getOwner(), repo.getName(),
-							ExperimentErrorCode.POM_DOWNLOAD_ISSUE,
-							"{downluadUrl: %s, path: %s}".formatted(downloadUrl, path));
-						e.printStackTrace();
 					}
 				}
 			}
+
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -488,7 +503,7 @@ public class GitHubRepositoriesFetcher {
 					String name = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
 					List<String> clientRepos = new ArrayList<String>();
 					fetchGitHubClients(packageUrl, clientRepos);
-					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
+ 					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
 
 					if (element != null) {
 						try {
@@ -562,40 +577,56 @@ public class GitHubRepositoriesFetcher {
 			String repo = clientArray[2];
 
 			String query = Queries.GRAPHQL_CLIENT_QUERY
-				.formatted(owner, repo, Constants.CLIENT_MIN_STARS, Constants.CLIENT_LAST_PUSHED_DATE);
+				.formatted(owner, repo);
 
 			try {
 				ResponseEntity<String> response = GitHubUtil.postQuery(query,
 					GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode json = mapper.readTree(response.getBody());
-				JsonNode data = json.get("data");
+				if (response != null) {
+					ObjectMapper mapper = new ObjectMapper();
+					JsonNode json = mapper.readTree(response.getBody());
+					JsonNode data = json.get("data");
 
-				if (response.getStatusCode().equals(HttpStatus.OK) && data != null) {
-					JsonNode search = data.get("search");
+					if (response.getStatusCode().equals(HttpStatus.OK)
+						&& data != null) {
+						JsonNode repository = data.get("repository");
 
-					// Expect only one edge
-					for (JsonNode edge: search.withArray("edges")) {
-						var cursor = edge.get("cursor").asText();
-						JsonNode repoJson = edge.get("node");
-						boolean isDisabled = repoJson.get("isDisabled").asBoolean();
-						boolean isEmpty = repoJson.get("isEmpty").asBoolean();
-						boolean isLocked = repoJson.get("isLocked").asBoolean();
-						String lastPush = repoJson.get("pushedAt").asText();
-						int stars = repoJson.get("stargazerCount").asInt();
-						String sshUrl = repoJson.get("sshUrl").asText();
-						String url = repoJson.get("url").asText();
-						boolean maven = repoJson.get("pom").hasNonNull("oid");
-						boolean gradle = repoJson.get("gradle").hasNonNull("oid");
+						// Expect only one edge
+						if (repository != null) {
+							boolean isArchived = repository.get("isArchived").asBoolean();
+							boolean isDisabled = repository.get("isDisabled").asBoolean();
+							boolean isEmpty = repository.get("isEmpty").asBoolean();
+							boolean isFork = repository.get("isFork").asBoolean();
+							boolean isLocked = repository.get("isLocked").asBoolean();
+							boolean isMirror = repository.get("isMirror").asBoolean();
+							String createdAt = repository.get("createdAt").asText();
+							String pushedAt = repository.get("pushedAt").asText();
+							int stars = repository.get("stargazerCount").asInt();
+							String sshUrl = repository.get("sshUrl").asText();
+							String url = repository.get("url").asText();
+							JsonNode languages = repository.get("languages").withArray("edges");
 
-						if (maven && !isDisabled && !isEmpty && !isLocked) {
-							Repository client = new Repository(owner, repo, stars,
-								lastPush, sshUrl, url, maven, gradle, cursor);
-							relevantClients.add(client);
-							System.out.println("   Client: %s:%s".formatted(owner, repo));
+							List<?> java = Arrays
+								.stream(Arrays.asList(languages).toArray())
+								.filter(x -> ((JsonNode) x).get("node")
+									.get("name").asText()
+									.equalsIgnoreCase("Java")).collect(Collectors.toList());
+
+							boolean maven = repository.get("pom").hasNonNull("oid");
+							boolean gradle = repository.get("gradle").hasNonNull("oid");
+
+							if (maven && !isArchived && !isDisabled && !isEmpty && !isFork
+								&& !isMirror && !isLocked && !java.isEmpty()
+								&& stars >= Constants.CLIENT_MIN_STARS) {
+								Repository client = new Repository(owner, repo, stars,
+									createdAt, pushedAt, sshUrl, url, maven, gradle, null);
+								relevantClients.add(client);
+								System.out.println("   Client: %s:%s".formatted(owner, repo));
+							}
 						}
 					}
 				}
+
 			} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
 				e.printStackTrace();
 			}
