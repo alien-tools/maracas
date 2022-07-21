@@ -63,6 +63,8 @@ public class GitHubRepositoriesFetcher {
 	 */
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 
+	public static final String GITHUB_REST = "https://api.github.com";
+
 	/**
 	 * Pointer to the GitHub access token
 	 */
@@ -332,15 +334,20 @@ public class GitHubRepositoriesFetcher {
 			String publishedAt = prJson.get("publishedAt").asText();
 			String mergedAt = prJson.get("mergedAt").asText();
 			String closedAt = prJson.get("closedAt").asText();
+			JsonNode files = prJson.get("files");
 
 			PullRequest pullRequest = new PullRequest(title, number, repo, baseRepository,
 				baseRef, baseRefPrefix, headRepository, headRef, headRefPrefix,
 				State.valueOf(state), draft, createdAt, publishedAt, mergedAt, closedAt);
 
+			for (JsonNode fileEdge: files.withArray("edges")) {
+				String file = fileEdge.get("node").get("path").asText();
+				pullRequest.addFile(file);
+			}
+
 			logger.info("{}/{} Pull request: {} ({}) - {}", repo.getOwner(), repo.getName(),
 				title, number, state);
 
-			fetchPRFiles(null, pullRequest);
 			pullRequest.gatherModifiedPackages();
 			pullRequestsCsv.writeRecord(pullRequest);
 			repo.addPullRequest(pullRequest);
@@ -356,54 +363,51 @@ public class GitHubRepositoriesFetcher {
 	 * @param currentCursor      GraphQL query cursor
 	 * @param pullRequest Target pull request
 	 */
-	private void fetchPRFiles(String currentCursor, PullRequest pullRequest) {
-		Repository repo = pullRequest.getRepository();
-		String cursorQuery = currentCursor != null
-			? ", after: \"" + currentCursor + "\""
-				: "";
-		String query = Queries.GRAPHQL_PRS_FILES_QUERY.formatted(repo.getOwner(), repo.getName(),
-			pullRequest.getNumber(), cursorQuery);
-
-		try {
-			ResponseEntity<String> response = GitHubUtil.postQuery(query,
-				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			if (response != null) {
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode json = mapper.readTree(response.getBody());
-				JsonNode data = json.get("data");
-
-				if (data != null) {
-					JsonNode search = data.get("search");
-					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
-					JsonNode files = pr.get("files");
-					JsonNode pageInfo = files.get("pageInfo");
-					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-					String endCursor = pageInfo.get("endCursor").asText();
-
-					for (JsonNode fileEdge: files.withArray("edges")) {
-						String file = fileEdge.get("node").get("path").asText();
-						pullRequest.addFile(file);
-
-						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
-							pullRequest.getTitle(), pullRequest.getNumber(), file);
-					}
-
-					if (hasNextPage)
-						fetchPRFiles(endCursor, pullRequest);
-				} else {
-					try {
-						Thread.sleep(30000);
-						fetchPRFiles(currentCursor, pullRequest);
-					} catch (InterruptedException e) {
-						logger.error(e);
-						Thread.currentThread().interrupt();
-					}
-				}
-			}
-		} catch (JsonProcessingException e) {
-			logger.error(e);
-		}
-	}
+//	private void fetchPRFiles(int currentPage, PullRequest pullRequest) {
+//		int pageQuery = currentPage + 1;
+//		Repository repo = pullRequest.getRepository();
+//		String url = (GITHUB_REST + "/repos/%s/%s/pulls/%d/files?page=%d&per_page=100")
+//			.formatted(repo.getOwner(), repo.getName(), pullRequest.getNumber(), pageQuery);
+//
+//		try {
+//			ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
+//			if (response != null) {
+//				ObjectMapper mapper = new ObjectMapper();
+//				JsonNode json = mapper.readTree(response.getBody());
+//				JsonNode data = json.get("data");
+//
+//				if (data != null) {
+//					JsonNode search = data.get("search");
+//					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
+//					JsonNode files = pr.get("files");
+//					JsonNode pageInfo = files.get("pageInfo");
+//					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+//					String endCursor = pageInfo.get("endCursor").asText();
+//
+//					for (JsonNode fileEdge: files.withArray("edges")) {
+//						String file = fileEdge.get("node").get("path").asText();
+//						pullRequest.addFile(file);
+//
+//						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
+//							pullRequest.getTitle(), pullRequest.getNumber(), file);
+//					}
+//
+//					if (hasNextPage)
+//						fetchPRFiles(endCursor, pullRequest);
+//				} else {
+//					try {
+//						Thread.sleep(30000);
+//						fetchPRFiles(currentCursor, pullRequest);
+//					} catch (InterruptedException e) {
+//						logger.error(e);
+//						Thread.currentThread().interrupt();
+//					}
+//				}
+//			}
+//		} catch (JsonProcessingException e) {
+//			logger.error(e);
+//		}
+//	}
 
 	/**
 	 * Fetches all POM files within a repository and gather information about
@@ -577,7 +581,6 @@ public class GitHubRepositoriesFetcher {
 			String[] clientArray = clientRepo.split(" ");
 			String owner = clientArray[0];
 			String repo = clientArray[2];
-
 			String query = Queries.GRAPHQL_CLIENT_QUERY
 				.formatted(owner, repo);
 
@@ -593,7 +596,6 @@ public class GitHubRepositoriesFetcher {
 						&& data != null) {
 						JsonNode repository = data.get("repository");
 
-						// Expect only one edge
 						if (repository != null) {
 							boolean isArchived = repository.get("isArchived").asBoolean();
 							boolean isDisabled = repository.get("isDisabled").asBoolean();

@@ -189,6 +189,14 @@ public final class Queries {
 		          publishedAt
 		          state
 		          title
+
+		          files(first: 100) {
+                    edges {
+                      node {
+                        path
+                      }
+                    }
+                  }
 		        }
 		      }
 		    }
@@ -204,37 +212,37 @@ public final class Queries {
 	 * TODO: If the pull requests modifies more than 1000 files, we will only
 	 * get 1000. We need to find a way to slice this query.
 	 */
-	public final static String GRAPHQL_PRS_FILES_QUERY = """
-		query {
-		  search(
-		    type: REPOSITORY,
-		    query: "repo:%s/%s",
-		    first: 1
-		  ) {
-		    edges {
-		      node {
-		        ... on Repository {
-		          pr: pullRequest(number: %d) {
-
-		            files(first: 100 %s) {
-		              totalCount
-		              edges {
-		                node {
-		                  path
-		                }
-		                cursor
-		              }
-
-		              pageInfo {
-		                endCursor
-		                hasNextPage
-		              }
-		            }
-		          }
-		        }
-		      }
-		    }
-		  }
-		}""";
+//	public final static String GRAPHQL_PRS_FILES_QUERY = """
+//		query {
+//		  search(
+//		    type: REPOSITORY,
+//		    query: "repo:%s/%s",
+//		    first: 1
+//		  ) {
+//		    edges {
+//		      node {
+//		        ... on Repository {
+//		          pr: pullRequest(number: %d) {
+//
+//		            files(first: 100 %s) {
+//		              totalCount
+//		              edges {
+//		                node {
+//		                  path
+//		                }
+//		                cursor
+//		              }
+//
+//		              pageInfo {
+//		                endCursor
+//		                hasNextPage
+//		              }
+//		            }
+//		          }
+//		        }
+//		      }
+//		    }
+//		  }
+//		}""";
 
 }
