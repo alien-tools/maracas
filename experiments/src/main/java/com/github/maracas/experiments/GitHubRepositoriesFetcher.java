@@ -32,16 +32,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.maracas.experiments.csv.CSVManager;
 import com.github.maracas.experiments.csv.ClientsCSVManager;
-import com.github.maracas.experiments.csv.ErrorRecord.ExperimentErrorCode;
 import com.github.maracas.experiments.csv.PullRequestsCSVManager;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
 import com.github.maracas.experiments.utils.Constants;
+import com.github.maracas.experiments.utils.Constants.ExperimentErrorCode;
 import com.github.maracas.experiments.utils.GitHubUtil;
 import com.github.maracas.experiments.utils.Queries;
 import com.github.maracas.experiments.utils.Util;
+
 
 /**
  * Class in charge of fetching popular Java repositories from GitHub.
