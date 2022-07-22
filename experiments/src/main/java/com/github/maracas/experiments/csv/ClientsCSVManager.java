@@ -16,14 +16,18 @@ import org.apache.commons.csv.CSVPrinter;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
 
+/**
+ * Class in charge of managing the clients CSV file.
+ */
 public class ClientsCSVManager extends CSVManager {
+	/**
+	 * Creates a {@link ClientsCSVManager} instance.
+	 *
+	 * @param path  Path to the pull requests CSV file
+	 * @throws IOException
+	 */
 	public ClientsCSVManager(String path) throws IOException {
 		super(path);
-	}
-
-	public LocalDateTime getCurrentDate() throws IOException {
-		String pushedAt = getLastValue("pushedAt");
-		return (pushedAt == null) ? null : LocalDateTime.parse(pushedAt + "T00:00:00");
 	}
 
 	@Override
@@ -100,5 +104,18 @@ public class ClientsCSVManager extends CSVManager {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Gets the last printed value on the CSV file of the "pushedAt" column.
+	 *
+	 * @return last printed value on the CSV file of the "pushedAt" column. If
+	 * there is no value returns {@code null}.
+	 * @throws IOException
+	 */
+	public LocalDateTime getCurrentDate() throws IOException {
+		String pushedAt = getLastValue("pushedAt");
+		return (pushedAt == null) ? null
+			: LocalDateTime.parse(pushedAt + "T00:00:00");
 	}
 }

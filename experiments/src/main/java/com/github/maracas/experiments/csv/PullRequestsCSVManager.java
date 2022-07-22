@@ -18,8 +18,16 @@ import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Repository;
 import com.github.maracas.experiments.model.RepositoryPackage;
 
+/**
+ * Class in charge of managing the pull requests CSV file.
+ */
 public class PullRequestsCSVManager extends CSVManager {
-
+	/**
+	 * Creates a {@link PullRequestsCSVManager} instance.
+	 *
+	 * @param path  Path to the pull requests CSV file
+	 * @throws IOException
+	 */
 	public PullRequestsCSVManager(String path) throws IOException {
 		super(path);
 	}

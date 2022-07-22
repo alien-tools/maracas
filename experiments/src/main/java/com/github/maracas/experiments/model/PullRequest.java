@@ -111,7 +111,7 @@ public class PullRequest {
 	}
 
 	/**
-	 * Crates a {@link PullRequest} instance.
+	 * Creates a {@link PullRequest} instance.
 	 *
 	 * @param title           Title of the PR
 	 * @param number          Number of the PR
