@@ -8,15 +8,15 @@ public final class Constants {
 	 */
 	private Constants() {}
 
-	public static final String CLIENTS_CSV_PATH = "clients.csv";
-	public static final String PRS_CSV_PATH = "prs.csv";
+	public static final String CLIENTS_CSV_PATH = "data/clients.csv";
+	public static final String PRS_CSV_PATH = "data/prs.csv";
 
-	public static final LocalDateTime STARTING_DATE = LocalDateTime.of(2022, 7, 1, 0, 0);
-	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 4, 1, 0, 0);
-	public static final LocalDateTime CLIENT_LAST_PUSHED_DATE = LocalDateTime.of(2022, 4, 1, 0, 0);
-	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 4, 1, 0, 0);
+	public static final LocalDateTime STARTING_DATE = LocalDateTime.of(2022, 7, 22, 0, 0);
+	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 4, 22, 0, 0);
+	public static final LocalDateTime CLIENT_LAST_PUSHED_DATE = LocalDateTime.of(2022, 4, 22, 0, 0);
+	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 4, 22, 0, 0);
 
-	public static final int REPO_MIN_STARS = 100;
+	public static final int REPO_MIN_STARS = 1000;
 	public static final int CLIENT_MIN_STARS = 100;
 
 	public static final int PR_LAST_MERGED_IN_DAYS = 180;

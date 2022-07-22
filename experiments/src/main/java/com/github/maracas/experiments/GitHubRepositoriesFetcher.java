@@ -160,10 +160,12 @@ public class GitHubRepositoriesFetcher {
 			? ", after: \"" + currentCursor + "\""
 				: "";
 
-		LocalDateTime previousDate = currentDate.minusHours(12);
+//		LocalDateTime previousDate = currentDate.minusHours(12);
+//		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
+//			GitHubUtil.toGitHubDateFormat(previousDate),
+//			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
 		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
-			GitHubUtil.toGitHubDateFormat(previousDate),
-			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
+			Constants.REPO_LAST_PUSHED_DATE, cursorQuery);
 
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
@@ -228,8 +230,8 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchRepositories(endCursor, currentDate);
-				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
-					fetchRepositories(null, previousDate);
+//				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
+//					fetchRepositories(null, previousDate);
 
 			} else {
 				for (JsonNode error: json.withArray("errors")) {

@@ -33,12 +33,14 @@ public final class Queries {
 	 * - Integer with maximum number of stars (e.g. 100)
 	 * - String with last pushed date (e.g. "2022-01-01")
 	 * - Cursor query (can be an empty string)
+	 *
+	 * Removed: sort:stars-desc
 	 */
 	public final static String GRAPHQL_LIBRARIES_QUERY = """
 		query {
 		  search(
 		    type: REPOSITORY,
-		    query: "java in:language stars:>%d pushed:%s..%s archived:false fork:false mirror:false",
+		    query: "java in:language stars:>%d pushed:>%s archived:false fork:false mirror:false",
 		    first: 100
 		    %s
 		  ) {
@@ -71,17 +73,7 @@ public final class Queries {
 
 		            edges {
 		              node {
-		                baseRepository {
-		                	nameWithOwner
-		                }
-		                closedAt
-		                createdAt
-		                isDraft
 		                mergedAt
-		                number
-		                publishedAt
-		                state
-		                title
 		              }
 		            }
 		          }
