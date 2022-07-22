@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.maracas.experiments.csv.ClientsCSVManager;
 import com.github.maracas.experiments.utils.Constants;
 
 /**
@@ -24,15 +23,13 @@ public class ExperimentMain {
 	public void run() {
 		try {
 			GitHubRepositoriesFetcher fetcher = new GitHubRepositoriesFetcher(Constants.STARTING_DATE.toLocalDate());
-			ClientsCSVManager clientsCsv = new ClientsCSVManager(Constants.CLIENTS_CSV_PATH);
+			String cursor = fetcher.getLastCursor();
+			LocalDateTime date = fetcher.getLastDate();
+			LocalDateTime datetime = (date == null) ? Constants.STARTING_DATE : date;
 
 			logger.info("Fetching repositories...");
-
-			String cursor = clientsCsv.getCursor();
-			LocalDateTime currentDate = clientsCsv.getCurrentDate();
-			LocalDateTime datetime = (currentDate == null)
-				? Constants.STARTING_DATE : currentDate;
 			fetcher.fetchRepositories(cursor, datetime);
+
 		} catch(IOException e) {
 			logger.error(e);
 		}

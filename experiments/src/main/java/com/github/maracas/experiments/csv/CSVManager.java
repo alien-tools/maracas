@@ -123,7 +123,7 @@ public abstract class CSVManager {
 
 			if (hasContent) {
 				initialize = false;
-				//cleanFile();
+				cleanFile();
 			}
 		} catch (IOException e) {
 			// Don't do anything
@@ -217,6 +217,7 @@ public abstract class CSVManager {
 				Writer writer = new FileWriter(original, true);
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Iterable<CSVRecord> records = csvFormat.parse(reader);
+				printer.printRecord(columns);  // Print header
 
 				for (CSVRecord record : records) {
 					String cursor = record.get("cursor");
@@ -225,8 +226,10 @@ public abstract class CSVManager {
 
 					printer.printRecord(record);
 				}
+
+				tmp.delete();
 			} catch (Exception e) {
-				FileUtils.copyFile(tmp, original); // Back to initial state
+				FileUtils.copyFile(tmp, original);  // Back to initial state
 			}
 		}
 	}

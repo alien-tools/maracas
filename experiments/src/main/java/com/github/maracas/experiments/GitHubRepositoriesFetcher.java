@@ -59,10 +59,13 @@ public class GitHubRepositoriesFetcher {
 	public static final String GITHUB_SEARCH = "https://api.github.com/search";
 
 	/**
-	 * URL to the GraphQL GitHub API
+	 * URL to the GitHub GraphQL API
 	 */
 	public static final String GITHUB_GRAPHQL = "https://api.github.com/graphql";
 
+	/**
+	 * URL to the GitHub REST API
+	 */
 	public static final String GITHUB_REST = "https://api.github.com";
 
 	/**
@@ -149,6 +152,26 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
+	 * Returns the last cursor written on the clients CSV file.
+	 *
+	 * @return last cursor written on the clients CSV file; {@code null} if the
+	 * file does not exist.
+	 */
+	public String getLastCursor() {
+		return clientsCsv.getCursor();
+	}
+
+	/**
+	 * Returns the last pushed at date written on the clients CSV file.
+	 *
+	 * @return last pushed at date written on the clients CSV file.
+	 * @throws IOException
+	 */
+	public LocalDateTime getLastDate() throws IOException {
+		return ((ClientsCSVManager) clientsCsv).getCurrentDate();
+	}
+
+	/**
 	 * Recursively fetches the list of popular GitHub repositories based on
 	 * certain criteria.
 	 *
@@ -216,11 +239,12 @@ public class GitHubRepositoriesFetcher {
 
 						logger.info("Fetching {}/{} clients...", owner, name);
 						fetchRepoPackagesAndClients(repo);
-						repositories.add(repo);
 
 						logger.info("Fetching {}/{} pull requests...", owner, name);
 						LocalDateTime datetime = LocalDateTime.now();
 						fetchPullRequests(null, datetime, repo);
+						repositories.add(repo);
+
 					} else {
 						logger.warn("{} {}/{} cursor:{} [disabled: {}, empty: {}, locked: {}, "
 							+ "maven: {}, active: {}]", ExperimentErrorCode.IRRELEVANT_REPO,
