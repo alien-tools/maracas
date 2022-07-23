@@ -622,7 +622,7 @@ public class GitHubRepositoriesFetcher {
 						&& data != null) {
 						JsonNode repository = data.get("repository");
 
-						if (repository != null) {
+						if (repository != null && !repository.isEmpty()) {
 							boolean isArchived = repository.get("isArchived").asBoolean();
 							boolean isDisabled = repository.get("isDisabled").asBoolean();
 							boolean isEmpty = repository.get("isEmpty").asBoolean();
