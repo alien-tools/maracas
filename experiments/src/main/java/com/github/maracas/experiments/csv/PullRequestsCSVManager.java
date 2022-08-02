@@ -7,6 +7,8 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +36,8 @@ public class PullRequestsCSVManager extends CSVManager {
 
 	@Override
 	protected String[] buildColumns() {
-		return new String[] {"cursor", "owner", "name", "sshUrl", "url", "baseRepo",
-			"baseRef", "baseRefPrefix", "headRepo", "headRef", "headRefPrefix",
+		return new String[] {"cursor", "timestamp", "owner", "name", "sshUrl", "url",
+			"baseRepo", "baseRef", "baseRefPrefix", "headRepo", "headRef", "headRefPrefix",
 			"title", "number", "state", "draft", "files", "createdAt", "publishedAt",
 			"mergedAt", "closedAt", "groupId", "artifactId", "version", "filePath"};
 	}
@@ -44,6 +46,7 @@ public class PullRequestsCSVManager extends CSVManager {
 	protected Map<String, String> buildColumnsFormat() {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("cursor", "%s");
+		map.put("timestamp", "%t");
 		map.put("owner", "%s");
 		map.put("name", "%s");
 		map.put("sshUrl", "%s");
@@ -78,6 +81,7 @@ public class PullRequestsCSVManager extends CSVManager {
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Repository repo = pr.getRepository();
 				String cursor = repo.getCursor();
+				LocalDateTime timestamp = LocalDateTime.now(ZoneId.of("Europe/Amsterdam"));
 				String owner = repo.getOwner();
 				String name = repo.getName();
 				URI sshUrl = repo.getSshUrl();
@@ -105,11 +109,11 @@ public class PullRequestsCSVManager extends CSVManager {
 					List<String> pkgFiles = pr.getFilesPerPackage(pkg.getName());
 
 					for (String filePath : pkgFiles) {
-						printer.printRecord(cursor, owner, name, sshUrl, url, baseRepo,
-							baseRef, baseRefPrefix, headRepo, headRef, headRefPrefix,
-							title, number, state, draft, files, createdAt, publishedAt,
-							mergedAt, closedAt, groupId, artifactId, version,
-							filePath);
+						printer.printRecord(cursor, timestamp, owner, name, sshUrl,
+							url, baseRepo, baseRef, baseRefPrefix, headRepo, headRef,
+							headRefPrefix, title, number, state, draft, files,
+							createdAt, publishedAt, mergedAt, closedAt, groupId,
+							artifactId, version, filePath);
 					}
 				}
 

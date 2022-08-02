@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class ClientsCSVManager extends CSVManager {
 
 	@Override
 	protected String[] buildColumns() {
-		return new String[] {"cursor", "owner", "name", "sshUrl", "url", "stars",
+		return new String[] {"cursor", "timestamp", "owner", "name", "sshUrl", "url", "stars",
 			"createdAt", "pushedAt", "packages", "groupId", "artifactId", "version",
 			"path", "clients", "relevantClients", "cowner", "cname", "csshUrl",
 			"curl", "cstars"};
@@ -42,6 +43,7 @@ public class ClientsCSVManager extends CSVManager {
 	protected Map<String, String> buildColumnsFormat() {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("cursor", "%s");
+		map.put("timestamp", "%t");
 		map.put("owner", "%s");
 		map.put("name", "%s");
 		map.put("sshUrl", "%s");
@@ -72,6 +74,7 @@ public class ClientsCSVManager extends CSVManager {
 				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
 				Repository repo = pkg.getRepository();
 				String cursor = repo.getCursor();
+				LocalDateTime timestamp = LocalDateTime.now(ZoneId.of("Europe/Amsterdam"));
 				String owner = repo.getOwner();
 				String name = repo.getName();
 				URI sshUrl = repo.getSshUrl();
@@ -94,7 +97,7 @@ public class ClientsCSVManager extends CSVManager {
 					URL curl = client.getUrl();
 					int cstars = client.getStars();
 
-					printer.printRecord(cursor, owner, name, sshUrl.toString(),
+					printer.printRecord(cursor, timestamp, owner, name, sshUrl.toString(),
 						url.toString(), stars, createdAt.toString(), pushedAt.toString(),
 						packages, groupId, artifactId, version, path, clients,
 						relevantClients, cowner, cname, csshUrl.toString(),
