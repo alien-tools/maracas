@@ -127,6 +127,7 @@ public final class Queries {
 		    pushedAt
 		    sshUrl
 		    url
+
 		    languages(first: 100) {
 		      edges {
 		        node {
@@ -134,9 +135,11 @@ public final class Queries {
 		        }
 		      }
 		    }
+
 		    pom: object(expression: "HEAD:pom.xml") {
 		      oid
 		    }
+
 		    gradle: object(expression: "HEAD:build.gradle") {
 		      oid
 		    }
@@ -161,13 +164,16 @@ public final class Queries {
                     name
                     prefix
                   }
+
                   baseRepository {
                     nameWithOwner
                   }
+
                   headRef {
                     name
                     prefix
                   }
+
                   headRepository {
                     nameWithOwner
                   }

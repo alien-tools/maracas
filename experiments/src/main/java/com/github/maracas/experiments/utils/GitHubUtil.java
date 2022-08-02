@@ -8,6 +8,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,6 +23,11 @@ import org.springframework.web.client.RestTemplate;
  * Helper class to deal with the GitHub API and REST requests.
  */
 public final class GitHubUtil {
+	/**
+	 * Class logger
+	 */
+	private static final Logger logger = LogManager.getLogger(GitHubUtil.class);
+
 	/**
 	 * This class should not be instantiated.
 	 */
@@ -46,11 +53,12 @@ public final class GitHubUtil {
 				new HttpEntity<>(jsonQuery, headers), String.class);
 			return response;
 		} catch (Exception e) {
+			logger.info("Too many requests, sleeping...");
 			try {
 				Thread.sleep(30000);
 				postQuery(graphqlQuery, url, githubToken);
 			} catch (InterruptedException ie) {
-				ie.printStackTrace();
+				logger.error(e);
 				Thread.currentThread().interrupt();
 			}
 		}
@@ -73,11 +81,12 @@ public final class GitHubUtil {
 				new HttpEntity<Object>(headers), String.class);
 			return response;
 		} catch (Exception e) {
+			logger.info("Too many requests, sleeping...");
 			try {
 				Thread.sleep(30000);
 				getQuery(url, githubToken);
 			} catch (InterruptedException ie) {
-				ie.printStackTrace();
+				logger.error(e);
 				Thread.currentThread().interrupt();
 			}
 		}
@@ -113,19 +122,19 @@ public final class GitHubUtil {
 			return Jsoup.connect(url).userAgent(ua).referrer(ref).get();
 		} catch (HttpStatusException e) {
 			if (e.getStatusCode() == 429) {
-				System.out.println("Too many requests, sleeping...");
+				logger.info("Too many requests, sleeping...");
 				try {
 					Thread.sleep(30000);
 				} catch (InterruptedException ee) {
-					ee.printStackTrace();
+					logger.error(e);
 					Thread.currentThread().interrupt();
 				}
 				return fetchPage(url);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.error(e);
 			Thread.currentThread().interrupt();
 		}
 		return null;

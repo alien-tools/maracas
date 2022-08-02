@@ -183,10 +183,10 @@ public class GitHubRepositoriesFetcher {
 			? ", after: \"" + currentCursor + "\""
 				: "";
 
-//		LocalDateTime previousDate = currentDate.minusHours(12);
-//		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
-//			GitHubUtil.toGitHubDateFormat(previousDate),
-//			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
+		//		LocalDateTime previousDate = currentDate.minusHours(12);
+		//		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
+		//			GitHubUtil.toGitHubDateFormat(previousDate),
+		//			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
 		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
 			Constants.REPO_LAST_PUSHED_DATE, cursorQuery);
 
@@ -254,8 +254,8 @@ public class GitHubRepositoriesFetcher {
 
 				if (hasNextPage)
 					fetchRepositories(endCursor, currentDate);
-//				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
-//					fetchRepositories(null, previousDate);
+				//				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
+				//					fetchRepositories(null, previousDate);
 
 			} else {
 				for (JsonNode error: json.withArray("errors")) {
@@ -269,6 +269,7 @@ public class GitHubRepositoriesFetcher {
 						response.getStatusCode(), currentCursor, response.getBody());
 
 				try {
+					logger.info("Too many requests, sleeping...");
 					Thread.sleep(30000);
 					fetchRepositories(currentCursor, currentDate);
 				} catch (InterruptedException e) {
@@ -321,6 +322,7 @@ public class GitHubRepositoriesFetcher {
 
 				} else {
 					try {
+						logger.info("Too many requests, sleeping...");
 						Thread.sleep(30000);
 						fetchPullRequests(currentCursor, currentDate, repo);
 					} catch (InterruptedException e) {
@@ -389,51 +391,51 @@ public class GitHubRepositoriesFetcher {
 	 * @param currentCursor      GraphQL query cursor
 	 * @param pullRequest Target pull request
 	 */
-//	private void fetchPRFiles(int currentPage, PullRequest pullRequest) {
-//		int pageQuery = currentPage + 1;
-//		Repository repo = pullRequest.getRepository();
-//		String url = (GITHUB_REST + "/repos/%s/%s/pulls/%d/files?page=%d&per_page=100")
-//			.formatted(repo.getOwner(), repo.getName(), pullRequest.getNumber(), pageQuery);
-//
-//		try {
-//			ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
-//			if (response != null) {
-//				ObjectMapper mapper = new ObjectMapper();
-//				JsonNode json = mapper.readTree(response.getBody());
-//				JsonNode data = json.get("data");
-//
-//				if (data != null) {
-//					JsonNode search = data.get("search");
-//					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
-//					JsonNode files = pr.get("files");
-//					JsonNode pageInfo = files.get("pageInfo");
-//					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-//					String endCursor = pageInfo.get("endCursor").asText();
-//
-//					for (JsonNode fileEdge: files.withArray("edges")) {
-//						String file = fileEdge.get("node").get("path").asText();
-//						pullRequest.addFile(file);
-//
-//						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
-//							pullRequest.getTitle(), pullRequest.getNumber(), file);
-//					}
-//
-//					if (hasNextPage)
-//						fetchPRFiles(endCursor, pullRequest);
-//				} else {
-//					try {
-//						Thread.sleep(30000);
-//						fetchPRFiles(currentCursor, pullRequest);
-//					} catch (InterruptedException e) {
-//						logger.error(e);
-//						Thread.currentThread().interrupt();
-//					}
-//				}
-//			}
-//		} catch (JsonProcessingException e) {
-//			logger.error(e);
-//		}
-//	}
+	//	private void fetchPRFiles(int currentPage, PullRequest pullRequest) {
+	//		int pageQuery = currentPage + 1;
+	//		Repository repo = pullRequest.getRepository();
+	//		String url = (GITHUB_REST + "/repos/%s/%s/pulls/%d/files?page=%d&per_page=100")
+	//			.formatted(repo.getOwner(), repo.getName(), pullRequest.getNumber(), pageQuery);
+	//
+	//		try {
+	//			ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
+	//			if (response != null) {
+	//				ObjectMapper mapper = new ObjectMapper();
+	//				JsonNode json = mapper.readTree(response.getBody());
+	//				JsonNode data = json.get("data");
+	//
+	//				if (data != null) {
+	//					JsonNode search = data.get("search");
+	//					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
+	//					JsonNode files = pr.get("files");
+	//					JsonNode pageInfo = files.get("pageInfo");
+	//					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+	//					String endCursor = pageInfo.get("endCursor").asText();
+	//
+	//					for (JsonNode fileEdge: files.withArray("edges")) {
+	//						String file = fileEdge.get("node").get("path").asText();
+	//						pullRequest.addFile(file);
+	//
+	//						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
+	//							pullRequest.getTitle(), pullRequest.getNumber(), file);
+	//					}
+	//
+	//					if (hasNextPage)
+	//						fetchPRFiles(endCursor, pullRequest);
+	//				} else {
+	//					try {
+	//						Thread.sleep(30000);
+	//						fetchPRFiles(currentCursor, pullRequest);
+	//					} catch (InterruptedException e) {
+	//						logger.error(e);
+	//						Thread.currentThread().interrupt();
+	//					}
+	//				}
+	//			}
+	//		} catch (JsonProcessingException e) {
+	//			logger.error(e);
+	//		}
+	//	}
 
 	/**
 	 * Fetches all POM files within a repository and gather information about
@@ -463,23 +465,21 @@ public class GitHubRepositoriesFetcher {
 					if (downloadUrl != null && !path.isEmpty() && path.contains("pom.xml")) {
 						MavenXpp3Reader pomReader = new MavenXpp3Reader();
 
-						try {
-							URL urll = new URL(downloadUrl);
-							Document doc = Jsoup.parse(urll.openStream(), "UTF-8", "", Parser.xmlParser());
+						URL urll = new URL(downloadUrl);
+						Document doc = Jsoup.parse(urll.openStream(), "UTF-8", "", Parser.xmlParser());
 
-							Model model = pomReader.read(new ByteArrayInputStream(doc.toString().getBytes()));
-							String groupId = model.getGroupId();
-							String artifactId = model.getArtifactId();
-							String version = model.getVersion();
-							String relativePath = path.substring(0, path.indexOf("pom.xml"));
+						Model model = pomReader.read(new ByteArrayInputStream(doc.toString().getBytes()));
+						String groupId = model.getGroupId();
+						String artifactId = model.getArtifactId();
+						String version = model.getVersion();
+						String relativePath = path.substring(0, path.indexOf("pom.xml"));
 
-							if (groupId == null || version == null) {
-								Parent parent = model.getParent();
+						if (groupId == null || version == null) {
+							Parent parent = model.getParent();
 
-								if (parent != null) {
-									groupId = (groupId == null) ? parent.getGroupId() : groupId;
-									version = (version == null) ? parent.getVersion() : version;
-								}
+							if (parent != null) {
+								groupId = (groupId == null) ? parent.getGroupId() : groupId;
+								version = (version == null) ? parent.getVersion() : version;
 							}
 
 							if (groupId == null || artifactId == null) {
@@ -488,20 +488,19 @@ public class GitHubRepositoriesFetcher {
 									repo.getName(), repo.getCursor(), groupId, artifactId);
 								continue;
 							}
-
-							RepositoryPackage pkg = new RepositoryPackage(groupId,
-								artifactId, version, relativePath, repo);
-							repo.addPackage(pkg);
-
-							logger.info("{}/{} POM: {}:{}:{} - {}", repo.getOwner(),
-								repo.getName(), groupId, artifactId, version, path);
-						} catch (XmlPullParserException | IOException e) {
-							logger.error(e);
 						}
+
+						RepositoryPackage pkg = new RepositoryPackage(groupId,
+							artifactId, version, relativePath, repo);
+						repo.addPackage(pkg);
+
+						logger.info("{}/{} POM: {}:{}:{} - {}", repo.getOwner(),
+							repo.getName(), groupId, artifactId, version, path);
+
 					}
 				}
 			}
-		} catch (JsonProcessingException e) {
+		} catch (XmlPullParserException | IOException e) {
 			logger.error(e);
 		}
 	}
@@ -607,8 +606,7 @@ public class GitHubRepositoriesFetcher {
 			String[] clientArray = clientRepo.split(" ");
 			String owner = clientArray[0];
 			String repo = clientArray[2];
-			String query = Queries.GRAPHQL_CLIENT_QUERY
-				.formatted(owner, repo);
+			String query = Queries.GRAPHQL_CLIENT_QUERY.formatted(owner, repo);
 
 			try {
 				ResponseEntity<String> response = GitHubUtil.postQuery(query,
