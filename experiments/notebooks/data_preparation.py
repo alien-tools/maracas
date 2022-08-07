@@ -5,7 +5,7 @@ import pandas as pd
 
 def compute_url_parts(url_col: str) -> tuple[str, str]:
     """
-    Returns the GitHub scheme and authority of the clients data 
+    Returns the GitHub scheme and authority of the data 
     frame column.
     :param url_col: name of the column in the data frame. Can 
         be 'sshUrl', 'url', 'csshUrl', or 'curl'
@@ -24,7 +24,7 @@ def compute_url_parts(url_col: str) -> tuple[str, str]:
         
 def validate_urls(url_col: str, df: pd.DataFrame) -> bool:
     """
-    Validates if the values of a given URL column within the clients
+    Validates if the values of a given URL column within the
     data frame are valid. Concretely, it performs three checks:
     1. all URLs start with the expected scheme; 2. all URLs 
     contain the expected authority, and; 3. all URLs are built 
@@ -32,7 +32,7 @@ def validate_urls(url_col: str, df: pd.DataFrame) -> bool:
     repository owner and name values.
     :param url_col: name of the column in the data frame. Can 
         be 'sshUrl', 'url', 'csshUrl', or 'curl'
-    :param df: clients data frame
+    :param df: target data frame
     :returns: `True` if all checks pass, `False` otherwise.
     """
     # Define owner and name column names
@@ -69,11 +69,11 @@ def validate_urls(url_col: str, df: pd.DataFrame) -> bool:
 def validate_date(date_col: str, df: pd.DataFrame) -> bool:
     """
     Validates if the values of a given date column within the 
-    clients data frame are valid. Concretely, it checks if all 
-    dates are of the format yyyy-MM-dd.
+    data frame are valid. Concretely, it checks if all dates 
+    are of the format yyyy-MM-dd.
     :param date_col: name of the column in the data frame. Can 
         be 'createdAt' or 'pushedAt'
-    :param df: clients data frame
+    :param df: target data frame
     :returns: `True` if the check passes, `False` otherwise.
     :raises: `ValueError` if the date_col is invalid.
     """
@@ -90,20 +90,20 @@ def validate_date(date_col: str, df: pd.DataFrame) -> bool:
 def validate_limit_date(limit_date: datetime, date_col: str, df: pd.DataFrame) -> bool:
     """
     Validates if the values of a given date column within the 
-    clients data frame are valid. Concretely, it performs two 
-    checks: 1. all date appear after a limit date, and; 2. all 
-    dates appear before the present date.
+    data frame are valid. Concretely, it performs two checks: 
+    1. all date appear after a limit date, and; 2. all dates 
+    appear before the present date.
     :param limit_date: limit past date for all records
     :param date_col: name of the column in the data frame. Can 
         be 'createdAt' or 'pushedAt'
-    :param df: clients data frame
+    :param df: target data frame
     :returns: `True` if all checks pass, `False` otherwise.
     :raises: `ValueError` if the date_col is invalid.
     """ 
     if date_col not in ['createdAt', 'pushedAt']:
         raise ValueError('Invalid date_col value')
     
-    mask = pd.to_datetime(df[date_col]) > limit_date
+    mask = pd.to_datetime(df[date_col]) >= limit_date
     limit_check = mask.all()
     print(f'Records appear after {limit_date}: {limit_check}')
     
@@ -118,16 +118,16 @@ def validate_limit_date(limit_date: datetime, date_col: str, df: pd.DataFrame) -
 def validate_limit_num(limit_num: int, num_col: str, df: pd.DataFrame) -> bool:
     """
     Validates if the values of a given numerical column within the 
-    clients data frame are valid. Concretely, it checks if they are 
-    greater than or equal to a limit number.
+    data frame are valid. Concretely, it checks if they are greater 
+    than or equal to a limit number.
     :param limit_num: limit number
     :param num_col: name of the column in the data frame. Can 
         be 'stars', 'packages', 'clients', 'relevantClients' or 'cstars'
-    :param df: clients data frame
+    :param df: target data frame
     :returns: `True` if the check passes, `False` otherwise.
     :raises: `ValueError` if the num_col is invalid.
     """
-    if num_col not in ['stars', 'packages', 'clients', 'relevantClients', 'cstars']:
+    if num_col not in ['stars', 'packages', 'clients', 'relevantClients', 'cstars', 'files']:
         raise ValueError('Invalid num_colnum_col value')
     
     mask = df[num_col] >= limit_num
@@ -135,3 +135,27 @@ def validate_limit_num(limit_num: int, num_col: str, df: pd.DataFrame) -> bool:
     print(f'Records have at least {limit_num}: {limit_check}')
     
     return limit_check
+
+
+def validate_repo_name(repo_col: str, df: pd.DataFrame) -> bool:
+    mask = df[repo_col] == df['owner'].map(str) + '/' + df['name'].map(str)
+    repo_name_check = mask.all()
+    print(f'Records have right repository name: {repo_name_check}')
+    
+    return repo_name_check
+
+
+def validate_repo_name_format(repo_col: str, df: pd.DataFrame) -> bool:
+    mask = df[repo_col].str.match('^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$')
+    repo_name_check = mask.all()
+    print(f'Records have right repository name format: {repo_name_check}')
+    
+    return repo_name_check
+
+
+def validate_value(value: any, col: str, df: pd.DataFrame) -> bool:
+    mask = df[col] == value
+    value_check = mask.all()
+    print(f'Records have value {value}: {value_check}')
+    
+    return value_check
