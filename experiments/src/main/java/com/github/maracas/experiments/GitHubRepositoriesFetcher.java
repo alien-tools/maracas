@@ -474,6 +474,7 @@ public class GitHubRepositoriesFetcher {
 						String version = model.getVersion();
 						String packaging = model.getPackaging();
 						String relativePath = path.substring(0, path.indexOf("pom.xml"));
+						relativePath = (relativePath.isEmpty()) ? "/" : relativePath;
 
 						if (packaging != null && !packaging.equals("jar"))
 							continue;
