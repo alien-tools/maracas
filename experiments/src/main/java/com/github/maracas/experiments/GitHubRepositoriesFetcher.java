@@ -472,7 +472,11 @@ public class GitHubRepositoriesFetcher {
 						String groupId = model.getGroupId();
 						String artifactId = model.getArtifactId();
 						String version = model.getVersion();
+						String packaging = model.getPackaging();
 						String relativePath = path.substring(0, path.indexOf("pom.xml"));
+
+						if (packaging != null && !packaging.equals("jar"))
+							continue;
 
 						if (groupId == null || version == null) {
 							Parent parent = model.getParent();
