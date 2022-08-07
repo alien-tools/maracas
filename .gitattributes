@@ -2,3 +2,6 @@ experiments/data/clients-vm1.csv filter=lfs diff=lfs merge=lfs -text
 experiments/data/prs-vm1.csv filter=lfs diff=lfs merge=lfs -text
 experiments/data/clients-vm2.csv filter=lfs diff=lfs merge=lfs -text
 experiments/data/prs-vm2.csv filter=lfs diff=lfs merge=lfs -text
+experiments/data/prs-vm2-timestamp.csv filter=lfs diff=lfs merge=lfs -text
+experiments/data/clients-vm2-timestamp.csv filter=lfs diff=lfs merge=lfs -text
+experiments/data/clients-cleaned.csv filter=lfs diff=lfs merge=lfs -text
