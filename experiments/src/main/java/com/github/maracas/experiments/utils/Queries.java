@@ -152,7 +152,7 @@ public final class Queries {
 		query {
 		  search(
 		    type: ISSUE
-		    query: "repo:%s/%s is:pr created:%s..%s is:open",
+		    query: "repo:%s/%s is:pr created:>%s is:open",
 		    first: 100
 		    %s
 		  ) {
