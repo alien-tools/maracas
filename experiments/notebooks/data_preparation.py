@@ -148,7 +148,7 @@ def validate_repo_name(repo_col: str, df: pd.DataFrame) -> bool:
     :returns: `True` if the check passes, `False` otherwise.
     :raises: `ValueError` if the repo_col is invalid.
     """
-    if repor_col not in ['baseRepo']:
+    if repo_col not in ['baseRepo']:
         raise ValueError('Invalid repo_col value')
         
     mask = df[repo_col] == df['owner'].map(str) + '/' + df['name'].map(str)
@@ -169,7 +169,7 @@ def validate_repo_name_format(repo_col: str, df: pd.DataFrame) -> bool:
     :returns: `True` if the check passes, `False` otherwise.
     :raises: `ValueError` if the repo_col is invalid.
     """
-    if repor_col not in ['baseRepo', 'headRepo']:
+    if repo_col not in ['baseRepo', 'headRepo']:
         raise ValueError('Invalid repo_col value')
         
     mask = df[repo_col].str.match('^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$')
