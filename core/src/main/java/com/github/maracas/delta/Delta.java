@@ -12,6 +12,7 @@ import com.google.common.base.Stopwatch;
 import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import spoon.Launcher;
 import spoon.SpoonException;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtElement;
@@ -20,8 +21,11 @@ import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -82,17 +86,39 @@ public class Delta {
 		// to our own. Building an empty model with the right
 		// classpath allows us to create these references.
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModelFromJar(oldJar);
-		CtPackage root = model.getRootPackage();
-		logger.info("Building Spoon model from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
 
-		sw.reset();
-		sw.start();
-		JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root);
-		JApiCmpDeltaVisitor.visit(classes, visitor);
-		logger.info("Mapping JApiCmp's breaking changes to Spoon took {}ms", sw.elapsed().toMillis());
+		try {
+			// Spoon will prioritize the JVM's classpath over our own
+			// custom classpath in case of conflict. Not what we want,
+			// so we use a custom child-first classloader instead.
+			// cf. https://github.com/INRIA/spoon/issues/3789
+			//String[] javaCp = { cp.toAbsolutePath().toString() };
+			//launcher.getEnvironment().setSourceClasspath(javaCp);
 
-		return new Delta(oldJar, newJar, visitor.getBreakingChanges());
+			URL[] cp = {new URL("file:" + oldJar.toAbsolutePath())};
+			URLClassLoader cl = new SpoonHelpers.ParentLastURLClassLoader(cp);
+			Launcher launcher = new Launcher();
+			launcher.getEnvironment().setInputClassLoader(cl);
+
+			CtModel model = launcher.buildModel();
+			CtPackage root = model.getRootPackage();
+			logger.info("Building Spoon model from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
+
+			sw.reset();
+			sw.start();
+			JApiCmpToSpoonVisitor visitor = new JApiCmpToSpoonVisitor(root);
+			JApiCmpDeltaVisitor.visit(classes, visitor);
+			logger.info("Mapping JApiCmp's breaking changes to Spoon took {}ms", sw.elapsed().toMillis());
+
+			// Explicitly closing the classloader to avoid dangling JAR references (issue #72)
+			cl.close();
+
+			return new Delta(oldJar, newJar, visitor.getBreakingChanges());
+		} catch (IOException e) {
+			logger.error(e);
+		}
+
+		return new Delta(oldJar, newJar, Collections.emptyList());
 	}
 
 	/**

@@ -16,12 +16,11 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -48,27 +47,6 @@ public final class SpoonHelpers {
 			String jar = libraryJar.toAbsolutePath().toString();
 			String[] newCp = ArrayUtils.add(cp, jar);
 			launcher.getEnvironment().setSourceClasspath(newCp);
-		}
-
-		return launcher.buildModel();
-	}
-
-	public static CtModel buildSpoonModelFromJar(Path jar) {
-		Launcher launcher = new Launcher();
-
-		try {
-			// Spoon will prioritize the JVM's classpath over our own
-			// custom classpath in case of conflict. Not what we want,
-			// so we use a custom child-first classloader instead.
-			// cf. https://github.com/INRIA/spoon/issues/3789
-			//String[] javaCp = { cp.toAbsolutePath().toString() };
-			//launcher.getEnvironment().setSourceClasspath(javaCp);
-
-			URL[] cp = {new URL("file:" + jar.toAbsolutePath())};
-			ClassLoader cl = new ParentLastURLClassLoader(cp);
-			launcher.getEnvironment().setInputClassLoader(cl);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
 		}
 
 		return launcher.buildModel();
@@ -188,7 +166,7 @@ public final class SpoonHelpers {
 	 * <p>
 	 * For those not familiar with class loading trickery, be wary
 	 */
-	private static class ParentLastURLClassLoader extends URLClassLoader {
+	public static class ParentLastURLClassLoader extends URLClassLoader {
 		private final ChildURLClassLoader childClassLoader;
 
 		/**
@@ -252,6 +230,12 @@ public final class SpoonHelpers {
 				// didn't find it, try the parent
 				return super.loadClass(name, resolve);
 			}
+		}
+
+		@Override
+		public void close() throws IOException {
+			childClassLoader.close();
+			super.close();
 		}
 	}
 }
