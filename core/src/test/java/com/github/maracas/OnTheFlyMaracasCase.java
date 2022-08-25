@@ -81,14 +81,17 @@ public class OnTheFlyMaracasCase {
 		Path newJar = Paths.get(TMP_PATH, "new.jar");
 		otf.createJar(newJar, List.of(newClassFile));
 
-		Path clientFile = Paths.get(TMP_PATH, "client/src/main/java/Client.java");
+		Path clientPath = Paths.get(TMP_PATH).resolve("client");
+		Path clientFile = clientPath.resolve("src/main/java/Client.java");
+		Path pomFile = clientPath.resolve("pom.xml");
 		clientFile.toFile().getParentFile().mkdirs();
 		Files.writeString(clientFile, client);
+		Files.writeString(pomFile, "<project></project>");
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(oldJar.toAbsolutePath())
 			.newJar(newJar.toAbsolutePath())
-			.client(clientFile.getParent())
+			.client(clientPath)
 			.build();
 
 		return Maracas.analyze(query);

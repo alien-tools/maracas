@@ -55,12 +55,12 @@ class SpoonTests extends AbstractControllerTest {
 			  - repository: SpoonLabs/astor
 			  - repository: SpoonLabs/npefix
 			  - repository: SpoonLabs/nopol
-			    sources: nopol/src/main/java
+			    module: nopol
 			  - repository: STAMP-project/AssertFixer
 			  - repository: Spirals-Team/casper
 			  - repository: SpoonLabs/CoCoSpoon
 			  - repository: STAMP-project/dspot
-			    sources: dspot/src/main/java
+			    module: dspot
 			  - repository: SpoonLabs/gumtree-spoon-ast-diff
 			  - repository: Spirals-Team/jPerturb
 			  - repository: SpoonLabs/metamutator

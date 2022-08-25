@@ -14,6 +14,7 @@ import japicmp.cmp.JarArchiveComparatorOptions;
 import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import spoon.SpoonException;
 import spoon.reflect.CtModel;
 
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ public class Maracas {
 	 * @param query The query to analyze
 	 * @return the resulting {@link AnalysisResult} with delta and broken uses
 	 * @throws NullPointerException if query is null
+	 * @throws SpoonException if we cannot build the Spoon model from the old JAR or source directory
 	 */
 	public static AnalysisResult analyze(AnalysisQuery query) {
 		Objects.requireNonNull(query);
@@ -70,6 +72,7 @@ public class Maracas {
 	 * @param options Maracas and JApiCmp options
 	 * @return a new delta model based on JapiCmp's results
 	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
+	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
 	 * @see #computeDelta(Path, Path, MaracasOptions)
 	 */
@@ -111,6 +114,7 @@ public class Maracas {
 	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
 	 * @throws IllegalArgumentException if client isn't a valid directory
 	 * @throws NullPointerException     if delta is null
+	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
 	 */
 	public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
 		if (!PathHelpers.isValidDirectory(client))
@@ -119,7 +123,7 @@ public class Maracas {
 
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
-			CtModel model = SpoonHelpers.buildSpoonModel(client, delta.getOldJar());
+			CtModel model = SpoonHelpers.buildSpoonModelFromSources(client, delta.getOldJar());
 			logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
 
 			sw.reset();

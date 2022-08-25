@@ -42,8 +42,8 @@ class MaracasReportTests {
 	void setUp() {
 		Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c1 = Paths.get("../test-data/comp-changes/client/src");
-		Path sources = Paths.get("../test-data/comp-changes/old/src");
+		Path c1 = Paths.get("../test-data/comp-changes/client/");
+		Path sources = Paths.get("../test-data/comp-changes/old/");
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)
@@ -54,7 +54,7 @@ class MaracasReportTests {
 		AnalysisResult result = Maracas.analyze(query);
 
 		GitHubForge forge = new GitHubForge(github);
-		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 2);
+		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 6);
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(
