@@ -16,10 +16,15 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
 //import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
+import org.hamcrest.io.FileMatchers;
 import org.junit.jupiter.api.Test;
 
 import com.github.maracas.brokenuse.BrokenUse;
@@ -222,4 +227,34 @@ class MaracasTest {
 		);
 	}
 
+	// Analyzed JARs may hang somewhere in some in-memory classloader,
+	// in which case Windows will refuse to remove them later
+	// cf. https://github.com/alien-tools/maracas/issues/72
+	@Test
+	void computeDelta_releasesJars() {
+		Path tmpJar1 = Paths.get("./tmp1.jar");
+		Path tmpJar2 = Paths.get("./tmp2.jar");
+
+		try {
+			Files.copy(v1, tmpJar1);
+			Files.copy(v2, tmpJar2);
+		} catch (IOException e) {
+			fail(e);
+		}
+
+		assertThat(tmpJar1.toFile(), FileMatchers.anExistingFile());
+		assertThat(tmpJar2.toFile(), FileMatchers.anExistingFile());
+
+		Maracas.computeDelta(tmpJar1, tmpJar2);
+
+		try {
+			Files.delete(tmpJar1);
+			Files.delete(tmpJar2);
+		} catch (IOException e) {
+			fail(e);
+		}
+
+		assertThat(tmpJar1.toFile(), not(FileMatchers.anExistingFile()));
+		assertThat(tmpJar2.toFile(), not(FileMatchers.anExistingFile()));
+	}
 }
