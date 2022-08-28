@@ -11,7 +11,6 @@ import com.github.maracas.visitors.MethodReturnTypeChangedVisitor;
 import japicmp.model.JApiBehavior;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiMethod;
-import javassist.NotFoundException;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -43,14 +42,9 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 				case METHOD_NOW_FINAL           -> new MethodNowFinalVisitor(mRef);
 				case METHOD_NOW_ABSTRACT        -> new MethodNowAbstractVisitor(mRef);
 				case METHOD_RETURN_TYPE_CHANGED -> {
-					try {
-						// Thanks for the checked exception japi <3
-						String newTypeName = ((JApiMethod) jApiMethod).getNewMethod().get().getReturnType().getName();
+						String newTypeName = ((JApiMethod) jApiMethod).getReturnType().getNewReturnType();
 						CtTypeReference<?> newType = mRef.getFactory().Type().createReference(newTypeName);
 						yield new MethodReturnTypeChangedVisitor(mRef, newType);
-					} catch (NotFoundException e) {
-						throw new IllegalStateException("japicmp gave us a METHOD_RETURN_TYPE_CHANGED without the new type of the method");
-					}
 				}
 				case METHOD_LESS_ACCESSIBLE -> null; // TODO: To be implemented
 				case METHOD_IS_STATIC_AND_OVERRIDES_NOT_STATIC -> null; // TODO: To be implemented
