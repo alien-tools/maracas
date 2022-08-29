@@ -98,7 +98,7 @@ class PopularLibrariesTest {
 
 	static Stream<Arguments> problematicCases() {
 		return Stream.of(
-			Arguments.of("asm", "asm-analysis", "2.2.3", "3.2", "org.codehaus.groovy", "groovy", "1.6.9" )
+			//Arguments.of("org.ow2.asm", "asm-analysis", "2.2.3", "3.2", "org.codehaus.groovy", "groovy", "1.6.9" )
 		);
 	}
 

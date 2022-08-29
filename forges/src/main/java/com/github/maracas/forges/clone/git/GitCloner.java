@@ -31,8 +31,10 @@ public class GitCloner implements Cloner {
 
 		if (!dest.toFile().exists())
 			dest.toFile().mkdirs();
-		else
+		else {
+			logger.info("{} exists; skipping", dest);
 			return dest;
+		}
 
 		Stopwatch sw = Stopwatch.createStarted();
 		String workingDirectory = dest.toAbsolutePath().toString();
@@ -50,6 +52,13 @@ public class GitCloner implements Cloner {
 	public Path clone(Repository repository, Path dest) {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(dest);
+
+		if (!dest.toFile().exists())
+			dest.toFile().mkdirs();
+		else {
+			logger.info("{} exists; skipping", dest);
+			return dest;
+		}
 
 		Stopwatch sw = Stopwatch.createStarted();
 		executeCommand(

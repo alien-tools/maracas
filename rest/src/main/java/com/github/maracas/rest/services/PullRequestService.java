@@ -201,7 +201,7 @@ public class PullRequestService {
 
 	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
 		Path clonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(clonePath.resolve(config.build().module()));
+		BuildConfig buildConfig = new BuildConfig(clonePath, Paths.get(config.build().module()));
 		config.build().goals().forEach(g -> buildConfig.addGoal(g));
 		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
