@@ -11,7 +11,7 @@ import static org.hamcrest.Matchers.*;
 class ConfigLessGithubControllerTests extends AbstractControllerTest {
 	@Test
 	void testAnalyzePRPushConfigLess() {
-		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
+		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));

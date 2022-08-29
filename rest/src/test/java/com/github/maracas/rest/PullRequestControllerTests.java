@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PullRequestControllerTests extends AbstractControllerTest {
 	@Test
 	void testAnalyzePRSync() {
-		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 3));
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
@@ -33,7 +33,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 	@Test
 	void testAnalyzePRPoll() {
-		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "comp-changes", 3));
+		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
@@ -44,7 +44,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 	@Test
 	void testAnalyzePRPush() {
-		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 3));
+		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
@@ -95,7 +95,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			clients:
 			  - repository: alien-tools/comp-changes-client""";
 
-		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 3, bbConfig));
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
@@ -110,7 +110,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			build:
 			  module: unknown/""";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.message", containsString("BuildException")));
 	}
@@ -206,7 +206,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			clients:
 			  - repository: unknown/repository""";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
 			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't fetch repository")));
 	}
 
@@ -214,7 +214,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	void testPRWithInvalidBreakbotFile() throws Exception {
 		String bbConfig = "nope";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/2").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message", containsString("Couldn't parse .github/breakbot.yml")));
 	}
@@ -272,7 +272,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  - '*tests*'
 			  - '*unstablePkg*'""";
 
-		PullRequestResponse response = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 2, bbConfig));
+		PullRequestResponse response = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 
 		Collection<String> brokenDecls =
 			response.report().delta().breakingChanges().stream().

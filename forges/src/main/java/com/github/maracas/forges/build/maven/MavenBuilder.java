@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -48,7 +49,7 @@ public class MavenBuilder extends AbstractBuilder {
 
 	@Override
 	public void build() {
-		File pomFile = config.getBasePath().resolve(config.getModule()).resolve(BUILD_FILE).toFile();
+		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
@@ -68,6 +69,8 @@ public class MavenBuilder extends AbstractBuilder {
 			request.setPomFile(pomFile);
 			request.setGoals(goals);
 			request.setProperties(properties);
+			request.setProjects(Collections.singletonList(config.getModule().toString()));
+			request.setAlsoMake(true);
 			request.setBatchMode(true);
 			request.setQuiet(true);
 			// For some reason, every handler but setOutputHandler is ignored

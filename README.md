@@ -2,7 +2,7 @@
 
 # Maracas
 
-Maracas is a source code and bytecode analysis framework⁠—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—designed to analyze how Java libraries evolve and how their evolution impact their clients.
+Maracas is a source code and bytecode analysis framework—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—designed to analyze how Java libraries evolve and how their evolution impact their clients.
 
 Currently, Maracas consists of three main components:
   - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code

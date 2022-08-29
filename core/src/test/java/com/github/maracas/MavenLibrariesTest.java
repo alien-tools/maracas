@@ -2,6 +2,7 @@ package com.github.maracas;
 
 import japicmp.model.AccessModifier;
 import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,13 +27,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Run the Maracas analysis on some popular libraries from Maven Central
  * and run some basic checks on the resulting models.
- * The old version of the library is used as client for broken use analysis.
  */
 @Tag("slow")
 class PopularLibrariesTest {
 	static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
 
-	static Stream<Arguments> interestingLibraries() {
+	static Stream<Arguments> popularLibraries() {
 		return Stream.of(
 			Arguments.of("com.google.guava", "guava", "18.0", "19.0"),
 			//Arguments.of("com.google.guava",           "guava",             "30.0-jre", "31.0.1-jre"),
@@ -56,11 +56,58 @@ class PopularLibrariesTest {
 		);
 	}
 
+	// The old version of the library is used as client for broken use analysis.
 	@ParameterizedTest
-	@MethodSource("interestingLibraries")
-	void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) {
-		Path oldJar = downloadJAR(coordinatesToJarURL(gid, aid, v1));
-		Path newJar = downloadJAR(coordinatesToJarURL(gid, aid, v2));
+	@MethodSource("popularLibraries")
+	void test_Maven_Library_Analyses(String gid, String aid, String v1, String v2) throws IOException {
+		Path oldJar = download(coordinatesToJarURL(gid, aid, v1));
+		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
+		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
+
+		// Since we're using the libraries as clients themselves (so all package names clash),
+		// the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
+		MaracasOptions opts = MaracasOptions.newDefault();
+		opts.getJApiOptions().setAccessModifier(AccessModifier.PROTECTED);
+
+		AnalysisQuery query = AnalysisQuery.builder()
+			.oldJar(oldJar)
+			.newJar(newJar)
+			.client(sources)
+			.options(opts)
+			.build();
+
+		AnalysisResult result = Maracas.analyze(query);
+		assertThat(result.delta(), is(notNullValue()));
+		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
+			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
+
+		result.delta().getBreakingChanges().forEach(bc -> assertThat(bc.getReference(), is(notNullValue())));
+		result.allBrokenUses().forEach(d -> {
+			assertThat(d.element(), is(notNullValue()));
+			assertThat(d.element().getPosition().isValidPosition(), is(true));
+			assertThat(d.usedApiElement(), is(notNullValue()));
+			assertThat(d.source(), is(notNullValue()));
+		});
+
+		result.delta().populateLocations(sources);
+		result.delta().getBreakingChanges().forEach(bc -> {
+			assertThat(bc.getSourceElement(), is(notNullValue()));
+			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
+		});
+	}
+
+	static Stream<Arguments> problematicCases() {
+		return Stream.of(
+			Arguments.of("asm", "asm-analysis", "2.2.3", "3.2", "org.codehaus.groovy", "groovy", "1.6.9" )
+		);
+	}
+
+	// Some cases that were failing
+	@ParameterizedTest
+	@MethodSource("problematicCases")
+	void test_Problematic_Cases(String gid, String aid, String v1, String v2) throws IOException {
+		Path oldJar = download(coordinatesToJarURL(gid, aid, v1));
+		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
 		// Since we're using the libraries as clients themselves (so all package names clash),
@@ -102,7 +149,7 @@ class PopularLibrariesTest {
 
 	@AfterAll
 	static void cleanUp() throws IOException {
-		FileUtils.deleteDirectory(TMP_PATH.toFile());
+		//FileUtils.deleteDirectory(TMP_PATH.toFile());
 	}
 
 	String coordinatesToJarURL(String gid, String aid, String v) {
@@ -115,7 +162,7 @@ class PopularLibrariesTest {
 			gid.replaceAll("\\.", "/"), aid, v, aid, v);
 	}
 
-	static Path downloadJAR(String uri) {
+	static Path download(String uri) {
 		try {
 			URL url = new URL(uri);
 			String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1);
@@ -131,14 +178,16 @@ class PopularLibrariesTest {
 	}
 
 	static Path downloadAndExtractSources(String uri) {
-		Path sourcesJar = downloadJAR(uri);
+		Path sourcesJar = download(uri);
 		String filename = sourcesJar.getFileName().toString();
 		Path dest = TMP_PATH.resolve(filename.substring(0, filename.length() - 4));
-		dest.toFile().mkdirs();
+		Path srcPath = dest.resolve("src/main/java");
+		srcPath.toFile().mkdir();
 
-		try (ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString())) {
-			zipFile.extractAll(dest.toAbsolutePath().toString());
-		} catch (IOException e) {
+		try {
+			ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString());
+			zipFile.extractAll(srcPath.toAbsolutePath().toString());
+		} catch (ZipException e) {
 			e.printStackTrace();
 		}
 
