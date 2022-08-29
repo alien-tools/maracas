@@ -21,6 +21,7 @@ class MavenBuilderTest {
 	final Path errorProject = Paths.get("src/test/resources/maven-project-error/");
 	final Path errorTarget = errorProject.resolve("target/");
 	final Path multiProject = Paths.get("src/test/resources/maven-multi-project/");
+	final Path invalidProject = Paths.get("src/test/resources/gradle-project");
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -72,6 +73,13 @@ class MavenBuilderTest {
 	}
 
 	@Test
+	void build_no_pom() {
+		Builder builder = new MavenBuilder(new BuildConfig(invalidProject));
+		Exception thrown = assertThrows(BuildException.class, builder::build);
+		assertThat(thrown.getMessage(), containsString("Couldn't find pom.xml"));
+	}
+
+	@Test
 	void build_multi_core_default() {
 		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("core-module")));
 		builder.build();
@@ -91,6 +99,6 @@ class MavenBuilderTest {
 	void build_multi_invalid() {
 		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
-		assertThat(thrown.getMessage(), containsString("Couldn't parse"));
+		assertThat(thrown.getMessage(), containsString("Couldn't find module nope"));
 	}
 }

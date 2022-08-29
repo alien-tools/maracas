@@ -194,7 +194,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("Don't know how to build")),
+					.withBody(subString("Couldn't find module")),
 				exactly(1)
 			);
 		}

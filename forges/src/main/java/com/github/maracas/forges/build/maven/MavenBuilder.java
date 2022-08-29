@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +52,11 @@ public class MavenBuilder extends AbstractBuilder {
 	public void build() {
 		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
 
+		if (!pomFile.exists())
+			throw new BuildException("Couldn't find pom.xml in %s".formatted(config.getBasePath()));
+		if (!config.getBasePath().resolve(config.getModule()).toFile().exists())
+			throw new BuildException("Couldn't find module %s in %s".formatted(config.getModule(), config.getBasePath()));
+
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
 			List<String> goals = config.getGoals().isEmpty()
@@ -60,8 +66,8 @@ public class MavenBuilder extends AbstractBuilder {
 				? DEFAULT_PROPERTIES
 				: config.getProperties();
 
-			logger.info("Building {} with goals={} properties={}",
-				pomFile, goals, properties);
+			logger.info("Building {} with module={} goals={} properties={}",
+				pomFile, config.getModule(), goals, properties);
 
 			Stopwatch sw = Stopwatch.createStarted();
 			StringBuilder errors = new StringBuilder();
@@ -89,8 +95,8 @@ public class MavenBuilder extends AbstractBuilder {
 				if (result.getExitCode() != 0)
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
 
-				logger.info("Building {} with goals={} properties={} took {}ms",
-					pomFile, goals, properties, sw.elapsed().toMillis());
+				logger.info("Building {} with module={} goals={} properties={} took {}ms",
+					pomFile, config.getModule(), goals, properties, sw.elapsed().toMillis());
 			} catch (MavenInvocationException e) {
 				throw new BuildException("Error invoking Maven", e);
 			}
@@ -113,7 +119,7 @@ public class MavenBuilder extends AbstractBuilder {
 			if (Files.exists(jar))
 				return Optional.of(jar);
 			else {
-				logger.warn("Couldn't find JAR at " + jar);
+				logger.warn("Couldn't find JAR at {}", jar);
 				return Optional.empty();
 			}
 		} catch (IOException | XmlPullParserException e) {

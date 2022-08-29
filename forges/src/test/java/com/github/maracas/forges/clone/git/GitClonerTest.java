@@ -101,7 +101,7 @@ class GitClonerTest {
 		Exception thrown = assertThrows(CloneException.class, () ->
 			cloner.clone(
 				new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
-				readOnly)
+				readOnly.resolve("clone"))
 		);
 		assertThat(thrown.getMessage(), containsString("Permission denied"));
 	}
