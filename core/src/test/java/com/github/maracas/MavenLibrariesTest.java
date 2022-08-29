@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * and run some basic checks on the resulting models.
  */
 @Tag("slow")
-class PopularLibrariesTest {
+class MavenLibrariesTest {
 	static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
 
 	static Stream<Arguments> popularLibraries() {
@@ -98,7 +98,7 @@ class PopularLibrariesTest {
 
 	static Stream<Arguments> problematicCases() {
 		return Stream.of(
-			//Arguments.of("org.ow2.asm", "asm-analysis", "2.2.3", "3.2", "org.codehaus.groovy", "groovy", "1.6.9" )
+			Arguments.of("cn.bestwu", "starter-logging", "2.0.5", "2.0.6", "cn.bestwu.autodoc", "gen", "0.0.9")
 		);
 	}
 
@@ -110,16 +110,10 @@ class PopularLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
-		// Since we're using the libraries as clients themselves (so all package names clash),
-		// the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
-		MaracasOptions opts = MaracasOptions.newDefault();
-		opts.getJApiOptions().setAccessModifier(AccessModifier.PROTECTED);
-
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(oldJar)
 			.newJar(newJar)
 			.client(sources)
-			.options(opts)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
@@ -149,7 +143,7 @@ class PopularLibrariesTest {
 
 	@AfterAll
 	static void cleanUp() throws IOException {
-		//FileUtils.deleteDirectory(TMP_PATH.toFile());
+		FileUtils.deleteDirectory(TMP_PATH.toFile());
 	}
 
 	String coordinatesToJarURL(String gid, String aid, String v) {
