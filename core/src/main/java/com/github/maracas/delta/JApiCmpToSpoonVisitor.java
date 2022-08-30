@@ -31,10 +31,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 
 	@Override
 	public void visit(JApiClass cls) {
-		// New types in the new version don't have to be looked at
-		if (cls.getChangeStatus().equals(JApiChangeStatus.NEW))
-			return;
-
 		Collection<JApiCompatibilityChange> bcs = cls.getCompatibilityChanges();
 		if (!bcs.isEmpty()) {
 			CtTypeReference<?> clsRef = root.getFactory().Type().createReference(cls.getFullyQualifiedName());
