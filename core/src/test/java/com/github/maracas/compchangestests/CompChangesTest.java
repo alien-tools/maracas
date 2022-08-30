@@ -30,11 +30,13 @@ public class CompChangesTest {
 	static void setUp() {
 		Path v1 = TestData.compChangesV1;
 		Path v2 = TestData.compChangesV2;
+		Path sources = TestData.compChangesSources;
 		Path client = TestData.compChangesClient;
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldJar(v1)
 			.newJar(v2)
+			.sources(sources)
 			.client(client)
 			.exclude("@main.unstableAnnon.Beta")
 			.exclude("@main.unstableAnnon.IsUnstable")

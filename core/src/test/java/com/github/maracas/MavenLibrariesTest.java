@@ -77,6 +77,7 @@ class MavenLibrariesTest {
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
+		result.delta().populateLocations(sources);
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
@@ -87,12 +88,6 @@ class MavenLibrariesTest {
 			assertThat(d.element().getPosition().isValidPosition(), is(true));
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
-		});
-
-		result.delta().populateLocations(sources);
-		result.delta().getBreakingChanges().forEach(bc -> {
-			assertThat(bc.getSourceElement(), is(notNullValue()));
-			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
 		});
 	}
 
@@ -117,6 +112,7 @@ class MavenLibrariesTest {
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
+		result.delta().populateLocations(sources);
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
@@ -127,12 +123,6 @@ class MavenLibrariesTest {
 			assertThat(d.element().getPosition().isValidPosition(), is(true));
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
-		});
-
-		result.delta().populateLocations(sources);
-		result.delta().getBreakingChanges().forEach(bc -> {
-			assertThat(bc.getSourceElement(), is(notNullValue()));
-			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
 		});
 	}
 

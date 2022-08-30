@@ -98,7 +98,7 @@ public class Delta {
 	/**
 	 * Delta models do not natively include source code locations. Invoking
 	 * this method with the old library's source code populates the source code
-	 * location for every breaking change.
+	 * location for most breaking changes.
 	 *
 	 * @param sources a {@link java.nio.file.Path} to the old library's source code
 	 * @throws SpoonException if we cannot build the Spoon model from {@code sources}
@@ -122,11 +122,11 @@ public class Delta {
 			if (source != null)
 				bc.setSourceElement(source);
 			else
-				logger.warn("Couldn't resolve a source location for {} in {}", binaryRef, sources);
+				logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), sources);
 		});
 
 		// Remove breaking changes that do not map to a source location
-		breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
+		//breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
 
 		logger.info("Mapping binary breaking changes to source code took {}ms", sw.elapsed().toMillis());
 	}

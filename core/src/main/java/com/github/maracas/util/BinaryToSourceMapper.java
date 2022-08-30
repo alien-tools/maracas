@@ -15,6 +15,11 @@ import java.util.Optional;
  * A BinaryToSourceMapper attempts to map Spoon's {@link CtReference}
  * extracted from binary code (typically the old JAR) to the corresponding
  * {@link CtElement} in the source code version of this JAR.
+ *
+ * There are many bytecode-specific artifacts (e.g., default constructors, enum's
+ * auto-generated methods, etc.) that can typically not be resolved in source code.
+ * In this case, we attempt to map the artifacts to the closest source artifact
+ * (e.g., the type containing the default constructor/enum's methods).
  */
 public final class BinaryToSourceMapper {
 	private final CtPackage root;
@@ -58,7 +63,7 @@ public final class BinaryToSourceMapper {
 		return null;
 	}
 
-	public CtExecutable<?> resolve(CtExecutableReference<?> binaryRef) {
+	public CtElement resolve(CtExecutableReference<?> binaryRef) {
 		CtExecutable<?> binaryExec = binaryRef.getExecutableDeclaration();
 
 		if (binaryExec != null) {
@@ -77,13 +82,15 @@ public final class BinaryToSourceMapper {
 					if (execDecl != null && execDecl.getPosition().isValidPosition())
 						return execDecl;
 				}
+
+				return declaringType;
 			}
 		}
 
 		return null;
 	}
 
-	public CtField<?> resolve(CtFieldReference<?> binaryRef) {
+	public CtElement resolve(CtFieldReference<?> binaryRef) {
 		CtField<?> binaryField = binaryRef.getFieldDeclaration();
 
 		if (binaryField != null) {
@@ -96,6 +103,8 @@ public final class BinaryToSourceMapper {
 				if (fieldDecl != null && fieldDecl.getPosition().isValidPosition())
 					return fieldDecl;
 			}
+
+			return declaringType;
 		}
 
 		return null;
