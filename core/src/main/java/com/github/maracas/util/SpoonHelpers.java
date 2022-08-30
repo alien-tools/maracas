@@ -21,13 +21,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 
 public final class SpoonHelpers {
-
 	private SpoonHelpers() {
 	}
 
@@ -43,6 +41,14 @@ public final class SpoonHelpers {
 			launcher.addInputResource(sources.toAbsolutePath().toString());
 		}
 
+		// Ignore missing types/classpath related errors
+		launcher.getEnvironment().setNoClasspath(true);
+		// Proceed even if we find the same type twice; affects the precision of the result
+		launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
+		// Ignore files with syntax/JLS violations and proceed
+		launcher.getEnvironment().setIgnoreSyntaxErrors(true);
+		launcher.getEnvironment().setLevel("DEBUG"); //
+
 		if (libraryJar != null) {
 			String[] cp = launcher.getEnvironment().getSourceClasspath();
 			String jar = libraryJar.toAbsolutePath().toString();
@@ -55,6 +61,7 @@ public final class SpoonHelpers {
 
 	public static CtModel buildSpoonModelFromJar(Path jar) {
 		Launcher launcher = new Launcher();
+		launcher.getEnvironment().setLevel("DEBUG");
 
 		try {
 			// Spoon will prioritize the JVM's classpath over our own
