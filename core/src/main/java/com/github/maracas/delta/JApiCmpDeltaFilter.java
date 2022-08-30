@@ -26,9 +26,10 @@ public class JApiCmpDeltaFilter extends OutputFilter {
 		filter(jApiClasses, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {
-				if (jApiClass.getFullyQualifiedName().matches(".*\\$\\d.*"))
-					iterator.remove();
-				if (jApiClass.getChangeStatus().equals(JApiChangeStatus.NEW))
+				if (
+					jApiClass.getFullyQualifiedName().matches(".*\\$\\d.*")
+					|| jApiClass.getChangeStatus().equals(JApiChangeStatus.NEW)
+				)
 					iterator.remove();
 
 				jApiClass.getCompatibilityChanges().removeAll(maracasOptions.getExcludedBreakingChanges());
