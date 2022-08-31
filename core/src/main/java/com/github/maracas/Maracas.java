@@ -8,6 +8,7 @@ import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.base.Stopwatch;
+import japicmp.cli.JApiCli;
 import japicmp.cmp.JApiCmpArchive;
 import japicmp.cmp.JarArchiveComparator;
 import japicmp.cmp.JarArchiveComparatorOptions;
@@ -17,7 +18,9 @@ import org.apache.logging.log4j.Logger;
 import spoon.SpoonException;
 import spoon.reflect.CtModel;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -82,8 +85,20 @@ public class Maracas {
 		if (!PathHelpers.isValidJar(newJar))
 			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
 
-		Stopwatch sw = Stopwatch.createStarted();
 		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
+
+		// If required, we attempt to build a proper classpath for the
+		// analyzed oldJar and pass it to both JApiCmp and Maracas
+		Stopwatch sw = Stopwatch.createStarted();
+		List<String> oldJarCp = new ArrayList<>();
+		if (!opts.isNoClasspath()) {
+			List<String> cp = SpoonHelpers.buildClasspathFromJar(oldJar);
+			opts.getJApiOptions().setClassPathMode(JApiCli.ClassPathMode.ONE_COMMON_CLASSPATH);
+			opts.getJApiOptions().setOldClassPath(japicmp.util.Optional.of(String.join(File.pathSeparator, cp)));
+			oldJarCp.addAll(cp);
+			logger.info("Extracting classpath from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
+		}
+
 		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
 		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
@@ -92,7 +107,7 @@ public class Maracas {
 
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 		Delta delta = Delta.fromJApiCmpDelta(
-			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), classes, options);
+			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), oldJarCp, classes, opts);
 
 		logger.info("Δ({}, {}) took {}ms", oldJar.getFileName(), newJar.getFileName(), sw.elapsed().toMillis());
 		return delta;

@@ -5,6 +5,9 @@ import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 import spoon.reflect.CtModel;
@@ -15,17 +18,26 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.support.compiler.SpoonPom;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import static java.util.stream.Collectors.joining;
 
 public final class SpoonHelpers {
+	private static final Logger logger = LogManager.getLogger(SpoonHelpers.class);
+
 	private SpoonHelpers() {
 	}
 
@@ -50,7 +62,7 @@ public final class SpoonHelpers {
 		launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
 		// Ignore files with syntax/JLS violations and proceed
 		launcher.getEnvironment().setIgnoreSyntaxErrors(true);
-		launcher.getEnvironment().setLevel("DEBUG"); //
+		launcher.getEnvironment().setLevel("DEBUG");
 
 		if (libraryJar != null) {
 			String[] cp = launcher.getEnvironment().getSourceClasspath();
@@ -62,26 +74,52 @@ public final class SpoonHelpers {
 		return launcher.buildModel();
 	}
 
-	public static CtModel buildSpoonModelFromJar(Path jar) {
+	public static CtModel buildSpoonModelFromJar(Path jar, List<String> cp) {
 		Launcher launcher = new Launcher();
 		launcher.getEnvironment().setLevel("DEBUG");
 
-		try {
-			// Spoon will prioritize the JVM's classpath over our own
-			// custom classpath in case of conflict. Not what we want,
-			// so we use a custom child-first classloader instead.
-			// cf. https://github.com/INRIA/spoon/issues/3789
-			//String[] javaCp = { cp.toAbsolutePath().toString() };
-			//launcher.getEnvironment().setSourceClasspath(javaCp);
+		// Spoon will prioritize the JVM's classpath over our own
+		// custom classpath in case of conflict. Not what we want,
+		// so we use a custom child-first classloader instead.
+		// cf. https://github.com/INRIA/spoon/issues/3789
 
-			URL[] cp = {new URL("file:" + jar.toAbsolutePath())};
-			ClassLoader cl = new ParentLastURLClassLoader(cp);
-			launcher.getEnvironment().setInputClassLoader(cl);
+		List<URL> jarDependenciesUrl = new ArrayList<>();
+		try {
+			jarDependenciesUrl.add(new URL("file:" + jar.toAbsolutePath().toString()));
+			for (String dep : cp)
+				jarDependenciesUrl.add(new URL("file:" + dep));
 		} catch (MalformedURLException e) {
+			// Checked exceptions are a blessing, kill me
+			logger.error(e);
+		}
+		ClassLoader cl = new ParentLastURLClassLoader(jarDependenciesUrl.toArray(new URL[0]));
+		launcher.getEnvironment().setInputClassLoader(cl);
+
+		logger.debug("{} analyzed with classpath={}", jar, jarDependenciesUrl);
+
+		return launcher.buildModel();
+	}
+
+	public static List<String> buildClasspathFromJar(Path path) {
+		try(JarFile jar = new JarFile(path.toFile())) {
+			List<JarEntry> poms = jar.stream().filter(e -> e.getName().endsWith("pom.xml")).toList();
+
+			if (poms.size() == 1) {
+				JarEntry pom = poms.get(0);
+				InputStream pomStream = jar.getInputStream(pom);
+
+				Path out = Files.createTempFile("pom", ".xml");
+				Files.copy(pomStream, out, StandardCopyOption.REPLACE_EXISTING);
+
+				SpoonPom spoonPom = new SpoonPom(out.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE, null);
+				return Arrays.asList(spoonPom.buildClassPath(null, MavenLauncher.SOURCE_TYPE.APP_SOURCE, null, true));
+			} else
+				logger.warn("Found {} pom.xml files in {}, no classpath inferred", poms.size(), path);
+		} catch (IOException | XmlPullParserException e) {
 			e.printStackTrace();
 		}
 
-		return launcher.buildModel();
+		return Collections.emptyList();
 	}
 
 	public static CtElement firstLocatableParent(CtElement element) {

@@ -208,6 +208,20 @@ public class AnalysisQuery {
 		}
 
 		/**
+		 * If noClasspath is set to true, Maracas won't attempt to build a proper
+		 * classpath for the analyzed oldJar and use it for JApiCmp and Maracas analysis.
+		 * This will diminish precision and improve performance.
+		 *
+		 * @param noClasspath Whether we should run in noClasspath mode or not
+		 * @return the builder
+		 * @see com.github.maracas.MaracasOptions#setNoClasspath(boolean)
+		 */
+		public Builder noClasspath(boolean noClasspath) {
+			this.options.setNoClasspath(noClasspath);
+			return this;
+		}
+
+		/**
 		 * Builds the {@link AnalysisQuery} object and returns it.
 		 *
 		 * @return the final query
