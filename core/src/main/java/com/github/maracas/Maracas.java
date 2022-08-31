@@ -93,13 +93,15 @@ public class Maracas {
 		List<String> oldJarCp = new ArrayList<>();
 		if (!opts.isNoClasspath()) {
 			List<String> cp = SpoonHelpers.buildClasspathFromJar(oldJar);
-			opts.getJApiOptions().setClassPathMode(JApiCli.ClassPathMode.ONE_COMMON_CLASSPATH);
-			opts.getJApiOptions().setOldClassPath(japicmp.util.Optional.of(String.join(File.pathSeparator, cp)));
 			oldJarCp.addAll(cp);
-			logger.info("Extracting classpath from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
+			opts.getJApiOptions().setClassPathMode(JApiCli.ClassPathMode.ONE_COMMON_CLASSPATH);
+			logger.info("Extracting classpath from {} took {}ms : {}", oldJar.getFileName(), sw.elapsed().toMillis(), oldJarCp);
 		}
 
+		sw.reset();
+		sw.start();
 		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
+		jApiOptions.getClassPathEntries().addAll(oldJarCp);
 		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
 		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
