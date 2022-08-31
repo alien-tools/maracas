@@ -31,9 +31,12 @@ public final class SpoonHelpers {
 
 	public static CtModel buildSpoonModelFromSources(Path sources, Path libraryJar) {
 		Launcher launcher;
-		if (Files.exists(sources.resolve("pom.xml")))
-			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
-		else if (Files.exists(sources.resolve("build.gradle")))
+		if (Files.exists(sources.resolve("pom.xml"))) {
+			// The only classpath we're interested in is libraryJar; not resolving other dependencies
+			// should be fine and it avoids running an extra Maven build
+			String[] cp = { libraryJar.toAbsolutePath().toString() };
+			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE, cp);
+		} else if (Files.exists(sources.resolve("build.gradle")))
 			launcher = new GradleLauncher(sources);
 		else {
 			launcher = new Launcher();
