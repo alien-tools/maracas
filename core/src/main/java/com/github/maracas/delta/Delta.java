@@ -9,6 +9,7 @@ import com.github.maracas.util.PathHelpers;
 import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.google.common.base.Stopwatch;
+import japicmp.cli.JApiCli;
 import japicmp.model.JApiClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,8 +20,9 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +71,7 @@ public class Delta {
 	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
 	 * @return a corresponding new delta model
 	 */
-	public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<JApiClass> classes, MaracasOptions options) {
+	public static Delta fromJApiCmpDelta(Path oldJar, Path newJar, List<String> cp, List<JApiClass> classes, MaracasOptions options) {
 		Objects.requireNonNull(oldJar);
 		Objects.requireNonNull(newJar);
 		Objects.requireNonNull(classes);
@@ -82,7 +84,7 @@ public class Delta {
 		// to our own. Building an empty model with the right
 		// classpath allows us to create these references.
 		Stopwatch sw = Stopwatch.createStarted();
-		CtModel model = SpoonHelpers.buildSpoonModelFromJar(oldJar);
+		CtModel model = SpoonHelpers.buildSpoonModelFromJar(oldJar, cp);
 		CtPackage root = model.getRootPackage();
 		logger.info("Building Spoon model from {} took {}ms", oldJar.getFileName(), sw.elapsed().toMillis());
 

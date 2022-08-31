@@ -41,6 +41,7 @@ public class CompChangesTest {
 			.exclude("@main.unstableAnnon.Beta")
 			.exclude("@main.unstableAnnon.IsUnstable")
 			.exclude("(*.)?unstablePkg(.*)?")
+			.noClasspath(true) // Not needed for the comp-changes case
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
