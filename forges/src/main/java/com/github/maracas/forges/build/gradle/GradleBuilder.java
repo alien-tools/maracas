@@ -66,7 +66,7 @@ public class GradleBuilder extends AbstractBuilder {
 	public Optional<Path> locateJar() {
 		try (ProjectConnection project = getProjectConnection(config)) {
 			Map<String, String> props = readGradleProperties(project);
-			Path buildPath = Paths.get(props.getOrDefault("buildDir",
+			Path buildPath = Path.of(props.getOrDefault("buildDir",
 				config.getBasePath().resolve(config.getModule()).toAbsolutePath().toString()));
 			Path libsPath = buildPath.resolve(props.getOrDefault("libsDirName", "libs"));
 			String version = props.get("version");

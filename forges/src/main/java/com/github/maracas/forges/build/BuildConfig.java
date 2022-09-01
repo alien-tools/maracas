@@ -16,7 +16,7 @@ public class BuildConfig {
 	public BuildConfig(Path basePath) {
 		Objects.requireNonNull(basePath);
 		this.basePath = basePath;
-		this.module = Paths.get("");
+		this.module = Path.of("");
 	}
 
 	public BuildConfig(Path basePath, Path module) {

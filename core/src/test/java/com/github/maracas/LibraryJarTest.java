@@ -3,7 +3,7 @@ package com.github.maracas;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtType;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -40,8 +40,8 @@ class LibraryJarTest {
 
 	@Test
 	void test_source_binary_models_match_jarWithDeps() {
-		LibraryJar withDeps = new LibraryJar(Paths.get("./src/test/resources/jar-with-deps/target/jar-with-deps-1.0-SNAPSHOT.jar"),
-			new SourcesDirectory(Paths.get("./src/test/resources/jar-with-deps")));
+		LibraryJar withDeps = new LibraryJar(Path.of("./src/test/resources/jar-with-deps/target/jar-with-deps-1.0-SNAPSHOT.jar"),
+			new SourcesDirectory(Path.of("./src/test/resources/jar-with-deps")));
 		assertSourceMatchesBinary(withDeps);
 	}
 

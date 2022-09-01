@@ -1,7 +1,7 @@
 package com.github.maracas.validator.build;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 
@@ -78,7 +78,7 @@ public record MavenBuildConfig(
         if (!srcDirFile.exists())
            throw new BuildException(String.format("The source directory cannot be found: %s", srcDir));
 
-        File pomFile = srcDirFile.toPath().resolve(Paths.get(pom)).toFile();
+        File pomFile = srcDirFile.toPath().resolve(Path.of(pom)).toFile();
         if (!pomFile.exists())
             throw new BuildException(String.format("The POM file of the project cannot be found: %s", pomFile.toString()));
     }

@@ -49,10 +49,6 @@ public class Maracas {
 		if (delta.getBreakingChanges().isEmpty())
 			return AnalysisResult.noImpact(delta, query.getClients());
 
-		// If we got the library's sources, populate the delta's source code locations
-		if (query.getOldVersion().hasSources())
-			delta.populateLocations();
-
 		// Compute the impact for each client and return the result
 		return new AnalysisResult(
 			delta,
@@ -94,6 +90,7 @@ public class Maracas {
 		Stopwatch sw = Stopwatch.createStarted();
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
 		Delta delta = Delta.fromJApiCmpDelta(oldVersion, newVersion, classes, opts);
+		delta.populateLocations();
 
 		logger.info("Δ({}, {}) took {}ms", oldVersion.getLabel(), newVersion.getLabel(), sw.elapsed().toMillis());
 		return delta;

@@ -278,13 +278,13 @@ public class AnalyzeRepositoryHistory {
 						.resolve(f[0])
 						.resolve(f[1])
 						.resolve(commit.getSHA1());
-				var builder = new CommitBuilder(forgeCommit, wd, Paths.get(""));
+				var builder = new CommitBuilder(forgeCommit, wd, Path.of(""));
 
 				// FIXME: ;)
 				if ("dspot".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, Paths.get("dspot"));
+					builder = new CommitBuilder(forgeCommit, wd, Path.of("dspot"));
 				if ("nopol".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, Paths.get("nopol"));
+					builder = new CommitBuilder(forgeCommit, wd, Path.of("nopol"));
 
 				return builder;
 			})
@@ -316,7 +316,7 @@ public class AnalyzeRepositoryHistory {
 	}
 
 	public static void spoon() throws IOException {
-		Path spoonModule = Paths.get("");
+		Path spoonModule = Path.of("");
 		var spoonProps = new Properties();
 		spoonProps.setProperty("maven.test.skip", "true");
 		spoonProps.setProperty("skipDepClean", "true");
@@ -344,12 +344,12 @@ public class AnalyzeRepositoryHistory {
 		);
 
 		new AnalyzeRepositoryHistory(
-			"INRIA", "spoon", spoonClients, spoonProps, spoonModule, Paths.get("./data"))
+			"INRIA", "spoon", spoonClients, spoonProps, spoonModule, Path.of("./data"))
 			.analyzePRs(2000, 4);
 	}
 
 	public static void javaparser() throws IOException {
-		var jpModule = Paths.get("javaparser-core");
+		var jpModule = Path.of("javaparser-core");
 		var jpProps = new Properties();
 		jpProps.setProperty("maven.test.skip", "true");
 
@@ -406,7 +406,7 @@ public class AnalyzeRepositoryHistory {
 		);
 
 		new AnalyzeRepositoryHistory(
-			"javaparser", "javaparser", jpClients, jpProps, jpModule, Paths.get("./data"))
+			"javaparser", "javaparser", jpClients, jpProps, jpModule, Path.of("./data"))
 			.analyzePRs(2000, 4);
 	}
 
