@@ -2,6 +2,7 @@ package com.github.maracas.rest.services;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.CommitBuilder;
@@ -171,7 +172,7 @@ public class PullRequestService {
 			clientReports.addAll(
 				result.deltaImpacts().keySet().stream()
 					.map(client -> {
-						CommitBuilder builder = clientBuilders.get(client.getSources());
+						CommitBuilder builder = clientBuilders.get(client.getLocation());
 						Repository clientRepo = builder.getCommit().repository();
 						String clientName = clientRepo.owner() + "/" + clientRepo.name();
 						DeltaImpact impact = result.deltaImpacts().get(client);
@@ -182,7 +183,7 @@ public class PullRequestService {
 						else
 							return ClientReport.success(clientName,
 								impact.getBrokenUses().stream()
-									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getSources()))
+									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getLocation()))
 									.toList());
 					})
 					.toList()

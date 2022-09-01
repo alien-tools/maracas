@@ -2,10 +2,9 @@ package com.github.maracas.brokenuse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.maracas.Client;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.delta.Delta;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
@@ -20,7 +19,7 @@ public class DeltaImpact {
 	/**
 	 * The client project
 	 */
-	private final Client client;
+	private final SourcesDirectory client;
 
 	/**
 	 * The {@link Delta} model computed between two versions of the library
@@ -44,7 +43,7 @@ public class DeltaImpact {
 	 * @param delta      the {@link Delta} model computed between two versions of a library
 	 * @param brokenUses the set of computed {@link BrokenUse} instances
 	 */
-	public DeltaImpact(Client client, Delta delta, Set<BrokenUse> brokenUses) {
+	public DeltaImpact(SourcesDirectory client, Delta delta, Set<BrokenUse> brokenUses) {
 		this.client = client;
 		this.delta = delta;
 		this.brokenUses = brokenUses;
@@ -58,7 +57,7 @@ public class DeltaImpact {
 	 * @param delta     the {@link Delta} model computed between two versions of a library
 	 * @param throwable the {@link Throwable} that was raised while attempting to compute broken uses
 	 */
-	public DeltaImpact(Client client, Delta delta, Throwable throwable) {
+	public DeltaImpact(SourcesDirectory client, Delta delta, Throwable throwable) {
 		this.client = client;
 		this.delta = delta;
 		this.brokenUses = Collections.emptySet();
@@ -70,7 +69,7 @@ public class DeltaImpact {
 	 *
 	 * @return the client project
 	 */
-	public Client getClient() {
+	public SourcesDirectory getClient() {
 		return client;
 	}
 
@@ -118,7 +117,7 @@ public class DeltaImpact {
 		return "ΔImpact(%s -> %s ON %s):%n%s)".formatted(
 			delta.getOldVersion().getLabel(),
 			delta.getNewVersion().getLabel(),
-			client.getLabel(),
+			client.getLocation(),
 			brokenUses.stream()
 				.map(bu -> "%n%s%n".formatted(bu.toString()))
 				.collect(joining()));

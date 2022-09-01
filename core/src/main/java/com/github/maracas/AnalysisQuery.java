@@ -12,9 +12,9 @@ import java.util.Collection;
  * Use the provided {@link AnalysisQuery.Builder} to build up analysis queries.
  */
 public class AnalysisQuery {
-	private final Library oldVersion;
-	private final Library newVersion;
-	private final Collection<Client> clients;
+	private final LibraryJar oldVersion;
+	private final LibraryJar newVersion;
+	private final Collection<SourcesDirectory> clients;
 	private final MaracasOptions options;
 
 	/**
@@ -22,8 +22,8 @@ public class AnalysisQuery {
 	 *
 	 * @see #builder()
 	 */
-	private AnalysisQuery(Library oldVersion, Library newVersion,
-	                      Collection<Client> clients, MaracasOptions options) {
+	private AnalysisQuery(LibraryJar oldVersion, LibraryJar newVersion,
+	                      Collection<SourcesDirectory> clients, MaracasOptions options) {
 		this.oldVersion = oldVersion;
 		this.newVersion = newVersion;
 		this.clients = clients;
@@ -42,21 +42,21 @@ public class AnalysisQuery {
 	/**
 	 * The library's old version
 	 */
-	public Library getOldVersion() {
+	public LibraryJar getOldVersion() {
 		return oldVersion;
 	}
 
 	/**
 	 * The library's new JAR
 	 */
-	public Library getNewVersion() {
+	public LibraryJar getNewVersion() {
 		return newVersion;
 	}
 
 	/**
 	 * The clients
 	 */
-	public Collection<Client> getClients() {
+	public Collection<SourcesDirectory> getClients() {
 		return clients;
 	}
 
@@ -72,12 +72,12 @@ public class AnalysisQuery {
 	/**
 	 * AnalysisQuery's builder.
 	 * <p>
-	 * Only {@link #oldVersion(Library)} and {@link #newVersion(Library)} are mandatory.
+	 * Only {@link #oldVersion(LibraryJar)} and {@link #newVersion(LibraryJar)} are mandatory.
 	 */
 	public static class Builder {
-		private Library oldVersion;
-		private Library newVersion;
-		private final Collection<Client> clients = new ArrayList<>();
+		private LibraryJar oldVersion;
+		private LibraryJar newVersion;
+		private final Collection<SourcesDirectory> clients = new ArrayList<>();
 		private MaracasOptions options = MaracasOptions.newDefault();
 
 		/**
@@ -94,7 +94,7 @@ public class AnalysisQuery {
 		 * @return the builder
 		 * @throws IllegalArgumentException if the library is null
 		 */
-		public Builder oldVersion(Library oldVersion) {
+		public Builder oldVersion(LibraryJar oldVersion) {
 			if (oldVersion == null)
 				throw new IllegalArgumentException("oldVersion is null");
 
@@ -109,7 +109,7 @@ public class AnalysisQuery {
 		 * @return the builder
 		 * @throws IllegalArgumentException if the library is null
 		 */
-		public Builder newVersion(Library newVersion) {
+		public Builder newVersion(LibraryJar newVersion) {
 			if (newVersion == null)
 				throw new IllegalArgumentException("newVersion is null");
 
@@ -124,7 +124,7 @@ public class AnalysisQuery {
 		 * @return the builder
 		 * @throws IllegalArgumentException if the client is null
 		 */
-		public Builder client(Client client) {
+		public Builder client(SourcesDirectory client) {
 			if (client == null)
 				throw new IllegalArgumentException("client is null");
 
@@ -138,9 +138,9 @@ public class AnalysisQuery {
 		 *
 		 * @return the builder
 		 * @throws IllegalArgumentException if clients is null
-		 * @see #client(Client)
+		 * @see #client(SourcesDirectory)
 		 */
-		public Builder clients(Collection<Client> clients) {
+		public Builder clients(Collection<SourcesDirectory> clients) {
 			if (clients == null)
 				throw new IllegalArgumentException("clients is null");
 

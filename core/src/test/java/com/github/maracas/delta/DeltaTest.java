@@ -4,7 +4,6 @@ import com.github.maracas.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -12,9 +11,9 @@ import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class DeltaTest {
-  final Library v1 = new Library(TestData.compChangesV1);
-  final Library v1WithSources = new Library(TestData.compChangesV1, TestData.compChangesSources);
-  final Library v2 = new Library(TestData.compChangesV2);
+  final LibraryJar v1 = new LibraryJar(TestData.compChangesV1);
+  final LibraryJar v1WithSources = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+  final LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
 
   @Test
   void test_JsonSerialization_WithSources() throws IOException {

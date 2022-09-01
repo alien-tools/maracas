@@ -11,7 +11,6 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +24,9 @@ public class CompChangesTest {
 
 	@BeforeAll
 	static void setUp() {
-		Library v1 = new Library(TestData.compChangesV1, TestData.compChangesSources);
-		Library v2 = new Library(TestData.compChangesV2);
-		Client client = new Client(TestData.compChangesClient, v1);
+		LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+		LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
+		SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
 
 		// We don't care about proper classpath for these tests
 		v1.setNoClasspath(true);

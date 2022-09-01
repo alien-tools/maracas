@@ -6,15 +6,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import com.github.maracas.*;
 import org.junit.jupiter.api.Test;
 
 class DeltaImpactTest {
-  final Library v1 = new Library(TestData.compChangesV1, TestData.compChangesSources);
-  final Library v2 = new Library(TestData.compChangesV2);
-  final Client client = new Client(TestData.compChangesClient, v1);
+  final LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+  final LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
+  final SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
 
   @Test
   void testJsonSerialization() throws IOException {
