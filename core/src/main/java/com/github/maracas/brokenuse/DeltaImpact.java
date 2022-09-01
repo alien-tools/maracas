@@ -2,6 +2,7 @@ package com.github.maracas.brokenuse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.maracas.Client;
 import com.github.maracas.delta.Delta;
 
 import java.nio.file.Path;
@@ -12,17 +13,17 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * A delta impact lists the broken uses detected in a client project after computing
- * the delta model between two releases of a library. Broken uses are represented
+ * the delta model between two versions of a library. Broken uses are represented
  * as a set of {@link BrokenUse} instances.
  */
 public class DeltaImpact {
 	/**
 	 * The client project
 	 */
-	private final Path client;
+	private final Client client;
 
 	/**
-	 * The {@link Delta} model computed between two releases of the library
+	 * The {@link Delta} model computed between two versions of the library
 	 */
 	private final Delta delta;
 
@@ -40,10 +41,10 @@ public class DeltaImpact {
 	 * Creates a {@link DeltaImpact} instance.
 	 *
 	 * @param client     the client project
-	 * @param delta      the {@link Delta} model computed between two releases of a library
+	 * @param delta      the {@link Delta} model computed between two versions of a library
 	 * @param brokenUses the set of computed {@link BrokenUse} instances
 	 */
-	public DeltaImpact(Path client, Delta delta, Set<BrokenUse> brokenUses) {
+	public DeltaImpact(Client client, Delta delta, Set<BrokenUse> brokenUses) {
 		this.client = client;
 		this.delta = delta;
 		this.brokenUses = brokenUses;
@@ -54,10 +55,10 @@ public class DeltaImpact {
 	 * Creates a failed {@link DeltaImpact} instance.
 	 *
 	 * @param client    the client project
-	 * @param delta     the {@link Delta} model computed between two releases of a library
+	 * @param delta     the {@link Delta} model computed between two versions of a library
 	 * @param throwable the {@link Throwable} that was raised while attempting to compute broken uses
 	 */
-	public DeltaImpact(Path client, Delta delta, Throwable throwable) {
+	public DeltaImpact(Client client, Delta delta, Throwable throwable) {
 		this.client = client;
 		this.delta = delta;
 		this.brokenUses = Collections.emptySet();
@@ -65,11 +66,11 @@ public class DeltaImpact {
 	}
 
 	/**
-	 * Returns the path to the client project.
+	 * Returns the client project
 	 *
-	 * @return the path to the client project
+	 * @return the client project
 	 */
-	public Path getClient() {
+	public Client getClient() {
 		return client;
 	}
 
@@ -115,9 +116,9 @@ public class DeltaImpact {
 	@Override
 	public String toString() {
 		return "ΔImpact(%s -> %s ON %s):%n%s)".formatted(
-			delta.getOldJar().getFileName(),
-			delta.getNewJar().getFileName(),
-			client,
+			delta.getOldVersion().getLabel(),
+			delta.getNewVersion().getLabel(),
+			client.getLabel(),
 			brokenUses.stream()
 				.map(bu -> "%n%s%n".formatted(bu.toString()))
 				.collect(joining()));

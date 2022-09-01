@@ -64,20 +64,24 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
+		Library oldVersion = new Library(oldJar, sources);
+		Library newVersion = new Library(newJar);
+		Client client = new Client(sources, oldVersion);
+
 		// Since we're using the libraries as clients themselves (so all package names clash),
 		// the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
 		MaracasOptions opts = MaracasOptions.newDefault();
 		opts.getJApiOptions().setAccessModifier(AccessModifier.PROTECTED);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar)
-			.newJar(newJar)
-			.client(sources)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.options(opts)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
-		result.delta().populateLocations(sources);
+		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
@@ -105,14 +109,18 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
+		Library oldVersion = new Library(oldJar, sources);
+		Library newVersion = new Library(newJar);
+		Client client = new Client(sources, oldVersion);
+
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar)
-			.newJar(newJar)
-			.client(sources)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
-		result.delta().populateLocations(sources);
+		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));

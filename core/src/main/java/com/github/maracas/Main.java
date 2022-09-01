@@ -5,15 +5,15 @@ import java.nio.file.Paths;
 
 public class Main {
 	public static void main(String[] args) {
-		Path v1 = Paths.get("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-		Path v2 = Paths.get("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c = Paths.get("test-data/comp-changes/client/");
-		Path sources = Paths.get("test-data/comp-changes/old/");
+		Library v1 = new Library(
+			Paths.get("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar"),
+			Paths.get("test-data/comp-changes/old/"));
+		Library v2 = new Library(Paths.get("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar"));
+		Client c = new Client(Paths.get("test-data/comp-changes/client/"), v1);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(v1)
-			.newJar(v2)
-			.sources(sources)
+			.oldVersion(v1)
+			.newVersion(v2)
 			.client(c)
 			.build();
 

@@ -28,7 +28,7 @@ public class MaracasCLI implements Runnable {
 
 	@Option(names = {"-c", "--client"}, arity = "0..*",
 		description = "Directory containing the client's source code")
-	private final List<Path> clients = new ArrayList<>();
+	private final List<Path> clientPaths = new ArrayList<>();
 
 	@Option(names = {"-s", "--sources"},
 		description = "Directory containing the old library's source code")
@@ -38,15 +38,15 @@ public class MaracasCLI implements Runnable {
 	public void run() {
 		try {
 			Stopwatch watch = Stopwatch.createStarted();
+			Library oldVersion = new Library(v1, sources);
+			Library newVersion = new Library(v2);
+			List<Client> clients = clientPaths.stream().map(path -> new Client(path, oldVersion)).toList();
 			AnalysisQuery query = AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(oldVersion)
+				.newVersion(newVersion)
 				.clients(clients)
 				.build();
 			AnalysisResult result = Maracas.analyze(query);
-
-			if (sources != null)
-				result.delta().populateLocations(sources);
 
 			System.out.println("""
 				+------------------+

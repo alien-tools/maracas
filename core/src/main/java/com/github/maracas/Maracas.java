@@ -18,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 import spoon.SpoonException;
 import spoon.reflect.CtModel;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,16 +46,17 @@ public class Maracas {
 		Objects.requireNonNull(query);
 
 		// Compute the delta model between old and new JARs
-		Delta delta = computeDelta(query.getOldJar(), query.getNewJar(), query.getMaracasOptions());
+		Delta delta = computeDelta(query.getOldVersion(), query.getNewVersion(), query.getMaracasOptions());
 
 		// If no breaking change, we can skip the rest and just return that
 		if (delta.getBreakingChanges().isEmpty())
 			return AnalysisResult.noImpact(delta, query.getClients());
 
 		// If we got the library's sources, populate the delta's source code locations
-		if (query.getSources() != null)
-			delta.populateLocations(query.getSources());
+		if (query.getOldVersion().hasSources())
+			delta.populateLocations();
 
+		// Compute the impact for each client and return the result
 		return new AnalysisResult(
 			delta,
 			query.getClients().parallelStream().collect(toMap(
@@ -67,81 +67,65 @@ public class Maracas {
 	}
 
 	/**
-	 * Compares the library's old and new JARs and returns a delta model
+	 * Compares the library's old and new versions and returns a delta model
 	 * containing all {@link BreakingChange} between them, based on JApiCmp.
 	 *
-	 * @param oldJar  the library's old JAR
-	 * @param newJar  the library's new JAR
+	 * @param oldVersion the library's old version
+	 * @param newVersion the library's new version
 	 * @param options Maracas and JApiCmp options
 	 * @return a new delta model based on JapiCmp's results
-	 * @throws IllegalArgumentException if oldJar or newJar aren't valid
-	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
+	 * @throws NullPointerException if oldVersion or newVersion is null
+	 * @throws SpoonException if we cannot build the Spoon model from the old version
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
-	 * @see #computeDelta(Path, Path, MaracasOptions)
+	 * @see #computeDelta(Library, Library, MaracasOptions)
 	 */
-	public static Delta computeDelta(Path oldJar, Path newJar, MaracasOptions options) {
-		if (!PathHelpers.isValidJar(oldJar))
-			throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
-		if (!PathHelpers.isValidJar(newJar))
-			throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
+	public static Delta computeDelta(Library oldVersion, Library newVersion, MaracasOptions options) {
+		Objects.requireNonNull(oldVersion);
+		Objects.requireNonNull(newVersion);
 
 		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
 
-		// If required, we attempt to build a proper classpath for the
-		// analyzed oldJar and pass it to both JApiCmp and Maracas
-		Stopwatch sw = Stopwatch.createStarted();
-		List<String> oldJarCp = new ArrayList<>();
-		if (!opts.isNoClasspath()) {
-			List<String> cp = SpoonHelpers.buildClasspathFromJar(oldJar);
-			oldJarCp.addAll(cp);
-			opts.getJApiOptions().setClassPathMode(JApiCli.ClassPathMode.ONE_COMMON_CLASSPATH);
-			logger.info("Extracting classpath from {} took {}ms : {}", oldJar.getFileName(), sw.elapsed().toMillis(), oldJarCp);
-		}
-
-		sw.reset();
-		sw.start();
+		// Pass the old version's classpath to JApiCmp for the analysis
+		opts.getJApiOptions().setClassPathMode(JApiCli.ClassPathMode.ONE_COMMON_CLASSPATH);
 		JarArchiveComparatorOptions jApiOptions = JarArchiveComparatorOptions.of(opts.getJApiOptions());
-		jApiOptions.getClassPathEntries().addAll(oldJarCp);
+		jApiOptions.getClassPathEntries().addAll(oldVersion.getClasspath());
 		JarArchiveComparator comparator = new JarArchiveComparator(jApiOptions);
 
-		JApiCmpArchive oldAPI = new JApiCmpArchive(oldJar.toFile(), "v1");
-		JApiCmpArchive newAPI = new JApiCmpArchive(newJar.toFile(), "v2");
+		JApiCmpArchive oldAPI = new JApiCmpArchive(oldVersion.getJar().toFile(), oldVersion.getLabel());
+		JApiCmpArchive newAPI = new JApiCmpArchive(newVersion.getJar().toFile(), newVersion.getLabel());
 
+		Stopwatch sw = Stopwatch.createStarted();
 		List<JApiClass> classes = comparator.compare(oldAPI, newAPI);
-		Delta delta = Delta.fromJApiCmpDelta(
-			oldJar.toAbsolutePath(), newJar.toAbsolutePath(), oldJarCp, classes, opts);
+		Delta delta = Delta.fromJApiCmpDelta(oldVersion, newVersion, classes, opts);
 
-		logger.info("Δ({}, {}) took {}ms", oldJar.getFileName(), newJar.getFileName(), sw.elapsed().toMillis());
+		logger.info("Δ({}, {}) took {}ms", oldVersion.getLabel(), newVersion.getLabel(), sw.elapsed().toMillis());
 		return delta;
 	}
 
 	/**
-	 * @see #computeDelta(Path, Path, MaracasOptions)
+	 * @see #computeDelta(Library, Library, MaracasOptions)
 	 */
-	public static Delta computeDelta(Path oldJar, Path newJar) {
-		return computeDelta(oldJar, newJar, MaracasOptions.newDefault());
+	public static Delta computeDelta(Library oldVersion, Library newVersion) {
+		return computeDelta(oldVersion, newVersion, MaracasOptions.newDefault());
 	}
 
 	/**
 	 * Computes the impact the {@code delta} model has on {@code client} and
 	 * returns the corresponding {@link DeltaImpact}.
 	 *
-	 * @param client valid path to the client's source code to analyze
+	 * @param client the client to analyze
 	 * @param delta  the delta model
 	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
-	 * @throws IllegalArgumentException if client isn't a valid directory
-	 * @throws NullPointerException     if delta is null
+	 * @throws NullPointerException     if client or delta is null
 	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
 	 */
-	public static DeltaImpact computeDeltaImpact(Path client, Delta delta) {
-		if (!PathHelpers.isValidDirectory(client))
-			throw new IllegalArgumentException("client isn't a valid directory: " + client);
+	public static DeltaImpact computeDeltaImpact(Client client, Delta delta) {
+		Objects.requireNonNull(client);
 		Objects.requireNonNull(delta);
 
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
-			CtModel model = SpoonHelpers.buildSpoonModelFromSources(client, delta.getOldJar());
-			logger.info("Building Spoon model from {} took {}ms", client, sw.elapsed().toMillis());
+			CtModel model = client.getSourceModel();
 
 			sw.reset();
 			sw.start();

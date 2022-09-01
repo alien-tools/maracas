@@ -33,54 +33,52 @@ class AnalysisQueryTest {
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		AnalysisQuery query = builder
-			.oldJar(validJar)
-			.newJar(validJar)
-			.client(validMavenDirectory)
-			.sources(validMavenDirectory2)
+			.oldVersion(validVersion)
+			.newVersion(validVersion)
+			.client(validClient)
 			.options(opts)
 			.build();
 
-		assertThat(query.getOldJar(), is(equalTo(validJar.toAbsolutePath())));
-		assertThat(query.getNewJar(), is(equalTo(validJar.toAbsolutePath())));
+		assertThat(query.getOldVersion(), is(equalTo(validVersion)));
+		assertThat(query.getNewVersion(), is(equalTo(validVersion)));
 		assertThat(query.getClients(), hasSize(1));
-		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
-		assertThat(query.getSources(), is(equalTo(validMavenDirectory2.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validClient)));
 		assertThat(query.getMaracasOptions(), is(equalTo(opts)));
 	}
 
 	@Test
 	void builder_multipleClients() {
 		AnalysisQuery query = builder
-			.oldJar(validJar)
-			.newJar(validJar)
-			.client(validMavenDirectory)
-			.client(validMavenDirectory2)
-			.client(validMavenDirectory)
+			.oldVersion(validVersion)
+			.newVersion(validVersion)
+			.client(validClient)
+			.client(validClient2)
+			.client(validClient)
 			.build();
 
 		assertThat(query.getClients(), hasSize(2));
-		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
-		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory2.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validClient)));
+		assertThat(query.getClients(), hasItem(equalTo(validClient2)));
 	}
 
 	@Test
 	void builder_collectionOfClients() {
 		AnalysisQuery query = builder
-			.oldJar(validJar)
-			.newJar(validJar)
-			.clients(Lists.newArrayList(validMavenDirectory, validMavenDirectory2, validMavenDirectory))
+			.oldVersion(validVersion)
+			.newVersion(validVersion)
+			.clients(Lists.newArrayList(validClient, validClient2, validClient))
 			.build();
 
 		assertThat(query.getClients(), hasSize(2));
-		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory.toAbsolutePath())));
-		assertThat(query.getClients(), hasItem(equalTo(validMavenDirectory2.toAbsolutePath())));
+		assertThat(query.getClients(), hasItem(equalTo(validClient)));
+		assertThat(query.getClients(), hasItem(equalTo(validClient2)));
 	}
 
 	@Test
 	void builder_exclude_createsFilters() {
 		AnalysisQuery query = builder
-			.oldJar(validJar)
-			.newJar(validJar)
+			.oldVersion(validVersion)
+			.newVersion(validVersion)
 			.exclude("@com.google.common.annotations.Beta")
 			.exclude("*unstable*")
 			.exclude("#foo()")
@@ -100,7 +98,7 @@ class AnalysisQueryTest {
 
 	@Test
 	void noOldJar_ThrowsException() {
-		builder.newJar(validJar);
+		builder.newVersion(validVersion);
 		assertThrows(IllegalStateException.class, () ->
 			builder.build()
 		);
@@ -108,7 +106,7 @@ class AnalysisQueryTest {
 
 	@Test
 	void noNewJar_ThrowsException() {
-		builder.oldJar(validJar);
+		builder.oldVersion(validVersion);
 		assertThrows(IllegalStateException.class, () ->
 			builder.build()
 		);
@@ -117,42 +115,14 @@ class AnalysisQueryTest {
 	@Test
 	void nullOldJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.oldJar(null)
+			builder.oldVersion(null)
 		);
 	}
 
 	@Test
 	void nullNewJar_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
-			builder.newJar(null)
-		);
-	}
-
-	@Test
-	void invalidOldJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.oldJar(invalidJar)
-		);
-	}
-
-	@Test
-	void invalidNewJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.newJar(invalidJar)
-		);
-	}
-
-	@Test
-	void nullSources_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.sources(null)
-		);
-	}
-
-	@Test
-	void invalidSources_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.sources(invalidDirectory)
+			builder.newVersion(null)
 		);
 	}
 
@@ -164,23 +134,9 @@ class AnalysisQueryTest {
 	}
 
 	@Test
-	void invalidClient_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.client(invalidDirectory)
-		);
-	}
-
-	@Test
 	void nullClients_ThrowsException() {
 		assertThrows(IllegalArgumentException.class, () ->
 			builder.clients(null)
-		);
-	}
-
-	@Test
-	void invalidClients_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
-			builder.clients(Collections.singleton(invalidDirectory))
 		);
 	}
 

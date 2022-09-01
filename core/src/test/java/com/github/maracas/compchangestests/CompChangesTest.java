@@ -1,9 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import com.github.maracas.AnalysisQuery;
-import com.github.maracas.AnalysisResult;
-import com.github.maracas.Maracas;
-import com.github.maracas.TestData;
+import com.github.maracas.*;
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
@@ -28,20 +25,20 @@ public class CompChangesTest {
 
 	@BeforeAll
 	static void setUp() {
-		Path v1 = TestData.compChangesV1;
-		Path v2 = TestData.compChangesV2;
-		Path sources = TestData.compChangesSources;
-		Path client = TestData.compChangesClient;
+		Library v1 = new Library(TestData.compChangesV1, TestData.compChangesSources);
+		Library v2 = new Library(TestData.compChangesV2);
+		Client client = new Client(TestData.compChangesClient, v1);
+
+		// We don't care about proper classpath for these tests
+		v1.setNoClasspath(true);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(v1)
-			.newJar(v2)
-			.sources(sources)
+			.oldVersion(v1)
+			.newVersion(v2)
 			.client(client)
 			.exclude("@main.unstableAnnon.Beta")
 			.exclude("@main.unstableAnnon.IsUnstable")
 			.exclude("(*.)?unstablePkg(.*)?")
-			.noClasspath(true) // Not needed for the comp-changes case
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);

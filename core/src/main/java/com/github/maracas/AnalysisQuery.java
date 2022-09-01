@@ -1,23 +1,20 @@
 package com.github.maracas;
 
-import com.github.maracas.util.PathHelpers;
 import japicmp.util.Optional;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
  * An AnalysisQuery holds the information about a library's old and new
- * versions (JARs) and the clients (source code) to analyze.
+ * versions, the clients to analyze, and user-defined analysis options.
  * <p>
  * Use the provided {@link AnalysisQuery.Builder} to build up analysis queries.
  */
 public class AnalysisQuery {
-	private final Path oldJar;
-	private final Path newJar;
-	private final Path sources;
-	private final Collection<Path> clients;
+	private final Library oldVersion;
+	private final Library newVersion;
+	private final Collection<Client> clients;
 	private final MaracasOptions options;
 
 	/**
@@ -25,11 +22,10 @@ public class AnalysisQuery {
 	 *
 	 * @see #builder()
 	 */
-	private AnalysisQuery(Path oldJar, Path newJar, Path sources,
-	                      Collection<Path> clients, MaracasOptions options) {
-		this.oldJar = oldJar;
-		this.newJar = newJar;
-		this.sources = sources;
+	private AnalysisQuery(Library oldVersion, Library newVersion,
+	                      Collection<Client> clients, MaracasOptions options) {
+		this.oldVersion = oldVersion;
+		this.newVersion = newVersion;
 		this.clients = clients;
 		this.options = options;
 	}
@@ -44,30 +40,23 @@ public class AnalysisQuery {
 	}
 
 	/**
-	 * The library's old JAR
+	 * The library's old version
 	 */
-	public Path getOldJar() {
-		return oldJar;
+	public Library getOldVersion() {
+		return oldVersion;
 	}
 
 	/**
 	 * The library's new JAR
 	 */
-	public Path getNewJar() {
-		return newJar;
+	public Library getNewVersion() {
+		return newVersion;
 	}
 
 	/**
-	 * The old library's source code directory
+	 * The clients
 	 */
-	public Path getSources() {
-		return sources;
-	}
-
-	/**
-	 * The clients' source code directories
-	 */
-	public Collection<Path> getClients() {
+	public Collection<Client> getClients() {
 		return clients;
 	}
 
@@ -83,13 +72,12 @@ public class AnalysisQuery {
 	/**
 	 * AnalysisQuery's builder.
 	 * <p>
-	 * Only {@link #oldJar(Path)} and {@link #newJar(Path)} are mandatory.
+	 * Only {@link #oldVersion(Library)} and {@link #newVersion(Library)} are mandatory.
 	 */
 	public static class Builder {
-		private Path oldJar;
-		private Path newJar;
-		private Path sources;
-		private final Collection<Path> clients = new ArrayList<>();
+		private Library oldVersion;
+		private Library newVersion;
+		private final Collection<Client> clients = new ArrayList<>();
 		private MaracasOptions options = MaracasOptions.newDefault();
 
 		/**
@@ -100,65 +88,48 @@ public class AnalysisQuery {
 		}
 
 		/**
-		 * Sets the library's old JAR. Required.
+		 * Sets the library's old version. Required.
 		 *
-		 * @param oldJar Valid path to the library's old JAR
+		 * @param oldVersion The library's old version
 		 * @return the builder
-		 * @throws IllegalArgumentException if the path isn't valid
+		 * @throws IllegalArgumentException if the library is null
 		 */
-		public Builder oldJar(Path oldJar) {
-			if (!PathHelpers.isValidJar(oldJar))
-				throw new IllegalArgumentException("oldJar isn't a valid JAR: " + oldJar);
+		public Builder oldVersion(Library oldVersion) {
+			if (oldVersion == null)
+				throw new IllegalArgumentException("oldVersion is null");
 
-			this.oldJar = oldJar.toAbsolutePath();
+			this.oldVersion = oldVersion;
 			return this;
 		}
 
 		/**
-		 * Sets the library's new JAR. Required.
+		 * Sets the library's new version. Required.
 		 *
-		 * @param newJar Valid path to the library's new JAR
+		 * @param newVersion The library's new version
 		 * @return the builder
-		 * @throws IllegalArgumentException if the path isn't valid
+		 * @throws IllegalArgumentException if the library is null
 		 */
-		public Builder newJar(Path newJar) {
-			if (!PathHelpers.isValidJar(newJar))
-				throw new IllegalArgumentException("newJar isn't a valid JAR: " + newJar);
+		public Builder newVersion(Library newVersion) {
+			if (newVersion == null)
+				throw new IllegalArgumentException("newVersion is null");
 
-			this.newJar = newJar.toAbsolutePath();
-			return this;
-		}
-
-		/**
-		 * Sets the library's source code.
-		 *
-		 * @param sources Valid path to the directory containing the source code
-		 *                of the old version of the library.
-		 * @return the builder
-		 * @throws IllegalArgumentException if the path isn't valid
-		 */
-		public Builder sources(Path sources) {
-			if (!PathHelpers.isValidDirectory(sources))
-				throw new IllegalArgumentException("sources isn't a valid directory: " + sources);
-
-			this.sources = sources.toAbsolutePath();
+			this.newVersion = newVersion;
 			return this;
 		}
 
 		/**
 		 * Includes a client into the analysis.
 		 *
-		 * @param client Valid path to the directory containing the source code of
-		 *               a client
+		 * @param client A client to analyze
 		 * @return the builder
-		 * @throws IllegalArgumentException if the path isn't valid
+		 * @throws IllegalArgumentException if the client is null
 		 */
-		public Builder client(Path client) {
-			if (!PathHelpers.isValidDirectory(client))
-				throw new IllegalArgumentException("client isn't a valid directory: " + client);
+		public Builder client(Client client) {
+			if (client == null)
+				throw new IllegalArgumentException("client is null");
 
-			if (!this.clients.contains(client.toAbsolutePath()))
-				this.clients.add(client.toAbsolutePath());
+			if (!this.clients.contains(client))
+				this.clients.add(client);
 			return this;
 		}
 
@@ -167,9 +138,9 @@ public class AnalysisQuery {
 		 *
 		 * @return the builder
 		 * @throws IllegalArgumentException if clients is null
-		 * @see #client(Path)
+		 * @see #client(Client)
 		 */
-		public Builder clients(Collection<Path> clients) {
+		public Builder clients(Collection<Client> clients) {
 			if (clients == null)
 				throw new IllegalArgumentException("clients is null");
 
@@ -208,32 +179,18 @@ public class AnalysisQuery {
 		}
 
 		/**
-		 * If noClasspath is set to true, Maracas won't attempt to build a proper
-		 * classpath for the analyzed oldJar and use it for JApiCmp and Maracas analysis.
-		 * This will diminish precision and improve performance.
-		 *
-		 * @param noClasspath Whether we should run in noClasspath mode or not
-		 * @return the builder
-		 * @see com.github.maracas.MaracasOptions#setNoClasspath(boolean)
-		 */
-		public Builder noClasspath(boolean noClasspath) {
-			this.options.setNoClasspath(noClasspath);
-			return this;
-		}
-
-		/**
 		 * Builds the {@link AnalysisQuery} object and returns it.
 		 *
 		 * @return the final query
 		 */
 		public AnalysisQuery build() {
 			validate();
-			return new AnalysisQuery(oldJar, newJar, sources, clients, options);
+			return new AnalysisQuery(oldVersion, newVersion, clients, options);
 		}
 
 		private void validate() {
-			if (oldJar == null || newJar == null)
-				throw new IllegalStateException("oldJar and newJar must be supplied");
+			if (oldVersion == null || newVersion == null)
+				throw new IllegalStateException("oldVersion and newVersion must be supplied");
 		}
 	}
 }
