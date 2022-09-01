@@ -41,32 +41,34 @@ One may use Maracas to compute the changes between two versions of a library as 
 *Note that both versions of the library must be provided as binary JARs, while the client is provided as source code.*
 
 ```java
-Path v1 = Paths.get("v1.jar");
-Path v2 = Paths.get("v2.jar");
-Path c =  Paths.get("/path/to/client/src/main/java");
+// Setting up the library versions and clients
+LibraryJar v1 = new LibraryJar(Path.of("v1.jar"));
+LibraryJar v2 = new LibraryJar(Path.of("v2.jar"));
+SourcesDirectory client = new SourcesDirectory(Path.of("/path/to/client"));
 
 // Using a query/result
 AnalysisQuery query = AnalysisQuery.builder()
-  .oldJar(v1)
-  .newJar(v2)
-  .client(c)
-  .build();
+	.oldVersion(v1)
+	.newVersion(v2)
+	.client(client)
+	.build();
 
 AnalysisResult result = Maracas.analyze(query);
 Delta delta = result.delta();
 Set<BrokenUse> brokenUses = result.allBrokenUses();
 
-// Programmatically
+// Or by directly invoking the analysis methods
 Delta delta = Maracas.computeDelta(v1, v2);
-Set<BreakingChange> breakingChanges = delta.getBreakingChanges();
+Collection<BreakingChange> breakingChanges = delta.getBreakingChanges();
 
-DeltaImpact deltaImpact = Maracas.computeDeltaImpact(c, delta);
+DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
 Set<BrokenUse> brokenUses = deltaImpact.getBrokenUses();
 
 // Delta models are built from JARs and lack source code locations.
 // To map breaking changes to precise locations in source code,
-// feed the delta with the library's source code:
-delta.populateLocations(Paths.get("/path/to/v1/src/main/java"));
+// create a library jar with its corresponding source code
+LibraryJar v1 = new LibraryJar(Path.of("v1.jar"),
+	new SourcesDirectory(Path.of("/path/to/v1/src")));
 ```
 
 ### From the command line
