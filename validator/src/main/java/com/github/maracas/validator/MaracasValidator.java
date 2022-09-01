@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.maracas.Client;
-import com.github.maracas.Library;
+import com.github.maracas.SourcesDirectory;
+import com.github.maracas.LibraryJar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -104,9 +104,9 @@ public class MaracasValidator {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
         BuildHandler handler = new MavenBuildHandler(srcClient);
-        Library v1 = new Library(jarApi1);
-        Library v2 = new Library(jarApi2);
-        Client client = new Client(srcClient, v1);
+        LibraryJar v1 = new LibraryJar(jarApi1);
+        LibraryJar v2 = new LibraryJar(jarApi2);
+        SourcesDirectory client = new SourcesDirectory(srcClient);
         Delta delta = Maracas.computeDelta(v1, v2);
         DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
         this.brokenUses = deltaImpact.getBrokenUses();

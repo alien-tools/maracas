@@ -38,9 +38,9 @@ public class MaracasCLI implements Runnable {
 	public void run() {
 		try {
 			Stopwatch watch = Stopwatch.createStarted();
-			Library oldVersion = new Library(v1, sources);
-			Library newVersion = new Library(v2);
-			List<Client> clients = clientPaths.stream().map(path -> new Client(path, oldVersion)).toList();
+			LibraryJar oldVersion = new LibraryJar(v1, new SourcesDirectory(sources));
+			LibraryJar newVersion = new LibraryJar(v2);
+			List<SourcesDirectory> clients = clientPaths.stream().map(path -> new SourcesDirectory(path)).toList();
 			AnalysisQuery query = AnalysisQuery.builder()
 				.oldVersion(oldVersion)
 				.newVersion(newVersion)

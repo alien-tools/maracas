@@ -17,7 +17,6 @@ import static org.hamcrest.collection.IsMapContaining.hasKey;
 //import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.nio.file.Path;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -31,11 +30,11 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
-	final Library v1 = new Library(TestData.compChangesV1);
-	final Library v1WithSources = new Library(TestData.compChangesV1, TestData.compChangesSources);
-	final Library v2 = new Library(TestData.compChangesV2);
-	final Client client = new Client(TestData.compChangesClient, v1);
-	final Client client2 = new Client(TestData.compChangesSources, v1);
+	final LibraryJar v1 = new LibraryJar(TestData.compChangesV1);
+	final LibraryJar v1WithSources = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+	final LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
+	final SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
+	final SourcesDirectory client2 = new SourcesDirectory(TestData.compChangesSources);
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {

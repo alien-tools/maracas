@@ -88,9 +88,9 @@ public class OnTheFlyMaracasCase {
 		Files.writeString(clientFile, clientCode);
 		Files.writeString(pomFile, "<project></project>");
 
-		Library oldVersion = new Library(oldJar.toAbsolutePath());
-		Library newVersion = new Library(newJar.toAbsolutePath());
-		Client client = new Client(clientPath.toAbsolutePath(), oldVersion);
+		LibraryJar oldVersion = new LibraryJar(oldJar.toAbsolutePath());
+		LibraryJar newVersion = new LibraryJar(newJar.toAbsolutePath());
+		SourcesDirectory client = new SourcesDirectory(clientPath.toAbsolutePath());
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldVersion(oldVersion)
 			.newVersion(newVersion)

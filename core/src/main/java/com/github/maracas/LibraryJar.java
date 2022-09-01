@@ -1,11 +1,9 @@
 package com.github.maracas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.maracas.util.GradleLauncher;
 import com.github.maracas.util.ParentLastURLClassLoader;
 import com.github.maracas.util.PathHelpers;
 import com.google.common.base.Stopwatch;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -28,35 +26,31 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class Library {
+public class LibraryJar {
 	private final Path jar;
-	private final Path sources;
 	private final String label;
+	private SourcesDirectory sources;
 	@JsonIgnore
 	private List<String> classpath = null;
 	@JsonIgnore
-	private CtModel binaryModel = null;
-	@JsonIgnore
-	private CtModel sourceModel = null;
+	private CtModel model = null;
 	@JsonIgnore
 	private boolean noClasspath = false;
 
 	private static Path TMP_DIR;
-	private static final Logger logger = LogManager.getLogger(Library.class);
+	private static final Logger logger = LogManager.getLogger(LibraryJar.class);
 
-	public Library(Path jar) {
+	public LibraryJar(Path jar) {
 		this(jar, null);
 	}
 
-	public Library(Path jar, Path sources) {
+	public LibraryJar(Path jar, SourcesDirectory sources) {
 		if (!PathHelpers.isValidJar(jar))
 			throw new IllegalArgumentException("Not a valid JAR: " + jar);
-		if (sources != null && !PathHelpers.isValidDirectory(sources))
-			throw new IllegalArgumentException("Not a valid source directory: " + sources);
 
-		this.jar = jar;
-		this.sources = sources;
+		this.jar = jar.toAbsolutePath();
 		this.label = jar.getFileName().toString();
+		this.sources = sources;
 		try {
 			TMP_DIR = Files.createTempDirectory("maracas-tmp");
 		} catch (IOException e) {
@@ -64,19 +58,13 @@ public class Library {
 		}
 	}
 
-	public CtModel getBinaryModel() {
-		if (binaryModel == null)
-			binaryModel = buildSpoonModelFromJar();
-		return binaryModel;
+	public CtModel getModel() {
+		if (model == null)
+			model = buildModel();
+		return model;
 	}
 
-	public CtModel getSourceModel() {
-		if (sourceModel == null)
-			sourceModel = buildSpoonModelFromSources();
-		return sourceModel;
-	}
-
-	private CtModel buildSpoonModelFromJar() {
+	private CtModel buildModel() {
 		Stopwatch sw = Stopwatch.createStarted();
 		Launcher launcher = new Launcher();
 
@@ -86,7 +74,7 @@ public class Library {
 		// cf. https://github.com/INRIA/spoon/issues/3789
 		List<URL> jarDependenciesUrl = new ArrayList<>();
 		try {
-			jarDependenciesUrl.add(new URL("file:" + jar.toAbsolutePath().toString()));
+			jarDependenciesUrl.add(new URL("file:" + jar));
 			for (String dep : getClasspath())
 				jarDependenciesUrl.add(new URL("file:" + dep));
 		} catch (MalformedURLException e) {
@@ -96,37 +84,9 @@ public class Library {
 		ClassLoader cl = new ParentLastURLClassLoader(jarDependenciesUrl.toArray(new URL[0]));
 		launcher.getEnvironment().setInputClassLoader(cl);
 
-		CtModel model = launcher.buildModel();
-		logger.info("Building Spoon model for {} took {}ms", this, sw.elapsed().toMillis());
-		return model;
-	}
-
-	private CtModel buildSpoonModelFromSources() {
-		if (!hasSources())
-			return null;
-
-		Stopwatch sw = Stopwatch.createStarted();
-		Launcher launcher;
-		if (Files.exists(sources.resolve("pom.xml")))
-			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE, new String[0]);
-		else if (Files.exists(sources.resolve("build.gradle")))
-			launcher = new GradleLauncher(sources);
-		else {
-			launcher = new Launcher();
-			launcher.getEnvironment().setComplianceLevel(11);
-			launcher.addInputResource(sources.toAbsolutePath().toString());
-		}
-
-		// Ignore missing types/classpath related errors
-		launcher.getEnvironment().setNoClasspath(true);
-		// Proceed even if we find the same type twice; affects the precision of the result
-		launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
-		// Ignore files with syntax/JLS violations and proceed
-		launcher.getEnvironment().setIgnoreSyntaxErrors(true);
-
-		CtModel model = launcher.buildModel();
-		logger.info("Building Spoon model for {} took {}ms", this, sw.elapsed().toMillis());
-		return model;
+		CtModel spoonModel = launcher.buildModel();
+		logger.info("Building binary Spoon model for {} took {}ms", this, sw.elapsed().toMillis());
+		return spoonModel;
 	}
 
 	public Path getJar() {
@@ -137,8 +97,12 @@ public class Library {
 		return sources != null;
 	}
 
-	public Path getSources() {
+	public SourcesDirectory getSources() {
 		return sources;
+	}
+
+	public void setSources(SourcesDirectory sources) {
+		this.sources = sources;
 	}
 
 	public String getLabel() {
@@ -169,8 +133,8 @@ public class Library {
 	private List<String> buildClasspath() {
 		Stopwatch sw = Stopwatch.createStarted();
 		Path pom =
-			sources != null && sources.resolve("pom.xml").toFile().exists()
-				? sources.resolve("pom.xml")
+			sources != null && sources.getLocation().resolve("pom.xml").toFile().exists()
+				? sources.getLocation().resolve("pom.xml")
 				: extractPomFromJar();
 
 		List<String> cp =

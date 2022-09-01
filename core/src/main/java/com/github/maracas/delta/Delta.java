@@ -3,7 +3,7 @@ package com.github.maracas.delta;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.maracas.Library;
+import com.github.maracas.LibraryJar;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.util.BinaryToSourceMapper;
 import com.github.maracas.visitors.BreakingChangeVisitor;
@@ -32,12 +32,12 @@ public class Delta {
 	/**
 	 * The old version of the library
 	 */
-	private final Library oldVersion;
+	private final LibraryJar oldVersion;
 
 	/**
 	 * The new version of the library
 	 */
-	private final Library newVersion;
+	private final LibraryJar newVersion;
 
 	/**
 	 * The list of {@link BreakingChange} extracted from japicmp's classes
@@ -47,9 +47,9 @@ public class Delta {
 	private static final Logger logger = LogManager.getLogger(Delta.class);
 
 	/**
-	 * @see #fromJApiCmpDelta(Library, Library, List, MaracasOptions)
+	 * @see #fromJApiCmpDelta(LibraryJar, LibraryJar, List, MaracasOptions)
 	 */
-	private Delta(Library oldVersion, Library newVersion, Collection<BreakingChange> breakingChanges) {
+	private Delta(LibraryJar oldVersion, LibraryJar newVersion, Collection<BreakingChange> breakingChanges) {
 		this.oldVersion = oldVersion;
 		this.newVersion = newVersion;
 		this.breakingChanges = breakingChanges;
@@ -66,7 +66,7 @@ public class Delta {
 	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
 	 * @return the corresponding delta model
 	 */
-	public static Delta fromJApiCmpDelta(Library oldVersion, Library newVersion, List<JApiClass> classes, MaracasOptions options) {
+	public static Delta fromJApiCmpDelta(LibraryJar oldVersion, LibraryJar newVersion, List<JApiClass> classes, MaracasOptions options) {
 		Objects.requireNonNull(oldVersion);
 		Objects.requireNonNull(newVersion);
 		Objects.requireNonNull(classes);
@@ -76,7 +76,7 @@ public class Delta {
 		JApiCmpDeltaFilter filter = new JApiCmpDeltaFilter(options);
 		filter.filter(classes);
 
-		CtModel model = oldVersion.getBinaryModel();
+		CtModel model = oldVersion.getModel();
 		CtPackage root = model.getRootPackage();
 
 		// Map the BCs from JApi to Spoon elements
@@ -99,7 +99,7 @@ public class Delta {
 		if (!oldVersion.hasSources())
 			return;
 
-		CtModel model = oldVersion.getSourceModel();
+		CtModel model = oldVersion.getSources().getModel();
 		CtPackage root = model.getRootPackage();
 
 		Stopwatch sw = Stopwatch.createStarted();
@@ -142,16 +142,16 @@ public class Delta {
 	}
 
 	/**
-	 * Returns the old {@link Library}
+	 * Returns the old {@link LibraryJar}
 	 */
-	public Library getOldVersion() {
+	public LibraryJar getOldVersion() {
 		return oldVersion;
 	}
 
 	/**
-	 * Returns the new {@link Library}
+	 * Returns the new {@link LibraryJar}
 	 */
-	public Library getNewVersion() {
+	public LibraryJar getNewVersion() {
 		return newVersion;
 	}
 

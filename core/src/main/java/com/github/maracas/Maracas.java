@@ -3,8 +3,6 @@ package com.github.maracas;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.util.PathHelpers;
-import com.github.maracas.util.SpoonHelpers;
 import com.github.maracas.visitors.BreakingChangeVisitor;
 import com.github.maracas.visitors.CombinedVisitor;
 import com.google.common.base.Stopwatch;
@@ -18,9 +16,8 @@ import org.apache.logging.log4j.Logger;
 import spoon.SpoonException;
 import spoon.reflect.CtModel;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,9 +74,9 @@ public class Maracas {
 	 * @throws NullPointerException if oldVersion or newVersion is null
 	 * @throws SpoonException if we cannot build the Spoon model from the old version
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
-	 * @see #computeDelta(Library, Library, MaracasOptions)
+	 * @see #computeDelta(LibraryJar, LibraryJar, MaracasOptions)
 	 */
-	public static Delta computeDelta(Library oldVersion, Library newVersion, MaracasOptions options) {
+	public static Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion, MaracasOptions options) {
 		Objects.requireNonNull(oldVersion);
 		Objects.requireNonNull(newVersion);
 
@@ -103,9 +100,9 @@ public class Maracas {
 	}
 
 	/**
-	 * @see #computeDelta(Library, Library, MaracasOptions)
+	 * @see #computeDelta(LibraryJar, LibraryJar, MaracasOptions)
 	 */
-	public static Delta computeDelta(Library oldVersion, Library newVersion) {
+	public static Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion) {
 		return computeDelta(oldVersion, newVersion, MaracasOptions.newDefault());
 	}
 
@@ -119,16 +116,15 @@ public class Maracas {
 	 * @throws NullPointerException     if client or delta is null
 	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
 	 */
-	public static DeltaImpact computeDeltaImpact(Client client, Delta delta) {
+	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta) {
 		Objects.requireNonNull(client);
 		Objects.requireNonNull(delta);
 
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
-			CtModel model = client.getSourceModel();
+			client.setClasspath(Collections.singletonList(delta.getOldVersion().getJar()));
+			CtModel model = client.getModel();
 
-			sw.reset();
-			sw.start();
 			Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 			CombinedVisitor visitor = new CombinedVisitor(visitors);
 

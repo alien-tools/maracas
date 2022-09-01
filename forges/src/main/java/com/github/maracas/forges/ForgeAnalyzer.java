@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
   private ExecutorService executorService = ForkJoinPool.commonPool();
@@ -48,8 +47,8 @@ public class ForgeAnalyzer {
     if (jarV2.isEmpty())
       throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
-    Library libV1 = new Library(jarV1.get(), v1.getClonePath());
-    Library libV2 = new Library(jarV2.get());
+    LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getClonePath()));
+    LibraryJar libV2 = new LibraryJar(jarV2.get());
     Delta delta = Maracas.computeDelta(libV1, libV2, options);
     delta.populateLocations();
     return delta;
@@ -62,7 +61,7 @@ public class ForgeAnalyzer {
     if (delta.getBreakingChanges().isEmpty())
       return AnalysisResult.noImpact(
         delta,
-        clients.stream().map(c -> new Client(c.getClonePath(), delta.getOldVersion())).toList()
+        clients.stream().map(c -> new SourcesDirectory(c.getClonePath())).toList()
       );
 
     List<CompletableFuture<DeltaImpact>> clientFutures =
@@ -70,15 +69,15 @@ public class ForgeAnalyzer {
         CompletableFuture.supplyAsync(
           () -> {
             c.cloneCommit();
-            return Maracas.computeDeltaImpact(new Client(c.getModulePath(), delta.getOldVersion()), delta);
+            return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta);
           },
           executorService
-       ).exceptionally(t -> new DeltaImpact(new Client(c.getModulePath(), delta.getOldVersion()), delta, t))
+       ).exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))
       ).toList();
 
     CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
 
-    Map<Client, DeltaImpact> impacts = new HashMap<>();
+    Map<SourcesDirectory, DeltaImpact> impacts = new HashMap<>();
     for (CompletableFuture<DeltaImpact> future : clientFutures) {
       DeltaImpact impact = future.get();
       impacts.put(impact.getClient(), impact);

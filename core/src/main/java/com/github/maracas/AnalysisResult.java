@@ -6,7 +6,6 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +26,7 @@ public record AnalysisResult(
 	/**
 	 * The delta impact model per analyzed client
 	 */
-	Map<Client, DeltaImpact> deltaImpacts
+	Map<SourcesDirectory, DeltaImpact> deltaImpacts
 ) {
 	public AnalysisResult {
 		Objects.requireNonNull(delta);
@@ -41,7 +40,7 @@ public record AnalysisResult(
 	 * @param clients a collection of clients
 	 * @return the newly-created {@link AnalysisResult}
 	 */
-	public static AnalysisResult noImpact(Delta delta, Collection<Client> clients) {
+	public static AnalysisResult noImpact(Delta delta, Collection<SourcesDirectory> clients) {
 		return new AnalysisResult(
 			delta,
 			clients.stream().collect(toMap(
@@ -80,7 +79,7 @@ public record AnalysisResult(
 	 * @param client client owning the expected {@link DeltaImpact} model
 	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
 	 */
-	public DeltaImpact deltaImpactForClient(Client client) {
+	public DeltaImpact deltaImpactForClient(SourcesDirectory client) {
 		return deltaImpacts.get(client);
 	}
 
