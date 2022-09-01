@@ -70,7 +70,7 @@ public class OnTheFlyMaracasCase {
 		}
 	}
 
-	public static AnalysisResult maracasCase(String oldCls, String oldClsName, String newCls, String newClsName, String client) throws IOException {
+	public static AnalysisResult maracasCase(String oldCls, String oldClsName, String newCls, String newClsName, String clientCode) throws IOException {
 		OnTheFlyMaracasCase otf = new OnTheFlyMaracasCase();
 
 		Path oldClassFile = otf.compileSources(oldClsName, otf.saveSource(oldCls, oldClsName));
@@ -85,13 +85,16 @@ public class OnTheFlyMaracasCase {
 		Path clientFile = clientPath.resolve("src/main/java/Client.java");
 		Path pomFile = clientPath.resolve("pom.xml");
 		clientFile.toFile().getParentFile().mkdirs();
-		Files.writeString(clientFile, client);
+		Files.writeString(clientFile, clientCode);
 		Files.writeString(pomFile, "<project></project>");
 
+		Library oldVersion = new Library(oldJar.toAbsolutePath());
+		Library newVersion = new Library(newJar.toAbsolutePath());
+		Client client = new Client(clientPath.toAbsolutePath(), oldVersion);
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar.toAbsolutePath())
-			.newJar(newJar.toAbsolutePath())
-			.client(clientPath)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.build();
 
 		return Maracas.analyze(query);

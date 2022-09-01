@@ -27,7 +27,7 @@ public record AnalysisResult(
 	/**
 	 * The delta impact model per analyzed client
 	 */
-	Map<Path, DeltaImpact> deltaImpacts
+	Map<Client, DeltaImpact> deltaImpacts
 ) {
 	public AnalysisResult {
 		Objects.requireNonNull(delta);
@@ -38,10 +38,10 @@ public record AnalysisResult(
 	 * Creates an {@link AnalysisResult} where the delta doesn't impact any client
 	 *
 	 * @param delta   the computed delta model
-	 * @param clients a collection of Path-identified clients
+	 * @param clients a collection of clients
 	 * @return the newly-created {@link AnalysisResult}
 	 */
-	public static AnalysisResult noImpact(Delta delta, Collection<Path> clients) {
+	public static AnalysisResult noImpact(Delta delta, Collection<Client> clients) {
 		return new AnalysisResult(
 			delta,
 			clients.stream().collect(toMap(
@@ -75,13 +75,13 @@ public record AnalysisResult(
 	}
 
 	/**
-	 * Returns a {@link DeltaImpact} model given a client path.
+	 * Returns the {@link DeltaImpact} model for a given client
 	 *
 	 * @param client client owning the expected {@link DeltaImpact} model
 	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
 	 */
-	public DeltaImpact deltaImpactForClient(Path client) {
-		return deltaImpacts.get(client.toAbsolutePath());
+	public DeltaImpact deltaImpactForClient(Client client) {
+		return deltaImpacts.get(client);
 	}
 
 	public String toJson() throws JsonProcessingException {

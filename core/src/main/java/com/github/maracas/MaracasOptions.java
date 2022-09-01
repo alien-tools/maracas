@@ -14,7 +14,6 @@ import java.util.Set;
 public class MaracasOptions {
 	private final Options jApiOptions;
 	private final Set<JApiCompatibilityChange> excludedBreakingChanges = new HashSet<>();
-	private boolean noClasspath;
 
 	private MaracasOptions(Options jApiOptions) {
 		this.jApiOptions = jApiOptions;
@@ -62,9 +61,6 @@ public class MaracasOptions {
 		opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_ABSTRACT_ADDED_IN_SUPERCLASS);
 		opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_DEFAULT_ADDED_IN_IMPLEMENTED_INTERFACE);
 
-		// If we can, attempt to build JAR's classpath from the pom.xml they may contain
-		opts.noClasspath = false;
-
 		return opts;
 	}
 
@@ -77,24 +73,8 @@ public class MaracasOptions {
 		excludedBreakingChanges.add(c);
 	}
 
-	/**
-	 * If set to true, Maracas won't attempt to find a pom.xml file in the analyzed JAR files
-	 * and build a classpath from it.
-	 * This makes the analysis less accurate but speeds up the analysis.
-	 * Default is false.
-	 *
-	 * @param noClasspath
-	 */
-	public void setNoClasspath(boolean noClasspath) {
-		this.noClasspath = noClasspath;
-	}
-
 	public Set<JApiCompatibilityChange> getExcludedBreakingChanges() {
 		return excludedBreakingChanges;
-	}
-
-	public boolean isNoClasspath() {
-		return noClasspath;
 	}
 
 	public Options getJApiOptions() {
