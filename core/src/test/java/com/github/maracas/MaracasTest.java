@@ -137,20 +137,24 @@ class MaracasTest {
 
 	@Test
 	void computeDelta_isValid() {
-		Delta d = Maracas.computeDelta(v1WithSources, v2);
+		Delta d1 = Maracas.computeDelta(v1, v2);
 
-		assertThat(d, is(notNullValue()));
-		assertThat(d.getOldVersion(), is(equalTo(v1WithSources)));
-		assertThat(d.getNewVersion(), is(equalTo(v2)));
-		assertThat(d.getBreakingChanges(), everyItem(allOf(
+		assertThat(d1, is(notNullValue()));
+		assertThat(d1.getOldVersion(), is(equalTo(v1)));
+		assertThat(d1.getNewVersion(), is(equalTo(v2)));
+		assertThat(d1.getBreakingChanges(), everyItem(allOf(
 			hasProperty("reference", is(notNullValue())),
 			// TODO: uncomment once all visitors are implemented
 			//hasProperty("visitor", is(notNullValue()))
 			hasProperty("sourceElement", is(nullValue()))
 		)));
 
-		d.populateLocations();
-		assertThat(d.getBreakingChanges(), everyItem(
+		Delta d2 = Maracas.computeDelta(v1WithSources, v2);
+
+		assertThat(d2, is(notNullValue()));
+		assertThat(d2.getOldVersion(), is(equalTo(v1WithSources)));
+		assertThat(d2.getNewVersion(), is(equalTo(v2)));
+		assertThat(d2.getBreakingChanges(), everyItem(
 			hasProperty("sourceElement", allOf(
 				is(notNullValue()),
 				hasProperty("position", is(not(instanceOf(NoSourcePosition.class))))
