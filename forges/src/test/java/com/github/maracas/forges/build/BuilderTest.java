@@ -12,9 +12,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
 class BuilderTest {
-  final Path mavenProject = Paths.get("src/test/resources/maven-project/");
-  final Path gradleProject = Paths.get("src/test/resources/gradle-project/");
-  final Path invalidProject = Paths.get("src/test/resources/");
+  final Path mavenProject = Path.of("src/test/resources/maven-project/");
+  final Path gradleProject = Path.of("src/test/resources/gradle-project/");
+  final Path invalidProject = Path.of("src/test/resources/");
 
   @Test
   void build_From_MavenProject() {

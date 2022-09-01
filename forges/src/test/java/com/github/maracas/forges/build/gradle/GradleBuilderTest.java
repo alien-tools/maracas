@@ -16,9 +16,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GradleBuilderTest {
-	final Path validProject = Paths.get("src/test/resources/gradle-project/");
-	final Path errorProject = Paths.get("src/test/resources/gradle-project-error/");
-	final Path multiProject = Paths.get("src/test/resources/gradle-multi-project/");
+	final Path validProject = Path.of("src/test/resources/gradle-project/");
+	final Path errorProject = Path.of("src/test/resources/gradle-project-error/");
+	final Path multiProject = Path.of("src/test/resources/gradle-multi-project/");
 	final Path validTarget = validProject.resolve("build/");
 	final Path errorTarget = errorProject.resolve("build/");
 
@@ -82,7 +82,7 @@ class GradleBuilderTest {
 
 	@Test
 	void build_multi_core_default_with_version() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("core")));
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("core")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("core-0.1.0.jar"));
@@ -90,7 +90,7 @@ class GradleBuilderTest {
 
 	@Test
 	void build_multi_extra_default() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("extra")));
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("extra")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("extra.jar"));
@@ -98,7 +98,7 @@ class GradleBuilderTest {
 
 	@Test
 	void build_multi_invalid() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Paths.get("nope")));
+		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}

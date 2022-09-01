@@ -30,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @Tag("slow")
 class MavenLibrariesTest {
-	static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
+	static final Path TMP_PATH = Path.of(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
 
 	static Stream<Arguments> popularLibraries() {
 		return Stream.of(

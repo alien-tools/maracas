@@ -33,7 +33,7 @@ public class CommitBuilder {
 		Objects.requireNonNull(buildConfig);
 		this.commit = commit;
 		this.clonePath = clonePath;
-		this.module = Paths.get("");
+		this.module = Path.of("");
 		this.buildConfig = buildConfig;
 	}
 

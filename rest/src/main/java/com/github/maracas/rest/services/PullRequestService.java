@@ -63,8 +63,8 @@ public class PullRequestService {
 
 	@PostConstruct
 	public void initialize() {
-		Paths.get(clonePath).toFile().mkdirs();
-		Paths.get(reportPath).toFile().mkdirs();
+		Path.of(clonePath).toFile().mkdirs();
+		Path.of(reportPath).toFile().mkdirs();
 
 		executorService = nThreads == -1
 			? Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
@@ -153,8 +153,8 @@ public class PullRequestService {
 					Path clientClone = clonePath(pr, clientCommit);
 					Path clientModule =
 						c.module() != null
-							? Paths.get(c.module())
-							: Paths.get("");
+							? Path.of(c.module())
+							: Path.of("");
 
 					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
 					clientBuilders.put(clientClone, clientBuilder);
@@ -202,7 +202,7 @@ public class PullRequestService {
 
 	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
 		Path clonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(clonePath, Paths.get(config.build().module()));
+		BuildConfig buildConfig = new BuildConfig(clonePath, Path.of(config.build().module()));
 		config.build().goals().forEach(g -> buildConfig.addGoal(g));
 		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
@@ -246,7 +246,7 @@ public class PullRequestService {
 	}
 
 	private File reportFile(PullRequest pr) {
-		return Paths.get(reportPath)
+		return Path.of(reportPath)
 			.resolve(pr.repository().owner())
 			.resolve(pr.repository().name())
 			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
@@ -254,7 +254,7 @@ public class PullRequestService {
 	}
 
 	private Path clonePath(PullRequest pr, Commit c) {
-		return Paths.get(clonePath)
+		return Path.of(clonePath)
 			.resolve(prUid(pr))
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())

@@ -18,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitClonerTest {
-	final Path CLONES = Paths.get(System.getProperty("java.io.tmpdir")).resolve("clones");
+	final Path CLONES = Path.of(System.getProperty("java.io.tmpdir")).resolve("clones");
 	Cloner cloner = new GitCloner();
 
 	private String readHEAD(Path clone) {

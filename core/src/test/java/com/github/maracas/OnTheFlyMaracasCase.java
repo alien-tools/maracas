@@ -19,7 +19,7 @@ public class OnTheFlyMaracasCase {
 	private static final String TMP_PATH = System.getProperty("java.io.tmpdir");
 
 	private Path saveSource(String source, String className) throws IOException {
-		Path sourcePath = Paths.get(TMP_PATH, "%s.java".formatted(className));
+		Path sourcePath = Path.of(TMP_PATH, "%s.java".formatted(className));
 		Files.writeString(sourcePath, source);
 		return sourcePath;
 	}
@@ -74,14 +74,14 @@ public class OnTheFlyMaracasCase {
 		OnTheFlyMaracasCase otf = new OnTheFlyMaracasCase();
 
 		Path oldClassFile = otf.compileSources(oldClsName, otf.saveSource(oldCls, oldClsName));
-		Path oldJar = Paths.get(TMP_PATH,"old.jar");
+		Path oldJar = Path.of(TMP_PATH,"old.jar");
 		otf.createJar(oldJar, List.of(oldClassFile));
 
 		Path newClassFile = otf.compileSources(newClsName, otf.saveSource(newCls, newClsName));
-		Path newJar = Paths.get(TMP_PATH, "new.jar");
+		Path newJar = Path.of(TMP_PATH, "new.jar");
 		otf.createJar(newJar, List.of(newClassFile));
 
-		Path clientPath = Paths.get(TMP_PATH).resolve("client");
+		Path clientPath = Path.of(TMP_PATH).resolve("client");
 		Path clientFile = clientPath.resolve("src/main/java/Client.java");
 		Path pomFile = clientPath.resolve("pom.xml");
 		clientFile.toFile().getParentFile().mkdirs();
