@@ -48,10 +48,10 @@ SourcesDirectory client = new SourcesDirectory(Path.of("/path/to/client"));
 
 // Using a query/result
 AnalysisQuery query = AnalysisQuery.builder()
-	.oldVersion(v1)
-	.newVersion(v2)
-	.client(client)
-	.build();
+  .oldVersion(v1)
+  .newVersion(v2)
+  .client(client)
+  .build();
 
 AnalysisResult result = Maracas.analyze(query);
 Delta delta = result.delta();
