@@ -157,7 +157,7 @@ public class PullRequestService {
 							: Path.of("");
 
 					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
-					clientBuilders.put(clientClone, clientBuilder);
+					clientBuilders.put(clientBuilder.getModulePath(), clientBuilder);
 				} catch (Exception e) {
 					clientReports.add(ClientReport.error(clientName, e));
 				}
