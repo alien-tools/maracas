@@ -58,8 +58,8 @@ public class Delta {
 	/**
 	 * Builds a delta model from the list of changes extracted by japicmp
 	 *
-	 * @param oldLib  the old version of the library
-	 * @param newLib  the new version of the library
+	 * @param oldVersion the old version of the library
+	 * @param newVersion the new version of the library
 	 * @param classes the list of changes extracted using
 	 *                {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
 	 * @param options Maracas' options
@@ -114,9 +114,6 @@ public class Delta {
 				logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), oldVersion.getSources());
 		});
 
-		// Remove breaking changes that do not map to a source location
-		// breakingChanges.removeIf(bc -> bc.getSourceElement() == null || !bc.getSourceElement().getPosition().isValidPosition());
-
 		logger.info("Mapping binary breaking changes to source code took {}ms", sw.elapsed().toMillis());
 	}
 
@@ -159,7 +156,7 @@ public class Delta {
 	 * Returns a JSON representation of the delta.
 	 *
 	 * @return string with the JSON representation of the object
-	 * @throws JsonProcessingException
+	 * @throws JsonProcessingException if jackson fails
 	 */
 	public String toJson() throws JsonProcessingException {
 		return new ObjectMapper()

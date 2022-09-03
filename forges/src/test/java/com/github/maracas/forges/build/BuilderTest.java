@@ -28,6 +28,7 @@ class BuilderTest {
 
   @Test
   void build_From_UnknownProject() {
-    assertThrows(BuildException.class, () -> Builder.of(new BuildConfig(invalidProject)));
+    BuildConfig config = new BuildConfig(invalidProject);
+    assertThrows(BuildException.class, () -> Builder.of(config));
   }
 }

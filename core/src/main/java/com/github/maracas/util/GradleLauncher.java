@@ -2,6 +2,7 @@ package com.github.maracas.util;
 
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.SourceDirectory;
 import org.gradle.tooling.model.eclipse.EclipseProject;
 import spoon.Launcher;
 import spoon.SpoonException;
@@ -34,7 +35,7 @@ public class GradleLauncher extends Launcher {
 			List<File> sourceDirectories = model.getSourceDirectories()
 				.stream()
 				.filter(d -> !d.getPath().contains("test")) // FIXME: better way to distinguish?
-				.map(d -> d.getDirectory())
+				.map(SourceDirectory::getDirectory)
 				.toList();
 
 			String[] classpath = model.getClasspath()

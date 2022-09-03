@@ -4,8 +4,6 @@ import japicmp.model.JApiConstructor;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.*;
@@ -19,8 +17,6 @@ import java.util.List;
 import static java.util.stream.Collectors.joining;
 
 public final class SpoonHelpers {
-	private static final Logger logger = LogManager.getLogger(SpoonHelpers.class);
-
 	private SpoonHelpers() {
 	}
 
@@ -30,7 +26,7 @@ public final class SpoonHelpers {
 			if (!(parent.getPosition() instanceof NoSourcePosition))
 				return parent;
 		} while ((parent = parent.getParent()) != null);
-		return parent;
+		return null;
 	}
 
 	public static String buildSpoonSignature(JApiMethod m) {
@@ -113,6 +109,7 @@ public final class SpoonHelpers {
 	 * @param japiMethod  The JapiCmp method
 	 * @return <code>true</code> if the methods have the same
 	 * signature; <code>false</code> otherwise.
+	 * @deprecated
 	 */
 	@Deprecated
 	public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {

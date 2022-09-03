@@ -16,7 +16,7 @@ import org.springframework.core.io.ResourceLoader;
 public class MaracasConfiguration {
 	/**
 	 * Attempts to build an OAuth-authenticated GitHub handler
-	 *
+	 * <p>
 	 * In normal conditions, this should come from a .github file in the classpath
 	 * In CI environments, this should come from a GITHUB_OAUTH environment variable
 	 */

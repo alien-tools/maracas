@@ -29,13 +29,13 @@ import spoon.reflect.reference.CtTypeReference;
  * </ul>
  */
 public class FieldTypeChangedVisitor extends BreakingChangeVisitor {
-	/**
-	 * FIXME: Notes
-	 *  - There must be a cleaner way than checking all possible usage contexts,
-	 *      but I can't find it yet
-	 *  - japicmp doesn't report a FIELD_TYPE_CHANGED when type parameters change,
-	 *      e.g.: {@literal List<A>} to {@literal List<B>} (ofc it does for e.g.
-	 *    {@literal List<A>} to {@literal Collection<A>})
+	/*
+	  FIXME: Notes
+	   - There must be a cleaner way than checking all possible usage contexts,
+	       but I can't find it yet
+	   - japicmp doesn't report a FIELD_TYPE_CHANGED when type parameters change,
+	       e.g.: {@literal List<A>} to {@literal List<B>} (ofc it does for e.g.
+	     {@literal List<A>} to {@literal Collection<A>})
 	 */
 
 	/**

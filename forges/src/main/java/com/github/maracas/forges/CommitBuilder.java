@@ -7,7 +7,6 @@ import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 

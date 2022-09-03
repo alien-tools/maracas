@@ -2,7 +2,6 @@ package com.github.maracas.rest.services;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.CommitBuilder;
@@ -31,7 +30,6 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +96,7 @@ public class PullRequestService {
 						jobs.remove(uid);
 
 						if (ex != null) {
-							logger.error("Error analyzing " + uid, ex);
+							logger.error("Error analyzing {}", uid, ex);
 							return new PullRequestResponse(ex.getCause().getMessage());
 						}
 
@@ -126,7 +124,7 @@ public class PullRequestService {
 	}
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
-		logger.info("Starting the analysis for {}", prUid(pr));
+		logger.info("Starting the analysis for {}", () -> prUid(pr));
 
 		try {
 			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
@@ -201,12 +199,12 @@ public class PullRequestService {
 	}
 
 	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
-		Path clonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(clonePath, Path.of(config.build().module()));
-		config.build().goals().forEach(g -> buildConfig.addGoal(g));
+		Path commitClonePath = clonePath(pr, c);
+		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.build().module()));
+		config.build().goals().forEach(buildConfig::addGoal);
 		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-		return new CommitBuilder(c, clonePath, buildConfig);
+		return new CommitBuilder(c, commitClonePath, buildConfig);
 	}
 
 	public boolean isProcessing(PullRequest pr) {
