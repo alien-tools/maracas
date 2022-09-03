@@ -66,10 +66,10 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 				else
 					logger.warn("Couldn't find Spoon node for old method {}", m);
 			} else if (newMethodOpt.isPresent()) {
-				// Added method introducing a breaking change.
+				// Added method introducing a breaking change => we attach it to its containing class
 				CtMethod newMethod = newMethodOpt.get();
 
-				// FIXME: we miss the information about the newly added method
+				// Unless this is one of these auto-generated Enum methods
 				if (!newMethod.getName().equals("values") && !newMethod.getName().equals("valueOf")) {
 					CtTypeReference<?> clsRef = root.getFactory().Type().createReference(m.getjApiClass().getFullyQualifiedName());
 
@@ -99,9 +99,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 						);
 					else
 						logger.warn("Couldn't find Spoon node for old field {}", f);
-				} else {
-					// No oldField
-				}
+				} // else => no oldField
 			} else
 				logger.warn("Couldn't find Spoon node for type {}", f.getjApiClass());
 		}
@@ -141,7 +139,6 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 	@Override
 	public void visit(JApiImplementedInterface intf) {
 		// Using visit(JApiClass jApiClass, JApiImplementedInterface jApiImplementedInterface)
-		// FIXME: is there a way to get the JApiClass from the interface?
 	}
 
 	@Override

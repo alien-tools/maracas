@@ -6,7 +6,6 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public record BreakingChange(
 	String declaration,

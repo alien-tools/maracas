@@ -329,10 +329,10 @@ public final class SpoonTypeHelpers {
 			return retrn.getReturnedExpression().getType();
 		else if (e instanceof CtSynchronized sync)
 			return sync.getExpression().getType();
-		else if (e instanceof CtAssignment<?, ?> assign)
-			return assign.getType();
-		else if (e instanceof CtBlock)
-			return null;
+		else {
+			if (e instanceof CtBlock)
+				return null;
+		}
 
 		throw new IllegalArgumentException("Unhandled enclosing type " + e.getClass());
 	}

@@ -37,8 +37,21 @@ public class LibraryJar {
 	@JsonIgnore
 	private boolean noClasspath = false;
 
-	private static Path TMP_DIR;
 	private static final Logger logger = LogManager.getLogger(LibraryJar.class);
+
+	private static final Path TMP_DIR;
+	// I can't seem to find a way to convince the compiler
+	// that TMP_DIR will be initialized without introducing
+	// an intermediate variable :(
+	static {
+		Path tmp = Path.of(".");
+		try {
+			tmp = Files.createTempDirectory("maracas-pom-tmp");
+		} catch (IOException e) {
+			logger.error(e);
+		}
+		TMP_DIR = tmp;
+	}
 
 	public LibraryJar(Path jar) {
 		this(jar, null);
@@ -51,11 +64,6 @@ public class LibraryJar {
 		this.jar = jar.toAbsolutePath();
 		this.label = jar.getFileName().toString();
 		this.sources = sources;
-		try {
-			TMP_DIR = Files.createTempDirectory("maracas-tmp");
-		} catch (IOException e) {
-			logger.error(e);
-		}
 	}
 
 	public CtModel getModel() {

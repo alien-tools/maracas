@@ -40,7 +40,7 @@ public interface BreakingChange {
 	CtElement getSourceElement();
 
 	/**
-	 * Sets the the {@link CtElement} in the library's source code associated with
+	 * Sets the {@link CtElement} in the library's source code associated with
 	 * the declaration's {@link #getReference()}
 	 */
 	void setSourceElement(CtElement element);

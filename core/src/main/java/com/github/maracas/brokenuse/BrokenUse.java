@@ -16,32 +16,32 @@ import java.util.Objects;
  * by a breaking change.
  */
 public record BrokenUse(
-	/**
-	 * The impacted {@link CtElement} in the client's AST
+	/*
+	  The impacted {@link CtElement} in the client's AST
 	 */
 	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement element,
 
-	/**
-	 * The {@link CtElement} in the library's code that is directly used by the {@link #element}
+	/*
+	  The {@link CtElement} in the library's code that is directly used by the {@link #element}
 	 */
 	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement usedApiElement,
 
-	/**
-	 * The original declaration affected by a breaking change in the library's code (often times the same as
-	 * {@link #usedApiElement})
+	/*
+	  The original declaration affected by a breaking change in the library's code (often times the same as
+	  {@link #usedApiElement})
 	 */
 	@JsonSerialize(using = ToStringSerializer.class)
 	CtReference source,
 
-	/**
-	 * The kind of use relationship between the {@link #element} and {@link #usedApiElement}
+	/*
+	  The kind of use relationship between the {@link #element} and {@link #usedApiElement}
 	 */
 	APIUse use,
 
-	/**
-	 * The kind of breaking change affecting {@link #source}
+	/*
+	  The kind of breaking change affecting {@link #source}
 	 */
 	JApiCompatibilityChange change
 ) {

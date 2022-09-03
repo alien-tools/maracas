@@ -19,12 +19,12 @@ import static java.util.stream.Collectors.toSet;
  * The result of analyzing an {@link AnalysisQuery} with Maracas.
  */
 public record AnalysisResult(
-	/**
-	 * The delta model between two versions of the library
+	/*
+	  The delta model between two versions of the library
 	 */
 	Delta delta,
-	/**
-	 * The delta impact model per analyzed client
+	/*
+	  The delta impact model per analyzed client
 	 */
 	Map<SourcesDirectory, DeltaImpact> deltaImpacts
 ) {

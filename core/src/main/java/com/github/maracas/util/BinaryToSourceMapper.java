@@ -15,7 +15,7 @@ import java.util.Optional;
  * A BinaryToSourceMapper attempts to map Spoon's {@link CtReference}
  * extracted from binary code (typically the old JAR) to the corresponding
  * {@link CtElement} in the source code version of this JAR.
- *
+ * <p>
  * There are many bytecode-specific artifacts (e.g., default constructors, enum's
  * auto-generated methods, etc.) that can typically not be resolved in source code.
  * In this case, we attempt to map the artifacts to the closest source artifact

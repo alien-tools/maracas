@@ -24,14 +24,13 @@ public class MethodNowAbstractVisitor extends BreakingChangeVisitor {
 	@Override
 	public <T> void visitCtClass(CtClass<T> ctClass) {
 		CtTypeReference<?> enclosingType = mRef.getDeclaringType();
-		if (!ctClass.isAbstract() && ctClass.isSubtypeOf(enclosingType)) {
-			if (mRef.getOverridingExecutable(ctClass.getReference()) == null) {
-				if (enclosingType.isInterface())
-					brokenUse(ctClass, enclosingType, mRef, APIUse.IMPLEMENTS);
-				else
-					brokenUse(ctClass, enclosingType, mRef, APIUse.EXTENDS);
-			}
-		}
+		if (
+			!ctClass.isAbstract() &&
+			ctClass.isSubtypeOf(enclosingType) &&
+			mRef.getOverridingExecutable(ctClass.getReference()) == null
+		)
+			brokenUse(ctClass, enclosingType, mRef,
+				enclosingType.isInterface() ? APIUse.IMPLEMENTS : APIUse.EXTENDS);
 	}
 
 	@Override

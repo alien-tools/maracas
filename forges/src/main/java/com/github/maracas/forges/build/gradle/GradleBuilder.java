@@ -13,7 +13,6 @@ import org.gradle.tooling.ProjectConnection;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -40,7 +39,6 @@ public class GradleBuilder extends AbstractBuilder {
 		Optional<Path> jar = locateJar();
 
 		if (jar.isEmpty()) {
-			Path workingDirectory = config.getBasePath().resolve(config.getModule());
 			List<String> goals = config.getGoals().isEmpty()
 				? DEFAULT_GOALS
 				: config.getGoals();

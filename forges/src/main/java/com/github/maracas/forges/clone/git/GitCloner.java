@@ -12,10 +12,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
-
-import static java.util.stream.Collectors.joining;
 
 /**
  * We would like to use JGit, but the lack of support for shallow clones hurts.
@@ -43,7 +40,7 @@ public class GitCloner implements Cloner {
 		executeCommand("git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
 		executeCommand("git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
 		logger.info("Cloning commit {} from {} took {}ms",
-			commit.sha(), commit.repository().remoteUrl(), sw.elapsed().toMillis());
+			commit::sha, () -> commit.repository().remoteUrl(), () -> sw.elapsed().toMillis());
 
 		return dest;
 	}
@@ -70,7 +67,7 @@ public class GitCloner implements Cloner {
 			dest.toAbsolutePath().toString()
 		);
 		logger.info("Cloning repository {} [{}] took {}ms",
-			repository.remoteUrl(), repository.branch(), sw.elapsed().toMillis());
+			repository::remoteUrl, repository::branch, () -> sw.elapsed().toMillis());
 
 		return dest;
 	}
@@ -85,7 +82,7 @@ public class GitCloner implements Cloner {
 			int exitCode = proc.waitFor();
 
 			if (exitCode != 0) {
-				String readableCommand = Arrays.asList(command).stream().collect(joining(" "));
+				String readableCommand = String.join(" ", command);
 				logger.error("{} failed: {}", readableCommand, errors);
 				throw new CloneException("%s failed (%d): %s".formatted(readableCommand, exitCode, errors));
 			}

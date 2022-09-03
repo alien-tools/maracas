@@ -104,7 +104,7 @@ public class DeltaImpact {
 	 * Returns a JSON representation of the object.
 	 *
 	 * @return string with the JSON representation of the object
-	 * @throws JsonProcessingException
+	 * @throws JsonProcessingException if jackson fails
 	 */
 	public String toJson() throws JsonProcessingException {
 		return new ObjectMapper()
