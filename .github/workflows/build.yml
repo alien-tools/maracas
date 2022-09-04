@@ -1,4 +1,4 @@
-name: Java CI
+name: Maven Build & Test
 
 on: [push]
 
@@ -7,16 +7,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'adopt'
           cache: 'maven'
-          submodules: true
       - name: Set up Maven
-        uses: stCarolas/setup-maven@v4.2
+        uses: stCarolas/setup-maven@v4.4
         with:
           maven-version: 3.8.2
       - name: Build with Maven
@@ -29,18 +28,14 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish Core JaCoCo reports
-        uses: actions/upload-artifact@v2
+      - name: Merging JaCoCo reports
+        run: |
+          mkdir -p jacoco-reports
+          mv core/target/site/jacoco jacoco-reports/core
+          mv forges/target/site/jacoco jacoco-reports/forges
+          mv rest/target/site/jacoco jacoco-reports/rest
+      - name: Publish JaCoCo reports
+        uses: actions/upload-artifact@v3
         with:
-          name: Core JaCoCo report
-          path: core/target/site/jacoco
-      - name: Publish REST JaCoCo reports
-        uses: actions/upload-artifact@v2
-        with:
-          name: REST JaCoCo report
-          path: rest/target/site/jacoco
-      - name: Publish Forges JaCoCo reports
-        uses: actions/upload-artifact@v2
-        with:
-          name: Forges JaCoCo report
-          path: forges/target/site/jacoco
+          name: JaCoCo reports
+          path: jacoco-reports
