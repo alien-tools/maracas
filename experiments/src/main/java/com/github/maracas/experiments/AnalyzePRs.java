@@ -1,6 +1,8 @@
 package com.github.maracas.experiments;
 
+import com.github.maracas.LibraryJar;
 import com.github.maracas.Maracas;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
@@ -27,10 +29,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AnalyzePRs {
 	private GitHub gh = buildGitHub();
@@ -46,6 +45,8 @@ public class AnalyzePRs {
 	// Store the ones we've computed already
 	private Map<String, PullRequest> cachePRs = new HashMap<>();
 	private Map<String, Delta> cacheDeltas = new HashMap<>();
+	private Map<Path, LibraryJar> cacheLibraries = new HashMap<>();
+	private Map<Path, SourcesDirectory> cacheClients = new HashMap<>();
 
 	public AnalyzePRs() throws IOException {
 		this.gh = GitHubBuilder.fromEnvironment().build();
@@ -64,6 +65,8 @@ public class AnalyzePRs {
 			var i = 0;
 
 			for (var c : cases) {
+				logger.info("Cached: {} PRs; {} deltas; {} libs; {} clients",
+					cachePRs.size(), cacheDeltas.size(), cacheLibraries.size(), cacheClients.size());
 				logger.info("[{}/{}] PR#{} of {}/{} on {}/{}",
 					++i, cases.size(), c.prNumber, c.owner, c.name, c.cowner, c.cname);
 
@@ -98,7 +101,9 @@ public class AnalyzePRs {
 
 								if (delta == null) {
 									// Compute delta between mergeBase and HEAD
-									delta = Maracas.computeDelta(mergeBaseJar.get(), headJar.get());
+									cacheLibraries.putIfAbsent(mergeBaseJar.get(), new LibraryJar(mergeBaseJar.get()));
+									cacheLibraries.putIfAbsent(headJar.get(), new LibraryJar(headJar.get()));
+									delta = Maracas.computeDelta(cacheLibraries.get(mergeBaseJar.get()), cacheLibraries.get(headJar.get()));
 									Files.write(prPath.resolve("delta.json"), delta.toJson().getBytes());
 									cacheDeltas.put(c.owner + c.name + c.prNumber, delta);
 									logger.info("[{}#{}] Found {} BCs", c.name, c.prNumber, delta.getBreakingChanges().size());
@@ -114,7 +119,8 @@ public class AnalyzePRs {
 										Cloner.of(client).clone(client, clientPath);
 
 										// Compute delta impact
-										var impact = Maracas.computeDeltaImpact(clientPath, delta);
+										cacheClients.putIfAbsent(clientPath, new SourcesDirectory(clientPath));
+										var impact = Maracas.computeDeltaImpact(cacheClients.get(clientPath), delta);
 										var brokenUses = impact.getBrokenUses();
 										c.brokenUses = brokenUses.size();
 										Files.write(prPath.resolve(String.format("%s-%s-impact.json", c.cowner, c.cname)), impact.toJson().getBytes());
