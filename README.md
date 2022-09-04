@@ -31,7 +31,7 @@ Then, declare the following dependency:
 <dependency>
   <groupId>com.github.maracas</groupId>
   <artifactId>maracas-core</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
