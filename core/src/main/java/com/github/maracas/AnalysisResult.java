@@ -6,7 +6,6 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -20,14 +19,14 @@ import static java.util.stream.Collectors.toSet;
  * The result of analyzing an {@link AnalysisQuery} with Maracas.
  */
 public record AnalysisResult(
-	/**
-	 * The delta model between two versions of the library
+	/*
+	  The delta model between two versions of the library
 	 */
 	Delta delta,
-	/**
-	 * The delta impact model per analyzed client
+	/*
+	  The delta impact model per analyzed client
 	 */
-	Map<Path, DeltaImpact> deltaImpacts
+	Map<SourcesDirectory, DeltaImpact> deltaImpacts
 ) {
 	public AnalysisResult {
 		Objects.requireNonNull(delta);
@@ -38,10 +37,10 @@ public record AnalysisResult(
 	 * Creates an {@link AnalysisResult} where the delta doesn't impact any client
 	 *
 	 * @param delta   the computed delta model
-	 * @param clients a collection of Path-identified clients
+	 * @param clients a collection of clients
 	 * @return the newly-created {@link AnalysisResult}
 	 */
-	public static AnalysisResult noImpact(Delta delta, Collection<Path> clients) {
+	public static AnalysisResult noImpact(Delta delta, Collection<SourcesDirectory> clients) {
 		return new AnalysisResult(
 			delta,
 			clients.stream().collect(toMap(
@@ -75,13 +74,13 @@ public record AnalysisResult(
 	}
 
 	/**
-	 * Returns a {@link DeltaImpact} model given a client path.
+	 * Returns the {@link DeltaImpact} model for a given client
 	 *
 	 * @param client client owning the expected {@link DeltaImpact} model
 	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
 	 */
-	public DeltaImpact deltaImpactForClient(Path client) {
-		return deltaImpacts.get(client.toAbsolutePath());
+	public DeltaImpact deltaImpactForClient(SourcesDirectory client) {
+		return deltaImpacts.get(client);
 	}
 
 	public String toJson() throws JsonProcessingException {

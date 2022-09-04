@@ -22,10 +22,10 @@ public class CompChangesCase {
      * @param args
      */
     public static void main(String[] args) {
-        Path srcApi1 = Paths.get("../test-data/comp-changes/old/");
-        Path srcApi2 = Paths.get("../test-data/comp-changes/new/");;
-        Path srcClient = Paths.get("../test-data/comp-changes/client/");
-        Path report = Paths.get("src/main/resources/comp-changes/report.html");
+        Path srcApi1 = Path.of("../test-data/comp-changes/old/");
+        Path srcApi2 = Path.of("../test-data/comp-changes/new/");;
+        Path srcClient = Path.of("../test-data/comp-changes/client/");
+        Path report = Path.of("src/main/resources/comp-changes/report.html");
         MavenArtifactUpgrade upgrade = new MavenArtifactUpgrade(null, null,
             "comp-changes-old", "comp-changes-new", null, null);
 

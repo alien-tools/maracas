@@ -17,7 +17,6 @@ import static org.hamcrest.collection.IsMapContaining.hasKey;
 //import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.nio.file.Path;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -31,18 +30,18 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
-	final Path v1 = TestData.compChangesV1;
-	final Path v2 = TestData.compChangesV2;
-	final Path client = TestData.compChangesClient;
-	final Path client2 = TestData.compChangesSources;
-	final Path sources = TestData.compChangesSources;
+	final LibraryJar v1 = new LibraryJar(TestData.compChangesV1);
+	final LibraryJar v1WithSources = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+	final LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
+	final SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
+	final SourcesDirectory client2 = new SourcesDirectory(TestData.compChangesSources);
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {
 		AnalysisResult res = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
@@ -58,25 +57,24 @@ class MaracasTest {
 	void analyze_QueryWithTwoClients_hasTwoClientBrokenUses() {
 		AnalysisResult res = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.client(client)
 				.client(client2)
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
 		assertThat(res.deltaImpacts().keySet(), hasSize(2));
-		assertThat(res.deltaImpacts(), hasKey(client.toAbsolutePath()));
-		assertThat(res.deltaImpacts(), hasKey(client2.toAbsolutePath()));
+		assertThat(res.deltaImpacts(), hasKey(client));
+		assertThat(res.deltaImpacts(), hasKey(client2));
 	}
 
 	@Test
 	void analyze_QueryWithSources_hasSourceLocations() {
 		AnalysisResult res = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
-				.sources(sources)
+				.oldVersion(v1WithSources)
+				.newVersion(v2)
 				.build());
 
 		assertThat(res.delta(), is(notNullValue()));
@@ -94,15 +92,15 @@ class MaracasTest {
 
 		AnalysisResult resPublic = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.options(publicOpts)
 				.build());
 
 		AnalysisResult resPrivate = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.options(privateOpts)
 				.build());
 
@@ -114,16 +112,16 @@ class MaracasTest {
 	void analyze_QueryWithExcludedBC_IsConsidered() {
 		AnalysisResult resWithoutOpts = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.build());
 
 		MaracasOptions opts = MaracasOptions.newDefault();
 		opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED);
 		AnalysisResult resWithOpts = Maracas.analyze(
 			AnalysisQuery.builder()
-				.oldJar(v1)
-				.newJar(v2)
+				.oldVersion(v1)
+				.newVersion(v2)
 				.options(opts)
 				.build());
 
@@ -139,20 +137,24 @@ class MaracasTest {
 
 	@Test
 	void computeDelta_isValid() {
-		Delta d = Maracas.computeDelta(v1, v2);
+		Delta d1 = Maracas.computeDelta(v1, v2);
 
-		assertThat(d, is(notNullValue()));
-		assertThat(d.getOldJar(), is(equalTo(v1.toAbsolutePath())));
-		assertThat(d.getNewJar(), is(equalTo(v2.toAbsolutePath())));
-		assertThat(d.getBreakingChanges(), everyItem(allOf(
+		assertThat(d1, is(notNullValue()));
+		assertThat(d1.getOldVersion(), is(equalTo(v1)));
+		assertThat(d1.getNewVersion(), is(equalTo(v2)));
+		assertThat(d1.getBreakingChanges(), everyItem(allOf(
 			hasProperty("reference", is(notNullValue())),
 			// TODO: uncomment once all visitors are implemented
 			//hasProperty("visitor", is(notNullValue()))
 			hasProperty("sourceElement", is(nullValue()))
 		)));
 
-		d.populateLocations(sources);
-		assertThat(d.getBreakingChanges(), everyItem(
+		Delta d2 = Maracas.computeDelta(v1WithSources, v2);
+
+		assertThat(d2, is(notNullValue()));
+		assertThat(d2.getOldVersion(), is(equalTo(v1WithSources)));
+		assertThat(d2.getNewVersion(), is(equalTo(v2)));
+		assertThat(d2.getBreakingChanges(), everyItem(
 			hasProperty("sourceElement", allOf(
 				is(notNullValue()),
 				hasProperty("position", is(not(instanceOf(NoSourcePosition.class))))
@@ -185,32 +187,21 @@ class MaracasTest {
 	}
 
 	@Test
-	void computeDelta_invalidPaths_throwsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+	void computeDelta_nullVersions_throwsException() {
+		assertThrows(NullPointerException.class, () ->
 			Maracas.computeDelta(v1, null)
 		);
 
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			Maracas.computeDelta(null, v2)
-		);
-
-		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDelta(v1, TestData.invalidJar)
-		);
-
-		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDelta(TestData.invalidJar, v2)
 		);
 	}
 
 	@Test
-	void computeDeltaImpact_invalidPaths_throwsException() {
+	void computeDeltaImpact_nullClient_throwsException() {
 		Delta d = Maracas.computeDelta(v1, v2);
-		assertThrows(IllegalArgumentException.class, () ->
-			Maracas.computeDeltaImpact(TestData.invalidDirectory, d)
-		);
 
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			Maracas.computeDeltaImpact(null, d)
 		);
 	}

@@ -1,7 +1,6 @@
 package com.github.maracas.forges.build;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +15,7 @@ public class BuildConfig {
 	public BuildConfig(Path basePath) {
 		Objects.requireNonNull(basePath);
 		this.basePath = basePath;
-		this.module = Paths.get("");
+		this.module = Path.of("");
 	}
 
 	public BuildConfig(Path basePath, Path module) {

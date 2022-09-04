@@ -1,20 +1,19 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Main {
 	public static void main(String[] args) {
-		Path v1 = Paths.get("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-		Path v2 = Paths.get("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c = Paths.get("test-data/comp-changes/client/");
-		Path sources = Paths.get("test-data/comp-changes/old/");
+		LibraryJar v1 = new LibraryJar(
+			Path.of("test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar"),
+			new SourcesDirectory(Path.of("test-data/comp-changes/old/")));
+		LibraryJar v2 = new LibraryJar(Path.of("test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar"));
+		SourcesDirectory client = new SourcesDirectory(Path.of("test-data/comp-changes/client/"));
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(v1)
-			.newJar(v2)
-			.sources(sources)
-			.client(c)
+			.oldVersion(v1)
+			.newVersion(v2)
+			.client(client)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);

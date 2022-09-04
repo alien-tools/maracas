@@ -7,7 +7,6 @@ import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,7 +32,7 @@ public class CommitBuilder {
 		Objects.requireNonNull(buildConfig);
 		this.commit = commit;
 		this.clonePath = clonePath;
-		this.module = Paths.get("");
+		this.module = Path.of("");
 		this.buildConfig = buildConfig;
 	}
 

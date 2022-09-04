@@ -30,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @Tag("slow")
 class MavenLibrariesTest {
-	static final Path TMP_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
+	static final Path TMP_PATH = Path.of(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
 
 	static Stream<Arguments> popularLibraries() {
 		return Stream.of(
@@ -64,19 +64,24 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
+		LibraryJar oldVersion = new LibraryJar(oldJar, new SourcesDirectory(sources));
+		LibraryJar newVersion = new LibraryJar(newJar);
+		SourcesDirectory client = new SourcesDirectory(sources);
+
 		// Since we're using the libraries as clients themselves (so all package names clash),
 		// the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
 		MaracasOptions opts = MaracasOptions.newDefault();
 		opts.getJApiOptions().setAccessModifier(AccessModifier.PROTECTED);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar)
-			.newJar(newJar)
-			.client(sources)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.options(opts)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
+		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
@@ -87,12 +92,6 @@ class MavenLibrariesTest {
 			assertThat(d.element().getPosition().isValidPosition(), is(true));
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
-		});
-
-		result.delta().populateLocations(sources);
-		result.delta().getBreakingChanges().forEach(bc -> {
-			assertThat(bc.getSourceElement(), is(notNullValue()));
-			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
 		});
 	}
 
@@ -110,13 +109,18 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
+		LibraryJar oldVersion = new LibraryJar(oldJar, new SourcesDirectory(sources));
+		LibraryJar newVersion = new LibraryJar(newJar);
+		SourcesDirectory client = new SourcesDirectory(sources);
+
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar)
-			.newJar(newJar)
-			.client(sources)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.build();
 
 		AnalysisResult result = Maracas.analyze(query);
+		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
 			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
@@ -127,12 +131,6 @@ class MavenLibrariesTest {
 			assertThat(d.element().getPosition().isValidPosition(), is(true));
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
-		});
-
-		result.delta().populateLocations(sources);
-		result.delta().getBreakingChanges().forEach(bc -> {
-			assertThat(bc.getSourceElement(), is(notNullValue()));
-			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
 		});
 	}
 

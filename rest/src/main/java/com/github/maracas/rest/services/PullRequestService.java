@@ -30,7 +30,6 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,8 +61,8 @@ public class PullRequestService {
 
 	@PostConstruct
 	public void initialize() {
-		Paths.get(clonePath).toFile().mkdirs();
-		Paths.get(reportPath).toFile().mkdirs();
+		Path.of(clonePath).toFile().mkdirs();
+		Path.of(reportPath).toFile().mkdirs();
 
 		executorService = nThreads == -1
 			? Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
@@ -97,7 +96,7 @@ public class PullRequestService {
 						jobs.remove(uid);
 
 						if (ex != null) {
-							logger.error("Error analyzing " + uid, ex);
+							logger.error("Error analyzing {}", uid, ex);
 							return new PullRequestResponse(ex.getCause().getMessage());
 						}
 
@@ -125,7 +124,7 @@ public class PullRequestService {
 	}
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
-		logger.info("Starting the analysis for {}", prUid(pr));
+		logger.info("Starting the analysis for {}", () -> prUid(pr));
 
 		try {
 			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
@@ -152,11 +151,11 @@ public class PullRequestService {
 					Path clientClone = clonePath(pr, clientCommit);
 					Path clientModule =
 						c.module() != null
-							? Paths.get(c.module())
-							: Paths.get("");
+							? Path.of(c.module())
+							: Path.of("");
 
 					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
-					clientBuilders.put(clientClone, clientBuilder);
+					clientBuilders.put(clientBuilder.getModulePath(), clientBuilder);
 				} catch (Exception e) {
 					clientReports.add(ClientReport.error(clientName, e));
 				}
@@ -171,7 +170,7 @@ public class PullRequestService {
 			clientReports.addAll(
 				result.deltaImpacts().keySet().stream()
 					.map(client -> {
-						CommitBuilder builder = clientBuilders.get(client);
+						CommitBuilder builder = clientBuilders.get(client.getLocation());
 						Repository clientRepo = builder.getCommit().repository();
 						String clientName = clientRepo.owner() + "/" + clientRepo.name();
 						DeltaImpact impact = result.deltaImpacts().get(client);
@@ -182,7 +181,7 @@ public class PullRequestService {
 						else
 							return ClientReport.success(clientName,
 								impact.getBrokenUses().stream()
-									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client))
+									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getLocation()))
 									.toList());
 					})
 					.toList()
@@ -200,12 +199,12 @@ public class PullRequestService {
 	}
 
 	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
-		Path clonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(clonePath, Paths.get(config.build().module()));
-		config.build().goals().forEach(g -> buildConfig.addGoal(g));
+		Path commitClonePath = clonePath(pr, c);
+		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.build().module()));
+		config.build().goals().forEach(buildConfig::addGoal);
 		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-		return new CommitBuilder(c, clonePath, buildConfig);
+		return new CommitBuilder(c, commitClonePath, buildConfig);
 	}
 
 	public boolean isProcessing(PullRequest pr) {
@@ -245,7 +244,7 @@ public class PullRequestService {
 	}
 
 	private File reportFile(PullRequest pr) {
-		return Paths.get(reportPath)
+		return Path.of(reportPath)
 			.resolve(pr.repository().owner())
 			.resolve(pr.repository().name())
 			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
@@ -253,7 +252,7 @@ public class PullRequestService {
 	}
 
 	private Path clonePath(PullRequest pr, Commit c) {
-		return Paths.get(clonePath)
+		return Path.of(clonePath)
 			.resolve(prUid(pr))
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())

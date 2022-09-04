@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 
 class ForgeAnalyzerTest {
-	final Path CLONES = Paths.get(System.getProperty("java.io.tmpdir")).resolve("clones");
+	final Path CLONES = Path.of(System.getProperty("java.io.tmpdir")).resolve("clones");
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -50,7 +50,7 @@ class ForgeAnalyzerTest {
 		AnalysisResult result = analyzer.analyzeCommits(
 			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone)),
 			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone)),
-			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Paths.get(""))),
+			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Path.of(""))),
 			MaracasOptions.newDefault()
 		);
 
@@ -81,9 +81,9 @@ class ForgeAnalyzerTest {
 
 		ForgeAnalyzer analyzer = new ForgeAnalyzer();
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone, Paths.get("core"))),
-			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone, Paths.get("core"))),
-			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Paths.get(""))),
+			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone, Path.of("core"))),
+			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone, Path.of("core"))),
+			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Path.of(""))),
 			MaracasOptions.newDefault()
 		);
 

@@ -8,8 +8,9 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Extends the default {@link OutputFilter}'s behavior with two additional filters:
+ * Extends the default {@link OutputFilter}'s behavior with additional filters:
  * - Remove BCs related to anonymous classes, as they're not exposed
+ * - Remove BCs on NEW types, as they won't affect anyone
  * - Remove any BCs that is excluded in Maracas' options
  */
 public class JApiCmpDeltaFilter extends OutputFilter {
@@ -25,7 +26,10 @@ public class JApiCmpDeltaFilter extends OutputFilter {
 		filter(jApiClasses, new FilterVisitor() {
 			@Override
 			public void visit(Iterator<JApiClass> iterator, JApiClass jApiClass) {
-				if (jApiClass.getFullyQualifiedName().matches(".*\\$\\d.*"))
+				if (
+					jApiClass.getFullyQualifiedName().matches(".*\\$\\d.*")
+					|| jApiClass.getChangeStatus().equals(JApiChangeStatus.NEW)
+				)
 					iterator.remove();
 
 				jApiClass.getCompatibilityChanges().removeAll(maracasOptions.getExcludedBreakingChanges());

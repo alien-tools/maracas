@@ -15,10 +15,10 @@ import japicmp.model.JApiCompatibilityChange;
 
 public class APIEvolutionDataCorpusCase {
 	public static void main(String[] args) {
-		Path srcApi1 = Paths.get("../test-data/api-evolution-data-corpus/lib-v1/");
-        Path srcApi2 = Paths.get("../test-data/api-evolution-data-corpus/lib-v2/");;
-        Path srcClient = Paths.get("../test-data/api-evolution-data-corpus/client/");
-        Path report = Paths.get("src/main/resources/api-evolution-data-corpus/report.html");
+		Path srcApi1 = Path.of("../test-data/api-evolution-data-corpus/lib-v1/");
+        Path srcApi2 = Path.of("../test-data/api-evolution-data-corpus/lib-v2/");;
+        Path srcClient = Path.of("../test-data/api-evolution-data-corpus/client/");
+        Path report = Path.of("src/main/resources/api-evolution-data-corpus/report.html");
         MavenArtifactUpgrade upgrade = new MavenArtifactUpgrade(null, null,
             "api-evolution-data-corpus-lib-v1", "api-evolution-data-corpus-lib-v2", null, null);
 

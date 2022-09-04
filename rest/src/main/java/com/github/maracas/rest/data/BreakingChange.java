@@ -6,7 +6,6 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public record BreakingChange(
 	String declaration,
@@ -32,7 +31,7 @@ public record BreakingChange(
 			}
 		}
 
-		String relativeFile = clone.toAbsolutePath().relativize(Paths.get(file).toAbsolutePath()).toString();
+		String relativeFile = clone.toAbsolutePath().relativize(Path.of(file).toAbsolutePath()).toString();
 		return new BreakingChange(
 			SpoonHelpers.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),

@@ -1,9 +1,6 @@
 package com.github.maracas.compchangestests;
 
-import com.github.maracas.AnalysisQuery;
-import com.github.maracas.AnalysisResult;
-import com.github.maracas.Maracas;
-import com.github.maracas.TestData;
+import com.github.maracas.*;
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.util.SpoonHelpers;
@@ -14,7 +11,6 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -28,13 +24,16 @@ public class CompChangesTest {
 
 	@BeforeAll
 	static void setUp() {
-		Path v1 = TestData.compChangesV1;
-		Path v2 = TestData.compChangesV2;
-		Path client = TestData.compChangesClient;
+		LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+		LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
+		SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
+
+		// We don't care about proper classpath for these tests
+		v1.setNoClasspath(true);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(v1)
-			.newJar(v2)
+			.oldVersion(v1)
+			.newVersion(v2)
 			.client(client)
 			.exclude("@main.unstableAnnon.Beta")
 			.exclude("@main.unstableAnnon.IsUnstable")

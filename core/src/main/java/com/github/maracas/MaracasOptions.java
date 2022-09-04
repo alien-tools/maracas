@@ -47,7 +47,7 @@ public class MaracasOptions {
 	public static MaracasOptions newDefault() {
 		MaracasOptions opts = new MaracasOptions(defaultJApiOptions());
 
-		// CLASS_NO_LONGER_PUBLIC is just a subet of CLASS_LESS_ACCESSIBLE
+		// CLASS_NO_LONGER_PUBLIC is just a subset of CLASS_LESS_ACCESSIBLE
 		opts.excludeBreakingChange(JApiCompatibilityChange.CLASS_NO_LONGER_PUBLIC);
 
 		// We don't care about source- and binary-compatible changes (except ADA...)

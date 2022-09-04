@@ -18,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitClonerTest {
-	final Path CLONES = Paths.get(System.getProperty("java.io.tmpdir")).resolve("clones");
+	final Path CLONES = Path.of(System.getProperty("java.io.tmpdir")).resolve("clones");
 	Cloner cloner = new GitCloner();
 
 	private String readHEAD(Path clone) {
@@ -62,32 +62,31 @@ class GitClonerTest {
 
 	@Test
 	void clone_repository_invalid() {
+		Repository repo = new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main");
 		Exception thrown = assertThrows(CloneException.class, () ->
-			cloner.clone(new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"), CLONES)
+			cloner.clone(repo, CLONES)
 		);
 		assertThat(thrown.getMessage(), containsString("could not read"));
 	}
 
 	@Test
 	void clone_commit_invalid_repository() {
+		Commit commit = new Commit(
+			new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"),
+		"fab7a51c347079dbd40cfe7f9eef81837cf5bfa9");
 		Exception thrown = assertThrows(CloneException.class, () ->
-			cloner.clone(
-				new Commit(
-					new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main"),
-					"fab7a51c347079dbd40cfe7f9eef81837cf5bfa9"),
-				CLONES)
+			cloner.clone(commit, CLONES)
 		);
 		assertThat(thrown.getMessage(), containsString("could not read"));
 	}
 
 	@Test
 	void clone_commit_invalid_sha() {
+		Commit commit = new Commit(
+			new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
+			"unknown");
 		Exception thrown = assertThrows(CloneException.class, () ->
-			cloner.clone(
-				new Commit(
-					new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
-					"unknown"),
-				CLONES)
+			cloner.clone(commit, CLONES)
 		);
 		assertThat(thrown.getMessage(), containsString("couldn't find remote ref unknown"));
 	}
@@ -97,11 +96,11 @@ class GitClonerTest {
 		Path readOnly = CLONES.resolve("read-only");
 		readOnly.toFile().mkdirs();
 		readOnly.toFile().setReadOnly();
+		Path clone = readOnly.resolve("clone");
 
+		Repository repo = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
 		Exception thrown = assertThrows(CloneException.class, () ->
-			cloner.clone(
-				new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main"),
-				readOnly.resolve("clone"))
+			cloner.clone(repo, clone)
 		);
 		assertThat(thrown.getMessage(), containsString("Permission denied"));
 	}

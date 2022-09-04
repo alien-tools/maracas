@@ -4,10 +4,6 @@ import japicmp.model.JApiConstructor;
 import japicmp.model.JApiMethod;
 import japicmp.model.JApiParameter;
 import javassist.CtBehavior;
-import org.apache.commons.lang3.ArrayUtils;
-import spoon.Launcher;
-import spoon.MavenLauncher;
-import spoon.reflect.CtModel;
 import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.*;
@@ -16,11 +12,6 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -29,65 +20,13 @@ public final class SpoonHelpers {
 	private SpoonHelpers() {
 	}
 
-	public static CtModel buildSpoonModelFromSources(Path sources, Path libraryJar) {
-		Launcher launcher;
-		if (Files.exists(sources.resolve("pom.xml")))
-			launcher = new MavenLauncher(sources.toAbsolutePath().toString(), MavenLauncher.SOURCE_TYPE.APP_SOURCE);
-		else if (Files.exists(sources.resolve("build.gradle")))
-			launcher = new GradleLauncher(sources);
-		else {
-			launcher = new Launcher();
-			launcher.getEnvironment().setComplianceLevel(11);
-			launcher.addInputResource(sources.toAbsolutePath().toString());
-		}
-
-		// Ignore missing types/classpath related errors
-		launcher.getEnvironment().setNoClasspath(true);
-		// Proceed even if we find the same type twice; affects the precision of the result
-		launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
-		// Ignore files with syntax/JLS violations and proceed
-		launcher.getEnvironment().setIgnoreSyntaxErrors(true);
-		launcher.getEnvironment().setLevel("DEBUG"); //
-
-		if (libraryJar != null) {
-			String[] cp = launcher.getEnvironment().getSourceClasspath();
-			String jar = libraryJar.toAbsolutePath().toString();
-			String[] newCp = ArrayUtils.add(cp, jar);
-			launcher.getEnvironment().setSourceClasspath(newCp);
-		}
-
-		return launcher.buildModel();
-	}
-
-	public static CtModel buildSpoonModelFromJar(Path jar) {
-		Launcher launcher = new Launcher();
-		launcher.getEnvironment().setLevel("DEBUG");
-
-		try {
-			// Spoon will prioritize the JVM's classpath over our own
-			// custom classpath in case of conflict. Not what we want,
-			// so we use a custom child-first classloader instead.
-			// cf. https://github.com/INRIA/spoon/issues/3789
-			//String[] javaCp = { cp.toAbsolutePath().toString() };
-			//launcher.getEnvironment().setSourceClasspath(javaCp);
-
-			URL[] cp = {new URL("file:" + jar.toAbsolutePath())};
-			ClassLoader cl = new ParentLastURLClassLoader(cp);
-			launcher.getEnvironment().setInputClassLoader(cl);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-
-		return launcher.buildModel();
-	}
-
 	public static CtElement firstLocatableParent(CtElement element) {
 		CtElement parent = element;
 		do {
 			if (!(parent.getPosition() instanceof NoSourcePosition))
 				return parent;
 		} while ((parent = parent.getParent()) != null);
-		return parent;
+		return null;
 	}
 
 	public static String buildSpoonSignature(JApiMethod m) {
@@ -170,6 +109,7 @@ public final class SpoonHelpers {
 	 * @param japiMethod  The JapiCmp method
 	 * @return <code>true</code> if the methods have the same
 	 * signature; <code>false</code> otherwise.
+	 * @deprecated
 	 */
 	@Deprecated
 	public static boolean matchingSignatures(CtExecutableReference<?> spoonMethod, CtBehavior japiMethod) {
@@ -185,80 +125,5 @@ public final class SpoonHelpers {
 			japiMethName = japiMethod.getName().concat(japiMethod.getSignature());
 		}
 		return japiMethName.startsWith(spoonMethod.getSignature());
-	}
-
-	/**
-	 * cf <a href="https://stackoverflow.com/a/5446671">this SO question</a>
-	 * <p>
-	 * A parent-last classloader that will try the child classloader first and then the parent.
-	 * This takes a fair bit of doing because java really prefers parent-first.
-	 * <p>
-	 * For those not familiar with class loading trickery, be wary
-	 */
-	private static class ParentLastURLClassLoader extends URLClassLoader {
-		private final ChildURLClassLoader childClassLoader;
-
-		/**
-		 * This class allows me to call findClass on a classloader
-		 */
-		private static class FindClassClassLoader extends ClassLoader {
-			public FindClassClassLoader(ClassLoader parent) {
-				super(parent);
-			}
-
-			@Override
-			public Class<?> findClass(String name) throws ClassNotFoundException {
-				return super.findClass(name);
-			}
-		}
-
-		/**
-		 * This class delegates (child then parent) for the findClass method for a URLClassLoader.
-		 * We need this because findClass is protected in URLClassLoader
-		 */
-		private static class ChildURLClassLoader extends URLClassLoader {
-			private final FindClassClassLoader realParent;
-
-			public ChildURLClassLoader(URL[] urls, FindClassClassLoader realParent) {
-				super(urls, null);
-				this.realParent = realParent;
-			}
-
-			@Override
-			public Class<?> findClass(String name) throws ClassNotFoundException {
-				Class<?> loaded = super.findLoadedClass(name);
-				if (loaded != null)
-					return loaded;
-
-				try {
-					// first try to use the URLClassLoader findClass
-					return super.findClass(name);
-				} catch (ClassNotFoundException e) {
-					// if that fails, we ask our real parent classloader to load the class (we give up)
-					return realParent.loadClass(name);
-				}
-			}
-		}
-
-		public ParentLastURLClassLoader(URL[] urls) {
-			super(urls, Thread.currentThread().getContextClassLoader());
-			childClassLoader = new ChildURLClassLoader(urls, new FindClassClassLoader(this.getParent()));
-		}
-
-		public ParentLastURLClassLoader(URL[] urls, ClassLoader parent) {
-			super(urls, parent);
-			childClassLoader = new ChildURLClassLoader(urls, new FindClassClassLoader(this.getParent()));
-		}
-
-		@Override
-		protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-			try {
-				// first we try to find a class inside the child classloader
-				return childClassLoader.findClass(name);
-			} catch (ClassNotFoundException e) {
-				// didn't find it, try the parent
-				return super.loadClass(name, resolve);
-			}
-		}
 	}
 }

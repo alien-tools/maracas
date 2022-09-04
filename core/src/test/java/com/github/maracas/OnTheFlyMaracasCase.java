@@ -19,7 +19,7 @@ public class OnTheFlyMaracasCase {
 	private static final String TMP_PATH = System.getProperty("java.io.tmpdir");
 
 	private Path saveSource(String source, String className) throws IOException {
-		Path sourcePath = Paths.get(TMP_PATH, "%s.java".formatted(className));
+		Path sourcePath = Path.of(TMP_PATH, "%s.java".formatted(className));
 		Files.writeString(sourcePath, source);
 		return sourcePath;
 	}
@@ -70,28 +70,31 @@ public class OnTheFlyMaracasCase {
 		}
 	}
 
-	public static AnalysisResult maracasCase(String oldCls, String oldClsName, String newCls, String newClsName, String client) throws IOException {
+	public static AnalysisResult maracasCase(String oldCls, String oldClsName, String newCls, String newClsName, String clientCode) throws IOException {
 		OnTheFlyMaracasCase otf = new OnTheFlyMaracasCase();
 
 		Path oldClassFile = otf.compileSources(oldClsName, otf.saveSource(oldCls, oldClsName));
-		Path oldJar = Paths.get(TMP_PATH,"old.jar");
+		Path oldJar = Path.of(TMP_PATH,"old.jar");
 		otf.createJar(oldJar, List.of(oldClassFile));
 
 		Path newClassFile = otf.compileSources(newClsName, otf.saveSource(newCls, newClsName));
-		Path newJar = Paths.get(TMP_PATH, "new.jar");
+		Path newJar = Path.of(TMP_PATH, "new.jar");
 		otf.createJar(newJar, List.of(newClassFile));
 
-		Path clientPath = Paths.get(TMP_PATH).resolve("client");
+		Path clientPath = Path.of(TMP_PATH).resolve("client");
 		Path clientFile = clientPath.resolve("src/main/java/Client.java");
 		Path pomFile = clientPath.resolve("pom.xml");
 		clientFile.toFile().getParentFile().mkdirs();
-		Files.writeString(clientFile, client);
+		Files.writeString(clientFile, clientCode);
 		Files.writeString(pomFile, "<project></project>");
 
+		LibraryJar oldVersion = new LibraryJar(oldJar.toAbsolutePath());
+		LibraryJar newVersion = new LibraryJar(newJar.toAbsolutePath());
+		SourcesDirectory client = new SourcesDirectory(clientPath.toAbsolutePath());
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(oldJar.toAbsolutePath())
-			.newJar(newJar.toAbsolutePath())
-			.client(clientPath)
+			.oldVersion(oldVersion)
+			.newVersion(newVersion)
+			.client(client)
 			.build();
 
 		return Maracas.analyze(query);

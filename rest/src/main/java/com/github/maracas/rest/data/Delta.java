@@ -12,8 +12,8 @@ public record Delta(
 ) {
 	public static Delta fromMaracasDelta(com.github.maracas.delta.Delta d, PullRequest pr, Path clone) {
 		return new Delta(
-			d.getOldJar(),
-			d.getNewJar(),
+			d.getOldVersion().getJar(),
+			d.getNewVersion().getJar(),
 			d.getBreakingChanges()
 				.stream()
 				.map(bc -> BreakingChange.fromMaracasBreakingChange(bc, pr, clone))

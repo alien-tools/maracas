@@ -16,12 +16,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MavenBuilderTest {
-	final Path validProject = Paths.get("src/test/resources/maven-project/");
+	final Path validProject = Path.of("src/test/resources/maven-project/");
 	final Path validTarget = validProject.resolve("target/");
-	final Path errorProject = Paths.get("src/test/resources/maven-project-error/");
+	final Path errorProject = Path.of("src/test/resources/maven-project-error/");
 	final Path errorTarget = errorProject.resolve("target/");
-	final Path multiProject = Paths.get("src/test/resources/maven-multi-project/");
-	final Path invalidProject = Paths.get("src/test/resources/gradle-project");
+	final Path multiProject = Path.of("src/test/resources/maven-multi-project/");
+	final Path invalidProject = Path.of("src/test/resources/gradle-project");
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -81,7 +81,7 @@ class MavenBuilderTest {
 
 	@Test
 	void build_multi_core_default() {
-		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("core-module")));
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Path.of("core-module")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("core-module-0.0.2.jar"));
@@ -89,7 +89,7 @@ class MavenBuilderTest {
 
 	@Test
 	void build_multi_extra_default() {
-		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("extra-module")));
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Path.of("extra-module")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("extra-module-0.0.3.jar"));
@@ -97,7 +97,7 @@ class MavenBuilderTest {
 
 	@Test
 	void build_multi_invalid() {
-		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Paths.get("nope")));
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Path.of("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Couldn't find module nope"));
 	}

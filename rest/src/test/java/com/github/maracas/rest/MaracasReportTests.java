@@ -7,10 +7,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.github.maracas.*;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubForge;
@@ -22,9 +22,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.github.maracas.AnalysisQuery;
-import com.github.maracas.AnalysisResult;
-import com.github.maracas.Maracas;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.Delta;
 import com.github.maracas.rest.data.BrokenUse;
@@ -40,15 +37,15 @@ class MaracasReportTests {
 
 	@BeforeEach
 	void setUp() {
-		Path v1 = Paths.get("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
-		Path v2 = Paths.get("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar");
-		Path c1 = Paths.get("../test-data/comp-changes/client/");
-		Path sources = Paths.get("../test-data/comp-changes/old/");
+		LibraryJar v1 = new LibraryJar(
+			Path.of("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar"),
+			new SourcesDirectory(Path.of("../test-data/comp-changes/old/")));
+		LibraryJar v2 = new LibraryJar(Path.of("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar"));
+		SourcesDirectory c1 = new SourcesDirectory(Path.of("../test-data/comp-changes/client/"));
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldJar(v1)
-			.newJar(v2)
-			.sources(sources)
+			.oldVersion(v1)
+			.newVersion(v2)
 			.client(c1)
 			.build();
 		AnalysisResult result = Maracas.analyze(query);
@@ -58,11 +55,11 @@ class MaracasReportTests {
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(result.delta(), pr, Paths.get("../test-data/comp-changes/old/")),
+			Delta.fromMaracasDelta(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
 			List.of(ClientReport.success("alien-tools/comp-changes-client",
 				result.allBrokenUses()
 					.stream()
-					.map(d -> BrokenUse.fromMaracasBrokenUse(d, clientRepo, "main", c1))
+					.map(d -> BrokenUse.fromMaracasBrokenUse(d, clientRepo, "main", c1.getLocation()))
 					.collect(Collectors.toList())
 			))
 		);

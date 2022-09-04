@@ -1,8 +1,6 @@
 package com.github.maracas.forges;
 
-import com.github.maracas.AnalysisResult;
-import com.github.maracas.Maracas;
-import com.github.maracas.MaracasOptions;
+import com.github.maracas.*;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
@@ -13,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
   private ExecutorService executorService = ForkJoinPool.commonPool();
@@ -50,8 +47,10 @@ public class ForgeAnalyzer {
     if (jarV2.isEmpty())
       throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
-    Delta delta = Maracas.computeDelta(jarV1.get(), jarV2.get(), options);
-    delta.populateLocations(v1.getClonePath());
+    LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getClonePath()));
+    LibraryJar libV2 = new LibraryJar(jarV2.get());
+    Delta delta = Maracas.computeDelta(libV1, libV2, options);
+    delta.populateLocations();
     return delta;
   }
 
@@ -62,27 +61,26 @@ public class ForgeAnalyzer {
     if (delta.getBreakingChanges().isEmpty())
       return AnalysisResult.noImpact(
         delta,
-        clients.stream().map(CommitBuilder::getClonePath).toList()
+        clients.stream().map(c -> new SourcesDirectory(c.getClonePath())).toList()
       );
 
-    Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
-      clients.stream()
-        .collect(Collectors.toMap(
-          c -> c.getClonePath(),
-          c -> CompletableFuture.supplyAsync(
-            () -> {
-              c.cloneCommit();
-              return Maracas.computeDeltaImpact(c.getModulePath(), delta);
-            },
-            executorService
-          ).exceptionally(t -> new DeltaImpact(c.getModulePath(), delta, t))
-      ));
+    List<CompletableFuture<DeltaImpact>> clientFutures =
+      clients.stream().map(c ->
+        CompletableFuture.supplyAsync(
+          () -> {
+            c.cloneCommit();
+            return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta);
+          },
+          executorService
+       ).exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))
+      ).toList();
 
-    CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
+    CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
 
-    Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
-      impacts.put(entry.getKey(), entry.getValue().get());
+    Map<SourcesDirectory, DeltaImpact> impacts = new HashMap<>();
+    for (CompletableFuture<DeltaImpact> future : clientFutures) {
+      DeltaImpact impact = future.get();
+      impacts.put(impact.getClient(), impact);
     }
 
     return new AnalysisResult(delta, impacts);
