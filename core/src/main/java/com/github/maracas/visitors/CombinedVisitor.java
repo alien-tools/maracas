@@ -136,7 +136,7 @@ public class CombinedVisitor extends CtScanner {
 			pos.isValidPosition() &&
 			pos.getEndLine() - pos.getLine() > this.options.getMaxClassLines()
 		) {
-			logger.info("Skipping the analysis of {} [{} lines > {} lines authorized]",
+			logger.warn("Skipping the analysis of {} [{} lines > {} lines authorized]",
 				ctClass.getQualifiedName(), pos.getEndLine() - pos.getLine(), this.options.getMaxClassLines());
 			return;
 		}
