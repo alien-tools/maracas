@@ -1,7 +1,11 @@
 package com.github.maracas.visitors;
 
+import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.BrokenUse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spoon.reflect.code.*;
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.*;
 import spoon.reflect.reference.*;
 import spoon.reflect.visitor.CtScanner;
@@ -17,9 +21,13 @@ import java.util.stream.Collectors;
  */
 public class CombinedVisitor extends CtScanner {
 	private final Collection<BreakingChangeVisitor> visitors;
+	private final MaracasOptions options;
 
-	public CombinedVisitor(Collection<BreakingChangeVisitor> visitors) {
+	private static final Logger logger = LogManager.getLogger(CombinedVisitor.class);
+
+	public CombinedVisitor(Collection<BreakingChangeVisitor> visitors, MaracasOptions options) {
 		this.visitors = visitors;
+		this.options = options;
 	}
 
 	public Set<BrokenUse> getBrokenUses() {
@@ -122,6 +130,17 @@ public class CombinedVisitor extends CtScanner {
 
 	@Override
 	public <T> void visitCtClass(CtClass<T> ctClass) {
+		SourcePosition pos = ctClass.getPosition();
+		if (
+			pos != null &&
+			pos.isValidPosition() &&
+			pos.getEndLine() - pos.getLine() > this.options.getMaxClassLines()
+		) {
+			logger.info("Skipping the analysis of {} [{} lines > {} lines authorized]",
+				ctClass.getQualifiedName(), pos.getEndLine() - pos.getLine(), this.options.getMaxClassLines());
+			return;
+		}
+
 		visitors.forEach(v -> v.visitCtClass(ctClass));
 		super.visitCtClass(ctClass);
 	}

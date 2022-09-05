@@ -14,6 +14,7 @@ import java.util.Set;
 public class MaracasOptions {
 	private final Options jApiOptions;
 	private final Set<JApiCompatibilityChange> excludedBreakingChanges = new HashSet<>();
+	private int maxClassLines = Integer.MAX_VALUE;
 
 	private MaracasOptions(Options jApiOptions) {
 		this.jApiOptions = jApiOptions;
@@ -75,6 +76,18 @@ public class MaracasOptions {
 
 	public Set<JApiCompatibilityChange> getExcludedBreakingChanges() {
 		return excludedBreakingChanges;
+	}
+
+	/**
+	 *
+	 * @param limit
+	 */
+	public void setMaxClassLines(int limit) {
+		maxClassLines = limit;
+	}
+
+	public int getMaxClassLines() {
+		return maxClassLines;
 	}
 
 	public Options getJApiOptions() {

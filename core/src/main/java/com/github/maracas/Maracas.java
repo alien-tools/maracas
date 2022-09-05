@@ -54,7 +54,7 @@ public class Maracas {
 			delta,
 			query.getClients().parallelStream().collect(toMap(
 				c -> c,
-				c -> computeDeltaImpact(c, delta))
+				c -> computeDeltaImpact(c, delta, query.getMaracasOptions()))
 			)
 		);
 	}
@@ -109,13 +109,16 @@ public class Maracas {
 	 *
 	 * @param client the client to analyze
 	 * @param delta  the delta model
+	 * @param options Maracas' options passed to the analysis
 	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
 	 * @throws NullPointerException     if client or delta is null
 	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
 	 */
-	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta) {
+	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta, MaracasOptions options) {
 		Objects.requireNonNull(client);
 		Objects.requireNonNull(delta);
+
+		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
 
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
@@ -123,7 +126,7 @@ public class Maracas {
 			CtModel model = client.getModel();
 
 			Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
-			CombinedVisitor visitor = new CombinedVisitor(visitors);
+			CombinedVisitor visitor = new CombinedVisitor(visitors, opts);
 
 			// FIXME: Only way I found to visit CompilationUnits and Imports in the model
 			// This is probably not the right way.
@@ -137,5 +140,12 @@ public class Maracas {
 			logger.warn("Error building the delta impact for {}: {}", client, e);
 			return new DeltaImpact(client, delta, e);
 		}
+	}
+
+	/**
+	 * @see #computeDeltaImpact(SourcesDirectory, Delta, MaracasOptions)
+	 */
+	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta) {
+		return computeDeltaImpact(client, delta, MaracasOptions.newDefault());
 	}
 }

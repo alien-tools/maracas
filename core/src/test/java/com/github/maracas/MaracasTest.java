@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Set;
 
+import com.github.maracas.brokenuse.APIUse;
 import org.junit.jupiter.api.Test;
 
 import com.github.maracas.brokenuse.BrokenUse;
@@ -133,6 +135,30 @@ class MaracasTest {
 			resWithOpts.delta().getBreakingChanges().stream()
 				.filter(bc -> bc.getChange().equals(JApiCompatibilityChange.METHOD_REMOVED))
 				.count(), is(equalTo(0L)));
+	}
+
+	@Test
+	void analyze_QueryWithMaxClassLines_IsConsidered() {
+		AnalysisResult resWithoutOpts = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldVersion(v1)
+				.newVersion(v2)
+				.client(client)
+				.build());
+
+		MaracasOptions opts = MaracasOptions.newDefault();
+		opts.setMaxClassLines(5);
+		AnalysisResult resWithOpts = Maracas.analyze(
+			AnalysisQuery.builder()
+				.oldVersion(v1)
+				.newVersion(v2)
+				.client(client)
+				.options(opts)
+				.build());
+
+		assertThat(resWithOpts.delta().getBreakingChanges().size(), equalTo(resWithoutOpts.delta().getBreakingChanges().size()));
+		assertThat(resWithOpts.brokenClients().size(), equalTo(resWithoutOpts.brokenClients().size()));
+		assertThat(resWithOpts.allBrokenUses().size(), lessThan(resWithoutOpts.allBrokenUses().size()));
 	}
 
 	@Test
