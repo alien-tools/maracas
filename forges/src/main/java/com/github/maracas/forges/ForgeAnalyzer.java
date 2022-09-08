@@ -26,7 +26,7 @@ public class ForgeAnalyzer {
     Objects.requireNonNull(options);
 
     Delta delta = computeDelta(v1, v2, options);
-    return computeImpact(delta, clients);
+    return computeImpact(delta, clients, options);
   }
 
   public Delta computeDelta(CommitBuilder v1, CommitBuilder v2, MaracasOptions options)
@@ -49,12 +49,10 @@ public class ForgeAnalyzer {
 
     LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getClonePath()));
     LibraryJar libV2 = new LibraryJar(jarV2.get());
-    Delta delta = Maracas.computeDelta(libV1, libV2, options);
-    delta.populateLocations();
-    return delta;
+    return Maracas.computeDelta(libV1, libV2, options);
   }
 
-  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients)
+  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(delta);
 
@@ -69,7 +67,7 @@ public class ForgeAnalyzer {
         CompletableFuture.supplyAsync(
           () -> {
             c.cloneCommit();
-            return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta);
+            return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
           },
           executorService
        ).exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))

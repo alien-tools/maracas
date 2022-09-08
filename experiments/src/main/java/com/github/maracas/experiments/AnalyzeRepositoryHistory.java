@@ -156,7 +156,8 @@ public class AnalyzeRepositoryHistory {
 
 						try {
 							// Compute delta
-							Delta delta = analyzer.computeDelta(buildV1, buildV2, MaracasOptions.newDefault());
+							var opts = MaracasOptions.newDefault();
+							Delta delta = analyzer.computeDelta(buildV1, buildV2, opts);
 							int bcs = delta.getBreakingChanges().size();
 
 							// We got something, look at the clients
@@ -177,7 +178,7 @@ public class AnalyzeRepositoryHistory {
 									}
 								});
 
-								var result = analyzer.computeImpact(delta, buildClients);
+								var result = analyzer.computeImpact(delta, buildClients, opts);
 								int checkedClients = result.deltaImpacts().size();
 								int brokenClients = result.brokenClients().size();
 								int allBrokenUses = result.allBrokenUses().size();
