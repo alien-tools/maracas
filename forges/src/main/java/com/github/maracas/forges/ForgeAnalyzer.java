@@ -56,11 +56,13 @@ public class ForgeAnalyzer {
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(delta);
 
-    if (delta.getBreakingChanges().isEmpty())
+    if (delta.getBreakingChanges().isEmpty()) {
+      clients.forEach(c -> c.getClonePath().toFile().mkdirs());
       return AnalysisResult.noImpact(
         delta,
         clients.stream().map(c -> new SourcesDirectory(c.getClonePath())).toList()
       );
+    }
 
     List<CompletableFuture<DeltaImpact>> clientFutures =
       clients.stream().map(c ->
