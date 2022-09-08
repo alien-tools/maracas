@@ -35,11 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @Service
 public class PullRequestService {
@@ -51,11 +47,11 @@ public class PullRequestService {
 	private String clonePath;
 	@Value("${maracas.report-path:./reports}")
 	private String reportPath;
-	@Value("${maracas.threads:-1}")
-	private int nThreads;
+	@Value("${maracas.analysisWorkers:-1}")
+	private int analysisWorkers;
 
-	private ExecutorService executorService;
 	private Forge forge;
+	private final ForgeAnalyzer forgeAnalyzer = new ForgeAnalyzer();
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -65,11 +61,10 @@ public class PullRequestService {
 		Path.of(clonePath).toFile().mkdirs();
 		Path.of(reportPath).toFile().mkdirs();
 
-		executorService = nThreads == -1
-			? Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
-			: Executors.newFixedThreadPool(nThreads);
-
 		forge = new GitHubForge(github);
+
+		if (analysisWorkers > 0)
+			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {
@@ -85,34 +80,28 @@ public class PullRequestService {
 		File reportFile = reportFile(pr);
 		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.repository().owner(), pr.repository().name(), pr.number());
 
-		// If we're already on it, no need to compute it twice
-		if (isProcessing(pr))
-			logger.info("{} is already being analyzed", uid);
-		else {
-			logger.info("Queuing analysis for {}", uid);
-			CompletableFuture<Void> future =
-				CompletableFuture
-					.supplyAsync(() -> buildMaracasReport(pr, config), executorService)
-					.handle((report, ex) -> {
-						jobs.remove(uid);
+		logger.info("Queuing analysis for {}", uid);
+		CompletableFuture<Void> future =
+			CompletableFuture
+				.supplyAsync(() -> buildMaracasReport(pr, config))
+				.handle((report, ex) -> {
+					jobs.remove(uid);
 
-						if (ex != null) {
-							logger.error("Error analyzing {}", uid, ex);
-							return new PullRequestResponse(ex.getCause().getMessage());
-						}
+					if (ex != null) {
+						logger.error("Error analyzing {}", uid, ex);
+						return new PullRequestResponse(ex.getCause().getMessage());
+					}
 
-						logger.info("Done analyzing {}", uid);
-						serializeReport(report, reportFile);
-						return new PullRequestResponse("ok", report);
-					})
-					.thenAccept(response -> {
-						if (callback != null)
-							breakbotService.sendPullRequestResponse(response, callback, installationId);
-					});
+					logger.info("Done analyzing {}", uid);
+					serializeReport(report, reportFile);
+					return new PullRequestResponse("ok", report);
+				})
+				.thenAccept(response -> {
+					if (callback != null)
+						breakbotService.sendPullRequestResponse(response, callback, installationId);
+				});
 
-			jobs.put(uid, future);
-		}
-
+		jobs.put(uid, future);
 		return reportLocation;
 	}
 
@@ -165,8 +154,7 @@ public class PullRequestService {
 			MaracasOptions options = MaracasOptions.newDefault();
 			Options jApiOptions = options.getJApiOptions();
 			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
-			ForgeAnalyzer analyzer = new ForgeAnalyzer();
-			AnalysisResult result = analyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
+			AnalysisResult result = forgeAnalyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
 			clientReports.addAll(
 				result.deltaImpacts().keySet().stream()
