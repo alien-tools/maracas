@@ -18,6 +18,7 @@ import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import japicmp.config.Options;
 import japicmp.util.Optional;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -257,6 +258,7 @@ public class PullRequestService {
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())
 			.resolve(c.sha())
+			.resolve(RandomStringUtils.randomAlphanumeric(12))
 			.toAbsolutePath();
 	}
 }
