@@ -21,6 +21,10 @@ public record BrokenUse(
 	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenuse.BrokenUse bu, Repository repository, String branch, Path clone) {
 		SourcePosition pos = bu.element().getPosition();
 
+		// Nasty effectful work-around for pretty-printing below: we don't want to see the comments here
+		bu.element().setComments(null);
+		bu.usedApiElement().setComments(null);
+
 		if (pos instanceof NoSourcePosition)
 			return new BrokenUse(
 				bu.element() instanceof CtNamedElement e ? e.getSimpleName() : bu.element().toString(),
