@@ -4,7 +4,6 @@ import com.github.maracas.forges.Repository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,6 +32,7 @@ public class GitHubClientsFetcher {
 	private static final String PACKAGES_URL = "https://github.com/%s/%s/network/dependents";
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 	private static final String REFERRER = "https://www.google.com";
+	private static final int HTTP_OK = 200;
 	private static final int HTTP_TOO_MANY_REQUESTS = 429;
 	private static final int FETCH_WAIT_TIME = 30;
 
@@ -46,28 +46,26 @@ public class GitHubClientsFetcher {
 	}
 
 	public List<Package> fetchPackages() {
-		try {
-			Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
-			Elements pkgsLinks = pkgsPage.select("#dependents .select-menu-item");
+		Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
+
+		if (pkgsPage != null) {
 			return
-				pkgsLinks.stream()
+				pkgsPage.select("#dependents .select-menu-item").stream()
 					.map(link -> {
 						String name = link.select(".select-menu-item-text").text().trim();
 						String url = "https://github.com" + link.attr("href");
 						return new Package(name, url);
 					}).toList();
-		} catch (IOException e) {
-			logger.error("Couldn't fetch packages for {}", repository, e);
+		} else {
+			return Collections.emptyList();
 		}
-
-		return Collections.emptyList();
 	}
 
 	public List<Client> fetchClients(String pkgUrl) {
 		List<Client> clients = new ArrayList<>();
+		Document pkgPage = fetchPage(pkgUrl);
 
-		try {
-			Document pkgPage = fetchPage(pkgUrl);
+		if (pkgPage != null) {
 			List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
 
 			// row should be of the form "org / user stars forks"
@@ -90,8 +88,6 @@ public class GitHubClientsFetcher {
 				if (!nextUrl.isEmpty())
 					clients.addAll(fetchClients(nextUrl));
 			}
-		} catch (IOException e) {
-			logger.error("Couldn't fetch clients for {}", pkgUrl, e);
 		}
 
 		return clients;
@@ -105,28 +101,34 @@ public class GitHubClientsFetcher {
 		return fetchPackages().stream().map(this::fetchClients).flatMap(Collection::stream).toList();
 	}
 
-	private Document fetchPage(String url) throws IOException {
+	private Document fetchPage(String url) {
 		try {
 			logger.debug("Fetching {}", url);
-			return Jsoup.connect(url).userAgent(USER_AGENT).referrer(REFERRER).get();
-		} catch (HttpStatusException e) {
-			if (e.getStatusCode() == HTTP_TOO_MANY_REQUESTS) {
-				try {
-					Connection.Response res = Jsoup.connect(url).userAgent(USER_AGENT).referrer(REFERRER)
-						.ignoreHttpErrors(true).execute();
-					String retryAfter = res.header("Retry-After");
-					int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : FETCH_WAIT_TIME;
-					logger.warn("Too many requests; retrying after {}s", waitTime);
-					Thread.sleep(1_000L * waitTime);
-				} catch (InterruptedException ee) {
-					logger.error(e);
-					Thread.currentThread().interrupt();
-				}
+			Connection.Response res =
+				Jsoup.connect(url)
+					.userAgent(USER_AGENT)
+					.referrer(REFERRER)
+					.ignoreHttpErrors(true)
+					.execute();
+
+			if (res.statusCode() == HTTP_OK) {
+				return res.parse();
+			} else if (res.statusCode() == HTTP_TOO_MANY_REQUESTS) {
+				String retryAfter = res.header("Retry-After");
+				int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : FETCH_WAIT_TIME;
+				logger.warn("Too many requests; retrying after {}s", waitTime);
+				Thread.sleep(1_000L * waitTime);
 				return fetchPage(url);
 			} else {
-				logger.error("Couldn't fetch {}", url, e);
-				throw e;
+				logger.error("Couldn't fetch {} [HTTP {}]", url, res.statusCode());
 			}
+		} catch (IOException e) {
+			logger.error("Couldn't fetch {}", url, e);
+		} catch (InterruptedException ee) {
+			logger.error(ee);
+			Thread.currentThread().interrupt();
 		}
+
+		return null;
 	}
 }
