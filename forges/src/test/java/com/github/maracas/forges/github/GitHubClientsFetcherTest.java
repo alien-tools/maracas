@@ -3,22 +3,24 @@ package com.github.maracas.forges.github;
 import com.github.maracas.forges.Repository;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 
 class GitHubClientsFetcherTest {
 	@Test
-	void fetch_packages_spoon() throws IOException {
+	void fetch_packages_spoon() {
 		Repository spoon = new Repository("INRIA", "spoon", "", "");
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(spoon);
-		System.out.println(fetcher.fetchPackages());
+		assertThat(fetcher.fetchPackages(), hasSize(4));
 	}
 
 	@Test
-	void fetch_packages_guava() throws IOException {
-		Repository spoon = new Repository("google", "guava", "", "");
+	void fetch_clients_spoon() {
+		Repository spoon = new Repository("INRIA", "spoon", "", "");
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(spoon);
-		System.out.println(fetcher.fetchPackages());
+		assertThat(fetcher.fetchClients(), is(not(empty())));
 	}
 }

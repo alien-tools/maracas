@@ -3,6 +3,7 @@ package com.github.maracas.forges.github;
 import com.github.maracas.forges.Repository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -11,13 +12,14 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
  * Unfortunately, information about dependents isn't available through their REST nor GraphQL APIs,
- * so we have to scrap the https://github.com/org/repo/network/dependents webpage.
+ * so we have to scrap the 'github.com/org/repo/network/dependents' webpage.
  * <br>
  * Note that repositories typically expose several "packages" (e.g., Maven modules) to which dependencies
  * are pointing.
@@ -31,31 +33,31 @@ public class GitHubClientsFetcher {
 	private static final String PACKAGES_URL = "https://github.com/%s/%s/network/dependents";
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 	private static final String REFERRER = "https://www.google.com";
+	private static final int HTTP_TOO_MANY_REQUESTS = 429;
+	private static final int FETCH_WAIT_TIME = 30;
 
 	private static final Logger logger = LogManager.getLogger(GitHubClientsFetcher.class);
+
+	public record Package(String name, String url) {}
+	public record Client(String owner, String name, int stars, int forks) {}
 
 	public GitHubClientsFetcher(Repository repository) {
 		this.repository = repository;
 	}
 
-	public List<String> fetchPackages() {
+	public List<Package> fetchPackages() {
 		try {
 			Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
-
-			if (pkgsPage != null) {
-				Elements pkgsLinks = pkgsPage.select("#dependents .select-menu-item");
-				List<Package> pkgs =
-					pkgsLinks.stream()
-						.map(link -> {
-							String name = link.select(".select-menu-item-text").text().trim();
-							String url = "https://github.com" + link.attr("href");
-							return new Package(name, url, fetchClients(url));
-						}).toList();
-
-				System.out.println(pkgs);
-			}
+			Elements pkgsLinks = pkgsPage.select("#dependents .select-menu-item");
+			return
+				pkgsLinks.stream()
+					.map(link -> {
+						String name = link.select(".select-menu-item-text").text().trim();
+						String url = "https://github.com" + link.attr("href");
+						return new Package(name, url);
+					}).toList();
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("Couldn't fetch packages for {}", repository, e);
 		}
 
 		return Collections.emptyList();
@@ -66,36 +68,41 @@ public class GitHubClientsFetcher {
 
 		try {
 			Document pkgPage = fetchPage(pkgUrl);
+			List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
 
-			if (pkgPage != null) {
-				List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
-				// rowText should be of the form "org / user stars forks"
+			// row should be of the form "org / user stars forks"
+			clientRows.forEach(row -> {
+				String[] fields = row.split(" ");
+				if (fields.length == 5) {
+					clients.add(new Client(
+						fields[0].trim(), fields[2].trim(),
+						Integer.parseInt(fields[3].trim().replaceAll("\\D", "")),
+						Integer.parseInt(fields[4].trim().replaceAll("\\D", ""))));
+				} else logger.error("Couldn't parse row {}", row);
+			});
 
-				clientRows.forEach(row -> {
-					String[] fields = row.split(" ");
-					if (fields.length == 5) {
-						clients.add(new Client(
-							fields[0].trim(), fields[2].trim(),
-							Integer.parseInt(fields[3].trim().replaceAll("[^0-9]", "")),
-							Integer.parseInt(fields[4].trim().replaceAll("[^0-9]", "")));
-					} else logger.error("Couldn't parse row {}", row);
-				});
+			// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
+			Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
+			if (pagination.size() == 2) {
+				Element nextBtn = pagination.get(1);
+				String nextUrl = nextBtn.attr("abs:href");
 
-				Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
-
-				if (!pagination.isEmpty()) {
-					Element nextBtn = pagination.get(1);
-					String nextUrl = nextBtn.attr("abs:href");
-
-					if (!nextUrl.isEmpty())
-						clients.addAll(fetchClients(nextUrl));
-				}
+				if (!nextUrl.isEmpty())
+					clients.addAll(fetchClients(nextUrl));
 			}
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("Couldn't fetch clients for {}", pkgUrl, e);
 		}
 
 		return clients;
+	}
+
+	public List<Client> fetchClients(Package pkg) {
+		return fetchClients(pkg.url());
+	}
+
+	public List<Client> fetchClients() {
+		return fetchPackages().stream().map(this::fetchClients).flatMap(Collection::stream).toList();
 	}
 
 	private Document fetchPage(String url) throws IOException {
@@ -103,10 +110,14 @@ public class GitHubClientsFetcher {
 			logger.debug("Fetching {}", url);
 			return Jsoup.connect(url).userAgent(USER_AGENT).referrer(REFERRER).get();
 		} catch (HttpStatusException e) {
-			if (e.getStatusCode() == 429) {
-				logger.warn("Too many requests, sleeping...");
+			if (e.getStatusCode() == HTTP_TOO_MANY_REQUESTS) {
 				try {
-					Thread.sleep(30000);
+					Connection.Response res = Jsoup.connect(url).userAgent(USER_AGENT).referrer(REFERRER)
+						.ignoreHttpErrors(true).execute();
+					String retryAfter = res.header("Retry-After");
+					int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : FETCH_WAIT_TIME;
+					logger.warn("Too many requests; retrying after {}s", waitTime);
+					Thread.sleep(1_000L * waitTime);
 				} catch (InterruptedException ee) {
 					logger.error(e);
 					Thread.currentThread().interrupt();
@@ -118,7 +129,4 @@ public class GitHubClientsFetcher {
 			}
 		}
 	}
-
-	public record Package(String name, String url, List<Client> clients) {}
-	public record Client(String owner, String name, int stars, int forks) {}
 }
