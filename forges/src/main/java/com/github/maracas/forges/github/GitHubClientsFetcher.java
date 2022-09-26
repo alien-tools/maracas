@@ -39,7 +39,7 @@ public class GitHubClientsFetcher {
 	private static final Logger logger = LogManager.getLogger(GitHubClientsFetcher.class);
 
 	public record Package(String name, String url) {}
-	public record Client(String owner, String name, int stars, int forks) {}
+	public record Client(Package pkg, String owner, String name, int stars, int forks) {}
 
 	public GitHubClientsFetcher(Repository repository) {
 		this.repository = repository;
@@ -61,9 +61,9 @@ public class GitHubClientsFetcher {
 		}
 	}
 
-	public List<Client> fetchClients(String pkgUrl) {
+	private List<Client> fetchClients(Package pkg, String url) {
 		List<Client> clients = new ArrayList<>();
-		Document pkgPage = fetchPage(pkgUrl);
+		Document pkgPage = fetchPage(url);
 
 		if (pkgPage != null) {
 			List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
@@ -73,6 +73,7 @@ public class GitHubClientsFetcher {
 				String[] fields = row.split(" ");
 				if (fields.length == 5) {
 					clients.add(new Client(
+						pkg,
 						fields[0].trim(), fields[2].trim(),
 						Integer.parseInt(fields[3].trim().replaceAll("\\D", "")),
 						Integer.parseInt(fields[4].trim().replaceAll("\\D", ""))));
@@ -86,19 +87,19 @@ public class GitHubClientsFetcher {
 				String nextUrl = nextBtn.attr("abs:href");
 
 				if (!nextUrl.isEmpty())
-					clients.addAll(fetchClients(nextUrl));
+					clients.addAll(fetchClients(pkg, nextUrl));
 			}
 		}
 
 		return clients;
 	}
 
-	public List<Client> fetchClients(Package pkg) {
-		return fetchClients(pkg.url());
-	}
-
 	public List<Client> fetchClients() {
-		return fetchPackages().stream().map(this::fetchClients).flatMap(Collection::stream).toList();
+		return fetchPackages()
+			.stream()
+			.map(pkg -> fetchClients(pkg, pkg.url()))
+			.flatMap(Collection::stream)
+			.toList();
 	}
 
 	private Document fetchPage(String url) {

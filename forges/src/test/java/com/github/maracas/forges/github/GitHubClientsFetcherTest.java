@@ -23,4 +23,10 @@ class GitHubClientsFetcherTest {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(spoon);
 		assertThat(fetcher.fetchClients(), is(not(empty())));
 	}
+
+	@Test
+	void fetch_packages_unknown() {
+		Repository unknown = new Repository("alien-tools", "unknown", "", "");
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(unknown);
+	}
 }
