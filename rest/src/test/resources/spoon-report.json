@@ -1,0 +1,2436 @@
+{
+  "message": "ok",
+  "report": {
+    "delta": {
+      "jarV1": "file:///./data/clones/break-bot-spoon-before-bc-4-0808c3e88d471a6c5355d2d04f97d474a3b06e61/break-bot/spoon-before-bc/b46724c1d19b0f5a5c8e9e70ac5d11030645191d/c4HsLo11vN9p/target/spoon-core-8.1.0-SNAPSHOT.jar",
+      "jarV2": "file:///./data/clones/break-bot-spoon-before-bc-4-0808c3e88d471a6c5355d2d04f97d474a3b06e61/break-bot/spoon-before-bc/0808c3e88d471a6c5355d2d04f97d474a3b06e61/jM0c6NbxqSu1/target/spoon-core-8.1.0-SNAPSHOT.jar",
+      "breakingChanges": [
+        {
+          "declaration": "spoon.reflect.cu.CompilationUnit.beginOfLineIndex(int)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java",
+          "startLine": 26,
+          "endLine": 26,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java#L26-L26",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-22825dd64c007503d85cff3e0b392ab25cfe143ad56a976894f25b33f51638ebL26"
+        },
+        {
+          "declaration": "spoon.reflect.cu.CompilationUnit.getTabCount(int)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java",
+          "startLine": 47,
+          "endLine": 47,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java#L47-L47",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-22825dd64c007503d85cff3e0b392ab25cfe143ad56a976894f25b33f51638ebL47"
+        },
+        {
+          "declaration": "spoon.reflect.cu.CompilationUnit.nextLineIndex(int)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java",
+          "startLine": 37,
+          "endLine": 37,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java#L37-L37",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-22825dd64c007503d85cff3e0b392ab25cfe143ad56a976894f25b33f51638ebL37"
+        },
+        {
+          "declaration": "spoon.reflect.cu.CompilationUnit",
+          "change": "ANNOTATION_DEPRECATED_ADDED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java",
+          "startLine": 14,
+          "endLine": 48,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/cu/CompilationUnit.java#L14-L48",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-22825dd64c007503d85cff3e0b392ab25cfe143ad56a976894f25b33f51638ebL14"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.DefaultJavaPrettyPrinter.printTypes(java.util.List)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java",
+          "startLine": 2050,
+          "endLine": 2061,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java#L2050-L2061",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-1812ca783bb53fbfb1b32fed7c769985053b0e9fdc29452a2948b3262946e9d1L2050"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.DefaultJavaPrettyPrinter.writeFooter(java.util.List)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java",
+          "startLine": 2007,
+          "endLine": 2010,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java#L2007-L2010",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-1812ca783bb53fbfb1b32fed7c769985053b0e9fdc29452a2948b3262946e9d1L2007"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.DefaultJavaPrettyPrinter.writeHeader(java.util.List,java.util.Collection)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java",
+          "startLine": 1998,
+          "endLine": 2001,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/DefaultJavaPrettyPrinter.java#L1998-L2001",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-1812ca783bb53fbfb1b32fed7c769985053b0e9fdc29452a2948b3262946e9d1L1998"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ElementPrinterHelper.writeFooter(java.util.List)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ElementPrinterHelper.java",
+          "startLine": 372,
+          "endLine": 378,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ElementPrinterHelper.java#L372-L378",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-f3bd063e3902cab766fef061a7d1a34e8b47a55a9de42ace43bc4181175ed66fL372"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ElementPrinterHelper.writeHeader(java.util.List,java.util.Collection)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ElementPrinterHelper.java",
+          "startLine": 353,
+          "endLine": 366,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ElementPrinterHelper.java#L353-L366",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-f3bd063e3902cab766fef061a7d1a34e8b47a55a9de42ace43bc4181175ed66fL353"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner.computeImports(spoon.reflect.declaration.CtElement)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 26,
+          "endLine": 26,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L26-L26",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L26"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner.getAllImports()",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 33,
+          "endLine": 33,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L33-L33",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L33"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner.initWithImports(java.lang.Iterable)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 43,
+          "endLine": 43,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L43-L43",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L43"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner.isImported(spoon.reflect.reference.CtReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 38,
+          "endLine": 38,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L38-L38",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L38"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner",
+          "change": "SUPERCLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 21,
+          "endLine": 44,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L21-L44",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L21"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScanner",
+          "change": "CLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java",
+          "startLine": 21,
+          "endLine": 44,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScanner.java#L21-L44",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-47274195db50fd6c7f12c302f7acc13860b0e660a97e094d2920c4ba8c82e187L21"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.addClassImport(spoon.reflect.reference.CtTypeReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 342,
+          "endLine": 445,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L342-L445",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L342"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.addFieldImport(spoon.reflect.reference.CtFieldReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 695,
+          "endLine": 710,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L695-L710",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L695"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.addMethodImport(spoon.reflect.reference.CtExecutableReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 647,
+          "endLine": 676,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L647-L676",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L647"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.classNamePresentInJavaLang(spoon.reflect.reference.CtTypeReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 733,
+          "endLine": 756,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L733-L756",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L733"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.isImportedInClassImports(spoon.reflect.reference.CtTypeReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 559,
+          "endLine": 590,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L559-L590",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L559"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.isImportedInFieldImports(spoon.reflect.reference.CtFieldReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 712,
+          "endLine": 731,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L712-L731",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L712"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.isImportedInMethodImports(spoon.reflect.reference.CtExecutableReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 678,
+          "endLine": 688,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L678-L688",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L678"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.isTypeInCollision(spoon.reflect.reference.CtReference,boolean)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 809,
+          "endLine": 921,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L809-L921",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L809"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.lookForLocalVariables(spoon.reflect.declaration.CtElement)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 758,
+          "endLine": 802,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L758-L802",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L758"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.scan(spoon.reflect.declaration.CtElement)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 137,
+          "endLine": 141,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L137-L141",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L137"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.spoon.reflect.visitor.ImportScannerImpl()",
+          "change": "CONSTRUCTOR_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 59,
+          "endLine": 922,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L59-L922",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L59"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl",
+          "change": "SUPERCLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 59,
+          "endLine": 922,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L59-L922",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L59"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.targetType",
+          "change": "FIELD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 70,
+          "endLine": 70,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L70-L70",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L70"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.methodImports",
+          "change": "FIELD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 68,
+          "endLine": 68,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L68-L68",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L68"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.classImports",
+          "change": "FIELD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 66,
+          "endLine": 66,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L66-L66",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L66"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl.fieldImports",
+          "change": "FIELD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 67,
+          "endLine": 67,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L67-L67",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L67"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl",
+          "change": "CLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 59,
+          "endLine": 922,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L59-L922",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L59"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl",
+          "change": "INTERFACE_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 59,
+          "endLine": 922,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L59-L922",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L59"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.ImportScannerImpl",
+          "change": "INTERFACE_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java",
+          "startLine": 59,
+          "endLine": 922,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/ImportScannerImpl.java#L59-L922",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-b8d94004cb3eb62e75f5b08a6a9f069353de7897d79f4f3c8afaa7eac7866af5L59"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner.addClassImport(spoon.reflect.reference.CtTypeReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 35,
+          "endLine": 43,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L35-L43",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L35"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner.addFieldImport(spoon.reflect.reference.CtFieldReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 46,
+          "endLine": 65,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L46-L65",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L46"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner.addMethodImport(spoon.reflect.reference.CtExecutableReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 68,
+          "endLine": 94,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L68-L94",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L68"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner.isImportedInClassImports(spoon.reflect.reference.CtTypeReference)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 97,
+          "endLine": 103,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L97-L103",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L97"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner.spoon.reflect.visitor.MinimalImportScanner()",
+          "change": "CONSTRUCTOR_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 18,
+          "endLine": 104,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L18-L104",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L18"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner",
+          "change": "SUPERCLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 18,
+          "endLine": 104,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L18-L104",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L18"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner",
+          "change": "CLASS_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 18,
+          "endLine": 104,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L18-L104",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L18"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner",
+          "change": "INTERFACE_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 18,
+          "endLine": 104,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L18-L104",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L18"
+        },
+        {
+          "declaration": "spoon.reflect.visitor.MinimalImportScanner",
+          "change": "INTERFACE_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java",
+          "startLine": 18,
+          "endLine": 104,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/reflect/visitor/MinimalImportScanner.java#L18-L104",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-10450641fc6bead021b12a5c70c690bfc884859469cc081cb972acb419c61964L18"
+        },
+        {
+          "declaration": "spoon.support.reflect.cu.CompilationUnitImpl.isAutoImport()",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/support/reflect/cu/CompilationUnitImpl.java",
+          "startLine": 64,
+          "endLine": 66,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/support/reflect/cu/CompilationUnitImpl.java#L64-L66",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-6947f99d6f9841424befbff7af1b106e19f4054eb027662c68cb6852de2e8d98L64"
+        },
+        {
+          "declaration": "spoon.support.reflect.cu.CompilationUnitImpl.setAutoImport(boolean)",
+          "change": "METHOD_REMOVED",
+          "path": "../c4HsLo11vN9p/src/main/java/spoon/support/reflect/cu/CompilationUnitImpl.java",
+          "startLine": 69,
+          "endLine": 71,
+          "fileUrl": "https://github.com/break-bot/spoon-before-bc/blob/main/../c4HsLo11vN9p/src/main/java/spoon/support/reflect/cu/CompilationUnitImpl.java#L69-L71",
+          "diffUrl": "https://github.com/break-bot/spoon-before-bc/pull/4/files#diff-6947f99d6f9841424befbff7af1b106e19f4054eb027662c68cb6852de2e8d98L69"
+        }
+      ]
+    },
+    "clientReports": [
+      {
+        "url": "SpoonLabs/metamutator",
+        "brokenUses": [],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/nopol",
+        "brokenUses": [
+          {
+            "elem": "element.getPosition().getCompilationUnit()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCollectorProcessor.java",
+            "startLine": 12,
+            "endLine": 12,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCollectorProcessor.java#L12-L12"
+          },
+          {
+            "elem": "super.enter(e)",
+            "used": "enter(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/diff/PatchGenerator.java",
+            "startLine": 59,
+            "endLine": 59,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/diff/PatchGenerator.java#L59-L59"
+          },
+          {
+            "elem": "elem.getPosition().getCompilationUnit()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCountingInstrumentingProcessor.java",
+            "startLine": 35,
+            "endLine": 35,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCountingInstrumentingProcessor.java#L35-L35"
+          },
+          {
+            "elem": "scan(expression())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 90,
+            "endLine": 90,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L90-L90"
+          },
+          {
+            "elem": "scan(argument)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 66,
+            "endLine": 66,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L66-L66"
+          },
+          {
+            "elem": "scan(assignment.getAssigned())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 83,
+            "endLine": 83,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L83-L83"
+          },
+          {
+            "elem": "scan(assignment.getAssignment())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 84,
+            "endLine": 84,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L84-L84"
+          },
+          {
+            "elem": "scan(operator.getOperand())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 31,
+            "endLine": 31,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L31-L31"
+          },
+          {
+            "elem": "method.getPosition().getCompilationUnit()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCountingInstrumentingProcessor.java",
+            "startLine": 91,
+            "endLine": 91,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/repair/nopol/ifmetric/IfCountingInstrumentingProcessor.java#L91-L91"
+          },
+          {
+            "elem": "pos.getCompilationUnit()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/lille/localization/DumbFaultLocalizerImpl.java",
+            "startLine": 66,
+            "endLine": 66,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/localization/DumbFaultLocalizerImpl.java#L66-L66"
+          },
+          {
+            "elem": "scan(operator.getLeftHandOperand())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 22,
+            "endLine": 22,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L22-L22"
+          },
+          {
+            "elem": "scan(operator.getRightHandOperand())",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java",
+            "startLine": 24,
+            "endLine": 24,
+            "url": "https://github.com/SpoonLabs/nopol/blob/master/src/main/java/fr/inria/lille/commons/spoon/collectable/SubconditionVisitor.java#L24-L24"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "KTH/xPerturb",
+        "brokenUses": [
+          {
+            "elem": "clazz.getPosition().getCompilationUnit()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "jPerturb/src/main/java/processor/UtilPerturbation.java",
+            "startLine": 298,
+            "endLine": 298,
+            "url": "https://github.com/KTH/xPerturb/blob/master/jPerturb/src/main/java/processor/UtilPerturbation.java#L298-L298"
+          },
+          {
+            "elem": "compilationUnit",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "jPerturb/src/main/java/processor/UtilPerturbation.java",
+            "startLine": 298,
+            "endLine": 298,
+            "url": "https://github.com/KTH/xPerturb/blob/master/jPerturb/src/main/java/processor/UtilPerturbation.java#L298-L298"
+          },
+          {
+            "elem": "import spoon.reflect.cu.CompilationUnit;",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "IMPORT",
+            "path": "jPerturb/src/main/java/processor/UtilPerturbation.java",
+            "startLine": 15,
+            "endLine": 15,
+            "url": "https://github.com/KTH/xPerturb/blob/master/jPerturb/src/main/java/processor/UtilPerturbation.java#L15-L15"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/CoCoSpoon",
+        "brokenUses": [],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/coming",
+        "brokenUses": [
+          {
+            "elem": "scanner.scan(expressiontostudy)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/BinaryOperatorAnalyzer.java",
+            "startLine": 144,
+            "endLine": 144,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/BinaryOperatorAnalyzer.java#L144-L144"
+          },
+          {
+            "elem": "scanner.scan(S)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 286,
+            "endLine": 286,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L286-L286"
+          },
+          {
+            "elem": "scanner.scan(diffEntry.srcNode)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java",
+            "startLine": 457,
+            "endLine": 457,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java#L457-L457"
+          },
+          {
+            "elem": "assignmentScanner.scan(parentClass)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/AbstractCodeAnalyzer.java",
+            "startLine": 744,
+            "endLine": 744,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/AbstractCodeAnalyzer.java#L744-L744"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 837,
+            "endLine": 837,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L837-L837"
+          },
+          {
+            "elem": "super.visitCtFieldReference(reference)",
+            "used": "visitCtFieldReference(spoon.reflect.reference.CtFieldReference)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 133,
+            "endLine": 133,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L133-L133"
+          },
+          {
+            "elem": "super.visitCtVariableRead(variableRead)",
+            "used": "visitCtVariableRead(spoon.reflect.code.CtVariableRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 211,
+            "endLine": 211,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L211-L211"
+          },
+          {
+            "elem": "super.visitCtAssignment(assignment)",
+            "used": "visitCtAssignment(spoon.reflect.code.CtAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 140,
+            "endLine": 140,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L140-L140"
+          },
+          {
+            "elem": "super.visitCtTypeAccess(typeAccess)",
+            "used": "visitCtTypeAccess(spoon.reflect.code.CtTypeAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 223,
+            "endLine": 223,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L223-L223"
+          },
+          {
+            "elem": "scanner.scan(diffEntry.srcNode)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java",
+            "startLine": 460,
+            "endLine": 460,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java#L460-L460"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 204,
+            "endLine": 204,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L204-L204"
+          },
+          {
+            "elem": "super.visitCtThisAccess(thisAccess)",
+            "used": "visitCtThisAccess(spoon.reflect.code.CtThisAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 282,
+            "endLine": 282,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L282-L282"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 257,
+            "endLine": 257,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L257-L257"
+          },
+          {
+            "elem": "super.visitCtFieldReference(reference)",
+            "used": "visitCtFieldReference(spoon.reflect.reference.CtFieldReference)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 132,
+            "endLine": 132,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L132-L132"
+          },
+          {
+            "elem": "super.visitCtStatementList(n)",
+            "used": "visitCtStatementList(spoon.reflect.code.CtStatementList)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java",
+            "startLine": 415,
+            "endLine": 415,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java#L415-L415"
+          },
+          {
+            "elem": "super.scan(role, element)",
+            "used": "scan(spoon.reflect.path.CtRole,spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java",
+            "startLine": 426,
+            "endLine": 426,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java#L426-L426"
+          },
+          {
+            "elem": "super.visitCtIf(n)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java",
+            "startLine": 407,
+            "endLine": 407,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java#L407-L407"
+          },
+          {
+            "elem": "scanner.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 592,
+            "endLine": 592,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L592-L592"
+          },
+          {
+            "elem": "super.visitCtFieldReference(reference)",
+            "used": "visitCtFieldReference(spoon.reflect.reference.CtFieldReference)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 144,
+            "endLine": 144,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L144-L144"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 647,
+            "endLine": 647,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L647-L647"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 245,
+            "endLine": 245,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L245-L245"
+          },
+          {
+            "elem": "scanner.scan(scanner2.toScan)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 847,
+            "endLine": 847,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L847-L847"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 249,
+            "endLine": 249,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L249-L249"
+          },
+          {
+            "elem": "scanner.scan(expression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/VariableAnalyzer.java",
+            "startLine": 748,
+            "endLine": 748,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/VariableAnalyzer.java#L748-L748"
+          },
+          {
+            "elem": "scanner.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 280,
+            "endLine": 280,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L280-L280"
+          },
+          {
+            "elem": "super.visitCtFieldRead(fieldRead)",
+            "used": "visitCtFieldRead(spoon.reflect.code.CtFieldRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 229,
+            "endLine": 229,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L229-L229"
+          },
+          {
+            "elem": "super.visitCtIf(n)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java",
+            "startLine": 404,
+            "endLine": 404,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java#L404-L404"
+          },
+          {
+            "elem": "super.visitCtField(f)",
+            "used": "visitCtField(spoon.reflect.declaration.CtField)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 124,
+            "endLine": 124,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L124-L124"
+          },
+          {
+            "elem": "super.visitCtOperatorAssignment(assignment)",
+            "used": "visitCtOperatorAssignment(spoon.reflect.code.CtOperatorAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 155,
+            "endLine": 155,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L155-L155"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 115,
+            "endLine": 115,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L115-L115"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 599,
+            "endLine": 599,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L599-L599"
+          },
+          {
+            "elem": "scanner.scan(diffEntry.srcNode)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java",
+            "startLine": 460,
+            "endLine": 460,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java#L460-L460"
+          },
+          {
+            "elem": "super.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 82,
+            "endLine": 82,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L82-L82"
+          },
+          {
+            "elem": "sc.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 241,
+            "endLine": 241,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L241-L241"
+          },
+          {
+            "elem": "scanner2.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 845,
+            "endLine": 845,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L845-L845"
+          },
+          {
+            "elem": "super.visitCtFieldWrite(fieldWrite)",
+            "used": "visitCtFieldWrite(spoon.reflect.code.CtFieldWrite)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 235,
+            "endLine": 235,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L235-L235"
+          },
+          {
+            "elem": "scanner.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 849,
+            "endLine": 849,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L849-L849"
+          },
+          {
+            "elem": "super.scan(role, element)",
+            "used": "scan(spoon.reflect.path.CtRole,spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java",
+            "startLine": 429,
+            "endLine": 429,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java#L429-L429"
+          },
+          {
+            "elem": "super.visitCtFieldReference(reference)",
+            "used": "visitCtFieldReference(spoon.reflect.reference.CtFieldReference)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 132,
+            "endLine": 132,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L132-L132"
+          },
+          {
+            "elem": "super.scan(role, element)",
+            "used": "scan(spoon.reflect.path.CtRole,spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java",
+            "startLine": 426,
+            "endLine": 426,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java#L426-L426"
+          },
+          {
+            "elem": "super.visitCtOperatorAssignment(assignment)",
+            "used": "visitCtOperatorAssignment(spoon.reflect.code.CtOperatorAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 174,
+            "endLine": 174,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L174-L174"
+          },
+          {
+            "elem": "super.visitCtTypeAccess(typeAccess)",
+            "used": "visitCtTypeAccess(spoon.reflect.code.CtTypeAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 157,
+            "endLine": 157,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L157-L157"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 185,
+            "endLine": 185,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L185-L185"
+          },
+          {
+            "elem": "scanner.scan(S)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 279,
+            "endLine": 279,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L279-L279"
+          },
+          {
+            "elem": "super.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 94,
+            "endLine": 94,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L94-L94"
+          },
+          {
+            "elem": "assignmentScanner.scan(methodParent)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/AbstractCodeAnalyzer.java",
+            "startLine": 114,
+            "endLine": 114,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/AbstractCodeAnalyzer.java#L114-L114"
+          },
+          {
+            "elem": "assignmentScanner.scan(methodParent)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/VariableAnalyzer.java",
+            "startLine": 550,
+            "endLine": 550,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/VariableAnalyzer.java#L550-L550"
+          },
+          {
+            "elem": "super.visitCtLiteral(literal)",
+            "used": "visitCtLiteral(spoon.reflect.code.CtLiteral)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 273,
+            "endLine": 273,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L273-L273"
+          },
+          {
+            "elem": "super.visitCtIf(n)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java",
+            "startLine": 407,
+            "endLine": 407,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java#L407-L407"
+          },
+          {
+            "elem": "super.visitCtAssignment(assignment)",
+            "used": "visitCtAssignment(spoon.reflect.code.CtAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 140,
+            "endLine": 140,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L140-L140"
+          },
+          {
+            "elem": "super.visitCtIf(n)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java",
+            "startLine": 404,
+            "endLine": 404,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java#L404-L404"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 730,
+            "endLine": 730,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L730-L730"
+          },
+          {
+            "elem": "super.visitCtVariableRead(variableRead)",
+            "used": "visitCtVariableRead(spoon.reflect.code.CtVariableRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 151,
+            "endLine": 151,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L151-L151"
+          },
+          {
+            "elem": "super.visitCtAssignment(assignment)",
+            "used": "visitCtAssignment(spoon.reflect.code.CtAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 152,
+            "endLine": 152,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L152-L152"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/BinaryOperatorAnalyzer.java",
+            "startLine": 139,
+            "endLine": 139,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/BinaryOperatorAnalyzer.java#L139-L139"
+          },
+          {
+            "elem": "scanner.scan(S)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 287,
+            "endLine": 287,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L287-L287"
+          },
+          {
+            "elem": "super.visitCtOperatorAssignment(assignment)",
+            "used": "visitCtOperatorAssignment(spoon.reflect.code.CtOperatorAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 154,
+            "endLine": 154,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L154-L154"
+          },
+          {
+            "elem": "super.visitCtSuperAccess(f)",
+            "used": "visitCtSuperAccess(spoon.reflect.code.CtSuperAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 277,
+            "endLine": 277,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L277-L277"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 587,
+            "endLine": 587,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L587-L587"
+          },
+          {
+            "elem": "super.scan(role, element)",
+            "used": "scan(spoon.reflect.path.CtRole,spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java",
+            "startLine": 429,
+            "endLine": 429,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java#L429-L429"
+          },
+          {
+            "elem": "sc.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 169,
+            "endLine": 169,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L169-L169"
+          },
+          {
+            "elem": "super.visitCtVariableWrite(variableWrite)",
+            "used": "visitCtVariableWrite(spoon.reflect.code.CtVariableWrite)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 217,
+            "endLine": 217,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L217-L217"
+          },
+          {
+            "elem": "super.visitCtAssignment(assignment)",
+            "used": "visitCtAssignment(spoon.reflect.code.CtAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 141,
+            "endLine": 141,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L141-L141"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 126,
+            "endLine": 126,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L126-L126"
+          },
+          {
+            "elem": "super.visitCtStatementList(n)",
+            "used": "visitCtStatementList(spoon.reflect.code.CtStatementList)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java",
+            "startLine": 418,
+            "endLine": 418,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/OriginalRepairGenerator.java#L418-L418"
+          },
+          {
+            "elem": "super.visitCtField(f)",
+            "used": "visitCtField(spoon.reflect.declaration.CtField)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 125,
+            "endLine": 125,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L125-L125"
+          },
+          {
+            "elem": "super.visitCtThisAccess(thisAccess)",
+            "used": "visitCtThisAccess(spoon.reflect.code.CtThisAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 283,
+            "endLine": 283,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L283-L283"
+          },
+          {
+            "elem": "super.visitCtLiteral(literal)",
+            "used": "visitCtLiteral(spoon.reflect.code.CtLiteral)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 294,
+            "endLine": 294,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L294-L294"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 192,
+            "endLine": 192,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L192-L192"
+          },
+          {
+            "elem": "scanner.scan(S)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 267,
+            "endLine": 267,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L267-L267"
+          },
+          {
+            "elem": "scanner.scan(diffEntry.srcNode)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java",
+            "startLine": 457,
+            "endLine": 457,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/EnhancedRepairGenerator.java#L457-L457"
+          },
+          {
+            "elem": "scanner.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 652,
+            "endLine": 652,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L652-L652"
+          },
+          {
+            "elem": "super.visitCtSuperAccess(f)",
+            "used": "visitCtSuperAccess(spoon.reflect.code.CtSuperAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 276,
+            "endLine": 276,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L276-L276"
+          },
+          {
+            "elem": "super.visitCtField(f)",
+            "used": "visitCtField(spoon.reflect.declaration.CtField)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java",
+            "startLine": 136,
+            "endLine": 136,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/original/util/OriginalFeatureVisitor.java#L136-L136"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 184,
+            "endLine": 184,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L184-L184"
+          },
+          {
+            "elem": "scanner.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 301,
+            "endLine": 301,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L301-L301"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 114,
+            "endLine": 114,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L114-L114"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 114,
+            "endLine": 114,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L114-L114"
+          },
+          {
+            "elem": "scanner.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 737,
+            "endLine": 737,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L737-L737"
+          },
+          {
+            "elem": "scannerOps.scan(logicalexpression)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java",
+            "startLine": 604,
+            "endLine": 604,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/codefeatures/codeanalyze/LogicalExpressionAnalyzer.java#L604-L604"
+          },
+          {
+            "elem": "super.visitCtFieldRead(fieldRead)",
+            "used": "visitCtFieldRead(spoon.reflect.code.CtFieldRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/coming/utils/VariableResolver.java",
+            "startLine": 163,
+            "endLine": 163,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/coming/utils/VariableResolver.java#L163-L163"
+          },
+          {
+            "elem": "super.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 83,
+            "endLine": 83,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L83-L83"
+          },
+          {
+            "elem": "super.visitCtStatementList(n)",
+            "used": "visitCtStatementList(spoon.reflect.code.CtStatementList)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java",
+            "startLine": 418,
+            "endLine": 418,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/ExtendedRepairGenerator.java#L418-L418"
+          },
+          {
+            "elem": "super.visitCtStatementList(n)",
+            "used": "visitCtStatementList(spoon.reflect.code.CtStatementList)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java",
+            "startLine": 415,
+            "endLine": 415,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/S4RORepairGenerator.java#L415-L415"
+          },
+          {
+            "elem": "super.visitCtOperatorAssignment(assignment)",
+            "used": "visitCtOperatorAssignment(spoon.reflect.code.CtOperatorAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java",
+            "startLine": 162,
+            "endLine": 162,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/S4RO/util/S4ROFeatureVisitor.java#L162-L162"
+          },
+          {
+            "elem": "super.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 82,
+            "endLine": 82,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L82-L82"
+          },
+          {
+            "elem": "super.visitCtField(f)",
+            "used": "visitCtField(spoon.reflect.declaration.CtField)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java",
+            "startLine": 124,
+            "endLine": 124,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/enhanced/util/EnhancedFeatureVisitor.java#L124-L124"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java",
+            "startLine": 250,
+            "endLine": 250,
+            "url": "https://github.com/SpoonLabs/coming/blob/master/src/main/java/fr/inria/prophet4j/feature/extended/util/ExtendedFeatureVisitor.java#L250-L250"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/gumtree-spoon-ast-diff",
+        "brokenUses": [
+          {
+            "elem": "super.exit(element)",
+            "used": "exit(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/gumtree/spoon/builder/TreeScanner.java",
+            "startLine": 90,
+            "endLine": 90,
+            "url": "https://github.com/SpoonLabs/gumtree-spoon-ast-diff/blob/master/src/main/java/gumtree/spoon/builder/TreeScanner.java#L90-L90"
+          },
+          {
+            "elem": "new gumtree.spoon.builder.TreeScanner(treeContext, root).scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/gumtree/spoon/builder/SpoonGumTreeBuilder.java",
+            "startLine": 40,
+            "endLine": 40,
+            "url": "https://github.com/SpoonLabs/gumtree-spoon-ast-diff/blob/master/src/main/java/gumtree/spoon/builder/SpoonGumTreeBuilder.java#L40-L40"
+          },
+          {
+            "elem": "super.enter(element)",
+            "used": "enter(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/gumtree/spoon/builder/TreeScanner.java",
+            "startLine": 30,
+            "endLine": 30,
+            "url": "https://github.com/SpoonLabs/gumtree-spoon-ast-diff/blob/master/src/main/java/gumtree/spoon/builder/TreeScanner.java#L30-L30"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "STAMP-project/dspot",
+        "brokenUses": [
+          {
+            "elem": "importScanner.computeImports(type)",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 195,
+            "endLine": 195,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L195-L195"
+          },
+          {
+            "elem": "import spoon.reflect.visitor.ImportScannerImpl;",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 17,
+            "endLine": 17,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L17-L17"
+          },
+          {
+            "elem": "importScanner",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 193,
+            "endLine": 193,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L193-L193"
+          },
+          {
+            "elem": "importScanner",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 195,
+            "endLine": 195,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L195-L195"
+          },
+          {
+            "elem": "importScanner.getAllImports()",
+            "used": "getAllImports()",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 196,
+            "endLine": 196,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L196-L196"
+          },
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl()",
+            "src": "spoon.reflect.visitor.ImportScannerImpl.spoon.reflect.visitor.ImportScannerImpl()",
+            "apiUse": "INSTANTIATION",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 193,
+            "endLine": 193,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L193-L193"
+          },
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 193,
+            "endLine": 193,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L193-L193"
+          },
+          {
+            "elem": "importScanner.computeImports(type)",
+            "used": "computeImports(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 195,
+            "endLine": 195,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L195-L195"
+          },
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 193,
+            "endLine": 193,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L193-L193"
+          },
+          {
+            "elem": "import spoon.reflect.visitor.ImportScanner;",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 16,
+            "endLine": 16,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L16-L16"
+          },
+          {
+            "elem": "importScanner.getAllImports()",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 196,
+            "endLine": 196,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L196-L196"
+          },
+          {
+            "elem": "importScanner",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 196,
+            "endLine": 196,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L196-L196"
+          },
+          {
+            "elem": "importScanner.computeImports(type)",
+            "used": "computeImports(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScanner.computeImports(spoon.reflect.declaration.CtElement)",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/eu/stamp_project/utils/AmplificationHelper.java",
+            "startLine": 195,
+            "endLine": 195,
+            "url": "https://github.com/STAMP-project/dspot/blob/master/src/main/java/eu/stamp_project/utils/AmplificationHelper.java#L195-L195"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/astor",
+        "brokenUses": [
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl()",
+            "src": "spoon.reflect.visitor.ImportScannerImpl.spoon.reflect.visitor.ImportScannerImpl()",
+            "apiUse": "INSTANTIATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 53,
+            "endLine": 53,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L53-L53"
+          },
+          {
+            "elem": "super.visitCtCase(caseStatement)",
+            "used": "visitCtCase(spoon.reflect.code.CtCase)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 259,
+            "endLine": 259,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L259-L259"
+          },
+          {
+            "elem": "super.visitCtVariableRead(variableRead)",
+            "used": "visitCtVariableRead(spoon.reflect.code.CtVariableRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 171,
+            "endLine": 171,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L171-L171"
+          },
+          {
+            "elem": "importContext.computeImports(this.faultyClass)",
+            "used": "computeImports(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScanner.computeImports(spoon.reflect.declaration.CtElement)",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 54,
+            "endLine": 54,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L54-L54"
+          },
+          {
+            "elem": "super.visitCtSwitch(switchStatement)",
+            "used": "visitCtSwitch(spoon.reflect.code.CtSwitch)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 245,
+            "endLine": 245,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L245-L245"
+          },
+          {
+            "elem": "scanner.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 300,
+            "endLine": 300,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L300-L300"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ExpressionTransform.java",
+            "startLine": 102,
+            "endLine": 102,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ExpressionTransform.java#L102-L102"
+          },
+          {
+            "elem": "super.visitCtFor(forLoop)",
+            "used": "visitCtFor(spoon.reflect.code.CtFor)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 295,
+            "endLine": 295,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L295-L295"
+          },
+          {
+            "elem": "super.visitCtReturn(returnStatement)",
+            "used": "visitCtReturn(spoon.reflect.code.CtReturn)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 209,
+            "endLine": 209,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L209-L209"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ConditionRemoveTransform.java",
+            "startLine": 39,
+            "endLine": 39,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ConditionRemoveTransform.java#L39-L39"
+          },
+          {
+            "elem": "this.mutSupporter.getFactory().CompilationUnit().getMap()",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 84,
+            "endLine": 84,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L84-L84"
+          },
+          {
+            "elem": "super.visitCtConstructorCall(ctConstructorCall)",
+            "used": "visitCtConstructorCall(spoon.reflect.code.CtConstructorCall)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 189,
+            "endLine": 189,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L189-L189"
+          },
+          {
+            "elem": "super.visitCtForEach(foreach)",
+            "used": "visitCtForEach(spoon.reflect.code.CtForEach)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 309,
+            "endLine": 309,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L309-L309"
+          },
+          {
+            "elem": "super.visitCtIf(ifElement)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 353,
+            "endLine": 353,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L353-L353"
+          },
+          {
+            "elem": "scanner.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 321,
+            "endLine": 321,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L321-L321"
+          },
+          {
+            "elem": "importContext",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 54,
+            "endLine": 54,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L54-L54"
+          },
+          {
+            "elem": "importContext",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 53,
+            "endLine": 53,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L53-L53"
+          },
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 53,
+            "endLine": 53,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L53-L53"
+          },
+          {
+            "elem": "super.visitCtVariableWrite(variableWrite)",
+            "used": "visitCtVariableWrite(spoon.reflect.code.CtVariableWrite)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 237,
+            "endLine": 237,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L237-L237"
+          },
+          {
+            "elem": "import spoon.reflect.visitor.ImportScannerImpl;",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 24,
+            "endLine": 24,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L24-L24"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ConditionMutationTransform.java",
+            "startLine": 47,
+            "endLine": 47,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/ConditionMutationTransform.java#L47-L47"
+          },
+          {
+            "elem": "super.visitCtFieldRead(fieldRead)",
+            "used": "visitCtFieldRead(spoon.reflect.code.CtFieldRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 183,
+            "endLine": 183,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L183-L183"
+          },
+          {
+            "elem": "super.visitCtAssert(asserted)",
+            "used": "visitCtAssert(spoon.reflect.code.CtAssert)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 223,
+            "endLine": 223,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L223-L223"
+          },
+          {
+            "elem": "super.visitCtArrayRead(arrayRead)",
+            "used": "visitCtArrayRead(spoon.reflect.code.CtArrayRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 396,
+            "endLine": 396,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L396-L396"
+          },
+          {
+            "elem": "super.visitCtAssignment(assignement)",
+            "used": "visitCtAssignment(spoon.reflect.code.CtAssignment)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 273,
+            "endLine": 273,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L273-L273"
+          },
+          {
+            "elem": "super.visitCtUnaryOperator(operator)",
+            "used": "visitCtUnaryOperator(spoon.reflect.code.CtUnaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 339,
+            "endLine": 339,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L339-L339"
+          },
+          {
+            "elem": "importContext.computeImports(this.faultyClass)",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 54,
+            "endLine": 54,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L54-L54"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 170,
+            "endLine": 170,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L170-L170"
+          },
+          {
+            "elem": "import spoon.reflect.visitor.ImportScanner;",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 23,
+            "endLine": 23,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L23-L23"
+          },
+          {
+            "elem": "this.mutSupporter.getFactory().CompilationUnit().getMap().get(classA.getPosition().getFile().getPath())",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 84,
+            "endLine": 85,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L84-L85"
+          },
+          {
+            "elem": "super.visitCtSynchronized(synchro)",
+            "used": "visitCtSynchronized(spoon.reflect.code.CtSynchronized)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 456,
+            "endLine": 456,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L456-L456"
+          },
+          {
+            "elem": "super.visitCtLiteral(literal)",
+            "used": "visitCtLiteral(spoon.reflect.code.CtLiteral)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 293,
+            "endLine": 293,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L293-L293"
+          },
+          {
+            "elem": "importContext.getAllImports()",
+            "used": "getAllImports()",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 55,
+            "endLine": 55,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L55-L55"
+          },
+          {
+            "elem": "super.visitCtVariableRead(variableRead)",
+            "used": "visitCtVariableRead(spoon.reflect.code.CtVariableRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 231,
+            "endLine": 231,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L231-L231"
+          },
+          {
+            "elem": "importContext",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 55,
+            "endLine": 55,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L55-L55"
+          },
+          {
+            "elem": "unitA",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 86,
+            "endLine": 86,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L86-L86"
+          },
+          {
+            "elem": "sc.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java",
+            "startLine": 60,
+            "endLine": 60,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java#L60-L60"
+          },
+          {
+            "elem": "super.visitCtFieldRead(fieldRead)",
+            "used": "visitCtFieldRead(spoon.reflect.code.CtFieldRead)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 249,
+            "endLine": 249,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L249-L249"
+          },
+          {
+            "elem": "new spoon.reflect.visitor.ImportScannerImpl()",
+            "used": "spoon.reflect.visitor.ImportScannerImpl",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 53,
+            "endLine": 53,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L53-L53"
+          },
+          {
+            "elem": "super.visitCtTypeAccess(typeAccess)",
+            "used": "visitCtTypeAccess(spoon.reflect.code.CtTypeAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 177,
+            "endLine": 177,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L177-L177"
+          },
+          {
+            "elem": "super.visitCtArrayWrite(arrayWrite)",
+            "used": "visitCtArrayWrite(spoon.reflect.code.CtArrayWrite)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 410,
+            "endLine": 410,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L410-L410"
+          },
+          {
+            "elem": "super.visitCtConditional(conditional)",
+            "used": "visitCtConditional(spoon.reflect.code.CtConditional)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 368,
+            "endLine": 368,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L368-L368"
+          },
+          {
+            "elem": "importContext.getAllImports()",
+            "used": "spoon.reflect.visitor.ImportScanner",
+            "src": "spoon.reflect.visitor.ImportScanner",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 55,
+            "endLine": 55,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L55-L55"
+          },
+          {
+            "elem": "super.visitCtFieldWrite(fieldWrite)",
+            "used": "visitCtFieldWrite(spoon.reflect.code.CtFieldWrite)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 255,
+            "endLine": 255,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L255-L255"
+          },
+          {
+            "elem": "sc.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 189,
+            "endLine": 189,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L189-L189"
+          },
+          {
+            "elem": "sc.scan(element)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 261,
+            "endLine": 261,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L261-L261"
+          },
+          {
+            "elem": "super.visitCtWhile(whileLoop)",
+            "used": "visitCtWhile(spoon.reflect.code.CtWhile)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 324,
+            "endLine": 324,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L324-L324"
+          },
+          {
+            "elem": "super.visitCtIf(element)",
+            "used": "visitCtIf(spoon.reflect.code.CtIf)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/BlockReificationScanner.java",
+            "startLine": 20,
+            "endLine": 20,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/BlockReificationScanner.java#L20-L20"
+          },
+          {
+            "elem": "super.visitCtBinaryOperator(operator)",
+            "used": "visitCtBinaryOperator(spoon.reflect.code.CtBinaryOperator)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/OperatorTransform.java",
+            "startLine": 39,
+            "endLine": 39,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/OperatorTransform.java#L39-L39"
+          },
+          {
+            "elem": "super.visitCtLiteral(literal)",
+            "used": "visitCtLiteral(spoon.reflect.code.CtLiteral)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 314,
+            "endLine": 314,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L314-L314"
+          },
+          {
+            "elem": "import spoon.reflect.cu.CompilationUnit;",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 38,
+            "endLine": 38,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L38-L38"
+          },
+          {
+            "elem": "super.visitCtInvocation(invocation)",
+            "used": "visitCtInvocation(spoon.reflect.code.CtInvocation)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java",
+            "startLine": 48,
+            "endLine": 48,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java#L48-L48"
+          },
+          {
+            "elem": "super.visitCtTypeAccess(typeAccess)",
+            "used": "visitCtTypeAccess(spoon.reflect.code.CtTypeAccess)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java",
+            "startLine": 243,
+            "endLine": 243,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/VariableResolver.java#L243-L243"
+          },
+          {
+            "elem": "unitA",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 84,
+            "endLine": 85,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L84-L85"
+          },
+          {
+            "elem": "super.visitCtConstructorCall(ctConstructorCall)",
+            "used": "visitCtConstructorCall(spoon.reflect.code.CtConstructorCall)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java",
+            "startLine": 54,
+            "endLine": 54,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/core/manipulation/sourcecode/InvocationResolver.java#L54-L54"
+          },
+          {
+            "elem": "super.visitCtNewArray(newArray)",
+            "used": "visitCtNewArray(spoon.reflect.code.CtNewArray)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java",
+            "startLine": 424,
+            "endLine": 424,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/TransformStrategy.java#L424-L424"
+          },
+          {
+            "elem": "importContext.computeImports(this.faultyClass)",
+            "used": "computeImports(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java",
+            "startLine": 54,
+            "endLine": 54,
+            "url": "https://github.com/SpoonLabs/astor/blob/master/src/main/java/fr/inria/astor/approaches/scaffold/scaffoldgeneration/libinfo/LibParser.java#L54-L54"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "Spirals-Team/casper",
+        "brokenUses": [],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/npefix",
+        "brokenUses": [
+          {
+            "elem": "super.scan(e)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/spirals/npefix/patch/PositionScanner.java",
+            "startLine": 25,
+            "endLine": 25,
+            "url": "https://github.com/SpoonLabs/npefix/blob/master/src/main/java/fr/inria/spirals/npefix/patch/PositionScanner.java#L25-L25"
+          },
+          {
+            "elem": "super.visitCtTypeParameterReference(ref)",
+            "used": "visitCtTypeParameterReference(spoon.reflect.reference.CtTypeParameterReference)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/spirals/npefix/transformer/processors/BeforeDerefAdder.java",
+            "startLine": 415,
+            "endLine": 415,
+            "url": "https://github.com/SpoonLabs/npefix/blob/master/src/main/java/fr/inria/spirals/npefix/transformer/processors/BeforeDerefAdder.java#L415-L415"
+          },
+          {
+            "elem": "super.scan(e)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/fr/inria/spirals/npefix/patch/PositionScanner.java",
+            "startLine": 36,
+            "endLine": 36,
+            "url": "https://github.com/SpoonLabs/npefix/blob/master/src/main/java/fr/inria/spirals/npefix/patch/PositionScanner.java#L36-L36"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "SpoonLabs/spooet",
+        "brokenUses": [
+          {
+            "elem": "import spoon.reflect.cu.CompilationUnit;",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "IMPORT",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 17,
+            "endLine": 17,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L17-L17"
+          },
+          {
+            "elem": "scan(annotationType.getAnnotations())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 218,
+            "endLine": 218,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L218-L218"
+          },
+          {
+            "elem": "super.visitCtInterface(ctInterface)",
+            "used": "visitCtInterface(spoon.reflect.declaration.CtInterface)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 173,
+            "endLine": 173,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L173-L173"
+          },
+          {
+            "elem": "sourceCompilationUnit",
+            "used": "spoon.reflect.cu.CompilationUnit",
+            "src": "spoon.reflect.cu.CompilationUnit",
+            "apiUse": "TYPE_DEPENDENCY",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 319,
+            "endLine": 319,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L319-L319"
+          },
+          {
+            "elem": "super.visitCtConstructor(c)",
+            "used": "visitCtConstructor(spoon.reflect.declaration.CtConstructor)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 263,
+            "endLine": 263,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L263-L263"
+          },
+          {
+            "elem": "scan(m.getAnnotations())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 277,
+            "endLine": 277,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L277-L277"
+          },
+          {
+            "elem": "scan(annotationType.getNestedTypes())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 219,
+            "endLine": 219,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L219-L219"
+          },
+          {
+            "elem": "scan(f)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 202,
+            "endLine": 202,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L202-L202"
+          },
+          {
+            "elem": "scan(ctEnum.getConstructors())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 205,
+            "endLine": 205,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L205-L205"
+          },
+          {
+            "elem": "scan(m.getParameters())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 276,
+            "endLine": 276,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L276-L276"
+          },
+          {
+            "elem": "super.visitCtClass(ctClass)",
+            "used": "visitCtClass(spoon.reflect.declaration.CtClass)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 150,
+            "endLine": 150,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L150-L150"
+          },
+          {
+            "elem": "scan(type)",
+            "used": "scan(spoon.reflect.declaration.CtElement)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 324,
+            "endLine": 324,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L324-L324"
+          },
+          {
+            "elem": "scan(ctEnum.getAnnotations())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 197,
+            "endLine": 197,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L197-L197"
+          },
+          {
+            "elem": "super.visitCtParameter(parameter)",
+            "used": "visitCtParameter(spoon.reflect.declaration.CtParameter)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 287,
+            "endLine": 287,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L287-L287"
+          },
+          {
+            "elem": "scan(ctEnum.getMethods())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 206,
+            "endLine": 206,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L206-L206"
+          },
+          {
+            "elem": "scan(ctEnum.getNestedTypes())",
+            "used": "scan(java.util.Collection)",
+            "src": "spoon.reflect.visitor.ImportScannerImpl",
+            "apiUse": "METHOD_INVOCATION",
+            "path": "src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java",
+            "startLine": 207,
+            "endLine": 207,
+            "url": "https://github.com/SpoonLabs/spooet/blob/master/src/main/java/spoon/reflect/visitor/JavaPoetPrettyPrinter.java#L207-L207"
+          }
+        ],
+        "error": null
+      },
+      {
+        "url": "STAMP-project/AssertFixer",
+        "brokenUses": [],
+        "error": null
+      }
+    ]
+  }
+}

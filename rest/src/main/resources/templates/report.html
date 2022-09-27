@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>BreakBot Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+</head>
+<body class="container-md bg-light">
+
+<header class="bd-header bg-dark border-bottom border-dark">
+    <h1 class="fs-4 text-white p-2">
+        BreakBot report for <a th:href="@{${prUrl}}" th:text="${owner} + '/' + ${name} + '#' + ${prNumber}">owner/name#prNumber</a>
+    </h1>
+</header>
+
+<div class="row">
+    <aside class="col-2 order-2 bd-aside sticky-xl-top text-muted align-self-start mb-3 mb-xl-5 px-2">
+        <nav class="small" id="toc">
+            <ul class="list-unstyled">
+                <li class="">
+                    <button class="btn d-inline-flex align-items-center collapsed" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#contents-collapse" aria-controls="contents-collapse">Contents</button>
+                    <ul class="list-unstyled ps-3 collapse" id="contents-collapse">
+                        <li><a class="d-inline-flex align-items-center rounded" href="#typography">Typography</a></li>
+                        <li><a class="d-inline-flex align-items-center rounded" href="#images">Images</a></li>
+                        <li><a class="d-inline-flex align-items-center rounded" href="#tables">Tables</a></li>
+                        <li><a class="d-inline-flex align-items-center rounded" href="#figures">Figures</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <section class="col-10 order-1">
+
+        <p>Generated on <span th:text="${generated}">July 1</span></p>
+
+        <p>
+            This pull request introduces <strong><span th:text="${bcs.size()}">45</span> breaking changes</strong>, causing <strong><span th:text="${report.allBrokenUses().size()}">195</span> broken uses</strong> in client code.
+            <strong>8 of 12 clients</strong> are impacted by the changes (66%).
+        </p>
+
+        <table class="table table-striped table-hover table-bordered table-sm">
+            <caption>List of breaking changes</caption>
+            <thead>
+            <tr>
+                <th scope="col">Declaration</th>
+                <th scope="col">Kind</th>
+                <th scope="col">Status</th>
+                <th scope="col">Impacted clients</th>
+                <th scope="col">Broken uses</th>
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            <tr th:each="bc : ${bcs}" th:object="${bc}">
+                <th scope="row"><span th:text="*{declaration()}">my.example.Declaration</span> (<a th:href="@{*{diffUrl()}}">diff</a> -- <a th:href="@{*{fileUrl()}}">file</a>)</th>
+                <td><a th:href="@{|https://alien-tools.github.io/maracas/bcs/*{change()}|}" th:text="*{change()}">METHOD_REMOVED</td>
+                <td><i class="bi bi-check"></i></td>
+                <td>None</td>
+                <td>None</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+</body>
+</html>
