@@ -42,6 +42,8 @@ public class PullRequestService {
 	@Autowired
 	private BreakbotService breakbotService;
 	@Autowired
+	private ClientsService clientsService;
+	@Autowired
 	private GitHub github;
 	@Value("${maracas.clone-path:./clones}")
 	private String clonePath;
@@ -120,9 +122,12 @@ public class PullRequestService {
 			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
 			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
 
+			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients());
+			logger.info("The breakbot configuration returned {} clients for {}", clients.size(), pr.repository());
+
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 			List<ClientReport> clientReports = new ArrayList<>();
-			for (BreakbotConfig.GitHubRepository c : config.clients().repositories()) {
+			for (BreakbotConfig.GitHubRepository c : clients) {
 				String[] fields = c.repository().split("/");
 				String clientOwner = fields[0];
 				String clientName = fields[1];

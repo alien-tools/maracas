@@ -6,6 +6,7 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.data.ClientsResponse;
+import com.github.maracas.rest.services.ClientsService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
@@ -23,6 +24,8 @@ import java.util.List;
 public class ClientsController {
 	@Autowired
 	private GitHub github;
+	@Autowired
+	private ClientsService clientsService;
 	private Forge forge;
 
 	private static final Logger logger = LogManager.getLogger(ClientsController.class);
@@ -38,9 +41,8 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClientsFetcher.Package> packages = fetcher.fetchPackages();
-		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients();
+		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
+		List<GitHubClientsFetcher.Client> clients = clientsService.fetchClients(repository);
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
 	}
@@ -51,8 +53,7 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClientsFetcher.Package> packages = fetcher.fetchPackages();
+		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
 	}
