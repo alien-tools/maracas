@@ -122,7 +122,7 @@ public class PullRequestService {
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 			List<ClientReport> clientReports = new ArrayList<>();
-			for (BreakbotConfig.GitHubRepository c : config.clients()) {
+			for (BreakbotConfig.GitHubRepository c : config.clients().repositories()) {
 				String[] fields = c.repository().split("/");
 				String clientOwner = fields[0];
 				String clientName = fields[1];
