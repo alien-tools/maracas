@@ -1,6 +1,7 @@
 package com.github.maracas.rest.controllers;
 
 import com.github.maracas.forges.Forge;
+import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
@@ -9,11 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.util.Collections;
@@ -56,5 +55,19 @@ public class ClientsController {
 		List<GitHubClientsFetcher.Package> packages = fetcher.fetchPackages();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
+	}
+
+	@ExceptionHandler({ForgeException.class})
+	public ResponseEntity<ClientsResponse> handleForgeExceptions(Exception e) {
+		logger.error(e);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(new ClientsResponse(e.getMessage()));
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ClientsResponse> handleExceptions(Exception e) {
+		logger.error("Uncaught exception ", e);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			.body(new ClientsResponse(e.getMessage()));
 	}
 }

@@ -27,4 +27,16 @@ class ClientsControllerTests extends AbstractControllerTest {
 			.andExpect(jsonPath("$.packages[*].url", hasSize(4)))
 			.andExpect(jsonPath("$.clients", is(empty())));
 	}
+
+	@Test
+	void get_clients_unknown() throws Exception {
+		mvc.perform(get("/github/clients/alien-tools/unknown"))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void get_packages_unknown() throws Exception {
+		mvc.perform(get("/github/packages/alien-tools/unknown"))
+			.andExpect(status().isBadRequest());
+	}
 }
