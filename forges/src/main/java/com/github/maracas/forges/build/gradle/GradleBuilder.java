@@ -83,6 +83,11 @@ public class GradleBuilder extends AbstractBuilder {
 		}
 	}
 
+	@Override
+	public Map<String, Path> locateModules() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
 	private ProjectConnection getProjectConnection(BuildConfig config) {
 		return GradleConnector.newConnector()
 			.forProjectDirectory(config.getBasePath().resolve(config.getModule()).toFile())

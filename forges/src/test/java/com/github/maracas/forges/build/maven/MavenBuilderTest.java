@@ -10,9 +10,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MavenBuilderTest {
@@ -100,5 +103,25 @@ class MavenBuilderTest {
 		Builder builder = new MavenBuilder(new BuildConfig(multiProject, Path.of("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Couldn't find module nope"));
+	}
+
+	@Test
+	void locate_modules_valid() {
+		Builder builder = new MavenBuilder(new BuildConfig(validProject));
+		Map<String, Path> modules = builder.locateModules();
+
+		assertThat(modules, is(aMapWithSize(1)));
+		assertThat(modules, hasEntry("test:maven-project", Path.of("")));
+	}
+
+	@Test
+	void locate_modules_multi() {
+		Builder builder = new MavenBuilder(new BuildConfig(multiProject));
+		Map<String, Path> modules = builder.locateModules();
+
+		assertThat(modules, is(aMapWithSize(3)));
+		assertThat(modules, hasEntry("sample:parent-module", Path.of("")));
+		assertThat(modules, hasEntry("sample:core-module", Path.of("core-module")));
+		assertThat(modules, hasEntry("sample:extra-module", Path.of("extra-module")));
 	}
 }

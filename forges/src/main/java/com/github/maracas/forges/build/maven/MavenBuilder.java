@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -23,10 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class MavenBuilder extends AbstractBuilder {
 	public static final String BUILD_FILE = "pom.xml";
@@ -124,5 +123,31 @@ public class MavenBuilder extends AbstractBuilder {
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
+	}
+
+	@Override
+	public Map<String, Path> locateModules() {
+		Map<String, Path> modules = new HashMap<>();
+
+		try (Stream<Path> paths = Files.walk(config.getBasePath())) {
+			paths
+				.filter(f -> BUILD_FILE.equals(f.getFileName().toString()) && Files.isRegularFile(f))
+				.forEach(pomFile -> {
+					MavenXpp3Reader reader = new MavenXpp3Reader();
+					try (InputStream in = new FileInputStream(pomFile.toFile())) {
+						Model model = reader.read(in);
+						String gid = StringUtils.isEmpty(model.getGroupId()) ? model.getParent().getGroupId() : model.getGroupId();
+						String aid = model.getArtifactId();
+
+						modules.put(String.format("%s:%s", gid, aid), config.getBasePath().relativize(pomFile.getParent()));
+					} catch (IOException | XmlPullParserException e) {
+						logger.error("Couldn't parse {}, skipping", pomFile);
+					}
+				});
+		} catch (IOException e) {
+			logger.error("Error walking directory {}", config.getBasePath(), e);
+		}
+
+		return modules;
 	}
 }
