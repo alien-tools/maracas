@@ -121,18 +121,15 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().delta().breakingChanges(), not(empty()));
 		assertThat(res.report().clientReports(), hasSize(3));
 
-		ClientReport unknown = res.report().clientReports().get(0);
-		assertThat(unknown.url(), is("alien-tools/unknown-client"));
+		ClientReport unknown = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/unknown-client")).findFirst().get();
 		assertThat(unknown.error(), containsString("Couldn't fetch repository alien-tools/unknown-client"));
 		assertThat(unknown.brokenUses(), is(empty()));
 
-		ClientReport compChanges = res.report().clientReports().get(1);
-		assertThat(compChanges.url(), is("alien-tools/comp-changes-client"));
+		ClientReport compChanges = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client")).findFirst().get();
 		assertThat(compChanges.error(), is(nullValue()));
 		assertThat(compChanges.brokenUses(), is(not(empty())));
 
-		ClientReport error = res.report().clientReports().get(2);
-		assertThat(error.url(), is("alien-tools/comp-changes-client-error"));
+		ClientReport error = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client-error")).findFirst().get();
 		assertThat(error.error(), containsString("Unable to read the pom"));
 		assertThat(error.brokenUses(), is(empty()));
 	}
