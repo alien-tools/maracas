@@ -119,8 +119,8 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", () -> prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
-			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
+			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config.build());
+			CommitBuilder headBuilder = builderFor(pr, pr.head(), config.build());
 
 			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients());
 			logger.info("The breakbot configuration returned {} clients for {}", clients.size(), pr.repository());
@@ -150,9 +150,10 @@ public class PullRequestService {
 							: Path.of("");
 
 					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
-					clientBuilders.put(clientBuilder.getModulePath(), clientBuilder);
+					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
 				} catch (Exception e) {
-					clientReports.add(ClientReport.error(clientName, e));
+					logger.error("Couldn't analyze client {}", c.repository(), e);
+					clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
 				}
 			}
 
@@ -171,7 +172,7 @@ public class PullRequestService {
 						Throwable t = impact.getThrowable();
 
 						if (t != null)
-							return ClientReport.error(clientName, t);
+							return ClientReport.error(clientName, t.getMessage());
 						else
 							return ClientReport.success(clientName,
 								impact.getBrokenUses().stream()
@@ -192,11 +193,11 @@ public class PullRequestService {
 		}
 	}
 
-	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
+	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig.Build config) {
 		Path commitClonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.build().module()));
-		config.build().goals().forEach(buildConfig::addGoal);
-		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
+		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.module()));
+		config.goals().forEach(buildConfig::addGoal);
+		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 
 		return new CommitBuilder(c, commitClonePath, buildConfig);
 	}
