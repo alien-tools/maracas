@@ -5,14 +5,11 @@ import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import org.kohsuke.github.GHBranch;
-import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.GHCompare;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
+import org.kohsuke.github.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 public class GitHubForge implements Forge {
@@ -75,6 +72,7 @@ public class GitHubForge implements Forge {
 			Commit base = new Commit(repository, pr.getBase().getSha());
 			Commit head = new Commit(repository, pr.getHead().getSha());
 			Commit mergeBase = new Commit(repository, compare.getMergeBaseCommit().getSHA1());
+			List<GHPullRequestFileDetail> changedFiles = pr.listFiles().toList();
 
 			return new PullRequest(
 				repository,
@@ -83,7 +81,8 @@ public class GitHubForge implements Forge {
 				head,
 				mergeBase,
 				pr.getBase().getRef(),
-				pr.getHead().getRef()
+				pr.getHead().getRef(),
+				changedFiles.stream().map(GHPullRequestFileDetail::getFilename).map(Path::of).toList()
 			);
 		} catch (IOException e) {
 			throw new ForgeException("Couldn't fetch PR %d from repository %s".formatted(number, repository.fullName()), e);

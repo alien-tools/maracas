@@ -3,6 +3,8 @@ package com.github.maracas.forges;
 import com.google.common.hash.Hashing;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 /*
@@ -22,7 +24,8 @@ public record PullRequest(
   Commit head,
   Commit mergeBase,
   String baseBranch,
-  String headBranch
+  String headBranch,
+  List<Path> changedFiles
 ) {
   public PullRequest {
     Objects.requireNonNull(repository);
@@ -31,6 +34,7 @@ public record PullRequest(
     Objects.requireNonNull(mergeBase);
     Objects.requireNonNull(baseBranch);
     Objects.requireNonNull(headBranch);
+    Objects.requireNonNull(changedFiles);
   }
 
   public String buildGitHubDiffUrl(String file, int line) {
