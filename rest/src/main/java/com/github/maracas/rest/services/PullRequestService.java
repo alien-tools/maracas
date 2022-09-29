@@ -7,6 +7,7 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
@@ -133,8 +134,8 @@ public class PullRequestService {
 			for (BreakbotConfig.GitHubRepository c : clients) {
 				try {
 					CommitBuilder clientBuilder = builderFor(pr, c);
-					clientBuilders.put(clientBuilder.getClonePath(), builderFor(pr, c));
-				} catch (IOException e) {
+					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
+				} catch (IOException | ForgeException e) {
 					logger.error("Couldn't create a builder for {}", c.repository(), e);
 					clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
 				}
@@ -185,7 +186,7 @@ public class PullRequestService {
 		return new CommitBuilder(c, commitClonePath, buildConfig);
 	}
 
-	private CommitBuilder builderFor(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException {
+	private CommitBuilder builderFor(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {
 		String[] fields = c.repository().split("/");
 		String clientOwner = fields[0];
 		String clientName = fields[1];
