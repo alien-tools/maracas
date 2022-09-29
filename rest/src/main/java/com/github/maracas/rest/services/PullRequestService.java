@@ -128,31 +128,11 @@ public class PullRequestService {
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 			List<ClientReport> clientReports = new ArrayList<>();
 			for (BreakbotConfig.GitHubRepository c : clients) {
-				String[] fields = c.repository().split("/");
-				String clientOwner = fields[0];
-				String clientName = fields[1];
-
 				try {
-					Repository clientRepo =
-						StringUtils.isEmpty(c.branch())
-							? forge.fetchRepository(clientOwner, clientName)
-							: forge.fetchRepository(clientOwner, clientName, c.branch());
-
-					String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
-					Commit clientCommit =
-						StringUtils.isEmpty(c.sha())
-							? new Commit(clientRepo, clientSha)
-							: new Commit(clientRepo, c.sha());
-					Path clientClone = clonePath(pr, clientCommit);
-					Path clientModule =
-						c.module() != null
-							? Path.of(c.module())
-							: Path.of("");
-
-					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
-					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
-				} catch (Exception e) {
-					logger.error("Couldn't analyze client {}", c.repository(), e);
+					CommitBuilder clientBuilder = builderFor(pr, c);
+					clientBuilders.put(clientBuilder.getClonePath(), builderFor(pr, c));
+				} catch (IOException e) {
+					logger.error("Couldn't create a builder for {}", c.repository(), e);
 					clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
 				}
 			}
@@ -200,6 +180,30 @@ public class PullRequestService {
 		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 
 		return new CommitBuilder(c, commitClonePath, buildConfig);
+	}
+
+	private CommitBuilder builderFor(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException {
+		String[] fields = c.repository().split("/");
+		String clientOwner = fields[0];
+		String clientName = fields[1];
+
+		Repository clientRepo =
+			StringUtils.isEmpty(c.branch())
+				? forge.fetchRepository(clientOwner, clientName)
+				: forge.fetchRepository(clientOwner, clientName, c.branch());
+
+		String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
+		Commit clientCommit =
+			StringUtils.isEmpty(c.sha())
+				? new Commit(clientRepo, clientSha)
+				: new Commit(clientRepo, c.sha());
+		Path clientClone = clonePath(pr, clientCommit);
+		Path clientModule =
+			c.module() != null
+				? Path.of(c.module())
+				: Path.of("");
+
+		return new CommitBuilder(clientCommit, clientClone, clientModule);
 	}
 
 	public boolean isProcessing(PullRequest pr) {
