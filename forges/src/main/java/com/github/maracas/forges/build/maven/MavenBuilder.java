@@ -139,7 +139,8 @@ public class MavenBuilder extends AbstractBuilder {
 						String gid = StringUtils.isEmpty(model.getGroupId()) ? model.getParent().getGroupId() : model.getGroupId();
 						String aid = model.getArtifactId();
 
-						modules.put(String.format("%s:%s", gid, aid), config.getBasePath().relativize(pomFile.getParent()));
+						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
+							modules.put(String.format("%s:%s", gid, aid), config.getBasePath().relativize(pomFile.getParent()));
 					} catch (IOException | XmlPullParserException e) {
 						logger.error("Couldn't parse {}, skipping", pomFile);
 					}
