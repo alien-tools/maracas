@@ -1,23 +1,36 @@
 package com.github.maracas.forges;
 
-import com.github.maracas.*;
+import com.github.maracas.AnalysisResult;
+import com.github.maracas.LibraryJar;
+import com.github.maracas.Maracas;
+import com.github.maracas.MaracasOptions;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ForgeAnalyzer {
   private ExecutorService executorService = ForkJoinPool.commonPool();
+  private int libraryBuildTimeout = Integer.MAX_VALUE;
+  private int clientAnalysisTimeout = Integer.MAX_VALUE;
 
-  public void setExecutorService(ExecutorService executorService) {
-    this.executorService = executorService;
-  }
+  private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
@@ -35,8 +48,24 @@ public class ForgeAnalyzer {
     Objects.requireNonNull(v2);
     Objects.requireNonNull(options);
 
-    CompletableFuture<Optional<Path>> futureV1 = CompletableFuture.supplyAsync(v1::cloneAndBuildCommit, executorService);
-    CompletableFuture<Optional<Path>> futureV2 = CompletableFuture.supplyAsync(v2::cloneAndBuildCommit, executorService);
+    CompletableFuture<Optional<Path>> futureV1 =
+      CompletableFuture
+        .supplyAsync(v1::cloneAndBuildCommit, executorService)
+        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS)
+        .exceptionally(t -> {
+          if (t instanceof TimeoutException)
+            logger.error("Clone & build for {} timed out [{}s]", v1.getClonePath(), libraryBuildTimeout);
+          return Optional.empty();
+        });
+    CompletableFuture<Optional<Path>> futureV2 =
+      CompletableFuture
+        .supplyAsync(v2::cloneAndBuildCommit, executorService)
+        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS)
+        .exceptionally(t -> {
+          if (t instanceof TimeoutException)
+            logger.error("Clone & build for {} timed out [{}s]", v2.getClonePath(), libraryBuildTimeout);
+          return Optional.empty();
+        });
 
     CompletableFuture.allOf(futureV1, futureV2).join();
     Optional<Path> jarV1 = futureV1.get();
@@ -72,7 +101,8 @@ public class ForgeAnalyzer {
             return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
           },
           executorService
-       ).exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))
+       ).orTimeout(clientAnalysisTimeout, TimeUnit.SECONDS)
+        .exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))
       ).toList();
 
     CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
@@ -84,5 +114,17 @@ public class ForgeAnalyzer {
     }
 
     return new AnalysisResult(delta, impacts);
+  }
+
+  public void setExecutorService(ExecutorService executorService) {
+    this.executorService = executorService;
+  }
+
+  public void setLibraryBuildTimeout(int libraryBuildTimeout) {
+    this.libraryBuildTimeout = libraryBuildTimeout;
+  }
+
+  public void setClientAnalysisTimeout(int clientAnalysisTimeout) {
+    this.clientAnalysisTimeout = clientAnalysisTimeout;
   }
 }
