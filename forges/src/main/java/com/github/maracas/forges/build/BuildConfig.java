@@ -7,21 +7,16 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class BuildConfig {
-	private final Path basePath;
 	private final Path module;
 	private final List<String> goals = new ArrayList<>();
 	private final Properties properties = new Properties();
 
-	public BuildConfig(Path basePath) {
-		Objects.requireNonNull(basePath);
-		this.basePath = basePath;
-		this.module = Path.of("");
+	public static BuildConfig newDefault() {
+		return new BuildConfig(Path.of(""));
 	}
 
-	public BuildConfig(Path basePath, Path module) {
-		Objects.requireNonNull(basePath);
+	public BuildConfig(Path module) {
 		Objects.requireNonNull(module);
-		this.basePath = basePath;
 		this.module = module;
 	}
 
@@ -34,10 +29,6 @@ public class BuildConfig {
 		Objects.requireNonNull(name);
 		Objects.requireNonNull(value);
 		properties.setProperty(name, value);
-	}
-
-	public Path getBasePath() {
-		return basePath;
 	}
 
 	public Path getModule() {

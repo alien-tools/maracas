@@ -8,8 +8,7 @@ import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.github.maracas.forges.build.CommitBuilder;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -23,14 +22,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class ForgeAnalyzer {
   private ExecutorService executorService = ForkJoinPool.commonPool();
   private int libraryBuildTimeout = Integer.MAX_VALUE;
   private int clientAnalysisTimeout = Integer.MAX_VALUE;
-
-  private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
@@ -51,21 +47,11 @@ public class ForgeAnalyzer {
     CompletableFuture<Optional<Path>> futureV1 =
       CompletableFuture
         .supplyAsync(v1::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS)
-        .exceptionally(t -> {
-          if (t instanceof TimeoutException)
-            logger.error("Clone & build for {} timed out [{}s]", v1.getClonePath(), libraryBuildTimeout);
-          return Optional.empty();
-        });
+        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS);
     CompletableFuture<Optional<Path>> futureV2 =
       CompletableFuture
         .supplyAsync(v2::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS)
-        .exceptionally(t -> {
-          if (t instanceof TimeoutException)
-            logger.error("Clone & build for {} timed out [{}s]", v2.getClonePath(), libraryBuildTimeout);
-          return Optional.empty();
-        });
+        .orTimeout(libraryBuildTimeout, TimeUnit.SECONDS);
 
     CompletableFuture.allOf(futureV1, futureV2).join();
     Optional<Path> jarV1 = futureV1.get();

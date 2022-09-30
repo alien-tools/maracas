@@ -13,14 +13,21 @@ public interface Builder {
   Optional<Path> locateJar();
   Map<String, Path> locateModules();
 
-  static Builder of(BuildConfig config) throws BuildException {
-    Objects.requireNonNull(config);
+  static Builder of(CommitBuilder builder) throws BuildException {
+    Objects.requireNonNull(builder);
 
-    if (MavenBuilder.isMavenProject(config.getBasePath()))
-      return new MavenBuilder(config);
-    if (GradleBuilder.isGradleProject(config.getBasePath()))
-      return new GradleBuilder(config);
+    return Builder.of(builder.getClonePath(), builder.getBuildConfig());
+  }
 
-    throw new BuildException("Don't know how to build " + config.getBasePath());
+  static Builder of(Path basePath, BuildConfig buildConfig) throws BuildException {
+    Objects.requireNonNull(basePath);
+    Objects.requireNonNull(buildConfig);
+
+    if (MavenBuilder.isMavenProject(basePath))
+      return new MavenBuilder(basePath, buildConfig);
+    if (GradleBuilder.isGradleProject(basePath))
+      return new GradleBuilder(basePath, buildConfig);
+
+    throw new BuildException("Don't know how to build " + basePath);
   }
 }

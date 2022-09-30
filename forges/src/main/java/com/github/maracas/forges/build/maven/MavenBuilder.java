@@ -1,14 +1,13 @@
 package com.github.maracas.forges.build.maven;
 
-import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.Builder;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -27,7 +26,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class MavenBuilder extends AbstractBuilder {
+public class MavenBuilder implements Builder {
+	private final Path basePath;
+	private final BuildConfig config;
 	public static final String BUILD_FILE = "pom.xml";
 	public static final List<String> DEFAULT_GOALS = List.of("package");
 	public static final Properties DEFAULT_PROPERTIES = new Properties();
@@ -42,18 +43,27 @@ public class MavenBuilder extends AbstractBuilder {
 		return Files.exists(basePath.resolve(BUILD_FILE));
 	}
 
-	public MavenBuilder(BuildConfig config) {
-		super(config);
+	public MavenBuilder(Path basePath, BuildConfig config) {
+		Objects.requireNonNull(basePath);
+		Objects.requireNonNull(config);
+		this.basePath = basePath;
+		this.config = config;
+	}
+
+	public MavenBuilder(Path basePath) {
+		Objects.requireNonNull(basePath);
+		this.basePath = basePath;
+		this.config = BuildConfig.newDefault();
 	}
 
 	@Override
 	public void build() {
-		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
+		File pomFile = basePath.resolve(BUILD_FILE).toFile();
 
 		if (!pomFile.exists())
-			throw new BuildException("Couldn't find pom.xml in %s".formatted(config.getBasePath()));
-		if (!config.getBasePath().resolve(config.getModule()).toFile().exists())
-			throw new BuildException("Couldn't find module %s in %s".formatted(config.getModule(), config.getBasePath()));
+			throw new BuildException("Couldn't find pom.xml in %s".formatted(basePath));
+		if (!basePath.resolve(config.getModule()).toFile().exists())
+			throw new BuildException("Couldn't find module %s in %s".formatted(config.getModule(), basePath));
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
@@ -103,7 +113,7 @@ public class MavenBuilder extends AbstractBuilder {
 
 	@Override
 	public Optional<Path> locateJar() {
-		Path workingDirectory = config.getBasePath().resolve(config.getModule());
+		Path workingDirectory = basePath.resolve(config.getModule());
 		File pomFile = workingDirectory.resolve(BUILD_FILE).toFile();
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pomFile)) {
@@ -129,7 +139,7 @@ public class MavenBuilder extends AbstractBuilder {
 	public Map<String, Path> locateModules() {
 		Map<String, Path> modules = new HashMap<>();
 
-		try (Stream<Path> paths = Files.walk(config.getBasePath())) {
+		try (Stream<Path> paths = Files.walk(basePath)) {
 			paths
 				.filter(f -> BUILD_FILE.equals(f.getFileName().toString()) && Files.isRegularFile(f))
 				.forEach(pomFile -> {
@@ -140,13 +150,13 @@ public class MavenBuilder extends AbstractBuilder {
 						String aid = model.getArtifactId();
 
 						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
-							modules.put(String.format("%s:%s", gid, aid), config.getBasePath().relativize(pomFile.getParent()));
+							modules.put(String.format("%s:%s", gid, aid), basePath.relativize(pomFile.getParent()));
 					} catch (IOException | XmlPullParserException e) {
 						logger.error("Couldn't parse {}, skipping", pomFile);
 					}
 				});
 		} catch (IOException e) {
-			logger.error("Error walking directory {}", config.getBasePath(), e);
+			logger.error("Error walking directory {}", basePath, e);
 		}
 
 		return modules;

@@ -6,6 +6,7 @@ import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.CommitBuilder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -50,9 +52,9 @@ class ForgeAnalyzerTest {
 
 		ForgeAnalyzer analyzer = new ForgeAnalyzer();
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone)),
-			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone)),
-			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Path.of(""))),
+			new CommitBuilder(v1, v1Clone),
+			new CommitBuilder(v2, v2Clone),
+			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"))),
 			MaracasOptions.newDefault()
 		);
 
@@ -83,9 +85,9 @@ class ForgeAnalyzerTest {
 
 		ForgeAnalyzer analyzer = new ForgeAnalyzer();
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone, Path.of("core"))),
-			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone, Path.of("core"))),
-			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Path.of(""))),
+			new CommitBuilder(v1, v1Clone, new BuildConfig(Path.of("core"))),
+			new CommitBuilder(v2, v2Clone, new BuildConfig(Path.of("core"))),
+			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"))),
 			MaracasOptions.newDefault()
 		);
 
@@ -105,13 +107,14 @@ class ForgeAnalyzerTest {
 		Commit v2 = new Commit(gumtree, "7925aa5e0e7a221e56b5c83de5156034a8ff394f");
 		Path v1Clone = CLONES.resolve("v1");
 		Path v2Clone = CLONES.resolve("v2");
-		CommitBuilder cb1 = new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone));
-		CommitBuilder cb2 = new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone));
+		CommitBuilder cb1 = new CommitBuilder(v1, v1Clone);
+		CommitBuilder cb2 = new CommitBuilder(v2, v2Clone);
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		ForgeAnalyzer analyzer = new ForgeAnalyzer();
-		analyzer.setLibraryBuildTimeout(5);
-		assertThrows(BuildException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
+		analyzer.setLibraryBuildTimeout(1);
+		Exception thrown = assertThrows(CompletionException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
+		assertThat(thrown.getCause(), is(instanceOf(TimeoutException.class)));
 	}
 
 	@Test
@@ -138,14 +141,14 @@ class ForgeAnalyzerTest {
 		ForgeAnalyzer analyzer = new ForgeAnalyzer();
 		analyzer.setClientAnalysisTimeout(1);
 		Delta delta = analyzer.computeDelta(
-			new CommitBuilder(v1, v1Clone, new BuildConfig(v1Clone, Path.of("core"))),
-			new CommitBuilder(v2, v2Clone, new BuildConfig(v2Clone, Path.of("core"))),
+			new CommitBuilder(v1, v1Clone, new BuildConfig(Path.of("core"))),
+			new CommitBuilder(v2, v2Clone, new BuildConfig(Path.of("core"))),
 			opts
 		);
 
 		AnalysisResult result = analyzer.computeImpact(
 			delta,
-			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"), Path.of(""))),
+			Collections.singletonList(new CommitBuilder(client, CLONES.resolve("client"))),
 			MaracasOptions.newDefault()
 		);
 

@@ -4,7 +4,7 @@ import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.CommitBuilder;
+import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.ForgeException;
@@ -131,8 +131,8 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", () -> prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config.build());
-			CommitBuilder headBuilder = builderFor(pr, pr.head(), config.build());
+			CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
+			CommitBuilder headBuilder = makeBuilderForCommit(pr, pr.head(), config.build());
 
 			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients());
 			logger.info("The breakbot configuration returned {} clients for {}", clients.size(), pr.repository());
@@ -141,7 +141,7 @@ public class PullRequestService {
 			List<ClientReport> clientReports = new ArrayList<>();
 			for (BreakbotConfig.GitHubRepository c : clients) {
 				try {
-					CommitBuilder clientBuilder = builderFor(pr, c);
+					CommitBuilder clientBuilder = makeBuilderForClient(pr, c);
 					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
 				} catch (IOException | ForgeException e) {
 					logger.error("Couldn't create a builder for {}", c.repository(), e);
@@ -185,16 +185,16 @@ public class PullRequestService {
 		}
 	}
 
-	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig.Build config) {
+	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config) {
 		Path commitClonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.module()));
+		BuildConfig buildConfig = new BuildConfig(Path.of(config.module()));
 		config.goals().forEach(buildConfig::addGoal);
 		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 
 		return new CommitBuilder(c, commitClonePath, buildConfig);
 	}
 
-	private CommitBuilder builderFor(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {
+	private CommitBuilder makeBuilderForClient(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {
 		String[] fields = c.repository().split("/");
 		String clientOwner = fields[0];
 		String clientName = fields[1];
@@ -215,7 +215,7 @@ public class PullRequestService {
 				? Path.of(c.module())
 				: Path.of("");
 
-		return new CommitBuilder(clientCommit, clientClone, clientModule);
+		return new CommitBuilder(clientCommit, clientClone, new BuildConfig(clientModule));
 	}
 
 	public boolean isProcessing(PullRequest pr) {
