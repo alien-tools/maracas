@@ -7,31 +7,124 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
+import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.CommitBuilder;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
-  private ExecutorService executorService = ForkJoinPool.commonPool();
+  private final Forge forge;
+  private final Path workingDirectory;
+  private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   private int libraryBuildTimeout = Integer.MAX_VALUE;
   private int clientAnalysisTimeout = Integer.MAX_VALUE;
 
-  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
+  private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
+
+  public ForgeAnalyzer(Forge forge, Path workingDirectory) {
+    Objects.requireNonNull(forge);
+    Objects.requireNonNull(workingDirectory);
+    this.forge = forge;
+    this.workingDirectory = workingDirectory;
+  }
+
+  public ForgeAnalyzer(Forge forge, Path workingDirectory, ExecutorService executorService,
+                       int libraryBuildTimeout, int clientAnalysisTimeout) {
+    this(forge, workingDirectory);
+    Objects.requireNonNull(executorService);
+    this.executorService = executorService;
+    this.libraryBuildTimeout = libraryBuildTimeout;
+    this.clientAnalysisTimeout = clientAnalysisTimeout;
+  }
+
+  public AnalysisResult analyzePullRequest(PullRequest pr, int clientsPerPackage, MaracasOptions options)
+    throws InterruptedException, ExecutionException {
+    Objects.requireNonNull(pr);
+    Objects.requireNonNull(options);
+
+    Commit v1 = pr.mergeBase();
+    Commit v2 = pr.head();
+    Set<String> impactedPackages = inferImpactedPackages(pr);
+    logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
+
+    logger.info("Fetching clients for packages {}", impactedPackages);
+    Collection<Commit> clients =
+      impactedPackages.stream()
+        .map(module -> forge.fetchTopClients(pr.repository(), module, clientsPerPackage))
+        .flatMap(Collection::stream)
+        .map(repository -> forge.fetchCommit(repository, "HEAD"))
+        .toList();
+    logger.info("Found {} clients to analyze for {}", clients.size(), pr);
+
+    return analyzeCommits(v1, v2, clients, options);
+  }
+
+  private Set<String> inferImpactedPackages(PullRequest pr) {
+    Commit v1 = pr.mergeBase();
+    CommitBuilder builderV1 = makeBuilderForCommit(v1);
+
+    builderV1.cloneCommit();
+    Map<Path, String> modules = builderV1.getBuilder().locateModules();
+    List<Path> changedFiles = pr.changedFiles();
+
+    return changedFiles.stream()
+      .filter(f -> f.toString().endsWith(".java"))
+      .map(f -> {
+        Optional<Path> matchingPath =
+          modules.keySet()
+            .stream()
+            .filter(p -> f.toString().startsWith(p.toString()))
+            .max(Comparator.comparingInt((Path p) -> p.toString().length()));
+
+        if (matchingPath.isPresent())
+          return modules.get(matchingPath.get());
+        else {
+          logger.warn("Couldn't infer the impacted package for {}", f);
+          return null;
+        }
+      })
+      .filter(Objects::nonNull)
+      .collect(Collectors.toUnmodifiableSet());
+  }
+
+  public AnalysisResult analyzeCommits(Commit v1, Commit v2, Collection<Commit> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);
+    Objects.requireNonNull(clients);
+    Objects.requireNonNull(options);
+
+    CommitBuilder builderV1 = makeBuilderForCommit(v1);
+    CommitBuilder builderV2 = makeBuilderForCommit(v2);
+    List<CommitBuilder> clientBuilders = clients.stream().map(this::makeBuilderForCommit).toList();
+
+    return analyzeCommits(builderV1, builderV2, clientBuilders, options);
+  }
+
+  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
+                                       MaracasOptions options)
+    throws InterruptedException, ExecutionException {
+    Objects.requireNonNull(v1);
+    Objects.requireNonNull(v2);
+    Objects.requireNonNull(clients);
     Objects.requireNonNull(options);
 
     Delta delta = computeDelta(v1, v2, options);
@@ -70,6 +163,8 @@ public class ForgeAnalyzer {
   public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options)
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(delta);
+    Objects.requireNonNull(clients);
+    Objects.requireNonNull(options);
 
     if (delta.getBreakingChanges().isEmpty()) {
       clients.forEach(c -> c.getClonePath().toFile().mkdirs());
@@ -103,6 +198,7 @@ public class ForgeAnalyzer {
   }
 
   public void setExecutorService(ExecutorService executorService) {
+    Objects.requireNonNull(executorService);
     this.executorService = executorService;
   }
 
@@ -112,5 +208,37 @@ public class ForgeAnalyzer {
 
   public void setClientAnalysisTimeout(int clientAnalysisTimeout) {
     this.clientAnalysisTimeout = clientAnalysisTimeout;
+  }
+
+  private CommitBuilder makeBuilderForCommit(Commit c) {
+    return new CommitBuilder(c, clonePath(c), BuildConfig.newDefault());
+  }
+
+  private Path clonePath(Commit c) {
+    return workingDirectory
+      .resolve(c.repository().owner())
+      .resolve(c.repository().name())
+      .resolve(c.sha())
+      .resolve(RandomStringUtils.randomAlphanumeric(12))
+      .toAbsolutePath();
+  }
+
+  private Path clonePath(PullRequest pr, Commit c) {
+    return workingDirectory
+      .resolve(prUid(pr))
+      .resolve(c.repository().owner())
+      .resolve(c.repository().name())
+      .resolve(c.sha())
+      .resolve(RandomStringUtils.randomAlphanumeric(12))
+      .toAbsolutePath();
+  }
+
+  private String prUid(PullRequest pr) {
+    return "%s-%s-%s-%s".formatted(
+      pr.repository().owner(),
+      pr.repository().name(),
+      pr.number(),
+      pr.head().sha()
+    );
   }
 }

@@ -61,7 +61,7 @@ public class PullRequestService {
 	private int clientAnalysisTimeout;
 
 	private Forge forge;
-	private final ForgeAnalyzer forgeAnalyzer = new ForgeAnalyzer();
+	private ForgeAnalyzer forgeAnalyzer;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -72,6 +72,7 @@ public class PullRequestService {
 		Path.of(reportPath).toFile().mkdirs();
 
 		forge = new GitHubForge(github);
+		forgeAnalyzer = new ForgeAnalyzer(forge, Path.of(clonePath));
 
 		if (analysisWorkers > 0)
 			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));

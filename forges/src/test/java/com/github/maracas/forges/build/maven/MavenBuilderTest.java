@@ -107,20 +107,20 @@ class MavenBuilderTest {
 	@Test
 	void locate_modules_valid() {
 		Builder builder = new MavenBuilder(validProject);
-		Map<String, Path> modules = builder.locateModules();
+		Map<Path, String> modules = builder.locateModules();
 
 		assertThat(modules, is(aMapWithSize(1)));
-		assertThat(modules, hasEntry("test:maven-project", Path.of("")));
+		assertThat(modules, hasEntry(Path.of(""), "test:maven-project"));
 	}
 
 	@Test
 	void locate_modules_multi() {
 		Builder builder = new MavenBuilder(multiProject);
-		Map<String, Path> modules = builder.locateModules();
+		Map<Path, String> modules = builder.locateModules();
 
 		assertThat(modules, is(aMapWithSize(3)));
-		assertThat(modules, hasEntry("sample:parent-module", Path.of("")));
-		assertThat(modules, hasEntry("sample:core-module", Path.of("core-module")));
-		assertThat(modules, hasEntry("sample:extra-module", Path.of("extra-module")));
+		assertThat(modules, hasEntry(Path.of(""),             "sample:parent-module"));
+		assertThat(modules, hasEntry(Path.of("core-module"),  "sample:core-module"));
+		assertThat(modules, hasEntry(Path.of("extra-module"), "sample:extra-module"));
 	}
 }

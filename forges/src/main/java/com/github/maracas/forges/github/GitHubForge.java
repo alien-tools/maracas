@@ -9,6 +9,7 @@ import org.kohsuke.github.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -104,5 +105,37 @@ public class GitHubForge implements Forge {
 		} catch (IOException e) {
 			throw new ForgeException("Couldn't fetch commit %s from repository %s".formatted(sha, repository.fullName()), e);
 		}
+	}
+
+	@Override
+	public List<Repository> fetchTopClients(Repository repository, String packageId, int limit) {
+		Objects.requireNonNull(repository);
+		Objects.requireNonNull(packageId);
+		if (limit < 1)
+			throw new IllegalArgumentException("limit < 1");
+
+		return
+			new GitHubClientsFetcher(repository)
+				.fetchClients(packageId)
+				.stream()
+				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
+				.limit(limit)
+				.map(client -> fetchRepository(client.owner(), client.name()))
+				.toList();
+	}
+
+	@Override
+	public List<Repository> fetchStarredClients(Repository repository, String packageId, int stars) {
+		Objects.requireNonNull(repository);
+		Objects.requireNonNull(packageId);
+
+		return
+			new GitHubClientsFetcher(repository)
+				.fetchClients(packageId)
+				.stream()
+				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
+				.filter(client -> client.stars() >= stars)
+				.map(client -> fetchRepository(client.owner(), client.name()))
+				.toList();
 	}
 }

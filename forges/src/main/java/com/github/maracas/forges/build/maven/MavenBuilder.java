@@ -124,20 +124,17 @@ public class MavenBuilder implements Builder {
 				: model.getParent().getVersion();
 			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
 
-			if (Files.exists(jar))
-				return Optional.of(jar);
-			else {
-				logger.warn("Couldn't find JAR at {}", jar);
-				return Optional.empty();
-			}
+			return Files.exists(jar)
+				? Optional.of(jar)
+				: Optional.empty();
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
 	}
 
 	@Override
-	public Map<String, Path> locateModules() {
-		Map<String, Path> modules = new HashMap<>();
+	public Map<Path, String> locateModules() {
+		Map<Path, String> modules = new HashMap<>();
 
 		try (Stream<Path> paths = Files.walk(basePath)) {
 			paths
@@ -150,7 +147,7 @@ public class MavenBuilder implements Builder {
 						String aid = model.getArtifactId();
 
 						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
-							modules.put(String.format("%s:%s", gid, aid), basePath.relativize(pomFile.getParent()));
+							modules.put(basePath.relativize(pomFile.getParent()), String.format("%s:%s", gid, aid));
 					} catch (IOException | XmlPullParserException e) {
 						logger.error("Couldn't parse {}, skipping", pomFile);
 					}

@@ -27,12 +27,11 @@ public class CommitBuilder {
 	}
 
 	public Path cloneCommit() throws CloneException {
-		Cloner cloner = Cloner.of(commit.repository());
-		return cloner.clone(commit, clonePath);
+		return getCloner().clone(commit, clonePath);
 	}
 
 	public Optional<Path> buildCommit() throws BuildException {
-		Builder builder = Builder.of(this);
+		Builder builder = getBuilder();
 		builder.build();
 		return builder.locateJar();
 	}
@@ -56,5 +55,13 @@ public class CommitBuilder {
 
 	public BuildConfig getBuildConfig() {
 		return buildConfig;
+	}
+
+	public Cloner getCloner() {
+		return Cloner.of(commit.repository());
+	}
+
+	public Builder getBuilder() {
+		return Builder.of(this);
 	}
 }

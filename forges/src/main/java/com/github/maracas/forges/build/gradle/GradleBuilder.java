@@ -95,7 +95,7 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public Map<String, Path> locateModules() {
+	public Map<Path, String> locateModules() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 

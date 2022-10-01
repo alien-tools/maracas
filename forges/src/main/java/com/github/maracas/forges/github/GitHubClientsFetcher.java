@@ -102,9 +102,17 @@ public class GitHubClientsFetcher {
 			.toList();
 	}
 
+	public List<Client> fetchClients(String pkg) {
+		return
+			fetchPackages().stream()
+				.filter(p -> p.name().equals(pkg))
+				.findFirst()
+				.map(p -> fetchClients(p, p.url()))
+				.orElse(Collections.emptyList());
+	}
+
 	private Document fetchPage(String url) {
 		try {
-			logger.debug("Fetching {}", url);
 			Connection.Response res =
 				Jsoup.connect(url)
 					.userAgent(USER_AGENT)

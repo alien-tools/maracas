@@ -13,9 +13,9 @@ import java.util.Objects;
  *           \
  *            \--- d --- e (head)
  *
- * base   => 'c'
- * head   => 'e'
- * prBase => 'a'
+ * base      => 'c'
+ * head      => 'e'
+ * mergeBase => 'a'
  */
 public record PullRequest(
   Repository repository,
@@ -44,5 +44,11 @@ public record PullRequest(
       number,
       Hashing.sha256().hashString(file, StandardCharsets.UTF_8),
       line);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("PR#%d [%s/%s] [base=%s, head=%s]",
+      number, repository.owner(), repository.name(), baseBranch, headBranch);
   }
 }

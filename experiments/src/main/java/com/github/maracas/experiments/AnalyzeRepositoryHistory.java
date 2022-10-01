@@ -119,7 +119,7 @@ public class AnalyzeRepositoryHistory {
 
 		while (iterator.hasNext()) {
 			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
-			var analyzer = new ForgeAnalyzer();
+			var analyzer = new ForgeAnalyzer(forge, clonesPath);
 			var executor = Executors.newFixedThreadPool(threads);
 			var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
 			var csvFile = new File(csvPath.toAbsolutePath().toString());

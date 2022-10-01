@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface Builder {
   void build() throws BuildException;
   Optional<Path> locateJar();
-  Map<String, Path> locateModules();
+  Map<Path, String> locateModules();
 
   static Builder of(CommitBuilder builder) throws BuildException {
     Objects.requireNonNull(builder);
