@@ -1,23 +1,51 @@
 package com.github.maracas.forges.github;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import org.kohsuke.github.*;
+import com.google.common.base.Stopwatch;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHCompare;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class GitHubForge implements Forge {
 	private final GitHub gh;
+	private final Path clientsCacheDirectory;
+	private int clientsCacheExpirationDays = 1;
+
+	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
 
 	public GitHubForge(GitHub gh) {
 		this.gh = gh;
+
+		Path dir;
+		try {
+			dir = Files.createTempDirectory("clients").toAbsolutePath();
+		} catch (IOException e) {
+			dir = Path.of("./clients");
+		}
+		this.clientsCacheDirectory = dir;
 	}
 
 	@Override
@@ -114,9 +142,7 @@ public class GitHubForge implements Forge {
 		if (limit < 1)
 			throw new IllegalArgumentException("limit < 1");
 
-		return
-			new GitHubClientsFetcher(repository)
-				.fetchClients(packageId)
+		return fetchClients(repository, packageId)
 				.stream()
 				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
 				.limit(limit)
@@ -129,13 +155,70 @@ public class GitHubForge implements Forge {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(packageId);
 
-		return
-			new GitHubClientsFetcher(repository)
-				.fetchClients(packageId)
+		return fetchClients(repository, packageId)
 				.stream()
 				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
 				.filter(client -> client.stars() >= stars)
 				.map(client -> fetchRepository(client.owner(), client.name()))
 				.toList();
+	}
+
+	public void setClientsCacheExpirationDays(int clientsCacheExpirationDays) {
+		if (clientsCacheExpirationDays < 0)
+			throw new IllegalArgumentException("clientsCacheExpirationDays < 0");
+		this.clientsCacheExpirationDays = clientsCacheExpirationDays;
+	}
+
+	private List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
+		File cacheFile = clientsCacheFile(repository, packageId);
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		if (clientsCacheIsValid(cacheFile)) {
+			try {
+				List<GitHubClientsFetcher.Client> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
+				logger.info("Fetched {} total clients for {} [package: {}] from {}",
+					clients.size(), repository, packageId, cacheFile);
+				return clients;
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+
+		Stopwatch sw = Stopwatch.createStarted();
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
+		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients(packageId);
+		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
+			clients.size(), repository, packageId, sw.elapsed().toSeconds());
+
+		try {
+			cacheFile.getParentFile().mkdirs();
+			objectMapper.writeValue(cacheFile, clients);
+			logger.info("Serialized clients for {} [package: {}] in {}", repository, packageId, cacheFile);
+		} catch (IOException e) {
+			logger.error(e);
+		}
+
+		return clients;
+	}
+
+	private boolean clientsCacheIsValid(File cacheFile) {
+		if (cacheFile.exists()) {
+			Date modified = new Date(cacheFile.lastModified());
+			Date now = Date.from(Instant.now());
+
+			long daysDiff = TimeUnit.DAYS.convert(Math.abs(now.getTime() - modified.getTime()), TimeUnit.MILLISECONDS);
+			return daysDiff <= clientsCacheExpirationDays;
+		}
+
+		return false;
+	}
+
+	private File clientsCacheFile(Repository repository, String packageId) {
+		return clientsCacheDirectory
+			.resolve(repository.owner())
+			.resolve(repository.name())
+			.resolve(packageId + "-clients.json")
+			.toAbsolutePath()
+			.toFile();
 	}
 }

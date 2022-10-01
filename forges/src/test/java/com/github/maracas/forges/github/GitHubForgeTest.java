@@ -10,17 +10,20 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GitHubForgeTest {
+  GitHub gh;
   GitHubForge github;
 
   @BeforeEach
   void setUp() {
     try {
-      GitHub gh = GitHubBuilder.fromEnvironment().build();
+      gh = GitHubBuilder.fromEnvironment().build();
       github = new GitHubForge(gh);
     } catch (IOException e) {
       e.printStackTrace();
@@ -121,5 +124,33 @@ class GitHubForgeTest {
     assertEquals("alien-tools/maracas", c.repository().fullName());
     assertEquals("https://github.com/alien-tools/maracas.git", c.repository().remoteUrl());
     assertEquals("main", c.repository().branch());
+  }
+
+  @Test
+  void fetchTopClients_spoon_core() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopClients(spoon, "fr.inria.gforge.spoon:spoon-core", 10);
+    assertThat(clients, hasSize(10));
+  }
+
+  @Test
+  void fetchStarredClients_spoon_core() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 100);
+    assertThat(clients, is(not(empty())));
+    clients.forEach(client -> {
+      try {
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(100)));
+      } catch (IOException e) {
+        fail(e);
+      }
+    });
+  }
+
+  @Test
+  void fetchTopClients_spoon_unkown() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopClients(spoon, "unknown", 10);
+    assertThat(clients, is(empty()));
   }
 }

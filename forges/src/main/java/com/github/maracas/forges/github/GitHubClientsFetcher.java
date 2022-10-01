@@ -3,6 +3,7 @@ package com.github.maracas.forges.github;
 import com.github.maracas.forges.Repository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.plexus.util.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -103,12 +104,13 @@ public class GitHubClientsFetcher {
 	}
 
 	public List<Client> fetchClients(String pkg) {
-		return
-			fetchPackages().stream()
-				.filter(p -> p.name().equals(pkg))
-				.findFirst()
-				.map(p -> fetchClients(p, p.url()))
-				.orElse(Collections.emptyList());
+		return StringUtils.isEmpty(pkg)
+			? fetchClients()
+			: fetchPackages().stream()
+					.filter(p -> p.name().equals(pkg))
+					.findFirst()
+					.map(p -> fetchClients(p, p.url()))
+					.orElse(Collections.emptyList());
 	}
 
 	private Document fetchPage(String url) {

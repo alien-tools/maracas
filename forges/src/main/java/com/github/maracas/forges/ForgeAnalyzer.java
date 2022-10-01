@@ -49,7 +49,13 @@ public class ForgeAnalyzer {
   public ForgeAnalyzer(Forge forge, Path workingDirectory, ExecutorService executorService,
                        int libraryBuildTimeout, int clientAnalysisTimeout) {
     this(forge, workingDirectory);
+
     Objects.requireNonNull(executorService);
+    if (libraryBuildTimeout < 0)
+      throw new IllegalArgumentException("libraryBuildTimeout < 0");
+    if (clientAnalysisTimeout < 0)
+      throw new IllegalArgumentException("clientAnalysisTimeout < 0");
+
     this.executorService = executorService;
     this.libraryBuildTimeout = libraryBuildTimeout;
     this.clientAnalysisTimeout = clientAnalysisTimeout;
@@ -59,6 +65,8 @@ public class ForgeAnalyzer {
     throws InterruptedException, ExecutionException {
     Objects.requireNonNull(pr);
     Objects.requireNonNull(options);
+    if (clientsPerPackage < 0)
+      throw new IllegalArgumentException("clientsPerPackage < 0");
 
     Commit v1 = pr.mergeBase();
     Commit v2 = pr.head();
@@ -75,34 +83,6 @@ public class ForgeAnalyzer {
     logger.info("Found {} clients to analyze for {}", clients.size(), pr);
 
     return analyzeCommits(v1, v2, clients, options);
-  }
-
-  private Set<String> inferImpactedPackages(PullRequest pr) {
-    Commit v1 = pr.mergeBase();
-    CommitBuilder builderV1 = makeBuilderForCommit(v1);
-
-    builderV1.cloneCommit();
-    Map<Path, String> modules = builderV1.getBuilder().locateModules();
-    List<Path> changedFiles = pr.changedFiles();
-
-    return changedFiles.stream()
-      .filter(f -> f.toString().endsWith(".java"))
-      .map(f -> {
-        Optional<Path> matchingPath =
-          modules.keySet()
-            .stream()
-            .filter(p -> f.toString().startsWith(p.toString()))
-            .max(Comparator.comparingInt((Path p) -> p.toString().length()));
-
-        if (matchingPath.isPresent())
-          return modules.get(matchingPath.get());
-        else {
-          logger.warn("Couldn't infer the impacted package for {}", f);
-          return null;
-        }
-      })
-      .filter(Objects::nonNull)
-      .collect(Collectors.toUnmodifiableSet());
   }
 
   public AnalysisResult analyzeCommits(Commit v1, Commit v2, Collection<Commit> clients, MaracasOptions options)
@@ -203,15 +183,49 @@ public class ForgeAnalyzer {
   }
 
   public void setLibraryBuildTimeout(int libraryBuildTimeout) {
+    if (libraryBuildTimeout < 0)
+      throw new IllegalArgumentException("libraryBuildTimeout < 0");
+
     this.libraryBuildTimeout = libraryBuildTimeout;
   }
 
   public void setClientAnalysisTimeout(int clientAnalysisTimeout) {
+    if (clientAnalysisTimeout < 0)
+      throw new IllegalArgumentException("clientAnalysisTimeout < 0");
+
     this.clientAnalysisTimeout = clientAnalysisTimeout;
   }
 
   private CommitBuilder makeBuilderForCommit(Commit c) {
     return new CommitBuilder(c, clonePath(c), BuildConfig.newDefault());
+  }
+
+  private Set<String> inferImpactedPackages(PullRequest pr) {
+    Commit v1 = pr.mergeBase();
+    CommitBuilder builderV1 = makeBuilderForCommit(v1);
+
+    builderV1.cloneCommit();
+    Map<Path, String> modules = builderV1.getBuilder().locateModules();
+    List<Path> changedFiles = pr.changedFiles();
+
+    return changedFiles.stream()
+      .filter(f -> f.toString().endsWith(".java"))
+      .map(f -> {
+        Optional<Path> matchingPath =
+          modules.keySet()
+            .stream()
+            .filter(p -> f.toString().startsWith(p.toString()))
+            .max(Comparator.comparingInt((Path p) -> p.toString().length()));
+
+        if (matchingPath.isPresent())
+          return modules.get(matchingPath.get());
+        else {
+          logger.warn("Couldn't infer the impacted package for {}", f);
+          return null;
+        }
+      })
+      .filter(Objects::nonNull)
+      .collect(Collectors.toUnmodifiableSet());
   }
 
   private Path clonePath(Commit c) {

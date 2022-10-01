@@ -36,21 +36,9 @@ class ForgeAnalyzerTest {
 
 	@Test
 	void analyzeCommits_CompChanges() throws Exception {
-		Repository compChanges = new Repository(
-			"alien-tools",
-			"comp-changes",
-			"https://github.com/alien-tools/comp-changes.git",
-			"main"
-		);
-		Repository compChangesClient = new Repository(
-			"alien-tools",
-			"comp-change-clients",
-			"https://github.com/alien-tools/comp-changes-client.git",
-			"main"
-		);
-		Commit v1 = new Commit(compChanges, "089d6129244bca3f13686e53c5968dea9c882613");
-		Commit v2 = new Commit(compChanges, "a30d9d23a2d61776aeef88aa327753bd45b991a6");
-		Commit client = new Commit(compChangesClient, "9741eb8a8f9d9c92dc4d0125acbe64c1265cb07b");
+		Commit v1 = github.fetchCommit("alien-tools", "comp-changes", "089d612");
+		Commit v2 = github.fetchCommit("alien-tools", "comp-changes", "a30d9d2");
+		Commit client = github.fetchCommit("alien-tools", "comp-changes-client", "9741eb8");
 
 		AnalysisResult result = analyzer.analyzeCommits(v1, v2, Collections.singletonList(client), MaracasOptions.newDefault());
 
@@ -61,21 +49,9 @@ class ForgeAnalyzerTest {
 
 	@Test
 	void analyzeCommits_GumTree() throws Exception {
-		Repository gumtree = new Repository(
-			"GumTreeDiff",
-			"gumtree",
-			"https://github.com/GumTreeDiff/gumtree.git",
-			"main"
-		);
-		Repository gumtreeClient = new Repository(
-			"SpoonLabs",
-			"gumtree-spoon-ast-diff",
-			"https://github.com/SpoonLabs/gumtree-spoon-ast-diff.git",
-			"master"
-		);
-		Commit v1 = new Commit(gumtree, "2570d34d35daf22e7778c564f19df301433ded21");
-		Commit v2 = new Commit(gumtree, "7925aa5e0e7a221e56b5c83de5156034a8ff394f");
-		Commit client = new Commit(gumtreeClient, "6533706e98ba0b7be088a2933641aeee3c458c85");
+		Commit v1 = github.fetchCommit("GumTreeDiff", "gumtree", "2570d34");
+		Commit v2 = github.fetchCommit("GumTreeDiff", "gumtree", "7925aa5");
+		Commit client = github.fetchCommit("SpoonLabs", "gumtree-spoon-ast-diff", "6533706");
 
 		AnalysisResult result = analyzer.analyzeCommits(
 			new CommitBuilder(v1, CLONES.resolve("v1"), new BuildConfig(Path.of("core"))),
@@ -90,14 +66,8 @@ class ForgeAnalyzerTest {
 
 	@Test
 	void computeDelta_GumTree_withTimeout() {
-		Repository gumtree = new Repository(
-			"GumTreeDiff",
-			"gumtree",
-			"https://github.com/GumTreeDiff/gumtree.git",
-			"main"
-		);
-		Commit v1 = new Commit(gumtree, "2570d34d35daf22e7778c564f19df301433ded21");
-		Commit v2 = new Commit(gumtree, "7925aa5e0e7a221e56b5c83de5156034a8ff394f");
+		Commit v1 = github.fetchCommit("GumTreeDiff", "gumtree", "2570d34");
+		Commit v2 = github.fetchCommit("GumTreeDiff", "gumtree", "7925aa5");
 		CommitBuilder cb1 = new CommitBuilder(v1, CLONES.resolve("v1"), new BuildConfig(Path.of("core")));
 		CommitBuilder cb2 = new CommitBuilder(v2, CLONES.resolve("v2"), new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
@@ -109,21 +79,9 @@ class ForgeAnalyzerTest {
 
 	@Test
 	void computeImpact_GumTree_withTimeout() throws Exception {
-		Repository gumtree = new Repository(
-			"GumTreeDiff",
-			"gumtree",
-			"https://github.com/GumTreeDiff/gumtree.git",
-			"main"
-		);
-		Repository gumtreeClient = new Repository(
-			"SpoonLabs",
-			"gumtree-spoon-ast-diff",
-			"https://github.com/SpoonLabs/gumtree-spoon-ast-diff.git",
-			"master"
-		);
-		Commit v1 = new Commit(gumtree, "2570d34d35daf22e7778c564f19df301433ded21");
-		Commit v2 = new Commit(gumtree, "7925aa5e0e7a221e56b5c83de5156034a8ff394f");
-		Commit client = new Commit(gumtreeClient, "6533706e98ba0b7be088a2933641aeee3c458c85");
+		Commit v1 = github.fetchCommit("GumTreeDiff", "gumtree", "2570d34");
+		Commit v2 = github.fetchCommit("GumTreeDiff", "gumtree", "7925aa5");
+		Commit client = github.fetchCommit("SpoonLabs", "gumtree-spoon-ast-diff", "6533706");
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		analyzer.setClientAnalysisTimeout(1);
