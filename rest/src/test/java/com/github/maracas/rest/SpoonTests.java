@@ -50,22 +50,23 @@ class SpoonTests extends AbstractControllerTest {
 			    jacoco.skip: true
 			    mdep.skip: true
 			clients:
-			  - repository: SpoonLabs/flacoco
-			  - repository: SpoonLabs/coming
-			  - repository: SpoonLabs/astor
-			  - repository: SpoonLabs/npefix
-			  - repository: SpoonLabs/nopol
-			    module: nopol
-			  - repository: STAMP-project/AssertFixer
-			  - repository: Spirals-Team/casper
-			  - repository: SpoonLabs/CoCoSpoon
-			  - repository: STAMP-project/dspot
-			    module: dspot
-			  - repository: SpoonLabs/gumtree-spoon-ast-diff
-			  - repository: Spirals-Team/jPerturb
-			  - repository: SpoonLabs/metamutator
-			  - repository: SpoonLabs/spooet
-			  - repository: KTH/spork""";
+			  repositories:
+			    - repository: SpoonLabs/flacoco
+			    - repository: SpoonLabs/coming
+			    - repository: SpoonLabs/astor
+			    - repository: SpoonLabs/npefix
+			    - repository: SpoonLabs/nopol
+			      module: nopol
+			    - repository: STAMP-project/AssertFixer
+			    - repository: Spirals-Team/casper
+			    - repository: SpoonLabs/CoCoSpoon
+			    - repository: STAMP-project/dspot
+			      module: dspot
+			    - repository: SpoonLabs/gumtree-spoon-ast-diff
+			    - repository: Spirals-Team/jPerturb
+			    - repository: SpoonLabs/metamutator
+			    - repository: SpoonLabs/spooet
+			    - repository: KTH/spork""";
 
 		javaPRs.parallelStream().forEach(pr -> {
 			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));

@@ -114,12 +114,14 @@ public class DeltaImpact {
 
 	@Override
 	public String toString() {
-		return "ΔImpact(%s -> %s ON %s):%n%s)".formatted(
+		return "ΔImpact(%s -> %s ON %s):%s)".formatted(
 			delta.getOldVersion().getLabel(),
 			delta.getNewVersion().getLabel(),
 			client.getLocation(),
-			brokenUses.stream()
-				.map(bu -> "%n%s%n".formatted(bu.toString()))
-				.collect(joining()));
+			throwable != null
+				? throwable.getMessage()
+				: brokenUses.stream()
+					.map(bu -> "%n%s%n".formatted(bu.toString()))
+					.collect(joining()));
 	}
 }

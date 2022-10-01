@@ -4,9 +4,10 @@ import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.CommitBuilder;
+import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
@@ -35,12 +36,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 @Service
 public class PullRequestService {
 	@Autowired
 	private BreakbotService breakbotService;
+	@Autowired
+	private ClientsService clientsService;
 	@Autowired
 	private GitHub github;
 	@Value("${maracas.clone-path:./clones}")
@@ -55,7 +61,7 @@ public class PullRequestService {
 	private int clientAnalysisTimeout;
 
 	private Forge forge;
-	private final ForgeAnalyzer forgeAnalyzer = new ForgeAnalyzer();
+	private ForgeAnalyzer forgeAnalyzer;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -66,6 +72,7 @@ public class PullRequestService {
 		Path.of(reportPath).toFile().mkdirs();
 
 		forge = new GitHubForge(github);
+		forgeAnalyzer = new ForgeAnalyzer(forge, Path.of(clonePath));
 
 		if (analysisWorkers > 0)
 			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
@@ -125,43 +132,25 @@ public class PullRequestService {
 		logger.info("Starting the analysis for {}", () -> prUid(pr));
 
 		try {
-			CommitBuilder baseBuilder = builderFor(pr, pr.mergeBase(), config);
-			CommitBuilder headBuilder = builderFor(pr, pr.head(), config);
+			CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
+			CommitBuilder headBuilder = makeBuilderForCommit(pr, pr.head(), config.build());
+
+			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients());
+			logger.info("The breakbot configuration returned {} clients for {}", clients.size(), pr.repository());
 
 			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 			List<ClientReport> clientReports = new ArrayList<>();
-			for (BreakbotConfig.GitHubRepository c : config.clients()) {
-				String[] fields = c.repository().split("/");
-				String clientOwner = fields[0];
-				String clientName = fields[1];
-
+			for (BreakbotConfig.GitHubRepository c : clients) {
 				try {
-					Repository clientRepo =
-						StringUtils.isEmpty(c.branch())
-							? forge.fetchRepository(clientOwner, clientName)
-							: forge.fetchRepository(clientOwner, clientName, c.branch());
-
-					String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
-					Commit clientCommit =
-						StringUtils.isEmpty(c.sha())
-							? new Commit(clientRepo, clientSha)
-							: new Commit(clientRepo, c.sha());
-					Path clientClone = clonePath(pr, clientCommit);
-					Path clientModule =
-						c.module() != null
-							? Path.of(c.module())
-							: Path.of("");
-
-					CommitBuilder clientBuilder = new CommitBuilder(clientCommit, clientClone, clientModule);
-					clientBuilders.put(clientBuilder.getModulePath(), clientBuilder);
-				} catch (Exception e) {
-					clientReports.add(ClientReport.error(clientName, e));
+					CommitBuilder clientBuilder = makeBuilderForClient(pr, c);
+					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
+				} catch (IOException | ForgeException e) {
+					logger.error("Couldn't create a builder for {}", c.repository(), e);
+					clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
 				}
 			}
 
-			MaracasOptions options = MaracasOptions.newDefault();
-			Options jApiOptions = options.getJApiOptions();
-			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+			MaracasOptions options = makeMaracasOptions(config);
 			AnalysisResult result = forgeAnalyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
 			clientReports.addAll(
@@ -174,7 +163,7 @@ public class PullRequestService {
 						Throwable t = impact.getThrowable();
 
 						if (t != null)
-							return ClientReport.error(clientName, t);
+							return ClientReport.error(clientName, t.getMessage());
 						else
 							return ClientReport.success(clientName,
 								impact.getBrokenUses().stream()
@@ -195,13 +184,44 @@ public class PullRequestService {
 		}
 	}
 
-	private CommitBuilder builderFor(PullRequest pr, Commit c, BreakbotConfig config) {
+	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config) {
 		Path commitClonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(commitClonePath, Path.of(config.build().module()));
-		config.build().goals().forEach(buildConfig::addGoal);
-		config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
+		BuildConfig buildConfig = new BuildConfig(Path.of(config.module()));
+		config.goals().forEach(buildConfig::addGoal);
+		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 
 		return new CommitBuilder(c, commitClonePath, buildConfig);
+	}
+
+	private CommitBuilder makeBuilderForClient(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {
+		String[] fields = c.repository().split("/");
+		String clientOwner = fields[0];
+		String clientName = fields[1];
+
+		Repository clientRepo =
+			StringUtils.isEmpty(c.branch())
+				? forge.fetchRepository(clientOwner, clientName)
+				: forge.fetchRepository(clientOwner, clientName, c.branch());
+
+		String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
+		Commit clientCommit =
+			StringUtils.isEmpty(c.sha())
+				? new Commit(clientRepo, clientSha)
+				: new Commit(clientRepo, c.sha());
+		Path clientClone = clonePath(pr, clientCommit);
+		Path clientModule =
+			c.module() != null
+				? Path.of(c.module())
+				: Path.of("");
+
+		return new CommitBuilder(clientCommit, clientClone, new BuildConfig(clientModule));
+	}
+
+	private MaracasOptions makeMaracasOptions(BreakbotConfig config) {
+		MaracasOptions options = MaracasOptions.newDefault();
+		Options jApiOptions = options.getJApiOptions();
+		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+		return options;
 	}
 
 	public boolean isProcessing(PullRequest pr) {

@@ -138,6 +138,7 @@ public class Maracas {
 			return new DeltaImpact(client, delta, visitor.getBrokenUses());
 		} catch (Exception e) {
 			logger.warn("Error building the delta impact for {}: {}", client, e);
+			e.printStackTrace();
 			return new DeltaImpact(client, delta, e);
 		}
 	}

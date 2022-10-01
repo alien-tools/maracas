@@ -1,8 +1,8 @@
 package com.github.maracas.forges.build.maven;
 
-import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.Builder;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Stream;
 
-public class MavenBuilder extends AbstractBuilder {
+public class MavenBuilder implements Builder {
+	private final Path basePath;
+	private final BuildConfig config;
 	public static final String BUILD_FILE = "pom.xml";
 	public static final List<String> DEFAULT_GOALS = List.of("package");
 	public static final Properties DEFAULT_PROPERTIES = new Properties();
@@ -43,18 +43,27 @@ public class MavenBuilder extends AbstractBuilder {
 		return Files.exists(basePath.resolve(BUILD_FILE));
 	}
 
-	public MavenBuilder(BuildConfig config) {
-		super(config);
+	public MavenBuilder(Path basePath, BuildConfig config) {
+		Objects.requireNonNull(basePath);
+		Objects.requireNonNull(config);
+		this.basePath = basePath;
+		this.config = config;
+	}
+
+	public MavenBuilder(Path basePath) {
+		Objects.requireNonNull(basePath);
+		this.basePath = basePath;
+		this.config = BuildConfig.newDefault();
 	}
 
 	@Override
 	public void build() {
-		File pomFile = config.getBasePath().resolve(BUILD_FILE).toFile();
+		File pomFile = basePath.resolve(BUILD_FILE).toFile();
 
 		if (!pomFile.exists())
-			throw new BuildException("Couldn't find pom.xml in %s".formatted(config.getBasePath()));
-		if (!config.getBasePath().resolve(config.getModule()).toFile().exists())
-			throw new BuildException("Couldn't find module %s in %s".formatted(config.getModule(), config.getBasePath()));
+			throw new BuildException("Couldn't find pom.xml in %s".formatted(basePath));
+		if (!basePath.resolve(config.getModule()).toFile().exists())
+			throw new BuildException("Couldn't find module %s in %s".formatted(config.getModule(), basePath));
 
 		Optional<Path> jar = locateJar();
 		if (jar.isEmpty()) {
@@ -104,7 +113,7 @@ public class MavenBuilder extends AbstractBuilder {
 
 	@Override
 	public Optional<Path> locateJar() {
-		Path workingDirectory = config.getBasePath().resolve(config.getModule());
+		Path workingDirectory = basePath.resolve(config.getModule());
 		File pomFile = workingDirectory.resolve(BUILD_FILE).toFile();
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pomFile)) {
@@ -115,14 +124,38 @@ public class MavenBuilder extends AbstractBuilder {
 				: model.getParent().getVersion();
 			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
 
-			if (Files.exists(jar))
-				return Optional.of(jar);
-			else {
-				logger.warn("Couldn't find JAR at {}", jar);
-				return Optional.empty();
-			}
+			return Files.exists(jar)
+				? Optional.of(jar)
+				: Optional.empty();
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
+	}
+
+	@Override
+	public Map<Path, String> locateModules() {
+		Map<Path, String> modules = new HashMap<>();
+
+		try (Stream<Path> paths = Files.walk(basePath)) {
+			paths
+				.filter(f -> BUILD_FILE.equals(f.getFileName().toString()) && Files.isRegularFile(f))
+				.forEach(pomFile -> {
+					MavenXpp3Reader reader = new MavenXpp3Reader();
+					try (InputStream in = new FileInputStream(pomFile.toFile())) {
+						Model model = reader.read(in);
+						String gid = StringUtils.isEmpty(model.getGroupId()) ? model.getParent().getGroupId() : model.getGroupId();
+						String aid = model.getArtifactId();
+
+						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
+							modules.put(basePath.relativize(pomFile.getParent()), String.format("%s:%s", gid, aid));
+					} catch (IOException | XmlPullParserException e) {
+						logger.error("Couldn't parse {}, skipping", pomFile);
+					}
+				});
+		} catch (IOException e) {
+			logger.error("Error walking directory {}", basePath, e);
+		}
+
+		return modules;
 	}
 }

@@ -32,57 +32,57 @@ class GradleBuilderTest {
 
 	@Test
 	void build_validGradle_default() {
-		Builder builder = new GradleBuilder(new BuildConfig(validProject));
+		Builder builder = new GradleBuilder(validProject);
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 	}
 
 	@Test
 	void build_validGradle_withGoal() {
-		BuildConfig configWithGoal = new BuildConfig(validProject);
+		BuildConfig configWithGoal = BuildConfig.newDefault();
 		configWithGoal.addGoal("clean");
-		Builder builder = new GradleBuilder(configWithGoal);
+		Builder builder = new GradleBuilder(validProject, configWithGoal);
 		builder.build();
 		assertFalse(builder.locateJar().isPresent());
 	}
 
 	@Test
 	void build_validGradle_with_invalidProperty() {
-		BuildConfig configWithProperty = new BuildConfig(validProject);
+		BuildConfig configWithProperty = BuildConfig.newDefault();
 		configWithProperty.setProperty("--unknown-property", "");
-		Builder builder = new GradleBuilder(configWithProperty);
+		Builder builder = new GradleBuilder(validProject, configWithProperty);
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}
 
 	@Test
 	void build_validGradle_with_validProperty() {
-		BuildConfig configWithProperty = new BuildConfig(validProject);
+		BuildConfig configWithProperty = BuildConfig.newDefault();
 		configWithProperty.setProperty("--dry-run", "");
-		Builder builder = new GradleBuilder(configWithProperty);
+		Builder builder = new GradleBuilder(validProject, configWithProperty);
 		builder.build();
 		assertFalse(builder.locateJar().isPresent());
 	}
 
 	@Test
 	void build_compileError() {
-		Builder builder = new GradleBuilder(new BuildConfig(errorProject));
+		Builder builder = new GradleBuilder(errorProject);
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}
 
 	@Test
 	void build_validGradle_invalidGoal() {
-		BuildConfig configWithInvalidGoal = new BuildConfig(validProject);
+		BuildConfig configWithInvalidGoal = BuildConfig.newDefault();
 		configWithInvalidGoal.addGoal("nope");
-		Builder builder = new GradleBuilder(configWithInvalidGoal);
+		Builder builder = new GradleBuilder(validProject, configWithInvalidGoal);
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}
 
 	@Test
 	void build_multi_core_default_with_version() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("core")));
+		Builder builder = new GradleBuilder(multiProject, new BuildConfig(Path.of("core")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("core-0.1.0.jar"));
@@ -90,7 +90,7 @@ class GradleBuilderTest {
 
 	@Test
 	void build_multi_extra_default() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("extra")));
+		Builder builder = new GradleBuilder(multiProject, new BuildConfig(Path.of("extra")));
 		builder.build();
 		assertTrue(builder.locateJar().isPresent());
 		assertTrue(builder.locateJar().get().getFileName().endsWith("extra.jar"));
@@ -98,7 +98,7 @@ class GradleBuilderTest {
 
 	@Test
 	void build_multi_invalid() {
-		Builder builder = new GradleBuilder(new BuildConfig(multiProject, Path.of("nope")));
+		Builder builder = new GradleBuilder(multiProject, new BuildConfig(Path.of("nope")));
 		Exception thrown = assertThrows(BuildException.class, builder::build);
 		assertThat(thrown.getMessage(), containsString("Gradle build failed"));
 	}
