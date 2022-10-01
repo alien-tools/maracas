@@ -150,9 +150,7 @@ public class PullRequestService {
 				}
 			}
 
-			MaracasOptions options = MaracasOptions.newDefault();
-			Options jApiOptions = options.getJApiOptions();
-			config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+			MaracasOptions options = makeMaracasOptions(config);
 			AnalysisResult result = forgeAnalyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
 
 			clientReports.addAll(
@@ -217,6 +215,13 @@ public class PullRequestService {
 				: Path.of("");
 
 		return new CommitBuilder(clientCommit, clientClone, new BuildConfig(clientModule));
+	}
+
+	private MaracasOptions makeMaracasOptions(BreakbotConfig config) {
+		MaracasOptions options = MaracasOptions.newDefault();
+		Options jApiOptions = options.getJApiOptions();
+		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+		return options;
 	}
 
 	public boolean isProcessing(PullRequest pr) {
