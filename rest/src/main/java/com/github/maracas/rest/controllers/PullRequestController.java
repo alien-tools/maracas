@@ -25,17 +25,17 @@ public class PullRequestController {
 
 	private static final Logger logger = LogManager.getLogger(PullRequestController.class);
 
-	@PostMapping("/pr/{owner}/{repository}/{number}")
+	@PostMapping("/pr/{owner}/{name}/{number}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequest(
 		@PathVariable String owner,
-		@PathVariable String repository,
+		@PathVariable String name,
 		@PathVariable Integer number,
 		@RequestParam(required=false) String callback,
 		@RequestHeader(required=false) String installationId,
 		@RequestBody(required=false) String breakbotYaml
 	) {
 		try {
-			PullRequest pr = prService.fetchPullRequest(owner, repository, number);
+			PullRequest pr = prService.fetchPullRequest(owner, name, number);
 			String location = prService.analyzePR(pr, callback, installationId, breakbotYaml);
 			return ResponseEntity
 				.accepted()
@@ -50,13 +50,13 @@ public class PullRequestController {
 		}
 	}
 
-	@GetMapping("/pr/{owner}/{repository}/{number}")
+	@GetMapping("/pr/{owner}/{name}/{number}")
 	public ResponseEntity<PullRequestResponse> getPullRequest(
 		@PathVariable String owner,
-		@PathVariable String repository,
+		@PathVariable String name,
 		@PathVariable Integer number
 	) {
-		PullRequest pr = prService.fetchPullRequest(owner, repository, number);
+		PullRequest pr = prService.fetchPullRequest(owner, name, number);
 
 		// Either we have it already
 		MaracasReport report = prService.getReport(pr);
@@ -77,14 +77,14 @@ public class PullRequestController {
 			.body(new PullRequestResponse("This PR isn't being analyzed"));
 	}
 
-	@PostMapping("/pr-sync/{owner}/{repository}/{number}")
+	@PostMapping("/pr-sync/{owner}/{name}/{number}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequestSync(
 		@PathVariable String owner,
-		@PathVariable String repository,
+		@PathVariable String name,
 		@PathVariable Integer number,
 		@RequestBody(required=false) String breakbotYaml
 	) {
-		PullRequest pr = prService.fetchPullRequest(owner, repository, number);
+		PullRequest pr = prService.fetchPullRequest(owner, name, number);
 		MaracasReport report = prService.analyzePRSync(pr, breakbotYaml);
 		return ResponseEntity.ok(new PullRequestResponse("ok", report));
 	}

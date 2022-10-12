@@ -1,8 +1,6 @@
-package com.github.maracas.forges;
+package com.github.maracas.forges.build;
 
-import com.github.maracas.forges.build.BuildConfig;
-import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.Builder;
+import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 
@@ -13,18 +11,7 @@ import java.util.Optional;
 public class CommitBuilder {
 	private final Commit commit;
 	private final Path clonePath;
-	private final Path module;
 	private final BuildConfig buildConfig;
-
-	public CommitBuilder(Commit commit, Path clonePath, Path module) {
-		Objects.requireNonNull(commit);
-		Objects.requireNonNull(clonePath);
-		Objects.requireNonNull(module);
-		this.commit = commit;
-		this.clonePath = clonePath;
-		this.module = module;
-		this.buildConfig = null;
-	}
 
 	public CommitBuilder(Commit commit, Path clonePath, BuildConfig buildConfig) {
 		Objects.requireNonNull(commit);
@@ -32,17 +19,19 @@ public class CommitBuilder {
 		Objects.requireNonNull(buildConfig);
 		this.commit = commit;
 		this.clonePath = clonePath;
-		this.module = Path.of("");
 		this.buildConfig = buildConfig;
 	}
 
+	public CommitBuilder(Commit commit, Path clonePath) {
+		this(commit, clonePath, BuildConfig.newDefault());
+	}
+
 	public Path cloneCommit() throws CloneException {
-		Cloner cloner = Cloner.of(commit.repository());
-		return cloner.clone(commit, clonePath);
+		return getCloner().clone(commit, clonePath);
 	}
 
 	public Optional<Path> buildCommit() throws BuildException {
-		Builder builder = Builder.of(buildConfig);
+		Builder builder = getBuilder();
 		builder.build();
 		return builder.locateJar();
 	}
@@ -60,11 +49,19 @@ public class CommitBuilder {
 		return clonePath;
 	}
 
-	public Path getModule() {
-		return module;
+	public Path getModulePath() {
+		return clonePath.resolve(buildConfig.getModule());
 	}
 
-	public Path getModulePath() {
-		return clonePath.resolve(module);
+	public BuildConfig getBuildConfig() {
+		return buildConfig;
+	}
+
+	public Cloner getCloner() {
+		return Cloner.of(commit.repository());
+	}
+
+	public Builder getBuilder() {
+		return Builder.of(this);
 	}
 }

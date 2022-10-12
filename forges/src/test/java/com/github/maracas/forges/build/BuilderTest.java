@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -18,17 +17,17 @@ class BuilderTest {
 
   @Test
   void build_From_MavenProject() {
-    assertThat(Builder.of(new BuildConfig(mavenProject)), instanceOf(MavenBuilder.class));
+    assertThat(Builder.of(mavenProject, BuildConfig.newDefault()), instanceOf(MavenBuilder.class));
   }
 
   @Test
   void build_From_GradleProject() {
-    assertThat(Builder.of(new BuildConfig(gradleProject)), instanceOf(GradleBuilder.class));
+    assertThat(Builder.of(gradleProject, BuildConfig.newDefault()), instanceOf(GradleBuilder.class));
   }
 
   @Test
   void build_From_UnknownProject() {
-    BuildConfig config = new BuildConfig(invalidProject);
-    assertThrows(BuildException.class, () -> Builder.of(config));
+    BuildConfig defaultConfig = BuildConfig.newDefault();
+    assertThrows(BuildException.class, () -> Builder.of(invalidProject, defaultConfig));
   }
 }

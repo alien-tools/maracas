@@ -1,8 +1,8 @@
 package com.github.maracas.forges.build.gradle;
 
-import com.github.maracas.forges.build.AbstractBuilder;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.Builder;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +20,9 @@ import java.util.*;
  * so we assume Gradle users will prepare an optimized task to be
  * invoked in their build.gradle
  */
-public class GradleBuilder extends AbstractBuilder {
+public class GradleBuilder implements Builder {
+	private final Path basePath;
+	private final BuildConfig config;
 	public static final String BUILD_FILE = "build.gradle";
 	public static final List<String> DEFAULT_GOALS = List.of("build");
 	public static final Properties DEFAULT_PROPERTIES = new Properties();
@@ -30,8 +32,17 @@ public class GradleBuilder extends AbstractBuilder {
 		return Files.exists(basePath.resolve(BUILD_FILE));
 	}
 
-	public GradleBuilder(BuildConfig config) {
-		super(config);
+	public GradleBuilder(Path basePath, BuildConfig config) {
+		Objects.requireNonNull(basePath);
+		Objects.requireNonNull(config);
+		this.basePath = basePath;
+		this.config = config;
+	}
+
+	public GradleBuilder(Path basePath) {
+		Objects.requireNonNull(basePath);
+		this.basePath = basePath;
+		this.config = BuildConfig.newDefault();
 	}
 
 	@Override
@@ -57,7 +68,7 @@ public class GradleBuilder extends AbstractBuilder {
 			} catch (org.gradle.tooling.BuildException | org.gradle.tooling.exceptions.UnsupportedBuildArgumentException e) {
 				throw new BuildException("Gradle build failed: %s".formatted(e.getMessage()), e);
 			}
-		} else logger.info("{} has already been built. Skipping.", config.getBasePath());
+		} else logger.info("{} has already been built. Skipping.", basePath);
 	}
 
 	@Override
@@ -65,7 +76,7 @@ public class GradleBuilder extends AbstractBuilder {
 		try (ProjectConnection project = getProjectConnection(config)) {
 			Map<String, String> props = readGradleProperties(project);
 			Path buildPath = Path.of(props.getOrDefault("buildDir",
-				config.getBasePath().resolve(config.getModule()).toAbsolutePath().toString()));
+				basePath.resolve(config.getModule()).toAbsolutePath().toString()));
 			Path libsPath = buildPath.resolve(props.getOrDefault("libsDirName", "libs"));
 			String version = props.get("version");
 			String versionQualifier = (version == null || "unspecified".equals(version))
@@ -83,9 +94,14 @@ public class GradleBuilder extends AbstractBuilder {
 		}
 	}
 
+	@Override
+	public Map<Path, String> locateModules() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
 	private ProjectConnection getProjectConnection(BuildConfig config) {
 		return GradleConnector.newConnector()
-			.forProjectDirectory(config.getBasePath().resolve(config.getModule()).toFile())
+			.forProjectDirectory(basePath.resolve(config.getModule()).toFile())
 			.connect();
 	}
 

@@ -1,6 +1,7 @@
 package com.github.maracas.rest;
 
 import com.github.maracas.rest.data.BreakingChange;
+import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -93,7 +94,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	void testPRWithSuppliedBreakbotConfiguration() {
 		String bbConfig = """
 			clients:
-			  - repository: alien-tools/comp-changes-client""";
+			  repositories:
+			    - repository: alien-tools/comp-changes-client""";
 
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 		assertThat(res.message(), is("ok"));
@@ -102,6 +104,34 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report().clientReports().size(), equalTo(1));
 		assertThat(res.report().clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(res.report().allBrokenUses().size(), greaterThan(0));
+	}
+
+	@Test
+	void testPRWithUnknownOrBuggyClient() {
+		String bbConfig = """
+			clients:
+			  repositories:
+			    - repository: alien-tools/unknown-client
+			    - repository: alien-tools/comp-changes-client
+			    - repository: alien-tools/comp-changes-client-error""";
+
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
+		assertThat(res.message(), is("ok"));
+		assertThat(res.report(), is(notNullValue()));
+		assertThat(res.report().delta().breakingChanges(), not(empty()));
+		assertThat(res.report().clientReports(), hasSize(3));
+
+		ClientReport unknown = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/unknown-client")).findFirst().get();
+		assertThat(unknown.error(), containsString("Couldn't fetch repository alien-tools/unknown-client"));
+		assertThat(unknown.brokenUses(), is(empty()));
+
+		ClientReport compChanges = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client")).findFirst().get();
+		assertThat(compChanges.error(), is(nullValue()));
+		assertThat(compChanges.brokenUses(), is(not(empty())));
+
+		ClientReport error = res.report().clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client-error")).findFirst().get();
+		assertThat(error.error(), containsString("Unable to read the pom"));
+		assertThat(error.brokenUses(), is(empty()));
 	}
 
 	@Test
@@ -204,7 +234,8 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	void testPRWithBuggyClientConfiguration() throws Exception {
 		String bbConfig = """
 			clients:
-			  - repository: unknown/repository""";
+			  repositories:
+			    - repository: unknown/repository""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
 			.andExpect(jsonPath("$.report.clientReports[0].error", containsString("Couldn't fetch repository")));

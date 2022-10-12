@@ -16,7 +16,7 @@ import java.util.Map;
 public record BreakbotConfig(
 	List<String> excludes,
 	Build build,
-	List<GitHubRepository> clients
+	Clients clients
 ) {
 	public record Build(
 		String module,
@@ -32,6 +32,18 @@ public record BreakbotConfig(
 		}
 	}
 
+	public record Clients(
+		int top,
+		int stars,
+		List<GitHubRepository> repositories
+	) {
+		public Clients(int top, int stars, List<GitHubRepository> repositories) {
+			this.top = Math.max(top, 0);
+			this.stars = Math.max(stars, 0);
+			this.repositories = repositories != null ? repositories : Collections.emptyList();
+		}
+	}
+
 	public record GitHubRepository(
 		String repository,
 		String branch,
@@ -41,10 +53,10 @@ public record BreakbotConfig(
 
 	}
 
-	public BreakbotConfig(List<String> excludes, Build build, List<GitHubRepository> clients) {
+	public BreakbotConfig(List<String> excludes, Build build, Clients clients) {
 		this.excludes = excludes != null ? excludes : Collections.emptyList();
 		this.build = build != null ? build : new Build(null, null, null, null);
-		this.clients = clients != null ? clients : Collections.emptyList();
+		this.clients = clients != null ? clients : new Clients(0, 0, Collections.emptyList());
 	}
 
 	public static BreakbotConfig defaultConfig() {
