@@ -4,6 +4,8 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
 import com.google.common.base.Stopwatch;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,7 +116,12 @@ public class MavenBuilder implements Builder {
 	@Override
 	public Optional<Path> locateJar() {
 		Path workingDirectory = basePath.resolve(config.getModule());
+		Path target = workingDirectory.resolve("target");
 		File pomFile = workingDirectory.resolve(BUILD_FILE).toFile();
+
+		if (!Files.exists(target))
+			return Optional.empty();
+
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		try (InputStream in = new FileInputStream(pomFile)) {
 			Model model = reader.read(in);
@@ -122,11 +129,16 @@ public class MavenBuilder implements Builder {
 			String vid = !StringUtils.isEmpty(model.getVersion())
 				? model.getVersion()
 				: model.getParent().getVersion();
-			Path jar = workingDirectory.resolve("target").resolve("%s-%s.jar".formatted(aid, vid));
+			Path jar = target.resolve("%s-%s.jar".formatted(aid, vid));
 
-			return Files.exists(jar)
-				? Optional.of(jar)
-				: Optional.empty();
+			if (Files.exists(jar))
+				return Optional.of(jar);
+			else {
+				// There are several cases that might fail us (e.g. <version>${revision}</version>)
+				// => just attempt to find the best matching JAR, if any
+				return FileUtils.listFiles(target.toFile(), new WildcardFileFilter(String.format("%s-*.jar", aid)), null)
+					.stream().map(File::toPath).findFirst();
+			}
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
 		}
