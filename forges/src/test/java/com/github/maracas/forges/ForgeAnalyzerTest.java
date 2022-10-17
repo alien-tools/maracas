@@ -15,6 +15,7 @@ import org.kohsuke.github.GitHubBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
@@ -72,7 +73,7 @@ class ForgeAnalyzerTest {
 		CommitBuilder cb2 = new CommitBuilder(v2, CLONES.resolve("v2"), new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		analyzer.setLibraryBuildTimeout(1);
+		analyzer.setLibraryBuildTimeoutSeconds(1);
 		Exception thrown = assertThrows(CompletionException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
 		assertThat(thrown.getCause(), is(instanceOf(TimeoutException.class)));
 	}
@@ -84,7 +85,7 @@ class ForgeAnalyzerTest {
 		Commit client = github.fetchCommit("SpoonLabs", "gumtree-spoon-ast-diff", "6533706");
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		analyzer.setClientAnalysisTimeout(1);
+		analyzer.setClientAnalysisTimeoutSeconds(1);
 		Delta delta = analyzer.computeDelta(
 			new CommitBuilder(v1, CLONES.resolve("v1"), new BuildConfig(Path.of("core"))),
 			new CommitBuilder(v2, CLONES.resolve("v2"), new BuildConfig(Path.of("core"))),
@@ -102,5 +103,16 @@ class ForgeAnalyzerTest {
 		DeltaImpact impact = result.deltaImpacts().values().stream().findAny().get();
 		assertThat(impact.getThrowable(), is(instanceOf(TimeoutException.class)));
 		assertThat(impact.getBrokenUses(), is(empty()));
+	}
+
+	@Test
+	void analyzePullRequest_apache_dubbo_10741() throws Exception {
+		PullRequest pr = github.fetchPullRequest("apache", "dubbo", 10741);
+		List<AnalysisResult> results = analyzer.analyzePullRequest(pr, 2, MaracasOptions.newDefault());
+		System.out.println(results);
+
+		results.forEach(res -> System.out.println(res));
+
+		assertThat(results, is(not(empty())));
 	}
 }

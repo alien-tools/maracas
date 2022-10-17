@@ -77,9 +77,9 @@ public class PullRequestService {
 		if (analysisWorkers > 0)
 			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
 		if (libraryBuildTimeout > 0)
-			forgeAnalyzer.setLibraryBuildTimeout(libraryBuildTimeout);
+			forgeAnalyzer.setLibraryBuildTimeoutSeconds(libraryBuildTimeout);
 		if (clientAnalysisTimeout > 0)
-			forgeAnalyzer.setClientAnalysisTimeout(clientAnalysisTimeout);
+			forgeAnalyzer.setClientAnalysisTimeoutSeconds(clientAnalysisTimeout);
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {
