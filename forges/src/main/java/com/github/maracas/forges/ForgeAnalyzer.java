@@ -159,7 +159,7 @@ public class ForgeAnalyzer {
     if (jarV2.isEmpty())
       throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
 
-    LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getClonePath()));
+    LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
     LibraryJar libV2 = new LibraryJar(jarV2.get());
     return Maracas.computeDelta(libV1, libV2, options);
   }
