@@ -1,21 +1,13 @@
 package com.github.maracas.experiments;
 
-import com.github.maracas.LibraryJar;
-import com.github.maracas.Maracas;
-import com.github.maracas.SourcesDirectory;
-import com.github.maracas.delta.Delta;
-import com.github.maracas.forges.CommitBuilder;
+import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.PullRequest;
-import com.github.maracas.forges.build.BuildConfig;
-import com.github.maracas.forges.clone.Cloner;
+import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.github.GitHubForge;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import okhttp3.Cache;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
@@ -26,31 +18,23 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
 
 public class AnalyzePRs {
-	private GitHub gh = buildGitHub();
-	private Forge forge = new GitHubForge(gh);
+	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
-	private static final Path PR_CSV = Paths.get("./experiments/data/combined.csv");
-	private static final Path RESULTS_CSV = Paths.get("./experiments/data/results.csv");
-	private static final Path LIBRARY_CLONES = Paths.get("./experiments/clones/libraries");
-	private static final Path CLIENT_CLONES = Paths.get("./experiments/clones/clients");
-	private static final Path GH_CACHE = Paths.get("./experiments/cache");
+	private static final Path PR_CSV = Path.of("./experiments/data/prs).csv");
+	private static final Path RESULTS_CSV = Path.of("./experiments/data/results.csv");
+	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
+	private static final Path GH_CACHE = Path.of("./experiments/cache");
+	private static final Path REPORTS = Path.of("./experiments/reports");
 	private static final Logger logger = LogManager.getLogger(AnalyzePRs.class);
 
-	// Store the ones we've computed already
-	private Map<String, PullRequest> cachePRs = new HashMap<>();
-	private Map<String, Delta> cacheDeltas = new HashMap<>();
-	private Map<Path, LibraryJar> cacheLibraries = new HashMap<>();
-	private Map<Path, SourcesDirectory> cacheClients = new HashMap<>();
-
 	public AnalyzePRs() throws IOException {
-		this.gh = GitHubBuilder.fromEnvironment().build();
-		this.forge = new GitHubForge(gh);
+		this.forge = new GitHubForge(buildGitHub());
 
 		try (Reader reader = new FileReader(PR_CSV.toFile())) {
 			this.cases = new CsvToBeanBuilder<Case>(reader).withType(Case.class).build().parse();
@@ -60,91 +44,33 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
+		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
+		analyzer.setLibraryBuildTimeoutSeconds(10 * 60);
+		analyzer.setClientAnalysisTimeoutSeconds(10 * 60);
+		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
+
 		try (var writer = new FileWriter(RESULTS_CSV.toFile())) {
-			var beanToCsv = new StatefulBeanToCsvBuilder(writer).build();
+			var beanToCsv = new StatefulBeanToCsvBuilder<Case>(writer).build();
 			var i = 0;
 
 			for (var c : cases) {
-				logger.info("Cached: {} PRs; {} deltas; {} libs; {} clients",
-					cachePRs.size(), cacheDeltas.size(), cacheLibraries.size(), cacheClients.size());
-				logger.info("[{}/{}] PR#{} of {}/{} on {}/{}",
-					++i, cases.size(), c.prNumber, c.owner, c.name, c.cowner, c.cname);
+				logger.info("[{}/{}] PR#{} of {}/{}",
+					++i, cases.size(), c.number, c.owner, c.name);
 
 				try {
-					var pr = cachePRs.get(c.owner + c.name + c.prNumber);
+					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
+					var result = analyzer.analyzePullRequest(pr, 100, MaracasOptions.newDefault());
+					var j = 0;
 
-					if (pr == null) {
-						pr = forge.fetchPullRequest(c.owner, c.name, c.prNumber);
-						cachePRs.put(c.owner + c.name + c.prNumber, pr);
-					}
+					for (var r : result) {
+						c.breakingChanges += r.delta().getBreakingChanges().size();
+						c.brokenUses += r.allBrokenUses().size();
+						c.clients += r.deltaImpacts().size();
+						c.brokenClients += r.brokenClients().size();
+						r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
 
-					var prPath = LIBRARY_CLONES.resolve(c.owner).resolve(c.name).resolve(String.valueOf(c.prNumber));
-
-					try {
-						// Clone and build PR's mergeBase
-						var mergeBasePath = prPath.resolve("mergeBase");
-						var mergeBaseConfig = new BuildConfig(mergeBasePath, Paths.get(c.pkgPath));
-						var mergeBaseBuilder = new CommitBuilder(pr.mergeBase(), mergeBasePath, mergeBaseConfig);
-						var mergeBaseJar = mergeBaseBuilder.cloneAndBuildCommit();
-						logger.info("[{}#{}] PR's mergeBase JAR is at {}", c.name, c.prNumber, mergeBaseJar.get());
-
-						try {
-							// Clone and build PR's HEAD
-							var headPath = prPath.resolve("head");
-							var headConfig = new BuildConfig(headPath, Paths.get(c.pkgPath));
-							var headBuilder = new CommitBuilder(pr.head(), headPath, headConfig);
-							var headJar = headBuilder.cloneAndBuildCommit();
-							logger.info("[{}#{}] PR's head JAR is at {}", c.name, c.prNumber, headJar.get());
-
-							try {
-								var delta = cacheDeltas.get(c.owner + c.name + c.prNumber);
-
-								if (delta == null) {
-									// Compute delta between mergeBase and HEAD
-									cacheLibraries.putIfAbsent(mergeBaseJar.get(), new LibraryJar(mergeBaseJar.get()));
-									cacheLibraries.putIfAbsent(headJar.get(), new LibraryJar(headJar.get()));
-									delta = Maracas.computeDelta(cacheLibraries.get(mergeBaseJar.get()), cacheLibraries.get(headJar.get()));
-									Files.write(prPath.resolve("delta.json"), delta.toJson().getBytes());
-									cacheDeltas.put(c.owner + c.name + c.prNumber, delta);
-									logger.info("[{}#{}] Found {} BCs", c.name, c.prNumber, delta.getBreakingChanges().size());
-								} else
-									logger.info("[{}#{}] Already computed: {} BCs", c.name, c.prNumber, delta.getBreakingChanges().size());
-
-								c.bcs = delta.getBreakingChanges().size();
-								if (!delta.getBreakingChanges().isEmpty()) {
-									try {
-										// Clone client
-										var client = forge.fetchRepository(c.cowner, c.cname);
-										var clientPath = CLIENT_CLONES.resolve(c.cowner).resolve(c.cname);
-										Cloner.of(client).clone(client, clientPath);
-
-										// Compute delta impact
-										cacheClients.putIfAbsent(clientPath, new SourcesDirectory(clientPath));
-										var impact = Maracas.computeDeltaImpact(cacheClients.get(clientPath), delta);
-										var brokenUses = impact.getBrokenUses();
-										c.brokenUses = brokenUses.size();
-										Files.write(prPath.resolve(String.format("%s-%s-impact.json", c.cowner, c.cname)), impact.toJson().getBytes());
-										logger.info("[{}#{}] Found {} broken uses in {}/{}",
-											c.name, c.prNumber, brokenUses.size(), c.cowner, c.cname);
-
-										if (impact.getThrowable() != null)
-											c.error = impact.getThrowable().getMessage();
-									} catch (Exception e) {
-										e.printStackTrace();
-										c.error = e.getMessage();
-									}
-								}
-							} catch (Exception e) {
-								e.printStackTrace();
-								c.error = e.getMessage();
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-							c.error = e.getMessage();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						c.error = e.getMessage();
+						logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
+							i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.clients);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -164,12 +90,9 @@ public class AnalyzePRs {
 	 */
 	private GitHub buildGitHub() throws IOException {
 		var builder = new OkHttpClient().newBuilder();
-		builder.addInterceptor(new Interceptor() {
-			@Override
-			public Response intercept(Chain chain) throws IOException {
-				logger.info("Sending request {}", chain.request().url());
-				return chain.proceed(chain.request());
-			}
+		builder.addInterceptor(chain -> {
+			logger.info("Sending request {}", chain.request().url());
+			return chain.proceed(chain.request());
 		});
 
 		var cacheDir = GH_CACHE.toFile();
@@ -190,12 +113,12 @@ public class AnalyzePRs {
 	public static class Case {
 		String owner;
 		String name;
-		String pkgPath;
-		String cowner;
-		String cname;
-		int prNumber;
-		int bcs;
-		int brokenUses;
+		int number;
 		String error;
+		int breakingChanges;
+		int brokenUses;
+		int clients;
+		int brokenClients;
+		String report;
 	}
 }

@@ -6,6 +6,8 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -87,5 +89,10 @@ public record AnalysisResult(
 		return new ObjectMapper()
 			.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(this);
+	}
+
+	public void writeJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.writerWithDefaultPrettyPrinter().writeValue(json, this);
 	}
 }

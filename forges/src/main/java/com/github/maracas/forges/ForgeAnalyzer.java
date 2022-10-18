@@ -78,33 +78,30 @@ public class ForgeAnalyzer {
     logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
     // We need to run the whole analysis for each impacted package in the PR
-    impactedPackages.forEach((pkgName, modulePath) -> {
+    for (String pkgName : impactedPackages.keySet()) {
       logger.info("[{}] Now analyzing package {}", pr, pkgName);
 
-      try {
-        // First, we compute the delta model to look for BCs
-        CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
-        CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
-        Delta delta = computeDelta(builderV1, builderV2, options);
+      // First, we compute the delta model to look for BCs
+      Path modulePath = impactedPackages.get(pkgName);
+      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
+      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
+      Delta delta = computeDelta(builderV1, builderV2, options);
 
-        // If we find some, we fetch the appropriate clients and analyze the impact
-        if (!delta.getBreakingChanges().isEmpty()) {
-          logger.info("Fetching clients for package {}", pkgName);
-          Collection<Commit> clients =
-            forge.fetchTopClients(pr.repository(), pkgName, clientsPerPackage)
-              .stream()
-              .map(repository -> forge.fetchCommit(repository, "HEAD"))
-              .toList();
-          logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+      // If we find some, we fetch the appropriate clients and analyze the impact
+      if (!delta.getBreakingChanges().isEmpty()) {
+        logger.info("Fetching clients for package {}", pkgName);
+        Collection<Commit> clients =
+          forge.fetchTopClients(pr.repository(), pkgName, clientsPerPackage)
+            .stream()
+            .map(repository -> forge.fetchCommit(repository, "HEAD"))
+            .toList();
+        logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
 
-          results.add(computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options));
-        } else {
-          results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
-        }
-      } catch (Exception e) {
-        logger.error(e);
+        results.add(computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options));
+      } else {
+        results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
       }
-    });
+    }
 
     return results;
   }
@@ -249,7 +246,7 @@ public class ForgeAnalyzer {
         }
       })
       .filter(Objects::nonNull)
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
   }
 
   private Path clonePath(Commit c) {
