@@ -1,29 +1,28 @@
 package com.github.maracas.rest.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
+import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GitHub;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class ClientsService {
+	@Autowired
+	private GitHub github;
+	private GitHubForge forge;
 	@Value("${maracas.client-path:./clients}")
 	private String clientPath;
 	@Value("${maracas.client-cache-expiration:7}")
@@ -34,38 +33,9 @@ public class ClientsService {
 	@PostConstruct
 	public void initialize() {
 		Path.of(clientPath).toFile().mkdirs();
-	}
-
-	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
-		File cacheFile = cacheFile(repository, packageId);
-		ObjectMapper objectMapper = new ObjectMapper();
-
-		if (cacheIsValid(cacheFile)) {
-			try {
-				List<GitHubClientsFetcher.Client> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
-				logger.info("Fetched {} total clients for {} [package: {}] from {}",
-					clients.size(), repository, packageId, cacheFile);
-				return clients;
-			} catch (IOException e) {
-				logger.error(e);
-			}
-		}
-
-		Stopwatch sw = Stopwatch.createStarted();
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients(packageId);
-		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
-			clients.size(), repository, packageId, sw.elapsed().toSeconds());
-
-		try {
-			cacheFile.getParentFile().mkdirs();
-			objectMapper.writeValue(cacheFile, clients);
-			logger.info("Serialized clients for {} [package: {}] in {}", repository, packageId, cacheFile);
-		} catch (IOException e) {
-			logger.error(e);
-		}
-
-		return clients;
+		forge = new GitHubForge(github);
+		forge.setClientsCacheExpirationDays(clientsCacheExpiration);
+		forge.setClientsCacheDirectory(Path.of(clientPath));
 	}
 
 	public List<GitHubClientsFetcher.Package> fetchPackages(Repository repository) {
@@ -76,53 +46,39 @@ public class ClientsService {
 		return packages;
 	}
 
+	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository) {
+		Stopwatch sw = Stopwatch.createStarted();
+		List<GitHubClientsFetcher.Package> packages = fetchPackages(repository);
+		List<GitHubClientsFetcher.Client> clients =
+			packages.stream()
+				.map(pkg -> forge.fetchClients(repository, pkg.name()))
+				.flatMap(Collection::stream)
+				.toList();
+		logger.info("Fetched {} total clients for {} in {}s", clients.size(), repository, sw.elapsed().toSeconds());
+		return clients;
+	}
+
 	public List<BreakbotConfig.GitHubRepository> buildClientsList(Repository repository, BreakbotConfig.Clients config, String packageId) {
 		List<BreakbotConfig.GitHubRepository> allClients = new ArrayList<>(config.repositories());
 
 		if (config.top() > 0) {
-			List<BreakbotConfig.GitHubRepository> topClients =
-				fetchClients(repository, packageId).stream()
-					.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars))
-					.limit(config.top())
-					.map(repo ->
-						new BreakbotConfig.GitHubRepository(String.format("%s/%s", repo.owner(), repo.name()), null, null, null)
-					)
-					.toList();
-
-			allClients.addAll(topClients);
+			allClients.addAll(
+				forge.fetchTopClients(repository, packageId, config.top()).stream()
+					.map(repo -> new BreakbotConfig.GitHubRepository(
+						String.format("%s/%s", repo.owner(), repo.name()),
+						null, null, null))
+					.toList()
+			);
 		} else if (config.stars() > 0) {
-			List<BreakbotConfig.GitHubRepository> starsClients =
-				fetchClients(repository, packageId).stream()
-					.filter(repo -> repo.stars() >= config.stars())
-					.map(repo ->
-						new BreakbotConfig.GitHubRepository(String.format("%s/%s", repo.owner(), repo.name()), null, null, null)
-					)
-					.toList();
-
-			allClients.addAll(starsClients);
+			allClients.addAll(
+				forge.fetchClients(repository, packageId).stream()
+					.map(repo -> new BreakbotConfig.GitHubRepository(
+						String.format("%s/%s", repo.owner(), repo.name()),
+						null, null, null))
+					.toList()
+			);
 		}
 
 		return allClients;
-	}
-
-	private boolean cacheIsValid(File cacheFile) {
-		if (cacheFile.exists()) {
-			Date modified = new Date(cacheFile.lastModified());
-			Date now = Date.from(Instant.now());
-
-			long daysDiff = TimeUnit.DAYS.convert(Math.abs(now.getTime() - modified.getTime()), TimeUnit.MILLISECONDS);
-			return daysDiff <= clientsCacheExpiration;
-		}
-
-		return false;
-	}
-
-	private File cacheFile(Repository repository, String packageId) {
-		return Path.of(clientPath)
-			.resolve(repository.owner())
-			.resolve(repository.name())
-			.resolve(packageId + "-clients.json")
-			.toAbsolutePath()
-			.toFile();
 	}
 }

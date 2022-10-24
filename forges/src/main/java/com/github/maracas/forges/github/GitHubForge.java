@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GitHubForge implements Forge {
 	private final GitHub gh;
-	private final Path clientsCacheDirectory;
+	private Path clientsCacheDirectory;
 	private int clientsCacheExpirationDays = 1;
 
 	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
@@ -144,6 +144,8 @@ public class GitHubForge implements Forge {
 
 		return fetchClients(repository, packageId)
 				.stream()
+				// FIXME: we don't want forks, but checking whether a client is a fork is too costly
+				.filter(client -> !client.name().equals(repository.name()))
 				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
 				.limit(limit)
 				.map(client -> fetchRepository(client.owner(), client.name()))
@@ -157,8 +159,9 @@ public class GitHubForge implements Forge {
 
 		return fetchClients(repository, packageId)
 				.stream()
+				// FIXME: we don't want forks, but checking whether a client is a fork is too costly
+				.filter(client -> client.stars() >= stars && !client.name().equals(repository.name()))
 				.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
-				.filter(client -> client.stars() >= stars)
 				.map(client -> fetchRepository(client.owner(), client.name()))
 				.toList();
 	}
@@ -169,7 +172,14 @@ public class GitHubForge implements Forge {
 		this.clientsCacheExpirationDays = clientsCacheExpirationDays;
 	}
 
-	private List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
+	public void setClientsCacheDirectory(Path dir) {
+		if (dir == null || !dir.toFile().exists())
+			throw new IllegalArgumentException("dir does not exist");
+
+		this.clientsCacheDirectory = dir;
+	}
+
+	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
 		File cacheFile = clientsCacheFile(repository, packageId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
