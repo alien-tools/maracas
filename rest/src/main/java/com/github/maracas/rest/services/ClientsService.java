@@ -36,14 +36,15 @@ public class ClientsService {
 		Path.of(clientPath).toFile().mkdirs();
 	}
 
-	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository) {
-		File cacheFile = cacheFile(repository);
+	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
+		File cacheFile = cacheFile(repository, packageId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		if (cacheIsValid(cacheFile)) {
 			try {
 				List<GitHubClientsFetcher.Client> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
-				logger.info("Fetched {} total clients for {} from {}", clients.size(), repository, cacheFile);
+				logger.info("Fetched {} total clients for {} [package: {}] from {}",
+					clients.size(), repository, packageId, cacheFile);
 				return clients;
 			} catch (IOException e) {
 				logger.error(e);
@@ -52,13 +53,14 @@ public class ClientsService {
 
 		Stopwatch sw = Stopwatch.createStarted();
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients();
-		logger.info("Fetched {} total clients for {} in {}s", clients.size(), repository, sw.elapsed().toSeconds());
+		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients(packageId);
+		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
+			clients.size(), repository, packageId, sw.elapsed().toSeconds());
 
 		try {
 			cacheFile.getParentFile().mkdirs();
 			objectMapper.writeValue(cacheFile, clients);
-			logger.info("Serialized clients for {} in {}", repository, cacheFile);
+			logger.info("Serialized clients for {} [package: {}] in {}", repository, packageId, cacheFile);
 		} catch (IOException e) {
 			logger.error(e);
 		}
@@ -74,12 +76,12 @@ public class ClientsService {
 		return packages;
 	}
 
-	public List<BreakbotConfig.GitHubRepository> buildClientsList(Repository repository, BreakbotConfig.Clients config) {
+	public List<BreakbotConfig.GitHubRepository> buildClientsList(Repository repository, BreakbotConfig.Clients config, String packageId) {
 		List<BreakbotConfig.GitHubRepository> allClients = new ArrayList<>(config.repositories());
 
 		if (config.top() > 0) {
 			List<BreakbotConfig.GitHubRepository> topClients =
-				fetchClients(repository).stream()
+				fetchClients(repository, packageId).stream()
 					.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars))
 					.limit(config.top())
 					.map(repo ->
@@ -90,7 +92,7 @@ public class ClientsService {
 			allClients.addAll(topClients);
 		} else if (config.stars() > 0) {
 			List<BreakbotConfig.GitHubRepository> starsClients =
-				fetchClients(repository).stream()
+				fetchClients(repository, packageId).stream()
 					.filter(repo -> repo.stars() >= config.stars())
 					.map(repo ->
 						new BreakbotConfig.GitHubRepository(String.format("%s/%s", repo.owner(), repo.name()), null, null, null)
@@ -115,11 +117,11 @@ public class ClientsService {
 		return false;
 	}
 
-	private File cacheFile(Repository repository) {
+	private File cacheFile(Repository repository, String packageId) {
 		return Path.of(clientPath)
 			.resolve(repository.owner())
 			.resolve(repository.name())
-			.resolve("clients.json")
+			.resolve(packageId + "-clients.json")
 			.toAbsolutePath()
 			.toFile();
 	}

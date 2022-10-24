@@ -7,20 +7,22 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-public record MaracasReport(
-	List<PackageReport> reports
+public record PackageReport(
+	String id,
+	Delta delta,
+	List<ClientReport> clientReports
 ) {
 	public Collection<BrokenUse> allBrokenUses() {
 		return
-			reports.stream()
-				.map(PackageReport::allBrokenUses)
+			clientReports.stream()
+				.map(ClientReport::brokenUses)
 				.flatMap(Collection::stream)
 				.toList();
 	}
 
-	public static MaracasReport fromJson(File json) throws IOException {
+	public static PackageReport fromJson(File json) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		return objectMapper.readValue(json, MaracasReport.class);
+		return objectMapper.readValue(json, PackageReport.class);
 	}
 
 	public void writeJson(File json) throws IOException {

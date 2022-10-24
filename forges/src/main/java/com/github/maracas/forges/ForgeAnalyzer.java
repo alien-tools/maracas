@@ -74,7 +74,7 @@ public class ForgeAnalyzer {
     Commit v2 = pr.head();
     Path v1Clone = clonePath(v1);
     Path v2Clone = clonePath(v2);
-    Map<String, Path> impactedPackages = inferImpactedPackages(pr);
+    Map<String, Path> impactedPackages = inferImpactedPackages(pr, makeBuilderForCommit(v1));
     logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
     // We need to run the whole analysis for each impacted package in the PR
@@ -221,10 +221,7 @@ public class ForgeAnalyzer {
     return new CommitBuilder(c, clonePath(c), BuildConfig.newDefault());
   }
 
-  private Map<String, Path> inferImpactedPackages(PullRequest pr) {
-    Commit v1 = pr.mergeBase();
-    CommitBuilder builderV1 = makeBuilderForCommit(v1);
-
+  public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1) {
     builderV1.cloneCommit();
     Map<Path, String> modules = builderV1.getBuilder().locateModules();
     List<Path> javaFiles = pr.changedFiles().stream().filter(f -> f.toString().endsWith(".java")).toList();

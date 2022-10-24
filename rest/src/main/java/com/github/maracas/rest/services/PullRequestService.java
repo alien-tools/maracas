@@ -3,6 +3,7 @@ package com.github.maracas.rest.services;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.DeltaImpact;
+import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
@@ -16,6 +17,7 @@ import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.BrokenUse;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.MaracasReport;
+import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import japicmp.config.Options;
 import japicmp.util.Optional;
@@ -33,6 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,9 +92,9 @@ public class PullRequestService {
 
 	public String analyzePR(PullRequest pr, String callback, String installationId, String breakbotYaml) {
 		BreakbotConfig config =
-			StringUtils.isEmpty(breakbotYaml) ?
-				breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name()) :
-				BreakbotConfig.fromYaml(breakbotYaml);
+			StringUtils.isEmpty(breakbotYaml)
+				? breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name())
+				: BreakbotConfig.fromYaml(breakbotYaml);
 		String uid = prUid(pr);
 		File reportFile = reportFile(pr);
 		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.repository().owner(), pr.repository().name(), pr.number());
@@ -122,61 +126,86 @@ public class PullRequestService {
 
 	public MaracasReport analyzePRSync(PullRequest pr, String breakbotYaml) {
 		BreakbotConfig config =
-			StringUtils.isEmpty(breakbotYaml) ?
-				breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name()) :
-				BreakbotConfig.fromYaml(breakbotYaml);
+			StringUtils.isEmpty(breakbotYaml)
+				? breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name())
+				: BreakbotConfig.fromYaml(breakbotYaml);
 		return buildMaracasReport(pr, config);
 	}
 
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
-		logger.info("Starting the analysis for {}", () -> prUid(pr));
+		logger.info("[{}] Starting the analysis", prUid(pr));
 
 		try {
+			MaracasOptions options = makeMaracasOptions(config);
 			CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
-			CommitBuilder headBuilder = makeBuilderForCommit(pr, pr.head(), config.build());
 
-			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients());
-			logger.info("The breakbot configuration returned {} clients for {}", clients.size(), pr.repository());
+			Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder);
+			logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages, impactedPackages.size());
 
-			Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
-			List<ClientReport> clientReports = new ArrayList<>();
-			for (BreakbotConfig.GitHubRepository c : clients) {
-				try {
-					CommitBuilder clientBuilder = makeBuilderForClient(pr, c);
-					clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
-				} catch (IOException | ForgeException e) {
-					logger.error("Couldn't create a builder for {}", c.repository(), e);
-					clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
+			List<PackageReport> packageReports = new ArrayList<>();
+			for (String pkgName : impactedPackages.keySet()) {
+				logger.info("[{}] Now analyzing package {}", prUid(pr), pkgName);
+
+				// First, we compute the delta model to look for BCs
+				Path modulePath = impactedPackages.get(pkgName);
+				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), modulePath);
+				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), modulePath);
+				Delta delta = forgeAnalyzer.computeDelta(builderV1, builderV2, options);
+
+				// If we find some, we fetch the appropriate clients and analyze the impact
+				if (!delta.getBreakingChanges().isEmpty()) {
+					logger.info("[{}] Fetching clients for package {}", prUid(pr), pkgName);
+					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkgName);
+					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkgName);
+
+					Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
+					List<ClientReport> clientReports = new ArrayList<>();
+					for (BreakbotConfig.GitHubRepository c : clients) {
+						try {
+							CommitBuilder clientBuilder = makeBuilderForClient(pr, c);
+							clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
+						} catch (IOException | ForgeException e) {
+							logger.error("Couldn't create a builder for {}", c.repository(), e);
+							clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
+						}
+					}
+
+					AnalysisResult result = forgeAnalyzer.computeImpact(delta, clientBuilders.values().stream().toList(), options);
+					clientReports.addAll(
+						result.deltaImpacts().keySet().stream()
+							.map(client -> {
+								CommitBuilder builder = clientBuilders.get(client.getLocation());
+								Repository clientRepo = builder.getCommit().repository();
+								String clientName = clientRepo.owner() + "/" + clientRepo.name();
+								DeltaImpact impact = result.deltaImpacts().get(client);
+								Throwable t = impact.getThrowable();
+
+								if (t != null)
+									return ClientReport.error(clientName, t.getMessage());
+								else
+									return ClientReport.success(clientName,
+										impact.getBrokenUses().stream()
+											.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getLocation()))
+											.toList());
+							})
+							.toList()
+					);
+
+					packageReports.add(new PackageReport(
+						pkgName,
+						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
+						clientReports
+					));
+				} else {
+					packageReports.add(new PackageReport(
+						pkgName,
+						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
+						Collections.emptyList()
+					));
 				}
 			}
 
-			MaracasOptions options = makeMaracasOptions(config);
-			AnalysisResult result = forgeAnalyzer.analyzeCommits(baseBuilder, headBuilder, clientBuilders.values().stream().toList(), options);
-
-			clientReports.addAll(
-				result.deltaImpacts().keySet().stream()
-					.map(client -> {
-						CommitBuilder builder = clientBuilders.get(client.getLocation());
-						Repository clientRepo = builder.getCommit().repository();
-						String clientName = clientRepo.owner() + "/" + clientRepo.name();
-						DeltaImpact impact = result.deltaImpacts().get(client);
-						Throwable t = impact.getThrowable();
-
-						if (t != null)
-							return ClientReport.error(clientName, t.getMessage());
-						else
-							return ClientReport.success(clientName,
-								impact.getBrokenUses().stream()
-									.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getLocation()))
-									.toList());
-					})
-					.toList()
-			);
-
-			return new MaracasReport(
-				com.github.maracas.rest.data.Delta.fromMaracasDelta(result.delta(), pr, clonePath(pr, pr.mergeBase())),
-				clientReports
-			);
+			return new MaracasReport(packageReports);
 		} catch (ExecutionException | InterruptedException e) {
 			logger.error(e);
 			Thread.currentThread().interrupt();
@@ -187,6 +216,15 @@ public class PullRequestService {
 	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config) {
 		Path commitClonePath = clonePath(pr, c);
 		BuildConfig buildConfig = new BuildConfig(Path.of(config.module()));
+		config.goals().forEach(buildConfig::addGoal);
+		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
+
+		return new CommitBuilder(c, commitClonePath, buildConfig);
+	}
+
+	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config, Path module) {
+		Path commitClonePath = clonePath(pr, c);
+		BuildConfig buildConfig = new BuildConfig(module);
 		config.goals().forEach(buildConfig::addGoal);
 		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 

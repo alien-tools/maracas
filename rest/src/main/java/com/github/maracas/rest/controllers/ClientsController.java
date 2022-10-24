@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +43,11 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
-		List<GitHubClientsFetcher.Client> clients = clientsService.fetchClients(repository);
+		List<GitHubClientsFetcher.Client> clients =
+			packages.stream()
+				.map(pkg -> clientsService.fetchClients(repository, pkg.name()))
+				.flatMap(Collection::stream)
+				.toList();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
 	}
