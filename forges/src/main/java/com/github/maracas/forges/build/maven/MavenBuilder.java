@@ -25,7 +25,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 public class MavenBuilder implements Builder {
@@ -36,9 +42,24 @@ public class MavenBuilder implements Builder {
 	public static final Properties DEFAULT_PROPERTIES = new Properties();
 	private static final Logger logger = LogManager.getLogger(MavenBuilder.class);
 
+	// Skippable goals from https://maven.apache.org/plugins/
 	static {
+		DEFAULT_PROPERTIES.setProperty("maven.source.skip", "true");
 		DEFAULT_PROPERTIES.setProperty("maven.test.skip", "true");
 		DEFAULT_PROPERTIES.setProperty("assembly.skipAssembly", "true");
+		DEFAULT_PROPERTIES.setProperty("shade.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("maven.war.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("maven.rar.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("changelog.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("checkstyle.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("maven.doap.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("maven.javadoc.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("maven.jxr.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("linkcheck.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("pmd.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("mpir.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("gpg.skip", "true");
+		DEFAULT_PROPERTIES.setProperty("jdepend.skip", "true");
 	}
 
 	public static boolean isMavenProject(Path basePath) {
