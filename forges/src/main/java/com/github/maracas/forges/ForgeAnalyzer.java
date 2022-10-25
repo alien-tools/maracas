@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
@@ -62,8 +63,7 @@ public class ForgeAnalyzer {
     this.clientAnalysisTimeoutSeconds = clientAnalysisTimeout;
   }
 
-  public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, MaracasOptions options)
-    throws InterruptedException, ExecutionException {
+  public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, MaracasOptions options) {
     Objects.requireNonNull(pr);
     Objects.requireNonNull(options);
     if (clientsPerPackage < 0)
@@ -78,30 +78,36 @@ public class ForgeAnalyzer {
     logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
     // We need to run the whole analysis for each impacted package in the PR
-    for (String pkgName : impactedPackages.keySet()) {
-      logger.info("[{}] Now analyzing package {}", pr, pkgName);
+    impactedPackages.keySet().forEach(pkgName -> {
+      try {
+        Path modulePath = impactedPackages.get(pkgName);
+        logger.info("[{}] Now analyzing package {}", pr, pkgName);
 
-      // First, we compute the delta model to look for BCs
-      Path modulePath = impactedPackages.get(pkgName);
-      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
-      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
-      Delta delta = computeDelta(builderV1, builderV2, options);
+        // First, we compute the delta model to look for BCs
+        CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
+        CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
+        Delta delta = computeDelta(builderV1, builderV2, options);
 
-      // If we find some, we fetch the appropriate clients and analyze the impact
-      if (!delta.getBreakingChanges().isEmpty()) {
-        logger.info("Fetching clients for package {}", pkgName);
-        Collection<Commit> clients =
-          forge.fetchTopClients(pr.repository(), pkgName, clientsPerPackage)
-            .stream()
-            .map(repository -> forge.fetchCommit(repository, "HEAD"))
-            .toList();
-        logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+        // If we find some, we fetch the appropriate clients and analyze the impact
+        if (!delta.getBreakingChanges().isEmpty()) {
+          logger.info("Fetching clients for package {}", pkgName);
+          Collection<Commit> clients =
+            forge.fetchTopClients(pr.repository(), pkgName, clientsPerPackage)
+              .stream()
+              .map(repository -> forge.fetchCommit(repository, "HEAD"))
+              .toList();
+          logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
 
-        results.add(computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options));
-      } else {
-        results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
+          results.add(computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options));
+        } else {
+          results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        logger.error("Couldn't analyze package {}", pkgName, e);
       }
-    }
+    });
 
     return results;
   }

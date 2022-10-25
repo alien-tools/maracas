@@ -74,9 +74,7 @@ public class MavenBuilder implements Builder {
 	}
 
 	public MavenBuilder(Path basePath) {
-		Objects.requireNonNull(basePath);
-		this.basePath = basePath;
-		this.config = BuildConfig.newDefault();
+		this(basePath, BuildConfig.newDefault());
 	}
 
 	@Override
