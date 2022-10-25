@@ -1,6 +1,7 @@
 package com.github.maracas.rest.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +20,14 @@ public record MaracasReport(
 	}
 
 	public static MaracasReport fromJson(File json) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper();
+		ObjectMapper objectMapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule());
 		return objectMapper.readValue(json, MaracasReport.class);
 	}
 
 	public void writeJson(File json) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper();
+		ObjectMapper objectMapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule());
 		objectMapper.writeValue(json, this);
 	}
 }

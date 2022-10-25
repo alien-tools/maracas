@@ -240,7 +240,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 					.withMethod("POST")
 					.withHeader("installationId", String.valueOf(installationId))
 					.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-					.withBody(subString("Unknown lifecycle phasec")),
+					.withBody(subString("Unknown lifecycle phase")),
 				exactly(1)
 			);
 		}
@@ -328,18 +328,5 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));
 		assertThat(brokenDecls, not(hasItem(containsString("main.unstableAnnon.classRemoved.ClassRemoved"))));
-	}
-
-	@Test
-	void testPRTopClients() {
-		String bbConfig = """
-      build:
-        module: module-a
-			clients:
-			  top: 2""";
-
-		PullRequestResponse response = resultAsPR(analyzePRSync("alien-tools", "repository-fixture", 1, bbConfig));
-
-		System.out.println(response.report());
 	}
 }

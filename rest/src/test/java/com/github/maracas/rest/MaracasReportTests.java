@@ -56,7 +56,7 @@ class MaracasReportTests {
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(
-			List.of(new PackageReport(
+			List.of(PackageReport.success(
 				"/",
 				Delta.fromMaracasDelta(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
 				List.of(ClientReport.success("alien-tools/comp-changes-client",

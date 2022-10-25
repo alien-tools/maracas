@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -108,12 +107,12 @@ public class PullRequestService {
 
 					if (ex != null) {
 						logger.error("Error analyzing {}", uid, ex);
-						return new PullRequestResponse(ex.getCause().getMessage());
+						return PullRequestResponse.status(pr, ex.getCause().getMessage());
 					}
 
 					logger.info("Done analyzing {}", uid);
 					serializeReport(report, reportFile);
-					return new PullRequestResponse("ok", report);
+					return PullRequestResponse.ok(pr, report);
 				})
 				.thenAccept(response -> {
 					if (callback != null)
@@ -135,19 +134,19 @@ public class PullRequestService {
 	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
 		logger.info("[{}] Starting the analysis", prUid(pr));
 
-		try {
-			MaracasOptions options = makeMaracasOptions(config);
-			CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
+		MaracasOptions options = makeMaracasOptions(config);
+		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
 
-			Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder);
-			logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages, impactedPackages.size());
+		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder);
+		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
 
-			List<PackageReport> packageReports = new ArrayList<>();
-			for (String pkgName : impactedPackages.keySet()) {
+		List<PackageReport> packageReports = new ArrayList<>();
+		impactedPackages.keySet().forEach(pkgName -> {
+			try {
+				Path modulePath = impactedPackages.get(pkgName);
 				logger.info("[{}] Now analyzing package {}", prUid(pr), pkgName);
 
 				// First, we compute the delta model to look for BCs
-				Path modulePath = impactedPackages.get(pkgName);
 				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), modulePath);
 				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), modulePath);
 				Delta delta = forgeAnalyzer.computeDelta(builderV1, builderV2, options);
@@ -191,26 +190,27 @@ public class PullRequestService {
 							.toList()
 					);
 
-					packageReports.add(new PackageReport(
+					packageReports.add(PackageReport.success(
 						pkgName,
 						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
 						clientReports
 					));
 				} else {
-					packageReports.add(new PackageReport(
+					packageReports.add(PackageReport.success(
 						pkgName,
 						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
 						Collections.emptyList()
 					));
 				}
+			} catch (ExecutionException e) {
+				logger.error(e);
+				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 			}
+		});
 
-			return new MaracasReport(packageReports);
-		} catch (ExecutionException | InterruptedException e) {
-			logger.error(e);
-			Thread.currentThread().interrupt();
-			return null;
-		}
+		return new MaracasReport(packageReports);
 	}
 
 	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config) {

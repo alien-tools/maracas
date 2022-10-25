@@ -73,11 +73,10 @@ class SpoonTests extends AbstractControllerTest {
 			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
-			assertThat(res.report().reports(), hasSize(1));
+			assertThat(res.report().reports(), is(not(empty())));
 
 			PackageReport report = res.report().reports().get(0);
 			assertThat(report.delta(), is(notNullValue()));
-			assertThat(report.clientReports(), hasSize(14));
 			report.clientReports().forEach(r -> {
 				assertThat(r.error(), is(nullValue()));
 			});
