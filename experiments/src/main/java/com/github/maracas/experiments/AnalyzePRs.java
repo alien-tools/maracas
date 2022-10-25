@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 public class AnalyzePRs {
 	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
-	private static final Path PR_CSV = Path.of("./experiments/data/prs).csv");
+	private static final Path PR_CSV = Path.of("./experiments/data/prs.csv");
 	private static final Path RESULTS_CSV = Path.of("./experiments/data/results.csv");
 	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
 	private static final Path GH_CACHE = Path.of("./experiments/cache");
@@ -61,6 +61,11 @@ public class AnalyzePRs {
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
 					var result = analyzer.analyzePullRequest(pr, 100, MaracasOptions.newDefault());
 					var j = 0;
+
+					c.base = pr.baseBranch();
+					c.head = pr.headBranch();
+					c.changedFiles = pr.changedFiles().size();
+					c.impactedPackages = result.size();
 
 					for (var r : result) {
 						c.breakingChanges += r.delta().getBreakingChanges().size();
@@ -114,11 +119,14 @@ public class AnalyzePRs {
 		String owner;
 		String name;
 		int number;
-		String error;
+		String base;
+		String head;
+		int changedFiles;
+		int impactedPackages;
 		int breakingChanges;
 		int brokenUses;
 		int clients;
 		int brokenClients;
-		String report;
+		String error;
 	}
 }
