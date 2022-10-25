@@ -104,27 +104,4 @@ class ForgeAnalyzerTest {
 		assertThat(impact.getThrowable(), is(instanceOf(TimeoutException.class)));
 		assertThat(impact.getBrokenUses(), is(empty()));
 	}
-
-	@Test
-	void analyzePullRequest_apache_dubbo_10741() {
-		PullRequest pr = github.fetchPullRequest("apache", "dubbo", 10741);
-		List<AnalysisResult> results = analyzer.analyzePullRequest(pr, 2, MaracasOptions.newDefault());
-		System.out.println(results);
-
-		results.forEach(res -> System.out.println(res));
-
-		assertThat(results, is(not(empty())));
-	}
-
-	@Test
-	void analyzePullRequest_assertj_2755() {
-		PullRequest pr = github.fetchPullRequest("assertj", "assertj", 2755);
-		System.out.println(pr.changedFiles());
-		List<AnalysisResult> results = analyzer.analyzePullRequest(pr, 2, MaracasOptions.newDefault());
-		System.out.println(results);
-
-		results.forEach(res -> System.out.println(res));
-
-		assertThat(results, is(not(empty())));
-	}
 }

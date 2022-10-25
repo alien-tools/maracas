@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -146,20 +147,30 @@ public class ForgeAnalyzer {
     CompletableFuture<Optional<Path>> futureV1 =
       CompletableFuture
         .supplyAsync(v1::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS);
+        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS)
+        // We catch to cleanup and rethrow as we can't get a JAR anyway
+        .exceptionally(t -> {
+          v1.cleanup();
+          throw new CompletionException(t);
+        });
     CompletableFuture<Optional<Path>> futureV2 =
       CompletableFuture
         .supplyAsync(v2::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS);
+        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS)
+        // We catch to cleanup and rethrow as we can't get a JAR anyway
+        .exceptionally(t -> {
+          v2.cleanup();
+          throw new CompletionException(t);
+        });
 
     CompletableFuture.allOf(futureV1, futureV2).join();
     Optional<Path> jarV1 = futureV1.get();
     Optional<Path> jarV2 = futureV2.get();
 
     if (jarV1.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v1.getCommit());
+      throw new BuildException("Couldn't find the JAR built from " + v1.getCommit());
     if (jarV2.isEmpty())
-      throw new BuildException("Couldn't build a JAR from " + v2.getCommit());
+      throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
 
     LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
     LibraryJar libV2 = new LibraryJar(jarV2.get());
@@ -189,7 +200,10 @@ public class ForgeAnalyzer {
           },
           executorService
        ).orTimeout(clientAnalysisTimeoutSeconds, TimeUnit.SECONDS)
-        .exceptionally(t -> new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t))
+        .exceptionally(t -> {
+          logger.error("Error analyzing client {}", c, t);
+          return new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t);
+        })
       ).toList();
 
     CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();

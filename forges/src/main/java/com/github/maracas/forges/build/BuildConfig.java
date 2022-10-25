@@ -42,4 +42,9 @@ public class BuildConfig {
 	public Properties getProperties() {
 		return properties;
 	}
+
+	@Override
+	public String toString() {
+		return "BuildConfig[module=%s, goals=%s, properties=%s]".formatted(module, goals, properties);
+	}
 }
