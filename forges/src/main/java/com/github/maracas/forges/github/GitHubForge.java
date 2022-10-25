@@ -101,11 +101,7 @@ public class GitHubForge implements Forge {
 			Commit base = new Commit(repository, pr.getBase().getSha());
 			Commit head = new Commit(repository, pr.getHead().getSha());
 			Commit mergeBase = new Commit(repository, compare.getMergeBaseCommit().getSHA1());
-
-			List<GHPullRequestFileDetail> changedJavaFiles =
-				pr.listFiles().toList().stream()
-					.filter(f -> f.getPreviousFilename() != null) // only those that were modified (no pure additions)
-					.toList();
+			List<GHPullRequestFileDetail> changedFiles = pr.listFiles().toList();
 
 			return new PullRequest(
 				repository,
@@ -115,7 +111,7 @@ public class GitHubForge implements Forge {
 				mergeBase,
 				pr.getBase().getRef(),
 				pr.getHead().getRef(),
-				changedJavaFiles.stream().map(GHPullRequestFileDetail::getFilename).map(Path::of).toList()
+				changedFiles.stream().map(GHPullRequestFileDetail::getFilename).map(Path::of).toList()
 			);
 		} catch (IOException e) {
 			throw new ForgeException("Couldn't fetch PR %d from repository %s".formatted(number, repository.fullName()), e);

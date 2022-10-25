@@ -230,8 +230,10 @@ public class ForgeAnalyzer {
     builderV1.cloneCommit();
     Map<Path, String> modules = builderV1.getBuilder().locateModules();
 
-    return pr.changedJavaFiles()
+    return pr.changedFiles()
       .stream()
+      // We only want Java files that exist in 'v1', not the new files created by this PR
+      .filter(f -> f.toString().endsWith(".java") && builderV1.getClonePath().resolve(f).toFile().exists())
       .map(f -> {
         Optional<Path> matchingPath =
           modules.keySet()
