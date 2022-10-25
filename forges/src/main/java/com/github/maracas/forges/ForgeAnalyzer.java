@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
@@ -104,8 +103,8 @@ public class ForgeAnalyzer {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-      } catch (Exception e) {
-        logger.error("Couldn't analyze package {}", pkgName, e);
+      } catch (Throwable t) {
+        logger.error("Couldn't analyze package {}", pkgName, t);
       }
     });
 
@@ -230,9 +229,8 @@ public class ForgeAnalyzer {
   public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1) {
     builderV1.cloneCommit();
     Map<Path, String> modules = builderV1.getBuilder().locateModules();
-    List<Path> javaFiles = pr.changedFiles().stream().filter(f -> f.toString().endsWith(".java")).toList();
 
-    return javaFiles
+    return pr.changedJavaFiles()
       .stream()
       .map(f -> {
         Optional<Path> matchingPath =

@@ -25,7 +25,7 @@ public record PullRequest(
   Commit mergeBase,
   String baseBranch,
   String headBranch,
-  List<Path> changedFiles
+  List<Path> changedJavaFiles
 ) {
   public PullRequest {
     Objects.requireNonNull(repository);
@@ -34,7 +34,7 @@ public record PullRequest(
     Objects.requireNonNull(mergeBase);
     Objects.requireNonNull(baseBranch);
     Objects.requireNonNull(headBranch);
-    Objects.requireNonNull(changedFiles);
+    Objects.requireNonNull(changedJavaFiles);
   }
 
   public String buildGitHubDiffUrl(String file, int line) {

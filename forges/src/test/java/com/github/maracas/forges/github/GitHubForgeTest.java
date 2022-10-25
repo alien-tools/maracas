@@ -78,7 +78,7 @@ class GitHubForgeTest {
     assertEquals("alien-tools", pr.repository().owner());
     assertEquals("comp-changes", pr.repository().name());
     assertEquals("main", pr.repository().branch());
-    assertEquals(237, pr.changedFiles().size());
+    assertEquals(237, pr.changedJavaFiles().size());
   }
 
   @Test
@@ -93,7 +93,7 @@ class GitHubForgeTest {
     assertEquals("INRIA", pr.repository().owner());
     assertEquals("spoon", pr.repository().name());
     assertEquals("master", pr.repository().branch());
-    assertEquals(6, pr.changedFiles().size());
+    assertEquals(6, pr.changedJavaFiles().size());
   }
 
   @Test
