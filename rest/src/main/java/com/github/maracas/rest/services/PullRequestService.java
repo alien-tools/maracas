@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -192,17 +193,17 @@ public class PullRequestService {
 
 					packageReports.add(PackageReport.success(
 						pkgName,
-						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
+						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, builderV1.getClonePath()),
 						clientReports
 					));
 				} else {
 					packageReports.add(PackageReport.success(
 						pkgName,
-						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, clonePath(pr, pr.mergeBase())),
+						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, builderV1.getClonePath()),
 						Collections.emptyList()
 					));
 				}
-			} catch (ExecutionException e) {
+			} catch (ExecutionException | CompletionException e) {
 				logger.error(e);
 				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
 			} catch (InterruptedException e) {

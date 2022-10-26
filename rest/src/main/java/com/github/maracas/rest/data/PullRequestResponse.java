@@ -1,6 +1,7 @@
 package com.github.maracas.rest.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.maracas.forges.PullRequest;
 
@@ -23,7 +24,8 @@ public record PullRequestResponse(
 
 	public String toJson() throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper()
-			.registerModule(new JavaTimeModule());
+			.registerModule(new JavaTimeModule())
+			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		return objectMapper.writeValueAsString(this);
 	}
 }

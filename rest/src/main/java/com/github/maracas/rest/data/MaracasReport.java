@@ -26,8 +26,7 @@ public record MaracasReport(
 	}
 
 	public void writeJson(File json) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper()
-			.registerModule(new JavaTimeModule());
+		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.writeValue(json, this);
 	}
 }
