@@ -92,7 +92,7 @@ public class ForgeAnalyzer {
         if (!delta.getBreakingChanges().isEmpty()) {
           logger.info("Fetching clients for package {}", pkgName);
           Collection<Commit> clients =
-            forge.fetchTopClients(pr.repository(), pkgName, clientsPerPackage)
+            forge.fetchTopStarredClients(pr.repository(), pkgName, clientsPerPackage, -1)
               .stream()
               .map(repository -> forge.fetchCommit(repository, "HEAD"))
               .toList();

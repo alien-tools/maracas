@@ -59,8 +59,8 @@ class ClientsServiceTest {
 	}
 
 	@Test
-	void test_spoon_stars_10_with_custom() {
-		BreakbotConfig.Clients config = new BreakbotConfig.Clients(0, 10, Collections.singletonList(
+	void test_spoon_stars_100_with_custom() {
+		BreakbotConfig.Clients config = new BreakbotConfig.Clients(0, 100, Collections.singletonList(
 			new BreakbotConfig.GitHubRepository("a/b", "", "", "")
 		));
 		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(spoon, config, "fr.inria.gforge.spoon:spoon-core");

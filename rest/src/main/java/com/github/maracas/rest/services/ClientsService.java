@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class ClientsService {
@@ -61,9 +61,6 @@ public class ClientsService {
 	}
 
 	public List<BreakbotConfig.GitHubRepository> buildClientsList(Repository repository, BreakbotConfig.Clients config, String packageId) {
-		List<BreakbotConfig.GitHubRepository> allClients = new ArrayList<>(config.repositories());
-
-
 		// FIXME: Dirty hack for our XPs: we're always forking popular libraries to run BreakBot, so the clients list on
 		// our side is always empty; if we detect a fork, we instead gather clients from the original repository
 		Repository actualRepository = repository;
@@ -76,24 +73,12 @@ public class ClientsService {
 			logger.error(e);
 		}
 
-		if (config.top() > 0) {
-			allClients.addAll(
-				forge.fetchTopClients(actualRepository, packageId, config.top()).stream()
-					.map(repo -> new BreakbotConfig.GitHubRepository(
-						String.format("%s/%s", repo.owner(), repo.name()),
-						null, null, null))
-					.toList()
-			);
-		} else if (config.stars() > 0) {
-			allClients.addAll(
-				forge.fetchClients(actualRepository, packageId).stream()
-					.map(repo -> new BreakbotConfig.GitHubRepository(
-						String.format("%s/%s", repo.owner(), repo.name()),
-						null, null, null))
-					.toList()
-			);
-		}
-
-		return allClients;
+		return Stream.concat(
+			config.repositories().stream(),
+			forge.fetchTopStarredClients(actualRepository, packageId, config.top(), config.stars()).stream()
+				.map(repo -> new BreakbotConfig.GitHubRepository(
+					String.format("%s/%s", repo.owner(), repo.name()),
+					null, null, null))
+		).toList();
 	}
 }

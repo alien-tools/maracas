@@ -19,7 +19,5 @@ public interface Forge {
     return fetchCommit(fetchRepository(owner, name), sha);
   }
 
-  List<Repository> fetchTopClients(Repository repository, String pkgId, int limit) throws ForgeException;
-
-  List<Repository> fetchStarredClients(Repository repository, String pkdId, int stars) throws ForgeException;
+  List<Repository> fetchTopStarredClients(Repository repository, String pkgId, int limit, int minStars) throws ForgeException;
 }
