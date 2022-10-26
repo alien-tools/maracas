@@ -7,12 +7,14 @@ import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,9 +63,22 @@ public class ClientsService {
 	public List<BreakbotConfig.GitHubRepository> buildClientsList(Repository repository, BreakbotConfig.Clients config, String packageId) {
 		List<BreakbotConfig.GitHubRepository> allClients = new ArrayList<>(config.repositories());
 
+
+		// FIXME: Dirty hack for our XPs: we're always forking popular libraries to run BreakBot, so the clients list on
+		// our side is always empty; if we detect a fork, we instead gather clients from the original repository
+		Repository actualRepository = repository;
+		try {
+			GHRepository repo = github.getRepository(String.format("%s/%s", repository.owner(), repository.name()));
+			if (repo != null && repo.getParent() != null) {
+				actualRepository = forge.fetchRepository(repo.getParent().getOwnerName(), repo.getParent().getName());
+			}
+		} catch (IOException e) {
+			logger.error(e);
+		}
+
 		if (config.top() > 0) {
 			allClients.addAll(
-				forge.fetchTopClients(repository, packageId, config.top()).stream()
+				forge.fetchTopClients(actualRepository, packageId, config.top()).stream()
 					.map(repo -> new BreakbotConfig.GitHubRepository(
 						String.format("%s/%s", repo.owner(), repo.name()),
 						null, null, null))
@@ -71,7 +86,7 @@ public class ClientsService {
 			);
 		} else if (config.stars() > 0) {
 			allClients.addAll(
-				forge.fetchClients(repository, packageId).stream()
+				forge.fetchClients(actualRepository, packageId).stream()
 					.map(repo -> new BreakbotConfig.GitHubRepository(
 						String.format("%s/%s", repo.owner(), repo.name()),
 						null, null, null))
