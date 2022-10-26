@@ -50,7 +50,7 @@ public class Maracas {
 			return AnalysisResult.noImpact(delta, query.getClients());
 
 		// Compute the impact for each client and return the result
-		return new AnalysisResult(
+		return AnalysisResult.success(
 			delta,
 			query.getClients().parallelStream().collect(toMap(
 				c -> c,

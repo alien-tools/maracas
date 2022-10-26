@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 public class AnalyzePRs {
 	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
+	private List<Case> casesDone = new ArrayList<>();
 	private static final Path PR_CSV = Path.of("./experiments/data/prs.csv");
 	private static final Path RESULTS_CSV = Path.of("./experiments/data/results.csv");
 	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
@@ -36,8 +37,14 @@ public class AnalyzePRs {
 	public AnalyzePRs() throws IOException {
 		this.forge = new GitHubForge(buildGitHub());
 
-		try (Reader reader = new FileReader(PR_CSV.toFile())) {
-			this.cases = new CsvToBeanBuilder<Case>(reader).withType(Case.class).build().parse();
+		try (
+			Reader prReader = new FileReader(PR_CSV.toFile());
+			Reader resultsReader = new FileReader(RESULTS_CSV.toFile())
+		) {
+			this.casesDone = new CsvToBeanBuilder<Case>(resultsReader).withType(Case.class).build().parse();
+			this.cases = new CsvToBeanBuilder<Case>(prReader).withType(Case.class).build().parse();
+			this.cases.removeIf(c -> casesDone.stream().anyMatch(done ->
+				c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -49,7 +56,7 @@ public class AnalyzePRs {
 		analyzer.setClientAnalysisTimeoutSeconds(10 * 60);
 		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
 
-		try (var writer = new FileWriter(RESULTS_CSV.toFile())) {
+		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
 			var beanToCsv = new StatefulBeanToCsvBuilder<Case>(writer).build();
 			var i = 0;
 
@@ -59,7 +66,7 @@ public class AnalyzePRs {
 
 				try {
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyzePullRequest(pr, 100, MaracasOptions.newDefault());
+					var result = analyzer.analyzePullRequest(pr, 100, 5, MaracasOptions.newDefault());
 					var j = 0;
 
 					c.base = pr.baseBranch();
@@ -68,14 +75,18 @@ public class AnalyzePRs {
 					c.impactedPackages = result.size();
 
 					for (var r : result) {
-						c.breakingChanges += r.delta().getBreakingChanges().size();
-						c.brokenUses += r.allBrokenUses().size();
-						c.clients += r.deltaImpacts().size();
-						c.brokenClients += r.brokenClients().size();
-						r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
+						if (r.delta() != null) {
+							c.breakingChanges += r.delta().getBreakingChanges().size();
+							c.brokenUses += r.allBrokenUses().size();
+							c.clients += r.deltaImpacts().size();
+							c.brokenClients += r.brokenClients().size();
+							r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
 
-						logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
-							i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.clients);
+							logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
+								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.clients);
+						} else {
+							c.error += r.error();
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

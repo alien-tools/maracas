@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
@@ -28,11 +27,18 @@ public record AnalysisResult(
 	/*
 	  The delta impact model per analyzed client
 	 */
-	Map<SourcesDirectory, DeltaImpact> deltaImpacts
+	Map<SourcesDirectory, DeltaImpact> deltaImpacts,
+	/*
+		The error we may have got along the way
+	 */
+	String error
 ) {
-	public AnalysisResult {
-		Objects.requireNonNull(delta);
-		Objects.requireNonNull(deltaImpacts);
+	public static AnalysisResult success(Delta delta, Map<SourcesDirectory, DeltaImpact> deltaImpacts) {
+		return new AnalysisResult(delta, deltaImpacts, null);
+	}
+
+	public static AnalysisResult failure(String message) {
+		return new AnalysisResult(null, null, message);
 	}
 
 	/**
@@ -43,7 +49,7 @@ public record AnalysisResult(
 	 * @return the newly-created {@link AnalysisResult}
 	 */
 	public static AnalysisResult noImpact(Delta delta, Collection<SourcesDirectory> clients) {
-		return new AnalysisResult(
+		return AnalysisResult.success(
 			delta,
 			clients.stream().collect(toMap(
 				c -> c,

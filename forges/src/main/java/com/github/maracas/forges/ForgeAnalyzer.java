@@ -63,7 +63,7 @@ public class ForgeAnalyzer {
     this.clientAnalysisTimeoutSeconds = clientAnalysisTimeout;
   }
 
-  public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, MaracasOptions options) {
+  public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, int clientsMinStars, MaracasOptions options) {
     Objects.requireNonNull(pr);
     Objects.requireNonNull(options);
     if (clientsPerPackage < 0)
@@ -92,7 +92,7 @@ public class ForgeAnalyzer {
         if (!delta.getBreakingChanges().isEmpty()) {
           logger.info("Fetching clients for package {}", pkgName);
           Collection<Commit> clients =
-            forge.fetchTopStarredClients(pr.repository(), pkgName, clientsPerPackage, -1)
+            forge.fetchTopStarredClients(pr.repository(), pkgName, clientsPerPackage, clientsMinStars)
               .stream()
               .map(repository -> forge.fetchCommit(repository, "HEAD"))
               .toList();
@@ -104,8 +104,8 @@ public class ForgeAnalyzer {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-      } catch (Throwable t) {
-        logger.error("Couldn't analyze package {}", pkgName, t);
+      } catch (Exception e) {
+        results.add(AnalysisResult.failure(e.getMessage()));
       }
     });
 
@@ -214,7 +214,7 @@ public class ForgeAnalyzer {
       impacts.put(impact.getClient(), impact);
     }
 
-    return new AnalysisResult(delta, impacts);
+    return AnalysisResult.success(delta, impacts);
   }
 
   public void setExecutorService(ExecutorService executorService) {
