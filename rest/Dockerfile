@@ -5,7 +5,7 @@ ENV M2_HOME=/usr/share/maven
 ENV JAVA_OPTS=
 
 RUN addgroup -S spring && adduser -S spring -G spring \
-  && mkdir -p /data/clones /data/reports /data/logs \
+  && mkdir -p /data/clones /data/reports /data/logs /data/clients \
   && chown spring:spring /data/clones /data/reports /data/logs \
   && apk --no-cache add ca-certificates openssl &&  update-ca-certificates
 
