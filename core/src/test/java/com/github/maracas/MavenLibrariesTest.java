@@ -30,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @Tag("slow")
 class MavenLibrariesTest {
-	static final Path TMP_PATH = Path.of(System.getProperty("java.io.tmpdir"), "maracas-test-libs");
+	static final Path TMP_PATH = Path.of("./maracas-test-libs");
 
 	static Stream<Arguments> popularLibraries() {
 		return Stream.of(
@@ -54,6 +54,16 @@ class MavenLibrariesTest {
 			Arguments.of("org.mockito", "mockito-core", "3.12.4", "4.0.0"),
 			Arguments.of("com.github.gumtreediff", "core", "2.1.2", "3.0.0")
 		);
+	}
+
+	@BeforeAll
+	static void setUp() {
+		TMP_PATH.toFile().mkdirs();
+	}
+
+	@AfterAll
+	static void cleanUp() throws IOException {
+		FileUtils.deleteDirectory(TMP_PATH.toFile());
 	}
 
 	// The old version of the library is used as client for broken use analysis.
@@ -132,16 +142,6 @@ class MavenLibrariesTest {
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
 		});
-	}
-
-	@BeforeAll
-	static void setUp() {
-		TMP_PATH.toFile().mkdirs();
-	}
-
-	@AfterAll
-	static void cleanUp() throws IOException {
-		FileUtils.deleteDirectory(TMP_PATH.toFile());
 	}
 
 	String coordinatesToJarURL(String gid, String aid, String v) {

@@ -8,6 +8,7 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHubBuilder;
@@ -24,15 +25,19 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ForgeAnalyzerTest {
-	final Path CLONES = Path.of(System.getProperty("java.io.tmpdir")).resolve("clones");
+	final Path CLONES = Path.of("./clones");
 	Forge github;
 	ForgeAnalyzer analyzer;
 
 	@BeforeEach
 	void setUp() throws IOException {
 		github = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		FileUtils.deleteDirectory(CLONES.toFile());
 		analyzer = new ForgeAnalyzer(github, CLONES);
+	}
+
+	@AfterEach
+	void tearDown() throws IOException {
+		FileUtils.deleteDirectory(CLONES.toFile());
 	}
 
 	@Test

@@ -5,6 +5,7 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitClonerTest {
-	final Path CLONES = Path.of(System.getProperty("java.io.tmpdir")).resolve("clones");
+	final Path CLONES = Path.of("./clones");
 	Cloner cloner = new GitCloner();
 
 	private String readHEAD(Path clone) {
@@ -29,8 +30,12 @@ class GitClonerTest {
 	}
 
 	@BeforeEach
-	void setUp() throws IOException {
+	void setUp() {
 		cloner = new GitCloner();
+	}
+
+	@AfterEach
+	void tearDown() throws IOException {
 		FileUtils.deleteDirectory(CLONES.toFile());
 	}
 
