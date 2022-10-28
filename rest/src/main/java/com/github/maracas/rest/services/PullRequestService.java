@@ -203,11 +203,9 @@ public class PullRequestService {
 						Collections.emptyList()
 					));
 				}
-			} catch (ExecutionException | CompletionException e) {
+			} catch (Exception e) {
 				logger.error(e);
 				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
 			}
 		});
 
