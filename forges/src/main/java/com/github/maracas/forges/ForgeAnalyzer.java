@@ -10,6 +10,7 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.CommitBuilder;
+import com.github.maracas.forges.clone.CloneException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,15 +30,14 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
   private final Forge forge;
   private final Path workingDirectory;
   private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  private int libraryBuildTimeoutSeconds = Integer.MAX_VALUE;
-  private int clientAnalysisTimeoutSeconds = Integer.MAX_VALUE;
+  private int buildTimeoutSeconds = Integer.MAX_VALUE;
+  private int cloneTimeoutSeconds = Integer.MAX_VALUE;
 
   private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
@@ -46,21 +46,6 @@ public class ForgeAnalyzer {
     Objects.requireNonNull(workingDirectory);
     this.forge = forge;
     this.workingDirectory = workingDirectory;
-  }
-
-  public ForgeAnalyzer(Forge forge, Path workingDirectory, ExecutorService executorService,
-                       int libraryBuildTimeout, int clientAnalysisTimeout) {
-    this(forge, workingDirectory);
-
-    Objects.requireNonNull(executorService);
-    if (libraryBuildTimeout < 0)
-      throw new IllegalArgumentException("libraryBuildTimeout < 0");
-    if (clientAnalysisTimeout < 0)
-      throw new IllegalArgumentException("clientAnalysisTimeout < 0");
-
-    this.executorService = executorService;
-    this.libraryBuildTimeoutSeconds = libraryBuildTimeout;
-    this.clientAnalysisTimeoutSeconds = clientAnalysisTimeout;
   }
 
   public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, int clientsMinStars, MaracasOptions options) {
@@ -102,8 +87,6 @@ public class ForgeAnalyzer {
         } else {
           results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
         }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
       } catch (Exception e) {
         results.add(AnalysisResult.failure(e.getMessage()));
       }
@@ -113,7 +96,7 @@ public class ForgeAnalyzer {
   }
 
   public AnalysisResult analyzeCommits(Commit v1, Commit v2, Collection<Commit> clients, MaracasOptions options)
-    throws InterruptedException, ExecutionException {
+    throws BuildException, CloneException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);
     Objects.requireNonNull(clients);
@@ -128,7 +111,7 @@ public class ForgeAnalyzer {
 
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
                                        MaracasOptions options)
-    throws InterruptedException, ExecutionException {
+    throws BuildException, CloneException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);
     Objects.requireNonNull(clients);
@@ -139,46 +122,51 @@ public class ForgeAnalyzer {
   }
 
   public Delta computeDelta(CommitBuilder v1, CommitBuilder v2, MaracasOptions options)
-    throws InterruptedException, ExecutionException {
+    throws BuildException, CloneException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);
     Objects.requireNonNull(options);
 
     CompletableFuture<Optional<Path>> futureV1 =
       CompletableFuture
-        .supplyAsync(v1::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS)
-        // We catch to cleanup and rethrow as we can't get a JAR anyway
-        .exceptionally(t -> {
-          v1.cleanup();
-          throw new CompletionException(t);
-        });
+        .supplyAsync(
+          () -> v1.cloneAndBuildCommit(cloneTimeoutSeconds, buildTimeoutSeconds),
+          executorService);
     CompletableFuture<Optional<Path>> futureV2 =
       CompletableFuture
-        .supplyAsync(v2::cloneAndBuildCommit, executorService)
-        .orTimeout(libraryBuildTimeoutSeconds, TimeUnit.SECONDS)
-        // We catch to cleanup and rethrow as we can't get a JAR anyway
-        .exceptionally(t -> {
-          v2.cleanup();
-          throw new CompletionException(t);
-        });
+        .supplyAsync(
+          () -> v2.cloneAndBuildCommit(cloneTimeoutSeconds, buildTimeoutSeconds),
+          executorService);
 
-    CompletableFuture.allOf(futureV1, futureV2).join();
-    Optional<Path> jarV1 = futureV1.get();
-    Optional<Path> jarV2 = futureV2.get();
+    try {
+      CompletableFuture.allOf(futureV1, futureV2).join();
+      Optional<Path> jarV1 = futureV1.get();
+      Optional<Path> jarV2 = futureV2.get();
 
-    if (jarV1.isEmpty())
-      throw new BuildException("Couldn't find the JAR built from " + v1.getCommit());
-    if (jarV2.isEmpty())
-      throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
+      if (jarV1.isEmpty())
+        throw new BuildException("Couldn't find the JAR built from " + v1.getCommit());
+      if (jarV2.isEmpty())
+        throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
 
-    LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
-    LibraryJar libV2 = new LibraryJar(jarV2.get());
-    return Maracas.computeDelta(libV1, libV2, options);
+      LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
+      LibraryJar libV2 = new LibraryJar(jarV2.get());
+      return Maracas.computeDelta(libV1, libV2, options);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException | CompletionException e) {
+      // Simply unwrap
+      if (e.getCause() instanceof BuildException be)
+        throw be;
+      if (e.getCause() instanceof CloneException ce)
+        throw ce;
+      logger.error(e);
+    }
+
+    return null;
   }
 
   public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options)
-    throws InterruptedException, ExecutionException {
+    throws CloneException {
     Objects.requireNonNull(delta);
     Objects.requireNonNull(clients);
     Objects.requireNonNull(options);
@@ -191,27 +179,40 @@ public class ForgeAnalyzer {
       );
     }
 
-    List<CompletableFuture<DeltaImpact>> clientFutures =
-      clients.stream().map(c ->
-        CompletableFuture.supplyAsync(
-          () -> {
-            c.cloneCommit();
-            return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
-          },
-          executorService
-       ).orTimeout(clientAnalysisTimeoutSeconds, TimeUnit.SECONDS)
-        .exceptionally(t -> {
-          logger.error("Error analyzing client {}", c, t);
-          return new DeltaImpact(new SourcesDirectory(c.getModulePath()), delta, t);
-        })
-      ).toList();
+    Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
+      clients.stream()
+        .collect(Collectors.toMap(
+          CommitBuilder::getModulePath,
+          c -> CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                c.cloneCommit(cloneTimeoutSeconds);
+              } catch (CloneException e) {
+                Path clientPath = c.getModulePath();
+                clientPath.toFile().mkdirs();
+                return new DeltaImpact(new SourcesDirectory(clientPath), delta, e);
+              }
 
-    CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
+              return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
+            },
+            executorService
+         )));
+
+    CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
     Map<SourcesDirectory, DeltaImpact> impacts = new HashMap<>();
-    for (CompletableFuture<DeltaImpact> future : clientFutures) {
-      DeltaImpact impact = future.get();
-      impacts.put(impact.getClient(), impact);
+    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
+      try {
+        DeltaImpact impact = entry.getValue().get();
+        impacts.put(impact.getClient(), impact);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        entry.getKey().toFile().mkdirs();
+        SourcesDirectory client = new SourcesDirectory(entry.getKey());
+        impacts.put(client,
+          new DeltaImpact(client, delta, e.getCause() != null ? e.getCause() : e));
+      }
     }
 
     return AnalysisResult.success(delta, impacts);
@@ -222,18 +223,18 @@ public class ForgeAnalyzer {
     this.executorService = executorService;
   }
 
-  public void setLibraryBuildTimeoutSeconds(int libraryBuildTimeoutSeconds) {
-    if (libraryBuildTimeoutSeconds < 0)
+  public void setBuildTimeoutSeconds(int buildTimeoutSeconds) {
+    if (buildTimeoutSeconds < 0)
       throw new IllegalArgumentException("libraryBuildTimeout < 0");
 
-    this.libraryBuildTimeoutSeconds = libraryBuildTimeoutSeconds;
+    this.buildTimeoutSeconds = buildTimeoutSeconds;
   }
 
-  public void setClientAnalysisTimeoutSeconds(int clientAnalysisTimeoutSeconds) {
-    if (clientAnalysisTimeoutSeconds < 0)
+  public void setCloneTimeoutSeconds(int cloneTimeoutSeconds) {
+    if (cloneTimeoutSeconds < 0)
       throw new IllegalArgumentException("clientAnalysisTimeout < 0");
 
-    this.clientAnalysisTimeoutSeconds = clientAnalysisTimeoutSeconds;
+    this.cloneTimeoutSeconds = cloneTimeoutSeconds;
   }
 
   private CommitBuilder makeBuilderForCommit(Commit c) {
@@ -241,7 +242,7 @@ public class ForgeAnalyzer {
   }
 
   public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1) {
-    builderV1.cloneCommit();
+    builderV1.cloneCommit(cloneTimeoutSeconds);
     Map<Path, String> modules = builderV1.getBuilder().locateModules();
 
     return pr.changedFiles()
@@ -273,24 +274,5 @@ public class ForgeAnalyzer {
       .resolve(c.sha())
       .resolve(RandomStringUtils.randomAlphanumeric(12))
       .toAbsolutePath();
-  }
-
-  private Path clonePath(PullRequest pr, Commit c) {
-    return workingDirectory
-      .resolve(prUid(pr))
-      .resolve(c.repository().owner())
-      .resolve(c.repository().name())
-      .resolve(c.sha())
-      .resolve(RandomStringUtils.randomAlphanumeric(12))
-      .toAbsolutePath();
-  }
-
-  private String prUid(PullRequest pr) {
-    return "%s-%s-%s-%s".formatted(
-      pr.repository().owner(),
-      pr.repository().name(),
-      pr.number(),
-      pr.head().sha()
-    );
   }
 }

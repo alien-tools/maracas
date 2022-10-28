@@ -59,10 +59,10 @@ public class PullRequestService {
 	private String reportPath;
 	@Value("${maracas.analysis-workers:-1}")
 	private int analysisWorkers;
-	@Value("${maracas.library-build-timeout:-1}")
-	private int libraryBuildTimeout;
-	@Value("${maracas.client-analysis-timeout:-1}")
-	private int clientAnalysisTimeout;
+	@Value("${maracas.build-timeout:600}")
+	private int buildTimeout;
+	@Value("${maracas.clone-timeout:600}")
+	private int cloneTimeout;
 
 	private Forge forge;
 	private ForgeAnalyzer forgeAnalyzer;
@@ -80,10 +80,10 @@ public class PullRequestService {
 
 		if (analysisWorkers > 0)
 			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
-		if (libraryBuildTimeout > 0)
-			forgeAnalyzer.setLibraryBuildTimeoutSeconds(libraryBuildTimeout);
-		if (clientAnalysisTimeout > 0)
-			forgeAnalyzer.setClientAnalysisTimeoutSeconds(clientAnalysisTimeout);
+		if (buildTimeout > 0)
+			forgeAnalyzer.setBuildTimeoutSeconds(buildTimeout);
+		if (cloneTimeout > 0)
+			forgeAnalyzer.setCloneTimeoutSeconds(cloneTimeout);
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {

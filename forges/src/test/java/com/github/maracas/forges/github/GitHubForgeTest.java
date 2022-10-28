@@ -127,6 +127,28 @@ class GitHubForgeTest {
   }
 
   @Test
+  void fetchCommit_HEAD() {
+    Commit c = github.fetchCommit("alien-tools", "repository-fixture", "HEAD");
+    assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("alien-tools", c.repository().owner());
+    assertEquals("repository-fixture", c.repository().name());
+    assertEquals("alien-tools/repository-fixture", c.repository().fullName());
+    assertEquals("https://github.com/alien-tools/repository-fixture.git", c.repository().remoteUrl());
+    assertEquals("main", c.repository().branch());
+  }
+
+  @Test
+  void fetchCommit_short_sha() {
+    Commit c = github.fetchCommit("alien-tools", "repository-fixture", "15b08c");
+    assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("alien-tools", c.repository().owner());
+    assertEquals("repository-fixture", c.repository().name());
+    assertEquals("alien-tools/repository-fixture", c.repository().fullName());
+    assertEquals("https://github.com/alien-tools/repository-fixture.git", c.repository().remoteUrl());
+    assertEquals("main", c.repository().branch());
+  }
+
+  @Test
   void fetchTopClients_spoon_core() {
     Repository spoon = github.fetchRepository("INRIA", "spoon");
     List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 5, -1);

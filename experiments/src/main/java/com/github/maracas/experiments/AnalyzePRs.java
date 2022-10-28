@@ -52,8 +52,8 @@ public class AnalyzePRs {
 
 	public void run() {
 		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
-		analyzer.setLibraryBuildTimeoutSeconds(10 * 60);
-		analyzer.setClientAnalysisTimeoutSeconds(10 * 60);
+		analyzer.setBuildTimeoutSeconds(10 * 60);
+		analyzer.setCloneTimeoutSeconds(10 * 60);
 		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {

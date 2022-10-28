@@ -5,6 +5,7 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,11 @@ class GitClonerTest {
 
 	@BeforeEach
 	void setUp() throws IOException {
+		FileUtils.deleteDirectory(clone.toFile());
+	}
+
+	@AfterEach
+	void tearDown() throws IOException {
 		FileUtils.deleteDirectory(clone.toFile());
 	}
 
@@ -95,7 +101,7 @@ class GitClonerTest {
 	@Test
 	void clone_commit_invalid_repository() {
 		Repository unknown = new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main");
-		Commit commit = new Commit(unknown, "5afad4ed34354d1413f459973183e2610d932750");
+		Commit commit = new Commit(unknown, "5afad4");
 		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(commit, clone));
 		assertThat(thrown.getMessage(), containsString("could not read"));
 		assertThat(clone.toFile().exists(), is(false));
