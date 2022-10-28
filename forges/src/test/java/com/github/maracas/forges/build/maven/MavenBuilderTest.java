@@ -105,6 +105,13 @@ class MavenBuilderTest {
 	}
 
 	@Test
+	void build_maracas_timeout() {
+		Builder builder = new MavenBuilder(Path.of("../"));
+		Exception thrown = assertThrows(BuildException.class, () -> builder.build(1));
+		assertThat(thrown.getMessage(), containsString("timed out"));
+	}
+
+	@Test
 	void locate_modules_valid() {
 		Builder builder = new MavenBuilder(validProject);
 		Map<Path, String> modules = builder.locateModules();

@@ -78,7 +78,7 @@ public class MavenBuilder implements Builder {
 	}
 
 	@Override
-	public void build() {
+	public void build(int timeoutSeconds) {
 		File pomFile = basePath.resolve(BUILD_FILE).toFile();
 
 		if (!pomFile.exists())
@@ -108,6 +108,7 @@ public class MavenBuilder implements Builder {
 			request.setAlsoMake(true);
 			request.setBatchMode(true);
 			request.setQuiet(true);
+			request.setTimeoutInSeconds(timeoutSeconds);
 			// For some reason, every handler but setOutputHandler is ignored
 			// Here, invoked only with errors because quiet == true
 			request.setOutputHandler(line -> {
@@ -120,7 +121,10 @@ public class MavenBuilder implements Builder {
 				InvocationResult result = invoker.execute(request);
 
 				if (result.getExecutionException() != null)
-					throw new BuildException("%s failed: %s".formatted(goals, result.getExecutionException().getMessage()));
+					throw new BuildException("%s failed: %s".formatted(goals,
+						result.getExecutionException().getCause() != null
+							? result.getExecutionException().getCause().getMessage()
+							: result.getExecutionException().getMessage()));
 				if (result.getExitCode() != 0)
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
 

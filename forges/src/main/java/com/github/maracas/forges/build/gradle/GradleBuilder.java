@@ -46,7 +46,9 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public void build() {
+	public void build(int timeoutSeconds) {
+		logger.warn("GradleBuilder doesn't honor timeouts yet");
+
 		Optional<Path> jar = locateJar();
 
 		if (jar.isEmpty()) {

@@ -9,9 +9,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 public interface Builder {
-  void build() throws BuildException;
+  void build(int timeoutSeconds) throws BuildException;
   Optional<Path> locateJar();
   Map<Path, String> locateModules();
+
+  default void build() throws BuildException {
+    build(Integer.MAX_VALUE);
+  }
 
   static Builder of(CommitBuilder builder) throws BuildException {
     Objects.requireNonNull(builder);
