@@ -8,6 +8,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
@@ -95,6 +96,7 @@ public class AnalyzePRs {
 
 				beanToCsv.write(c);
 				writer.flush();
+				FileUtils.cleanDirectory(WORKING_DIRECTORY.toFile());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
