@@ -188,9 +188,11 @@ public class SupertypeRemovedVisitor extends BreakingChangeVisitor {
 			Set<CtTypeReference<?>> casts = new HashSet<>(assignExpr.getTypeCasts());
 			CtTypeReference<?> typeRef = assignExpr.getType();
 
-			for (CtTypeReference<?> cast : casts) {
-				if (supertypes.contains(cast) && typeRef.isSubtypeOf(clsRef))
-					brokenUse(assignExpr, cast, clsRef, APIUse.TYPE_DEPENDENCY);
+			if (typeRef != null) {
+				for (CtTypeReference<?> cast : casts) {
+					if (supertypes.contains(cast) && typeRef.isSubtypeOf(clsRef))
+						brokenUse(assignExpr, cast, clsRef, APIUse.TYPE_DEPENDENCY);
+				}
 			}
 		}
 	}
