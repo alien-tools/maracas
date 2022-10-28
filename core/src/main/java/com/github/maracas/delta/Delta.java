@@ -105,13 +105,17 @@ public class Delta {
 		Stopwatch sw = Stopwatch.createStarted();
 		BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
 		breakingChanges.forEach(bc -> {
-			CtReference binaryRef = bc.getReference();
-			CtElement source = mapper.resolve(binaryRef);
+			try {
+				CtReference binaryRef = bc.getReference();
+				CtElement source = mapper.resolve(binaryRef);
 
-			if (source != null)
-				bc.setSourceElement(source);
-			else
-				logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), oldVersion.getSources());
+				if (source != null)
+					bc.setSourceElement(source);
+				else
+					logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), oldVersion.getSources());
+			} catch (NoClassDefFoundError e) {
+				logger.error(e);
+			}
 		});
 
 		logger.info("Mapping binary breaking changes to source code took {}ms", sw.elapsed().toMillis());
