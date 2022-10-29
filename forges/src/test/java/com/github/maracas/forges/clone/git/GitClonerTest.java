@@ -35,7 +35,7 @@ class GitClonerTest {
 		try {
 			return Files.readAllLines(clone.resolve(".git/HEAD")).get(0);
 		} catch (IOException e) {
-			return null;
+			return "not-read";
 		}
 	}
 
@@ -57,8 +57,8 @@ class GitClonerTest {
 
 	@Test
 	void clone_repository_timeout() {
-		Repository mrc = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
-		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(mrc, clone, 1));
+		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
+		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(linux, clone, 1));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 		assertThat(clone.toFile().exists(), is(false));
 	}
@@ -72,6 +72,33 @@ class GitClonerTest {
 	}
 
 	@Test
+	void clone_repository_branch_invalid() {
+		Repository unknownBranch = new Repository("alien-tools", "repository-fixture", "https://github.com/alien-tools/repository-fixture", "unknown");
+		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(unknownBranch, clone));
+		assertThat(thrown.getMessage(), containsString("branch unknown not found"));
+		assertThat(clone.toFile().exists(), is(false));
+	}
+
+	@Test
+	void clone_repository_invalid_location() {
+		Path readOnly = clone.resolve("read-only");
+		readOnly.toFile().mkdirs();
+		readOnly.toFile().setReadOnly();
+		Path clone = readOnly.resolve("clone");
+
+		Repository fixtureMain = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
+		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(fixtureMain, clone));
+		assertThat(thrown.getMessage(), containsString("Couldn't create clone directory"));
+		assertThat(clone.toFile().exists(), is(false));
+	}
+
+	@Test
+	void clone_repository_timeout_invalid() {
+		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
+		assertThrows(IllegalArgumentException.class, () -> cloner.clone(linux, clone, -1));
+	}
+
+	@Test
 	void clone_commit_HEAD() {
 		Repository fixtureMain = new Repository("alien-tools", "repository-fixture", "https://github.com/alien-tools/repository-fixture", "main");
 		Commit commit = new Commit(fixtureMain, "HEAD");
@@ -81,7 +108,7 @@ class GitClonerTest {
 	}
 
 	@Test
-	void clone_commit_sha() {
+	void clone_commit_sha_main() {
 		Repository fixtureMain = new Repository("alien-tools", "repository-fixture", "https://github.com/alien-tools/repository-fixture", "main");
 		Commit commit = new Commit(fixtureMain, "5afad4ed34354d1413f459973183e2610d932750");
 		cloner.clone(commit, clone);
@@ -90,9 +117,18 @@ class GitClonerTest {
 	}
 
 	@Test
+	void clone_commit_sha_branch() {
+		Repository fixtureMain = new Repository("alien-tools", "repository-fixture", "https://github.com/alien-tools/repository-fixture", "pr-on-modules");
+		Commit commit = new Commit(fixtureMain, "b2208730510e973e42bd3a176db5c5169b17a7bf");
+		cloner.clone(commit, clone);
+		assertThat(clone.resolve("pom.xml").toFile().exists(), is(true));
+		assertThat(readHEAD(clone), is(equalTo("b2208730510e973e42bd3a176db5c5169b17a7bf")));
+	}
+
+	@Test
 	void clone_commit_timeout() {
-		Repository mrc = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
-		Commit commit = new Commit(mrc, "HEAD");
+		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
+		Commit commit = new Commit(linux, "6b872a5ecece462ba02c8cad1c0203583631db2b");
 		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(commit, clone, 1));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 		assertThat(clone.toFile().exists(), is(false));
@@ -101,7 +137,7 @@ class GitClonerTest {
 	@Test
 	void clone_commit_invalid_repository() {
 		Repository unknown = new Repository("alien-tools", "unknown", "https://github.com/alien-tools/unknown", "main");
-		Commit commit = new Commit(unknown, "5afad4");
+		Commit commit = new Commit(unknown, "5afad4ed34354d1413f459973183e2610d932750");
 		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(commit, clone));
 		assertThat(thrown.getMessage(), containsString("could not read"));
 		assertThat(clone.toFile().exists(), is(false));
@@ -117,15 +153,9 @@ class GitClonerTest {
 	}
 
 	@Test
-	void clone_invalid_location() {
-		Path readOnly = clone.resolve("read-only");
-		readOnly.toFile().mkdirs();
-		readOnly.toFile().setReadOnly();
-		Path clone = readOnly.resolve("clone");
-
-		Repository fixtureMain = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
-		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(fixtureMain, clone));
-		assertThat(thrown.getMessage(), containsString("Permission denied"));
-		assertThat(clone.toFile().exists(), is(false));
+	void clone_commit_timeout_invalid() {
+		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
+		Commit commit = new Commit(linux, "6b872a5ecece462ba02c8cad1c0203583631db2b");
+		assertThrows(IllegalArgumentException.class, () -> cloner.clone(commit, clone, -1));
 	}
 }

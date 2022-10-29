@@ -27,78 +27,82 @@ public class GitCloner implements Cloner {
 	public Path clone(Commit commit, Path dest, int timeoutSeconds) {
 		Objects.requireNonNull(commit);
 		Objects.requireNonNull(dest);
+		if (timeoutSeconds < 1)
+			throw new IllegalArgumentException("timeoutSeconds < 1");
 
-		if (!dest.toFile().exists())
-			dest.toFile().mkdirs();
-		else {
+		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
 			return dest;
-		}
-
-		try {
-			Stopwatch sw = Stopwatch.createStarted();
-			String workingDirectory = dest.toAbsolutePath().toString();
-			logger.info("Cloning commit {} from {}",
-				commit::sha, () -> commit.repository().remoteUrl());
-			executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
-			executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
-			executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
-			executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
-			logger.info("Cloning commit {} from {} took {}ms",
-				commit::sha, () -> commit.repository().remoteUrl(), () -> sw.elapsed().toMillis());
-		} catch (CloneException e) {
-			// If anything went wrong we need to clean up our dirty state and rethrow
+		} else if (dest.toFile().mkdirs()) {
 			try {
-				FileUtils.deleteDirectory(dest.toFile());
-			} catch (IOException ee) {
-				logger.error(ee);
+				Stopwatch sw = Stopwatch.createStarted();
+				String workingDirectory = dest.toAbsolutePath().toString();
+				logger.info("Cloning commit {} from {}",
+					commit::sha, () -> commit.repository().remoteUrl());
+				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
+				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
+				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
+				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
+				logger.info("Cloning commit {} from {} took {}ms",
+					commit::sha, () -> commit.repository().remoteUrl(), () -> sw.elapsed().toMillis());
+			} catch (CloneException e) {
+				// If anything went wrong we need to clean up our dirty state and rethrow
+				try {
+					FileUtils.deleteDirectory(dest.toFile());
+				} catch (IOException ee) {
+					logger.error(ee);
+				}
+
+				throw e;
 			}
 
-			throw e;
+			return dest;
+		} else {
+			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}
-
-		return dest;
 	}
 
 	@Override
 	public Path clone(Repository repository, Path dest, int timeoutSeconds) {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(dest);
+		if (timeoutSeconds < 1)
+			throw new IllegalArgumentException("timeoutSeconds < 1");
 
-		if (!dest.toFile().exists())
-			dest.toFile().mkdirs();
-		else {
+		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
 			return dest;
-		}
-
-		try {
-			Stopwatch sw = Stopwatch.createStarted();
-			logger.info("Cloning repository {} [{}]",
-				repository::remoteUrl, repository::branch);
-			executeCommand(
-				timeoutSeconds,
-				"git", "clone",
-				"--depth", "1",
-				"--branch", repository.branch(),
-				"--single-branch",
-				repository.remoteUrl(),
-				dest.toAbsolutePath().toString()
-			);
-			logger.info("Cloning repository {} [{}] took {}ms",
-				repository::remoteUrl, repository::branch, () -> sw.elapsed().toMillis());
-		} catch (Exception e) {
-			// If anything went wrong we need to clean up our dirty state and rethrow
+		} else if (dest.toFile().mkdirs()) {
 			try {
-				FileUtils.deleteDirectory(dest.toFile());
-			} catch (IOException ee) {
-				logger.error(ee);
+				Stopwatch sw = Stopwatch.createStarted();
+				logger.info("Cloning repository {} [{}]",
+					repository::remoteUrl, repository::branch);
+				executeCommand(
+					timeoutSeconds,
+					"git", "clone",
+					"--depth", "1",
+					"--branch", repository.branch(),
+					"--single-branch",
+					repository.remoteUrl(),
+					dest.toAbsolutePath().toString()
+				);
+				logger.info("Cloning repository {} [{}] took {}ms",
+					repository::remoteUrl, repository::branch, () -> sw.elapsed().toMillis());
+			} catch (Exception e) {
+				// If anything went wrong we need to clean up our dirty state and rethrow
+				try {
+					FileUtils.deleteDirectory(dest.toFile());
+				} catch (IOException ee) {
+					logger.error(ee);
+				}
+
+				throw e;
 			}
 
-			throw e;
+			return dest;
+		} else {
+			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}
-
-		return dest;
 	}
 
 	private void executeCommand(int timeout, String... command) throws CloneException {
@@ -118,6 +122,8 @@ public class GitCloner implements Cloner {
 
 			if (!completed) {
 				proc.destroy();
+				// Waiting a bit for the process to actually terminate, if necessary
+				proc.waitFor(5, TimeUnit.SECONDS);
 				logger.error("{} timed out [> {}s]", readableCommand, timeout);
 				throw new CloneException("%s timed out [> %ds]".formatted(readableCommand, timeout));
 			}
