@@ -80,10 +80,6 @@ public class PullRequestService {
 
 		if (analysisWorkers > 0)
 			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
-		if (buildTimeout > 0)
-			forgeAnalyzer.setBuildTimeoutSeconds(buildTimeout);
-		if (cloneTimeout > 0)
-			forgeAnalyzer.setCloneTimeoutSeconds(cloneTimeout);
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {
@@ -138,7 +134,7 @@ public class PullRequestService {
 		MaracasOptions options = makeMaracasOptions(config);
 		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
 
-		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder);
+		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
 		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
 
 		List<PackageReport> packageReports = new ArrayList<>();
@@ -258,6 +254,8 @@ public class PullRequestService {
 		MaracasOptions options = MaracasOptions.newDefault();
 		Options jApiOptions = options.getJApiOptions();
 		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
+		options.setCloneTimeoutSeconds(cloneTimeout);
+		options.setBuildTimeoutSeconds(buildTimeout);
 		return options;
 	}
 

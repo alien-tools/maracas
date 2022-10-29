@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,8 +35,6 @@ public class ForgeAnalyzer {
   private final Forge forge;
   private final Path workingDirectory;
   private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  private int buildTimeoutSeconds = Integer.MAX_VALUE;
-  private int cloneTimeoutSeconds = Integer.MAX_VALUE;
 
   private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
@@ -48,51 +45,55 @@ public class ForgeAnalyzer {
     this.workingDirectory = workingDirectory;
   }
 
-  public List<AnalysisResult> analyzePullRequest(PullRequest pr, int clientsPerPackage, int clientsMinStars, MaracasOptions options) {
+  public List<AnalysisResult> analyzePullRequest(PullRequest pr, MaracasOptions options) {
     Objects.requireNonNull(pr);
     Objects.requireNonNull(options);
-    if (clientsPerPackage < 0)
-      throw new IllegalArgumentException("clientsPerPackage < 0");
 
-    List<AnalysisResult> results = new ArrayList<>();
+    // For every package in mergeBase that may be impacted by the PR's changes
     Commit v1 = pr.mergeBase();
     Commit v2 = pr.head();
-    Path v1Clone = clonePath(v1);
-    Path v2Clone = clonePath(v2);
-    Map<String, Path> impactedPackages = inferImpactedPackages(pr, makeBuilderForCommit(v1));
+    Path v1Clone = newClonePath(v1);
+    Path v2Clone = newClonePath(v2);
+    CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, BuildConfig.newDefault());
+    Map<String, Path> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
     logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
     // We need to run the whole analysis for each impacted package in the PR
-    impactedPackages.keySet().forEach(pkgName -> {
-      try {
-        Path modulePath = impactedPackages.get(pkgName);
-        logger.info("[{}] Now analyzing package {}", pr, pkgName);
+    return impactedPackages.entrySet()
+      .stream()
+      .map(e -> analyzePullRequestPackage(pr, v1Clone, v2Clone, e.getKey(), e.getValue(), options))
+      .toList();
+  }
 
-        // First, we compute the delta model to look for BCs
-        CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
-        CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
-        Delta delta = computeDelta(builderV1, builderV2, options);
+  private AnalysisResult analyzePullRequestPackage(PullRequest pr, Path v1Clone, Path v2Clone,
+                                                   String pkgName, Path modulePath, MaracasOptions options) {
+    try {
+      logger.info("[{}] Now analyzing package {}", pr, pkgName);
 
-        // If we find some, we fetch the appropriate clients and analyze the impact
-        if (!delta.getBreakingChanges().isEmpty()) {
-          logger.info("Fetching clients for package {}", pkgName);
-          Collection<Commit> clients =
-            forge.fetchTopStarredClients(pr.repository(), pkgName, clientsPerPackage, clientsMinStars)
-              .stream()
-              .map(repository -> forge.fetchCommit(repository, "HEAD"))
-              .toList();
-          logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+      Commit v1 = pr.mergeBase();
+      Commit v2 = pr.head();
 
-          results.add(computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options));
-        } else {
-          results.add(AnalysisResult.noImpact(delta, Collections.emptyList()));
-        }
-      } catch (Exception e) {
-        results.add(AnalysisResult.failure(e.getMessage()));
-      }
-    });
+      // First, we compute the delta model to look for BCs
+      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
+      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
+      Delta delta = computeDelta(builderV1, builderV2, options);
 
-    return results;
+      if (delta.getBreakingChanges().isEmpty())
+        return AnalysisResult.noImpact(delta, Collections.emptyList());
+
+      // If we find some, we fetch the appropriate clients and analyze the impact
+      logger.info("Fetching clients for package {}", pkgName);
+      Collection<Commit> clients =
+        forge.fetchTopStarredClients(pr.repository(), pkgName, options.getClientsPerPackage(), options.getMinStarsPerClient())
+          .stream()
+          .map(repository -> forge.fetchCommit(repository, "HEAD"))
+          .toList();
+      logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+
+      return computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options);
+    } catch (Exception e) {
+      return AnalysisResult.failure(e.getMessage());
+    }
   }
 
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
@@ -116,12 +117,12 @@ public class ForgeAnalyzer {
     CompletableFuture<Optional<Path>> futureV1 =
       CompletableFuture
         .supplyAsync(
-          () -> v1.cloneAndBuildCommit(cloneTimeoutSeconds, buildTimeoutSeconds),
+          () -> v1.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
           executorService);
     CompletableFuture<Optional<Path>> futureV2 =
       CompletableFuture
         .supplyAsync(
-          () -> v2.cloneAndBuildCommit(cloneTimeoutSeconds, buildTimeoutSeconds),
+          () -> v2.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
           executorService);
 
     try {
@@ -172,7 +173,7 @@ public class ForgeAnalyzer {
           c -> CompletableFuture.supplyAsync(
             () -> {
               try {
-                c.cloneCommit(cloneTimeoutSeconds);
+                c.cloneCommit(options.getCloneTimeoutSeconds());
               } catch (CloneException e) {
                 Path clientPath = c.getModulePath();
                 clientPath.toFile().mkdirs();
@@ -208,29 +209,11 @@ public class ForgeAnalyzer {
     this.executorService = executorService;
   }
 
-  public ExecutorService getExecutorService() {
-    return executorService;
-  }
-
-  public void setBuildTimeoutSeconds(int buildTimeoutSeconds) {
-    if (buildTimeoutSeconds < 0)
-      throw new IllegalArgumentException("libraryBuildTimeout < 0");
-
-    this.buildTimeoutSeconds = buildTimeoutSeconds;
-  }
-
-  public void setCloneTimeoutSeconds(int cloneTimeoutSeconds) {
-    if (cloneTimeoutSeconds < 0)
-      throw new IllegalArgumentException("clientAnalysisTimeout < 0");
-
-    this.cloneTimeoutSeconds = cloneTimeoutSeconds;
-  }
-
   private CommitBuilder makeBuilderForCommit(Commit c) {
-    return new CommitBuilder(c, clonePath(c), BuildConfig.newDefault());
+    return new CommitBuilder(c, newClonePath(c), BuildConfig.newDefault());
   }
 
-  public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1) {
+  public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
     builderV1.cloneCommit(cloneTimeoutSeconds);
     Map<Path, String> modules = builderV1.getBuilder().locateModules();
 
@@ -256,7 +239,7 @@ public class ForgeAnalyzer {
       .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
   }
 
-  private Path clonePath(Commit c) {
+  private Path newClonePath(Commit c) {
     return workingDirectory
       .resolve(c.repository().owner())
       .resolve(c.repository().name())

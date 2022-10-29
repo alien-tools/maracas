@@ -150,7 +150,7 @@ class ForgeAnalyzerTest {
 		CommitBuilder cb2 = new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		analyzer.setBuildTimeoutSeconds(1);
+		opts.setBuildTimeoutSeconds(1);
 		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 	}
@@ -163,7 +163,7 @@ class ForgeAnalyzerTest {
 		CommitBuilder cb2 = new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		analyzer.setCloneTimeoutSeconds(1);
+		opts.setCloneTimeoutSeconds(1);
 		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 	}
@@ -174,7 +174,7 @@ class ForgeAnalyzerTest {
 		Commit v2 = forge.fetchCommit("alien-tools", "repository-fixture", "b220873");
 		Commit client1 = forge.fetchCommit("alien-tools", "client-fixture-a", "HEAD");
 		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "HEAD");
-		Commit client3 = forge.fetchCommit("alien-tools", "maracas", "HEAD");
+		Commit client3 = forge.fetchCommit("torvalds", "linux", "HEAD");
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		Delta delta = analyzer.computeDelta(
@@ -183,7 +183,7 @@ class ForgeAnalyzerTest {
 			opts
 		);
 
-		analyzer.setCloneTimeoutSeconds(2);
+		opts.setCloneTimeoutSeconds(2);
 		AnalysisResult result = analyzer.computeImpact(
 			delta,
 			List.of(
@@ -191,7 +191,7 @@ class ForgeAnalyzerTest {
 				new CommitBuilder(client2, workingDirectory.resolve("client2")),
 				new CommitBuilder(client3, workingDirectory.resolve("client3"))
 			),
-			MaracasOptions.newDefault()
+			opts
 		);
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(3)));

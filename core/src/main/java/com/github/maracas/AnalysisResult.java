@@ -89,7 +89,7 @@ public record AnalysisResult(
 	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
 	 */
 	public DeltaImpact deltaImpactForClient(SourcesDirectory client) {
-		return deltaImpacts.get(client);
+		return deltaImpacts.get(client.getLocation());
 	}
 
 	public String toJson() throws JsonProcessingException {

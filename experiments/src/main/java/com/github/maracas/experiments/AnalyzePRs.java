@@ -52,8 +52,6 @@ public class AnalyzePRs {
 
 	public void run() {
 		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
-		analyzer.setBuildTimeoutSeconds(10 * 60);
-		analyzer.setCloneTimeoutSeconds(5 * 60);
 		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
@@ -66,9 +64,13 @@ public class AnalyzePRs {
 
 				try {
 					var opts = MaracasOptions.newDefault();
+					opts.setCloneTimeoutSeconds(5 * 60);
+					opts.setBuildTimeoutSeconds(10 * 60);
 					opts.setMaxClassLines(20_000);
+					opts.setClientsPerPackage(100);
+					opts.setMinStarsPerClient(5);
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyzePullRequest(pr, 100, 5, opts);
+					var result = analyzer.analyzePullRequest(pr, opts);
 					var j = 0;
 
 					c.base = pr.baseBranch();
