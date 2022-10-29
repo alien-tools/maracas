@@ -27,7 +27,6 @@ import java.util.concurrent.Executors;
 public class AnalyzePRs {
 	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
-	private List<Case> casesDone = new ArrayList<>();
 	private static final Path PR_CSV = Path.of("./experiments/data/prs.csv");
 	private static final Path RESULTS_CSV = Path.of("./experiments/data/results.csv");
 	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
@@ -42,7 +41,7 @@ public class AnalyzePRs {
 			Reader prReader = new FileReader(PR_CSV.toFile());
 			Reader resultsReader = new FileReader(RESULTS_CSV.toFile())
 		) {
-			this.casesDone = new CsvToBeanBuilder<Case>(resultsReader).withType(Case.class).build().parse();
+			var casesDone = new CsvToBeanBuilder<Case>(resultsReader).withType(Case.class).build().parse();
 			this.cases = new CsvToBeanBuilder<Case>(prReader).withType(Case.class).build().parse();
 			this.cases.removeIf(c -> casesDone.stream().anyMatch(done ->
 				c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
@@ -54,7 +53,7 @@ public class AnalyzePRs {
 	public void run() {
 		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
 		analyzer.setBuildTimeoutSeconds(10 * 60);
-		analyzer.setCloneTimeoutSeconds(10 * 60);
+		analyzer.setCloneTimeoutSeconds(5 * 60);
 		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
