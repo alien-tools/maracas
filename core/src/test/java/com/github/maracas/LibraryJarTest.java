@@ -18,7 +18,7 @@ class LibraryJarTest {
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(nullValue()));
 		assertThat(comp.getClasspath(), hasSize(2));
-		assertThat(comp.getModel(), is(notNullValue()));
+		assertThat(comp.buildModel(), is(notNullValue()));
 	}
 
 	@Test
@@ -28,8 +28,8 @@ class LibraryJarTest {
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(notNullValue()));
 		assertThat(comp.getClasspath(), hasSize(2));
-		assertThat(comp.getModel(), is(notNullValue()));
-		assertThat(comp.getSources().getModel(), is(notNullValue()));
+		assertThat(comp.buildModel(), is(notNullValue()));
+		assertThat(comp.getSources().buildModel(), is(notNullValue()));
 	}
 
 	@Test
@@ -46,8 +46,8 @@ class LibraryJarTest {
 	}
 
 	void assertSourceMatchesBinary(LibraryJar lib) {
-		lib.getSources().getModel().getAllTypes().forEach(srcType -> {
-			CtType<?> binType = lib.getModel().getRootPackage().getFactory().Type().createReference(srcType.getQualifiedName()).getTypeDeclaration();
+		lib.getSources().buildModel().getAllTypes().forEach(srcType -> {
+			CtType<?> binType = lib.buildModel().getRootPackage().getFactory().Type().createReference(srcType.getQualifiedName()).getTypeDeclaration();
 
 			assertNotNull(binType, "didn't find " + srcType.getQualifiedName());
 			assertEquals(srcType.getQualifiedName(), binType.getQualifiedName());

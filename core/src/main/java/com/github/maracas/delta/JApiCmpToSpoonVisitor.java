@@ -14,18 +14,19 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 	private final CtPackage root;
-	private final Collection<BreakingChange> breakingChanges = new ArrayList<>();
+	private final List<BreakingChange> breakingChanges = new ArrayList<>();
 	private static final Logger logger = LogManager.getLogger(JApiCmpToSpoonVisitor.class);
 
 	public JApiCmpToSpoonVisitor(CtPackage root) {
 		this.root = root;
 	}
 
-	public Collection<BreakingChange> getBreakingChanges() {
+	public List<BreakingChange> getBreakingChanges() {
 		return breakingChanges;
 	}
 

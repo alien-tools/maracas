@@ -8,6 +8,7 @@ import com.github.maracas.delta.Delta;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -27,13 +28,13 @@ public record AnalysisResult(
 	/*
 	  The delta impact model per analyzed client
 	 */
-	Map<SourcesDirectory, DeltaImpact> deltaImpacts,
+	Map<Path, DeltaImpact> deltaImpacts,
 	/*
 		The error we may have got along the way
 	 */
 	String error
 ) {
-	public static AnalysisResult success(Delta delta, Map<SourcesDirectory, DeltaImpact> deltaImpacts) {
+	public static AnalysisResult success(Delta delta, Map<Path, DeltaImpact> deltaImpacts) {
 		return new AnalysisResult(delta, deltaImpacts, null);
 	}
 
@@ -52,7 +53,7 @@ public record AnalysisResult(
 		return AnalysisResult.success(
 			delta,
 			clients.stream().collect(toMap(
-				c -> c,
+				SourcesDirectory::getLocation,
 				c -> new DeltaImpact(c, delta, emptySet()))
 			)
 		);

@@ -33,8 +33,6 @@ public class LibraryJar {
 	@JsonIgnore
 	private List<String> classpath = null;
 	@JsonIgnore
-	private CtModel model = null;
-	@JsonIgnore
 	private boolean noClasspath = false;
 
 	private static final Logger logger = LogManager.getLogger(LibraryJar.class);
@@ -66,13 +64,7 @@ public class LibraryJar {
 		this.sources = sources;
 	}
 
-	public CtModel getModel() {
-		if (model == null)
-			model = buildModel();
-		return model;
-	}
-
-	private CtModel buildModel() {
+	public CtModel buildModel() {
 		Stopwatch sw = Stopwatch.createStarted();
 		Launcher launcher = new Launcher();
 
