@@ -65,8 +65,10 @@ public class AnalyzePRs {
 					++i, cases.size(), c.number, c.owner, c.name);
 
 				try {
+					var opts = MaracasOptions.newDefault();
+					opts.setMaxClassLines(20_000);
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyzePullRequest(pr, 100, 5, MaracasOptions.newDefault());
+					var result = analyzer.analyzePullRequest(pr, 100, 5, opts);
 					var j = 0;
 
 					c.base = pr.baseBranch();
