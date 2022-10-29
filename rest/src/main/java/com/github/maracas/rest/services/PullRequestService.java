@@ -174,7 +174,7 @@ public class PullRequestService {
 					clientReports.addAll(
 						result.deltaImpacts().keySet().stream()
 							.map(client -> {
-								CommitBuilder builder = clientBuilders.get(client.getLocation());
+								CommitBuilder builder = clientBuilders.get(client);
 								Repository clientRepo = builder.getCommit().repository();
 								String clientName = clientRepo.owner() + "/" + clientRepo.name();
 								DeltaImpact impact = result.deltaImpacts().get(client);
@@ -185,7 +185,7 @@ public class PullRequestService {
 								else
 									return ClientReport.success(clientName,
 										impact.getBrokenUses().stream()
-											.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client.getLocation()))
+											.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client))
 											.toList());
 							})
 							.toList()

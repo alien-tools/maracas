@@ -95,20 +95,6 @@ public class ForgeAnalyzer {
     return results;
   }
 
-  public AnalysisResult analyzeCommits(Commit v1, Commit v2, Collection<Commit> clients, MaracasOptions options)
-    throws BuildException, CloneException {
-    Objects.requireNonNull(v1);
-    Objects.requireNonNull(v2);
-    Objects.requireNonNull(clients);
-    Objects.requireNonNull(options);
-
-    CommitBuilder builderV1 = makeBuilderForCommit(v1);
-    CommitBuilder builderV2 = makeBuilderForCommit(v2);
-    List<CommitBuilder> clientBuilders = clients.stream().map(this::makeBuilderForCommit).toList();
-
-    return analyzeCommits(builderV1, builderV2, clientBuilders, options);
-  }
-
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
                                        MaracasOptions options)
     throws BuildException, CloneException {
@@ -200,17 +186,16 @@ public class ForgeAnalyzer {
 
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
-    Map<SourcesDirectory, DeltaImpact> impacts = new HashMap<>();
+    Map<Path, DeltaImpact> impacts = new HashMap<>();
     for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
       try {
-        DeltaImpact impact = entry.getValue().get();
-        impacts.put(impact.getClient(), impact);
+        impacts.put(entry.getKey(), entry.getValue().get());
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (Exception e) {
         entry.getKey().toFile().mkdirs();
         SourcesDirectory client = new SourcesDirectory(entry.getKey());
-        impacts.put(client,
+        impacts.put(entry.getKey(),
           new DeltaImpact(client, delta, e.getCause() != null ? e.getCause() : e));
       }
     }
@@ -221,6 +206,10 @@ public class ForgeAnalyzer {
   public void setExecutorService(ExecutorService executorService) {
     Objects.requireNonNull(executorService);
     this.executorService = executorService;
+  }
+
+  public ExecutorService getExecutorService() {
+    return executorService;
   }
 
   public void setBuildTimeoutSeconds(int buildTimeoutSeconds) {
