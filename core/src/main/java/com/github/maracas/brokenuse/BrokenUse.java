@@ -69,7 +69,7 @@ public record BrokenUse(
 		// CtElement::equals/hashCode() do not check the position
 		return Objects.hash(
 			element.getPosition().toString(),
-			element.toString(),
+			element.getShortRepresentation(),
 			usedApiElement.getPosition().toString(),
 			source.getPosition().toString(),
 			use,
