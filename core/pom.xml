@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.github.maracas</groupId>
 		<artifactId>maracas-parent</artifactId>
-		<version>${revision}</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>maracas-core</artifactId>
@@ -14,7 +14,12 @@
 	<name>Maracas core implementation</name>
 
 	<properties>
-		<junit.version>5.7.2</junit.version>
+		<spoon.version>10.1.1</spoon.version>
+		<japicmp.version>0.16.0</japicmp.version>
+		<gradle.version>7.3.3</gradle.version>
+		<zip4j.version>2.11.2</zip4j.version>
+		<picocli.version>4.6.3</picocli.version>
+		<jackson.version>2.13.4.2</jackson.version>
 	</properties>
 
 	<repositories>
@@ -42,59 +47,39 @@
 		</plugins>
 	</build>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>${junit.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>31.1-jre</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.17.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.36</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.siom79.japicmp</groupId>
 			<artifactId>japicmp</artifactId>
-			<version>0.15.7</version>
+			<version>${japicmp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.inria.gforge.spoon</groupId>
 			<artifactId>spoon-core</artifactId>
-			<version>10.1.1</version>
+			<version>${spoon.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>info.picocli</groupId>
 			<artifactId>picocli</artifactId>
-			<version>4.6.3</version>
+			<version>${picocli.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.13.2.2</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.gradle</groupId>
 			<artifactId>gradle-tooling-api</artifactId>
-			<version>7.3.3</version>
+			<version>${gradle.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -113,24 +98,23 @@
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-runner</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-launcher</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.lingala.zip4j</groupId>
 			<artifactId>zip4j</artifactId>
-			<version>2.10.0</version>
+			<version>${zip4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<!-- test data -->
