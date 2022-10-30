@@ -4,6 +4,7 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.github.GitHubForge;
+import com.google.common.base.Stopwatch;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import okhttp3.Cache;
@@ -23,6 +24,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AnalyzePRs {
 	private final Forge forge;
@@ -61,6 +63,7 @@ public class AnalyzePRs {
 			for (var c : cases) {
 				logger.info("[{}/{}] PR#{} of {}/{}",
 					++i, cases.size(), c.number, c.owner, c.name);
+				Stopwatch sw = Stopwatch.createStarted();
 
 				try {
 					var opts = MaracasOptions.newDefault();
@@ -82,21 +85,22 @@ public class AnalyzePRs {
 						if (r.delta() != null) {
 							c.breakingChanges += r.delta().getBreakingChanges().size();
 							c.brokenUses += r.allBrokenUses().size();
-							c.clients += r.deltaImpacts().size();
+							c.checkedClients += r.deltaImpacts().size();
 							c.brokenClients += r.brokenClients().size();
 							r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
 
 							logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
-								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.clients);
+								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.checkedClients);
 						} else {
-							c.error += r.error();
+							c.errors += r.error();
 						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
-					c.error = e.getMessage();
+					c.errors += e.getMessage();
 				}
 
+				c.seconds = sw.elapsed(TimeUnit.SECONDS);
 				beanToCsv.write(c);
 				writer.flush();
 				FileUtils.cleanDirectory(WORKING_DIRECTORY.toFile());
@@ -141,8 +145,9 @@ public class AnalyzePRs {
 		int impactedPackages;
 		int breakingChanges;
 		int brokenUses;
-		int clients;
+		int checkedClients;
 		int brokenClients;
-		String error;
+		String errors;
+		long seconds;
 	}
 }
