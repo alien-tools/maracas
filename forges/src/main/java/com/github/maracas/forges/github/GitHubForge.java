@@ -146,12 +146,16 @@ public class GitHubForge implements Forge {
 			.stream()
 			.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
 			.filter(client -> {
+				// FIXME: Kinda harsh, but there are too many "unofficial" forks
+				if (client.name().equals(repository.name()))
+					return false;
+
 				if (client.stars() < minStars)
 					return false;
 
 				try {
 					GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
-					return !candidate.isFork();
+					return !candidate.isFork() && !candidate.isArchived() && !candidate.isDisabled();
 				} catch (IOException e) {
 					return false;
 				}
