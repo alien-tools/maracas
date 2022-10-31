@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
@@ -35,11 +36,19 @@ public record AnalysisResult(
 	String error
 ) {
 	public static AnalysisResult success(Delta delta, Map<Path, DeltaImpact> deltaImpacts) {
-		return new AnalysisResult(delta, deltaImpacts, null);
+		return new AnalysisResult(
+			Objects.requireNonNull(delta),
+			Objects.requireNonNull(deltaImpacts),
+			null
+		);
 	}
 
 	public static AnalysisResult failure(String message) {
-		return new AnalysisResult(null, null, message);
+		return new AnalysisResult(
+			null,
+			null,
+			Objects.requireNonNull(message)
+		);
 	}
 
 	/**
@@ -51,11 +60,13 @@ public record AnalysisResult(
 	 */
 	public static AnalysisResult noImpact(Delta delta, Collection<SourcesDirectory> clients) {
 		return AnalysisResult.success(
-			delta,
-			clients.stream().collect(toMap(
-				SourcesDirectory::getLocation,
-				c -> new DeltaImpact(c, delta, emptySet()))
-			)
+			Objects.requireNonNull(delta),
+			Objects.requireNonNull(clients)
+				.stream()
+				.collect(toMap(
+					SourcesDirectory::getLocation,
+					c -> new DeltaImpact(c, delta, emptySet()))
+				)
 		);
 	}
 

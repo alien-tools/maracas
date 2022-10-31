@@ -16,6 +16,8 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Objects;
+
 /**
  * Represents a field-level breaking change
  */
@@ -25,8 +27,8 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 
 	public FieldBreakingChange(JApiField field, CtFieldReference<?> fRef, JApiCompatibilityChange change) {
 		super(change);
-		this.jApiField = field;
-		this.fRef = fRef;
+		this.jApiField = Objects.requireNonNull(field);
+		this.fRef = Objects.requireNonNull(fRef);
 	}
 
 	@Override

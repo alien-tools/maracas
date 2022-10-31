@@ -6,6 +6,7 @@ import com.github.maracas.SourcesDirectory;
 import com.github.maracas.delta.Delta;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
@@ -44,9 +45,9 @@ public class DeltaImpact {
 	 * @param brokenUses the set of computed {@link BrokenUse} instances
 	 */
 	public DeltaImpact(SourcesDirectory client, Delta delta, Set<BrokenUse> brokenUses) {
-		this.client = client;
-		this.delta = delta;
-		this.brokenUses = brokenUses;
+		this.client = Objects.requireNonNull(client);
+		this.delta = Objects.requireNonNull(delta);
+		this.brokenUses = Objects.requireNonNull(brokenUses);
 		this.throwable = null;
 	}
 
@@ -58,10 +59,10 @@ public class DeltaImpact {
 	 * @param throwable the {@link Throwable} that was raised while attempting to compute broken uses
 	 */
 	public DeltaImpact(SourcesDirectory client, Delta delta, Throwable throwable) {
-		this.client = client;
-		this.delta = delta;
+		this.client = Objects.requireNonNull(client);
+		this.delta = Objects.requireNonNull(delta);
 		this.brokenUses = Collections.emptySet();
-		this.throwable = throwable;
+		this.throwable = Objects.requireNonNull(throwable);
 	}
 
 	/**

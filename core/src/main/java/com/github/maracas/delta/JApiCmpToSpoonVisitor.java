@@ -15,6 +15,7 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
@@ -23,7 +24,7 @@ public class JApiCmpToSpoonVisitor implements JApiCmpDeltaVisitor {
 	private static final Logger logger = LogManager.getLogger(JApiCmpToSpoonVisitor.class);
 
 	public JApiCmpToSpoonVisitor(CtPackage root) {
-		this.root = root;
+		this.root = Objects.requireNonNull(root);
 	}
 
 	public List<BreakingChange> getBreakingChanges() {

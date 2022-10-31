@@ -11,13 +11,19 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * An experimental {@link spoon.MavenLauncher} for Gradle that sets up
+ * the Java version, source directories, and classpath
+ */
 public class GradleLauncher extends Launcher {
 	public GradleLauncher(Path gradleProject) {
 		init(gradleProject);
 	}
 
 	public void init(Path gradleProject) {
+		Objects.requireNonNull(gradleProject);
 		if (!Files.exists(gradleProject))
 			throw new SpoonException(gradleProject + " does not exist");
 
@@ -48,7 +54,7 @@ public class GradleLauncher extends Launcher {
 			getEnvironment().setComplianceLevel(javaVersion);
 			sourceDirectories.forEach(dir -> addInputResource(dir.getAbsolutePath()));
 		} catch (Exception e) {
-			throw new SpoonException("Unable to parse build.gradle", e);
+			throw new SpoonException(String.format("Unable to parse build.gradle in %s", gradleProject), e);
 		}
 	}
 }

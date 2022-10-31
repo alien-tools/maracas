@@ -12,6 +12,7 @@ import spoon.reflect.visitor.CtScanner;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,8 +27,8 @@ public class CombinedVisitor extends CtScanner {
 	private static final Logger logger = LogManager.getLogger(CombinedVisitor.class);
 
 	public CombinedVisitor(Collection<BreakingChangeVisitor> visitors, MaracasOptions options) {
-		this.visitors = visitors;
-		this.options = options;
+		this.visitors = Objects.requireNonNull(visitors);
+		this.options = Objects.requireNonNull(options);
 	}
 
 	public Set<BrokenUse> getBrokenUses() {

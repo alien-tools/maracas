@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class SourcesDirectory {
 	private final Path location;
@@ -30,7 +31,7 @@ public class SourcesDirectory {
 	}
 
 	public void setClasspath(List<Path> classpath) {
-		this.classpath = classpath;
+		this.classpath = Objects.requireNonNull(classpath);
 	}
 
 	public CtModel buildModel() {

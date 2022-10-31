@@ -5,6 +5,7 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -21,7 +22,7 @@ public class MaracasOptions {
 	private int buildTimeoutSeconds = Integer.MAX_VALUE;
 
 	private MaracasOptions(Options jApiOptions) {
-		this.jApiOptions = jApiOptions;
+		this.jApiOptions = jApiOptions != null ? jApiOptions : defaultJApiOptions();
 	}
 
 	public static Options defaultJApiOptions() {

@@ -26,10 +26,12 @@ public final class BinaryToSourceMapper {
 	private final Map<CtReference, CtElement> mapped = new HashMap<>();
 
 	public BinaryToSourceMapper(CtPackage root) {
-		this.root = root;
+		this.root = Objects.requireNonNull(root);
 	}
 
 	public CtElement resolve(CtReference binaryRef) {
+		Objects.requireNonNull(binaryRef);
+
 		if (mapped.containsKey(binaryRef))
 			return mapped.get(binaryRef);
 
@@ -49,7 +51,7 @@ public final class BinaryToSourceMapper {
 		return resolved;
 	}
 
-	public CtType<?> resolve(CtTypeReference<?> binaryRef) {
+	private CtType<?> resolve(CtTypeReference<?> binaryRef) {
 		CtType<?> binaryDecl = binaryRef.getTypeDeclaration();
 
 		if (binaryDecl != null) {
@@ -63,11 +65,11 @@ public final class BinaryToSourceMapper {
 		return null;
 	}
 
-	public CtElement resolve(CtExecutableReference<?> binaryRef) {
-		CtExecutable<?> binaryExec = binaryRef.getExecutableDeclaration();
+	private CtElement resolve(CtExecutableReference<?> binaryRef) {
+		CtTypeReference<?> declaringTypeRef = binaryRef.getDeclaringType();
 
-		if (binaryExec != null) {
-			CtType<?> declaringType = resolve(binaryRef.getDeclaringType());
+		if (declaringTypeRef != null) {
+			CtType<?> declaringType = resolve(declaringTypeRef);
 
 			if (declaringType != null) {
 				Optional<CtExecutableReference<?>> sourceRefOpt =
@@ -90,11 +92,11 @@ public final class BinaryToSourceMapper {
 		return null;
 	}
 
-	public CtElement resolve(CtFieldReference<?> binaryRef) {
-		CtField<?> binaryField = binaryRef.getFieldDeclaration();
+	private CtElement resolve(CtFieldReference<?> binaryRef) {
+		CtTypeReference<?> declaringTypeRef = binaryRef.getDeclaringType();
 
-		if (binaryField != null) {
-			CtType<?> declaringType = resolve(binaryRef.getDeclaringType());
+		if (declaringTypeRef != null) {
+			CtType<?> declaringType = resolve(declaringTypeRef);
 
 			if (declaringType != null) {
 				CtFieldReference<?> sourceRef = declaringType.getDeclaredField(binaryRef.getSimpleName());

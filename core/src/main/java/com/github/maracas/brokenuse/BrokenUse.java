@@ -45,6 +45,13 @@ public record BrokenUse(
 	 */
 	JApiCompatibilityChange change
 ) {
+	public BrokenUse {
+		Objects.requireNonNull(element);
+		Objects.requireNonNull(usedApiElement);
+		Objects.requireNonNull(source);
+		Objects.requireNonNull(use);
+	}
+
 	@Override
 	public String toString() {
 		return """

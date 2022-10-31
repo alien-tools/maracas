@@ -114,42 +114,42 @@ class AnalysisQueryTest {
 
 	@Test
 	void nullOldJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.oldVersion(null)
 		);
 	}
 
 	@Test
 	void nullNewJar_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.newVersion(null)
 		);
 	}
 
 	@Test
 	void nullClient_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.client(null)
 		);
 	}
 
 	@Test
 	void nullClients_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.clients(null)
 		);
 	}
 
 	@Test
 	void nullOptions_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.options(null)
 		);
 	}
 
 	@Test
 	void nullExclude_ThrowsException() {
-		assertThrows(IllegalArgumentException.class, () ->
+		assertThrows(NullPointerException.class, () ->
 			builder.exclude(null)
 		);
 	}

@@ -18,7 +18,6 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,9 +49,9 @@ public class Delta {
 	 * @see #fromJApiCmpDelta(LibraryJar, LibraryJar, List, MaracasOptions)
 	 */
 	private Delta(LibraryJar oldVersion, LibraryJar newVersion, List<BreakingChange> breakingChanges) {
-		this.oldVersion = oldVersion;
-		this.newVersion = newVersion;
-		this.breakingChanges = breakingChanges;
+		this.oldVersion = Objects.requireNonNull(oldVersion);
+		this.newVersion = Objects.requireNonNull(newVersion);
+		this.breakingChanges = Objects.requireNonNull(breakingChanges);
 	}
 
 	/**
