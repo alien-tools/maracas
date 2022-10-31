@@ -21,6 +21,7 @@
 		<log4j.version>2.19.0</log4j.version>
 		<slf4j.version>1.7.36</slf4j.version>
 		<commons-io.version>2.11.0</commons-io.version>
+		<github-api.version>1.313</github-api.version>
 	</properties>
 
 	<groupId>com.github.maracas</groupId>
@@ -147,6 +148,11 @@
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>${commons-io.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.kohsuke</groupId>
+				<artifactId>github-api</artifactId>
+				<version>${github-api.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
