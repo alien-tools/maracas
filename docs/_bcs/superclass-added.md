@@ -8,7 +8,7 @@ title: Superclass Added
 ---
 
 ## Example
-The class `LandVehicles` in the library project adds the superclass `Vehicle` to its declaration.
+The class `LandVehicle` in the library project adds the superclass `Vehicle` to its declaration.
 
 ```java
 public abstract class Vehicle {
@@ -24,8 +24,8 @@ public abstract class Vehicle {
 ```
 
 ```diff
-+public abstract class LandVehicles {
--public abstract class LandVehicles extends Vehicle {
++public abstract class LandVehicle {
+-public abstract class LandVehicle extends Vehicle {
 
 }
 ```
