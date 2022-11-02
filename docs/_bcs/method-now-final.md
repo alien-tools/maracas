@@ -8,15 +8,16 @@ title: Method Now Final
 ---
 
 ## Example
-The abstract class `Vehicle` removes the `static` modifier and adds the `abstract` modifier to the `move` method.
+The abstract class `Vehicle` adds the `final` modifier to the `move` method.
 Afterwards, the method's body is removed.
 
 ```diff
 public abstract class Vehicle {
--  public static void move() {
--    System.out.println("The vehicle is moving.");
--  }
-+  public abstract move();
+-  public void move() {
++  public final move() {
+    System.out.println("The vehicle is moving.");
+  }
+
 }
 ```
 
@@ -25,36 +26,23 @@ public abstract class Vehicle {
 ## Broken Uses
 Hereafter, we list the **broken uses** that are currently detected by Maracas.
 
-- [1. Non-abstract types extending/implementing the enclosing type of the now-abstract method](#case-1)
-- [2. Invocations in subtypes of the now-abstract method](#case-2)
+- [1. Methods overriding the now-final method](#case-1)
 
 <br>
 
-### 1. Non-abstract types extending/implementing the enclosing type of the now-abstract method <a name="case-1"></a>
-(Unless the now-abstract method is already implemented somewhere in the hierarchy)
+### 1. Methods overriding the now-final method <a name="case-1"></a>
+(With or without the explicit use of the `@Override` annotation)
 #### Example
 The `LanVehicle` class—declared in the in a client project—extends the `Vehicle` class form the library.
-Then, a broken use is reported pointing to the class declaration given that no implementation for the now-abstract method `move` has been provided.
+It overrides the `move` method coming from the `Vehicle` class.
+Then, a broken use is reported pointing to the method declaration given that the method cannot be overriden anymore.
 
 ```java
 public class LandVehicle extends Vehicle {
-
-}
-```
-
-
-### 2. Invocations in subtypes of the now-abstract method <a name="case-1"></a>
-#### Example
-The method `printMove`—defined in the `LandVehicle` class in a client project—invokes the now-abstract method `move` from the `Vehicle` class.
-Then, a broken use is reported pointing to the method invocation expression.
-
-```java
-public class LandVehicle extends Vehicle {
-
-  public static void printMove() {
-    // Broken use reported here
-    Vehicle.move();
+  // Broken use reported here
+  @Override
+  public final move() {
+    System.out.println("The land vehicle is moving.");
   }
-
 }
 ```
