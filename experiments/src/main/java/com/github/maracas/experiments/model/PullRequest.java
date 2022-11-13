@@ -94,16 +94,6 @@ public class PullRequest {
 	private List<String> files;
 
 	/**
-	 * Map between modified package names and their modified files.
-	 */
-	private Map<String, List<String>> filesPerPackage;
-
-	/**
-	 * {@link RepositoryPackage} modified by the pull request.
-	 */
-	private List<RepositoryPackage> modifiedPackages;
-
-	/**
 	 * Constants representing the state of a PR
 	 */
 	public enum State {
@@ -148,8 +138,6 @@ public class PullRequest {
 		setMergedAt(mergedAt);
 		setClosedAt(closedAt);
 		this.files = new ArrayList<String>();
-		this.filesPerPackage = new HashMap<String, List<String>>();
-		this.modifiedPackages = new ArrayList<RepositoryPackage>();
 	}
 
 	/**
@@ -389,54 +377,4 @@ public class PullRequest {
 		if (file != null && !file.isEmpty())
 			files.add(file);
 	}
-
-	/**
-	 * Returns the packages that have been modified by the pull request.
-	 *
-	 * @return packages modified by the pull request
-	 */
-	public List<RepositoryPackage> getModifiedPackages() {
-		return modifiedPackages;
-	}
-
-	/**
-	 * Updates the  {@code modifiedPackages} attribute based on the files
-	 * modified by the pull request.
-	 */
-	public void gatherModifiedPackages() {
-		Set<String> packagePaths = repository.getRepoPackagesByPath().keySet();
-
-		for (String file : files) {
-			for (String pkgPath : packagePaths) {
-				if (file.startsWith(pkgPath)) {
-					RepositoryPackage pkg = repository.getRepoPackageByPath(pkgPath);
-					List<String> pkgFiles = filesPerPackage.getOrDefault(pkg.getName(), new ArrayList<String>());
-					pkgFiles.add(file);
-					filesPerPackage.put(pkg.getName(), pkgFiles);
-					modifiedPackages.add(repository.getRepoPackageByPath(pkgPath));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Returns the mapping between the modified package name and the list of
-	 * modified files of such package.
-	 *
-	 * @return map between modified package names and their modified files.
-	 */
-	public Map<String, List<String>> getFilesPerPackage() {
-		return filesPerPackage;
-	}
-
-	/**
-	 * Returns the list of modified files of a given package given its name.
-	 *
-	 * @param pkgName  Name of the modified package
-	 * @return modified files of a given package.
-	 */
-	public List<String> getFilesPerPackage(String pkgName) {
-		return filesPerPackage.get(pkgName);
-	}
-
 }

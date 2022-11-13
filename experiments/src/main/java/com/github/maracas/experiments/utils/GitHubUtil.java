@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -114,29 +115,32 @@ public final class GitHubUtil {
 	 * @return {@link Document} instance
 	 */
 	public static Document fetchPage(String url) {
-		var ua = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
-		var ref = "http://www.google.com";
-
 		try {
-			Thread.sleep(250);
-			return Jsoup.connect(url).userAgent(ua).referrer(ref).get();
-		} catch (HttpStatusException e) {
-			if (e.getStatusCode() == 429) {
-				logger.info("Too many requests, sleeping...");
-				try {
-					Thread.sleep(30000);
-				} catch (InterruptedException ee) {
-					logger.error(e);
-					Thread.currentThread().interrupt();
-				}
+			Connection.Response res =
+				Jsoup.connect(url)
+					.userAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+					.referrer("https://www.google.com")
+					.ignoreHttpErrors(true)
+					.execute();
+
+			if (res.statusCode() == 200) {
+				return res.parse();
+			} else if (res.statusCode() == 429) {
+				String retryAfter = res.header("Retry-After");
+				int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : 30;
+				logger.warn("Too many requests; retrying after {}s", waitTime);
+				Thread.sleep(1_000L * waitTime);
 				return fetchPage(url);
+			} else {
+				logger.error("Couldn't fetch {} [HTTP {}]", url, res.statusCode());
 			}
 		} catch (IOException e) {
-			logger.error(e);
-		} catch (InterruptedException e) {
-			logger.error(e);
+			logger.error("Couldn't fetch {}", url, e);
+		} catch (InterruptedException ee) {
+			logger.error(ee);
 			Thread.currentThread().interrupt();
 		}
+
 		return null;
 	}
 
