@@ -68,6 +68,15 @@ class ClientsServiceTest {
 	}
 
 	@Test
+	void test_spoon_only_custom() {
+		BreakbotConfig.Clients config = new BreakbotConfig.Clients(0, 0, Collections.singletonList(
+			new BreakbotConfig.GitHubRepository("a/b", "", "", "")
+		));
+		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(spoon, config, "fr.inria.gforge.spoon:spoon-core");
+		assertThat(clients, hasSize(equalTo(1)));
+	}
+
+	@Test
 	void test_fork_has_parent_clients() {
 		BreakbotConfig.Clients config = new BreakbotConfig.Clients(10, 0, Collections.emptyList());
 		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(

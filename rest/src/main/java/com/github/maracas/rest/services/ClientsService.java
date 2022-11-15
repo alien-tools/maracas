@@ -75,10 +75,12 @@ public class ClientsService {
 
 		return Stream.concat(
 			config.repositories().stream(),
-			forge.fetchTopStarredClients(actualRepository, packageId, config.top(), config.stars()).stream()
-				.map(repo -> new BreakbotConfig.GitHubRepository(
-					String.format("%s/%s", repo.owner(), repo.name()),
-					null, null, null))
+			config.top() > 0
+				? forge.fetchTopStarredClients(actualRepository, packageId, config.top(), config.stars()).stream()
+					.map(repo -> new BreakbotConfig.GitHubRepository(
+						String.format("%s/%s", repo.owner(), repo.name()),
+						null, null, null))
+				: Stream.empty()
 		).toList();
 	}
 }
