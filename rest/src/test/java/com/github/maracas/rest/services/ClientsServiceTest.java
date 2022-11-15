@@ -37,9 +37,10 @@ class ClientsServiceTest {
 
 	@Test
 	void test_spoon_stars_100() {
-		BreakbotConfig.Clients config = new BreakbotConfig.Clients(0, 100, Collections.emptyList());
+		BreakbotConfig.Clients config = new BreakbotConfig.Clients(10, 100, Collections.emptyList());
 		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(spoon, config, "fr.inria.gforge.spoon:spoon-core");
 		assertThat(clients, not(empty()));
+		assertThat(clients, hasSize(lessThanOrEqualTo(10)));
 	}
 
 	@Test
@@ -59,12 +60,12 @@ class ClientsServiceTest {
 	}
 
 	@Test
-	void test_spoon_stars_100_with_custom() {
-		BreakbotConfig.Clients config = new BreakbotConfig.Clients(0, 100, Collections.singletonList(
+	void test_spoon_stars_10000_with_custom() {
+		BreakbotConfig.Clients config = new BreakbotConfig.Clients(10, 10000, Collections.singletonList(
 			new BreakbotConfig.GitHubRepository("a/b", "", "", "")
 		));
 		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(spoon, config, "fr.inria.gforge.spoon:spoon-core");
-		assertThat(clients, hasSize(greaterThan(1)));
+		assertThat(clients, hasSize(equalTo(1)));
 	}
 
 	@Test
