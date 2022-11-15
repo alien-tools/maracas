@@ -192,7 +192,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 				request()
 					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
 					.withMethod("POST")
-					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", report: null}")),
+					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", \"report\": null}")),
 				exactly(1)
 			);
 		}
