@@ -10,17 +10,17 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 public record PullRequestResponse(
-	PullRequest pr,
 	String message,
 	LocalDateTime date,
+	PullRequestDto pr,
 	MaracasReport report
 ) {
-	public static PullRequestResponse status(PullRequest pr, String message) {
-		return new PullRequestResponse(pr, message, LocalDateTime.now(), null);
+	public static PullRequestResponse status(PullRequest pr, String status) {
+		return new PullRequestResponse(status, LocalDateTime.now(), pr != null ? PullRequestDto.of(pr) : null, null);
 	}
 
 	public static PullRequestResponse ok(PullRequest pr, MaracasReport report) {
-		return new PullRequestResponse(pr, "ok", LocalDateTime.now(), report);
+		return new PullRequestResponse("ok", LocalDateTime.now(), PullRequestDto.of(pr), report);
 	}
 
 	public static PullRequestResponse fromJson(File json) throws IOException {

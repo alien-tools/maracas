@@ -1,5 +1,6 @@
 package com.github.maracas.rest.data;
 
+import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.util.SpoonHelpers;
 import spoon.reflect.cu.SourcePosition;
@@ -7,7 +8,7 @@ import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.nio.file.Path;
 
-public record BreakingChange(
+public record BreakingChangeDto(
 	String declaration,
 	String change,
 	String path,
@@ -16,7 +17,7 @@ public record BreakingChange(
 	String fileUrl,
 	String diffUrl
 ) {
-	public static BreakingChange fromMaracasBreakingChange(com.github.maracas.delta.BreakingChange decl, PullRequest pr, Path clone) {
+	public static BreakingChangeDto of(BreakingChange decl, PullRequest pr, Path clone) {
 		String file = "";
 		int startLine = -1;
 		int endLine = -1;
@@ -32,7 +33,7 @@ public record BreakingChange(
 		}
 
 		String relativeFile = clone.toAbsolutePath().relativize(Path.of(file).toAbsolutePath()).toString();
-		return new BreakingChange(
+		return new BreakingChangeDto(
 			SpoonHelpers.fullyQualifiedName(decl.getReference()),
 			decl.getChange().name(),
 			relativeFile,

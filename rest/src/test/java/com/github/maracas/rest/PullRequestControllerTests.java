@@ -1,6 +1,6 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.BreakingChange;
+import com.github.maracas.rest.data.BreakingChangeDto;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
@@ -326,7 +326,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 		Collection<String> brokenDecls =
 			response.report().reports().get(0).delta().breakingChanges().stream().
-				map(BreakingChange::declaration).toList();
+				map(BreakingChangeDto::declaration).toList();
 		assertThat(brokenDecls, not(hasItem(containsString("test"))));
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));

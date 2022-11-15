@@ -24,8 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.github.maracas.rest.data.ClientReport;
-import com.github.maracas.rest.data.Delta;
-import com.github.maracas.rest.data.BrokenUse;
+import com.github.maracas.rest.data.DeltaDto;
+import com.github.maracas.rest.data.BrokenUseDto;
 import com.github.maracas.rest.data.MaracasReport;
 
 @SpringBootTest
@@ -58,11 +58,11 @@ class MaracasReportTests {
 		report = new MaracasReport(
 			List.of(PackageReport.success(
 				"/",
-				Delta.fromMaracasDelta(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
+				DeltaDto.of(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
 				List.of(ClientReport.success("alien-tools/comp-changes-client",
 					result.allBrokenUses()
 						.stream()
-						.map(d -> BrokenUse.fromMaracasBrokenUse(d, clientRepo, "main", c1.getLocation()))
+						.map(d -> BrokenUseDto.of(d, clientRepo, "main", c1.getLocation()))
 						.collect(Collectors.toList())
 				))
 			))

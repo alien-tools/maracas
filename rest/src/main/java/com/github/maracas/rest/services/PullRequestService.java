@@ -14,8 +14,9 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.data.BrokenUse;
+import com.github.maracas.rest.data.BrokenUseDto;
 import com.github.maracas.rest.data.ClientReport;
+import com.github.maracas.rest.data.DeltaDto;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
@@ -173,7 +174,7 @@ public class PullRequestService {
 								else
 									return ClientReport.success(clientName,
 										impact.getBrokenUses().stream()
-											.map(bu -> BrokenUse.fromMaracasBrokenUse(bu, clientRepo, clientRepo.branch(), client))
+											.map(bu -> BrokenUseDto.of(bu, clientRepo, clientRepo.branch(), client))
 											.toList());
 							})
 							.toList()
@@ -181,13 +182,13 @@ public class PullRequestService {
 
 					packageReports.add(PackageReport.success(
 						pkgName,
-						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, builderV1.getClonePath()),
+						DeltaDto.of(delta, pr, builderV1.getClonePath()),
 						clientReports
 					));
 				} else {
 					packageReports.add(PackageReport.success(
 						pkgName,
-						com.github.maracas.rest.data.Delta.fromMaracasDelta(delta, pr, builderV1.getClonePath()),
+						DeltaDto.of(delta, pr, builderV1.getClonePath()),
 						Collections.emptyList()
 					));
 				}

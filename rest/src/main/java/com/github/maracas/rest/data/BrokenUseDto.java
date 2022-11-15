@@ -1,5 +1,6 @@
 package com.github.maracas.rest.data;
 
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.util.SpoonHelpers;
 import spoon.reflect.cu.SourcePosition;
@@ -8,7 +9,7 @@ import spoon.reflect.declaration.CtNamedElement;
 
 import java.nio.file.Path;
 
-public record BrokenUse(
+public record BrokenUseDto(
 	String elem,
 	String used,
 	String src,
@@ -18,15 +19,15 @@ public record BrokenUse(
 	int endLine,
 	String url
 ) {
-	public static BrokenUse fromMaracasBrokenUse(com.github.maracas.brokenuse.BrokenUse bu, Repository repository, String branch, Path clone) {
+	public static BrokenUseDto of(BrokenUse bu, Repository repository, String branch, Path clone) {
 		SourcePosition pos = bu.element().getPosition();
 
-		// Nasty effectful work-around for pretty-printing below: we don't want to see the comments here
+		// Nasty side-effect work-around for pretty-printing below: we don't want to see the comments here
 		bu.element().setComments(null);
 		bu.usedApiElement().setComments(null);
 
 		if (pos instanceof NoSourcePosition)
-			return new BrokenUse(
+			return new BrokenUseDto(
 				bu.element() instanceof CtNamedElement e ? e.getSimpleName() : bu.element().toString(),
 				bu.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : bu.usedApiElement().toString(),
 				SpoonHelpers.fullyQualifiedName(bu.source()),
@@ -38,7 +39,7 @@ public record BrokenUse(
 			);
 
 		String relativeFile = clone.toAbsolutePath().relativize(pos.getFile().toPath().toAbsolutePath()).toString();
-		return new BrokenUse(
+		return new BrokenUseDto(
 			bu.element() instanceof CtNamedElement e ? e.getSimpleName() : bu.element().toString(),
 			bu.usedApiElement() instanceof CtNamedElement e ? e.getSimpleName() : bu.usedApiElement().toString(),
 			SpoonHelpers.fullyQualifiedName(bu.source()),
