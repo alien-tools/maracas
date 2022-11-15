@@ -13,7 +13,6 @@ class BreakbotConfigTests {
 	void testDefaultConfiguration() {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
-		assertThat(c.build().module(), is(""));
 		assertThat(c.build().goals(), is(empty()));
 		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), nullValue());
@@ -102,13 +101,11 @@ class BreakbotConfigTests {
 	void testCustomBuild() {
 		String s = """
 			build:
-			  module: submodule/
 			  goals: [a, b]
 			  properties:
 			    skipTests: true
 			    skipDepClean: true""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().module(), is("submodule/"));
 		assertThat(c.build().goals(), allOf(iterableWithSize(2), hasItem("a"), hasItem("b")));
 		assertThat(c.build().properties(), allOf(
 			aMapWithSize(2),
@@ -119,21 +116,11 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testCustomSources() {
-		String s = """
-			build:
-			  module: module/""";
-		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().module(), is("module/"));
-	}
-
-	@Test
 	void testCustomOutput() {
 		String s = """
 			build:
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().module(), is(""));
 		assertThat(c.build().goals(), is(empty()));
 		assertThat(c.build().properties(), is(anEmptyMap()));
 		assertThat(c.build().jar(), is("build/out.jar"));
@@ -143,13 +130,11 @@ class BreakbotConfigTests {
 	void testCustomBuildOutput() {
 		String s = """
 			build:
-			  module: sub/
 			  goals: [custom]
 			  properties:
 			    -x: test
 			  jar: build/out.jar""";
 		BreakbotConfig c = BreakbotConfig.fromYaml(s);
-		assertThat(c.build().module(), is("sub/"));
 		assertThat(c.build().goals(), allOf(iterableWithSize(1), hasItem("custom")));
 		assertThat(c.build().properties(), allOf(aMapWithSize(1), hasEntry("-x", "test")));
 		assertThat(c.build().jar(), is("build/out.jar"));

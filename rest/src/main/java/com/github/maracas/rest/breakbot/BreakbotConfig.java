@@ -19,13 +19,11 @@ public record BreakbotConfig(
 	Clients clients
 ) {
 	public record Build(
-		String module,
 		List<String> goals,
 		Map<String, String> properties,
 		String jar
 	) {
-		public Build(String module, List<String> goals, Map<String, String> properties, String jar) {
-			this.module = module != null ? module : "";
+		public Build(List<String> goals, Map<String, String> properties, String jar) {
 			this.goals = goals != null && !goals.isEmpty() ? goals : Collections.emptyList();
 			this.properties = properties != null && !properties.isEmpty() ? properties : Collections.emptyMap();
 			this.jar = jar;
@@ -55,7 +53,7 @@ public record BreakbotConfig(
 
 	public BreakbotConfig(List<String> excludes, Build build, Clients clients) {
 		this.excludes = excludes != null ? excludes : Collections.emptyList();
-		this.build = build != null ? build : new Build(null, null, null, null);
+		this.build = build != null ? build : new Build(null, null, null);
 		this.clients = clients != null ? clients : new Clients(0, 0, Collections.emptyList());
 	}
 

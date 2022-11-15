@@ -124,7 +124,7 @@ public class PullRequestService {
 		logger.info("[{}] Starting the analysis", prUid(pr));
 
 		MaracasOptions options = makeMaracasOptions(config);
-		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build());
+		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), Path.of(""));
 
 		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
 		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
@@ -200,17 +200,8 @@ public class PullRequestService {
 		return new MaracasReport(packageReports);
 	}
 
-	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config) {
-		Path commitClonePath = clonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(Path.of(config.module()));
-		config.goals().forEach(buildConfig::addGoal);
-		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
-
-		return new CommitBuilder(c, commitClonePath, buildConfig);
-	}
-
 	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config, Path module) {
-		Path commitClonePath = clonePath(pr, c);
+		Path commitClonePath = newClonePath(pr, c);
 		BuildConfig buildConfig = new BuildConfig(module);
 		config.goals().forEach(buildConfig::addGoal);
 		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
@@ -233,7 +224,7 @@ public class PullRequestService {
 			StringUtils.isEmpty(c.sha())
 				? new Commit(clientRepo, clientSha)
 				: new Commit(clientRepo, c.sha());
-		Path clientClone = clonePath(pr, clientCommit);
+		Path clientClone = newClonePath(pr, clientCommit);
 		Path clientModule =
 			c.module() != null
 				? Path.of(c.module())
@@ -295,7 +286,7 @@ public class PullRequestService {
 			.toFile();
 	}
 
-	private Path clonePath(PullRequest pr, Commit c) {
+	private Path newClonePath(PullRequest pr, Commit c) {
 		return Path.of(clonePath)
 			.resolve(prUid(pr))
 			.resolve(c.repository().owner())
