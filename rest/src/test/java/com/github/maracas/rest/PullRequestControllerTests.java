@@ -157,8 +157,11 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			  goals: [unknown]""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
-			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.message", containsString("BuildException")));
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.report.reports[0].id", equalTo("maracas-data:comp-changes")))
+			.andExpect(jsonPath("$.report.reports[0].error", containsString("Unknown lifecycle phase")))
+			.andExpect(jsonPath("$.report.reports[0].delta", nullValue()))
+			.andExpect(jsonPath("$.report.reports[0].clientReports", empty()));
 	}
 
 	@Test
