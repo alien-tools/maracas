@@ -1,7 +1,9 @@
 package com.github.maracas.rest.services;
 
+import com.github.maracas.forges.Repository;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.PullRequestResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
@@ -46,14 +48,18 @@ public class BreakbotService {
 		}
 	}
 
-	public BreakbotConfig readBreakbotConfig(String owner, String repository) {
-		String fullName = owner + "/" + repository;
+	public BreakbotConfig buildBreakbotConfig(Repository repository, String breakbotYaml) {
+		return StringUtils.isEmpty(breakbotYaml)
+			? readBreakbotConfig(repository)
+			: BreakbotConfig.fromYaml(breakbotYaml);
+	}
 
-		try (InputStream configIn = github.getRepository(fullName).getFileContent(breakbotFile).read()) {
+	public BreakbotConfig readBreakbotConfig(Repository repository) {
+		try (InputStream configIn = github.getRepository(repository.fullName()).getFileContent(breakbotFile).read()) {
 			BreakbotConfig res = BreakbotConfig.fromYaml(configIn);
 			if (res != null)
 				return res;
-		} catch (@SuppressWarnings("unused") IOException e) {
+		} catch (IOException e) {
 			logger.error(e);
 		}
 

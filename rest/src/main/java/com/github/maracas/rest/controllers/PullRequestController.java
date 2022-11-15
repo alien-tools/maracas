@@ -59,9 +59,9 @@ public class PullRequestController {
 		PullRequest pr = prService.fetchPullRequest(owner, name, number);
 
 		// Either we have it already
-		MaracasReport report = prService.getReport(pr);
-		if (report != null) {
-			return ResponseEntity.ok(PullRequestResponse.ok(pr, report));
+		PullRequestResponse response = prService.readResponse(pr);
+		if (response != null) {
+			return ResponseEntity.ok(response);
 		}
 
 		// Or we're currently computing it

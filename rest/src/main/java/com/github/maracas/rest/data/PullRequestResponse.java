@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.maracas.forges.PullRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -20,6 +21,19 @@ public record PullRequestResponse(
 
 	public static PullRequestResponse ok(PullRequest pr, MaracasReport report) {
 		return new PullRequestResponse(pr, "ok", LocalDateTime.now(), report);
+	}
+
+	public static PullRequestResponse fromJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule());
+		return objectMapper.readValue(json, PullRequestResponse.class);
+	}
+
+	public void writeJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule())
+			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		objectMapper.writeValue(json, this);
 	}
 
 	public String toJson() throws IOException {

@@ -40,9 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 @Service
@@ -87,10 +85,7 @@ public class PullRequestService {
 	}
 
 	public String analyzePR(PullRequest pr, String callback, String installationId, String breakbotYaml) {
-		BreakbotConfig config =
-			StringUtils.isEmpty(breakbotYaml)
-				? breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name())
-				: BreakbotConfig.fromYaml(breakbotYaml);
+		BreakbotConfig config = breakbotService.buildBreakbotConfig(pr.repository(), breakbotYaml);
 		String uid = prUid(pr);
 		File reportFile = reportFile(pr);
 		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.repository().owner(), pr.repository().name(), pr.number());
@@ -105,13 +100,13 @@ public class PullRequestService {
 					if (ex != null) {
 						logger.error("Error analyzing {}", uid, ex);
 						return PullRequestResponse.status(pr, ex.getCause().getMessage());
+					} else {
+						logger.info("Done analyzing {}", uid);
+						return PullRequestResponse.ok(pr, report);
 					}
-
-					logger.info("Done analyzing {}", uid);
-					serializeReport(report, reportFile);
-					return PullRequestResponse.ok(pr, report);
 				})
 				.thenAccept(response -> {
+					serializeResponse(response, reportFile);
 					if (callback != null)
 						breakbotService.sendPullRequestResponse(response, callback, installationId);
 				});
@@ -121,10 +116,7 @@ public class PullRequestService {
 	}
 
 	public MaracasReport analyzePRSync(PullRequest pr, String breakbotYaml) {
-		BreakbotConfig config =
-			StringUtils.isEmpty(breakbotYaml)
-				? breakbotService.readBreakbotConfig(pr.repository().owner(), pr.repository().name())
-				: BreakbotConfig.fromYaml(breakbotYaml);
+		BreakbotConfig config = breakbotService.buildBreakbotConfig(pr.repository(), breakbotYaml);
 		return buildMaracasReport(pr, config);
 	}
 
@@ -263,7 +255,7 @@ public class PullRequestService {
 		return jobs.containsKey(prUid(pr));
 	}
 
-	private void serializeReport(MaracasReport report, File reportFile) {
+	private void serializeResponse(PullRequestResponse report, File reportFile) {
 		try {
 			logger.info("Serializing {}", reportFile);
 			reportFile.getParentFile().mkdirs();
@@ -273,11 +265,11 @@ public class PullRequestService {
 		}
 	}
 
-	public MaracasReport getReport(PullRequest pr) {
+	public PullRequestResponse readResponse(PullRequest pr) {
 		try {
-			File reportFile = reportFile(pr);
-			if (reportFile.exists() && reportFile.length() > 0) {
-				return MaracasReport.fromJson(reportFile);
+			File responseFile = reportFile(pr);
+			if (responseFile.exists() && responseFile.length() > 0) {
+				return PullRequestResponse.fromJson(responseFile);
 			}
 		} catch (IOException e) {
 			logger.error(e);
