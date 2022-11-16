@@ -25,4 +25,25 @@ public record PackageReport(
 				.flatMap(Collection::stream)
 				.toList();
 	}
+
+	public Collection<ClientReport> brokenClients() {
+		return
+			clientReports.stream()
+				.filter(r -> !r.brokenUses().isEmpty())
+				.toList();
+	}
+
+	public Collection<ClientReport> unimpactedClients() {
+		return
+			clientReports.stream()
+				.filter(r -> r.brokenUses().isEmpty())
+				.toList();
+	}
+
+	public Collection<BreakingChangeDto> impactfulBreakingChanges() {
+		return
+			delta.breakingChanges().stream()
+				.filter(bc -> allBrokenUses().stream().anyMatch(bu -> bu.src().equals(bc.declaration())))
+				.toList();
+	}
 }

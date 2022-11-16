@@ -1,5 +1,7 @@
 package com.github.maracas.rest.data;
 
+import com.github.maracas.delta.BreakingChange;
+
 import java.util.Collections;
 import java.util.List;
 

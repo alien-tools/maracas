@@ -36,11 +36,6 @@ public record PullRequestResponse(
 		objectMapper.writeValue(json, this);
 	}
 
-	public static PullRequestResponse fromJson(File json) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		return objectMapper.readValue(json, PullRequestResponse.class);
-	}
-
 	public String toJson() throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper()
 			.registerModule(new JavaTimeModule())
