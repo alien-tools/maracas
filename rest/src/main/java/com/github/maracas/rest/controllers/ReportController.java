@@ -1,6 +1,5 @@
 package com.github.maracas.rest.controllers;
 
-import com.github.maracas.rest.data.BreakingChangeDto;
 import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.springframework.stereotype.Controller;
@@ -12,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Controller
 public class ReportController {
@@ -28,7 +26,8 @@ public class ReportController {
 
 			PullRequestResponse report = PullRequestResponse.fromJson(reportFile);
 			model.addAttribute("pr", report.pr());
-			model.addAttribute("generated", report.date().format(DateTimeFormatter.ofPattern("MMM d, Y H:mm")));
+			model.addAttribute("repoUrl", String.format("https://github.com/%s/%s", report.pr().owner(), report.pr().name()));
+			model.addAttribute("generated", report.date().format(DateTimeFormatter.ofPattern("MMM d, y H:mm")));
 
 			PackageReport firstReport = report.report().reports().get(0);
 			model.addAttribute("report", firstReport);

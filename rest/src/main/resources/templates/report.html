@@ -1,129 +1,147 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|BreakBot report for ${owner}/${name}&num;${prNumber}|">BreakBot report for owner/name#prNumber</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+  <title th:text="|BreakBot report for ${owner}/${name}&num;${prNumber}|">BreakBot report for
+    owner/name#prNumber</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 </head>
-<body class="container-md bg-light">
+<body class="container-md">
 
-<header class="bd-header bg-dark border-bottom border-dark">
-    <h1 class="fs-4 text-white p-2">
-        BreakBot report for <a th:href="@{|https://github.com/${owner}/${name}/pull/${prNumber}|}" th:text="|${owner}/${name}&num;${prNumber}|">owner/name#prNumber</a>
-    </h1>
+<header>
+  <h1>
+    BreakBot report for <a href="" th:href="@{|${repoUrl}/pull/${prNumber}|}" th:text="|${owner}/${name}&num;${prNumber}|">owner/name#prNumber</a>
+  </h1>
 </header>
 
 <div class="row">
-    <aside class="col-2 order-2 bd-aside sticky-xl-top text-muted align-self-start mb-3 mb-xl-5 px-2">
-        <nav class="small" id="toc">
-            <ul class="list-unstyled">
-                <li class="">
-                    <button class="btn d-inline-flex align-items-center collapsed" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#contents-collapse" aria-controls="contents-collapse">Contents</button>
-                    <ul class="list-unstyled ps-3 collapse" id="contents-collapse">
-                        <li><a class="d-inline-flex align-items-center rounded" href="#summary">Summary</a></li>
-                        <li><a class="d-inline-flex align-items-center rounded" href="#bcs-summary">Breaking Changes</a></li>
-                        <li><a class="d-inline-flex align-items-center rounded" href="#clients-summary">Breaking Changes</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-        <p>This report was generated on <span th:text="${generated}" th:remove="tag">July 1</span></p>
-    </aside>
-
-    <section class="col-10 order-1">
-        <h2 id="summary">Summary</h2>
+  <div class="col-md-2 order-md-1 order-0">
+    <aside class="sticky-md-top">
+      <img class="img-fluid my-3" th:src="@{/images/bb-logo.png}" src="../static/images/bb-logo.png" alt="BreakBot logo">
+      <div class="p-3 bg-light rounded">
+        <h4 class="fst-italic">About</h4>
         <p>
-            BreakBot checked <code th:text="${pr.headBranch()}">feature-branch</code> (commit <a href="" th:href="@{https://github.com}" th:text="${pr.headSha().substring(0, 7)}">36880e3</a>) against <code th:text="${pr.baseBranch()}">main-branch</code> (commit <a href="" th:href="@{https://github.com}" th:text="${pr.baseSha().substring(0, 7)}">36880e3</a>).
-            <br>
-            This pull request introduces <strong><span th:text="${bcs.size()}" th:remove="tag">45</span> breaking changes</strong>, causing <strong><span th:text="${report.allBrokenUses().size()}" th:remove="tag">195</span> broken uses</strong> in client code.
-            <br>
-            <strong>8 of 12 clients</strong> are impacted by the changes (66%).
+          This report has been produced with BreakBot and Maracas! If you encounter any bug in the analysis results, please make sure to report them to <a href="https://github.com/alien-tools/maracas">Maracas</a> developers; if you encounter any bug in the GitHub App, please make sure to report them to <a href="https://github.com/alien-tools/breakbot">BreakBot</a> developers.
         </p>
+      </div>
+      <nav>
+        <ul class="list-unstyled">
+          <li><a href="#summary">Summary</a></li>
+          <li><a href="#bcs-summary">Breaking changes</a></li>
+          <li><a href="#clients-summary">Impact overview</a></li>
+          <li><a href="#clients-detailed">Detailed impact</a></li>
+        </ul>
+      </nav>
+      <p>This report was generated on <span th:text="${generated}" th:remove="tag">July 1</span></p>
+    </aside>
+  </div>
+
+  <div class="col-md-10 order-md-0 order-1">
+    <section>
+      <h2 id="summary" class="fw-light">Summary</h2>
+      <p>
+        BreakBot checked
+        <mark th:text="${pr.headBranch()}">feature-branch</mark> (commit <a href="" th:href="@{|${repoUrl}/commit/${pr.headSha()}|}" th:text="${pr.headSha().substring(0, 7)}">36880e3</a>) against
+        <mark th:text="${pr.baseBranch()}">main-branch</mark> (commit <a href="" th:href="@{|${repoUrl}/commit/${pr.baseSha()}|}" th:text="${pr.baseSha().substring(0, 7)}">36880e3</a>)
+        and found <strong><span th:text="${bcs.size()}" th:remove="tag">45</span> breaking changes</strong>,
+        causing <strong><span th:text="${report.allBrokenUses().size()}" th:remove="tag">195</span> broken uses</strong> in client code.
+        <strong>8 of 12 clients</strong> are impacted by the changes (66%).
+      </p>
     </section>
 
-    <section class="col-10 order-1">
-        <h2 id="bcs-summary">Breaking changes</h2>
-        <table class="table table-striped table-hover table-bordered table-sm">
-            <caption>
-                Overall, <span th:text="${report.impactfulBreakingChanges().size()}" th:remove="tag">2</span> out of <span th:text="${report.delta().breakingChanges().size()}" th:remove="tag">7</span> breaking changes are impacting clients.
-            </caption>
-            <thead>
-            <tr>
-                <th scope="col">Declaration</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Status</th>
-                <th scope="col">Impacted clients</th>
-                <th scope="col">Broken uses</th>
-            </tr>
-            </thead>
-            <tbody class="table-group-divider" th:remove="all-but-first">
-            <tr th:each="bc : ${bcs}" th:object="${bc}">
-                <th scope="row"><span th:text="*{declaration()}" th:remove="tag">my.example.Declaration</span> (<a href="" th:href="@{*{diffUrl()}}">diff</a> -- <a href="" th:href="@{*{fileUrl()}}">file</a>)</th>
-                <td><a href="" th:href="@{|https://alien-tools.github.io/maracas/bcs/*{change()}|}" th:text="*{change()}">METHOD_REMOVED</a></td>
-                <td><i class="bi bi-check"></i></td>
-                <td>None</td>
-                <td>None</td>
-            </tr>
-            <tr>
-                <th>Declaration</th>
-                <th>INTERFACE_ADDED</th>
-                <th>nope</th>
-                <th>3</th>
-                <th>03</th>
-            </tr>
-            <tr>
-                <th>Declaration</th>
-                <th>INTERFACE_ADDED</th>
-                <th>nope</th>
-                <th>3</th>
-                <th>03</th>
-            </tr>
-            </tbody>
-        </table>
+    <section>
+      <h2 id="bcs-summary" class="fw-light">Breaking changes</h2>
+      <table class="table table-striped table-hover table-sm">
+        <caption>
+          Overall, <span th:text="${report.impactfulBreakingChanges().size()}" th:remove="tag">2</span> out of <span
+            th:text="${report.delta().breakingChanges().size()}" th:remove="tag">7</span> breaking changes are impacting
+          clients.
+        </caption>
+        <thead>
+        <tr>
+          <th scope="col">Declaration</th>
+          <th scope="col">Kind</th>
+          <th scope="col">Status</th>
+          <th scope="col">Impacted clients</th>
+          <th scope="col">Broken uses</th>
+        </tr>
+        </thead>
+        <tbody class="table-group-divider" th:remove="all-but-first">
+        <tr th:each="bc : ${bcs}" th:object="${bc}">
+          <th scope="row"><span th:text="*{declaration()}" th:remove="tag">my.example.Declaration</span> (<a href=""
+                                                                                                             th:href="@{*{diffUrl()}}">diff</a>
+            -- <a href="" th:href="@{*{fileUrl()}}">file</a>)
+          </th>
+          <td><a href="" th:href="@{|https://alien-tools.github.io/maracas/bcs/*{change()}|}" th:text="*{change()}">METHOD_REMOVED</a>
+          </td>
+          <td><i class="bi bi-check"></i></td>
+          <td>None</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <th>a.foo()</th>
+          <th>INTERFACE_ADDED</th>
+          <th><span class="badge rounded-pill text-bg-danger text-l">3 broken clients</span></th>
+          <th>3</th>
+          <th>11</th>
+        </tr>
+        <tr>
+          <th>b.bar()</th>
+          <th>METHOD_REMOVED</th>
+          <th><span class="badge rounded-pill text-bg-warning">No broken client</span></th>
+          <th>3</th>
+          <th>0</th>
+        </tr>
+        </tbody>
+      </table>
     </section>
 
-    <section class="col-10 order-1">
-        <h2 id="clients-summary">Impact on clients</h2>
-        <table class="table table-striped table-hover table-bordered table-sm">
-            <caption>
-                Overall, <span th:text="${report.brokenClients().size()}" th:remove="tag">2</span> out of the <span th:text="${report.clientReports().size()}" th:remove="tag">7</span> analyzed clients are impacted by a breaking change.
-            </caption>
-            <thead>
-            <tr>
-                <th scope="col">Client</th>
-                <th scope="col">Status</th>
-                <th scope="col">Broken uses</th>
-            </tr>
-            </thead>
-            <tbody class="table-group-divider" th:remove="all-but-first">
-            <tr th:each="bc : ${bcs}" th:object="${bc}">
-                <th scope="row"><span th:text="*{declaration()}" th:remove="tag">my.example.Declaration</span> (<a href="" th:href="@{*{diffUrl()}}">diff</a> -- <a href="" th:href="@{*{fileUrl()}}">file</a>)</th>
-                <td><a href="" th:href="@{|https://alien-tools.github.io/maracas/bcs/*{change()}|}" th:text="*{change()}">METHOD_REMOVED</a></td>
-                <td><i class="bi bi-check"></i></td>
-                <td>None</td>
-                <td>None</td>
-            </tr>
-            <tr>
-                <th>Declaration</th>
-                <th>INTERFACE_ADDED</th>
-                <th>nope</th>
-                <th>3</th>
-                <th>03</th>
-            </tr>
-            <tr>
-                <th>Declaration</th>
-                <th>INTERFACE_ADDED</th>
-                <th>nope</th>
-                <th>3</th>
-                <th>03</th>
-            </tr>
-            </tbody>
-        </table>
+    <section>
+      <h2 id="clients-summary" class="fw-light">Impact overview</h2>
+      <table class="table table-striped table-hover table-sm">
+        <caption>
+          Overall, <span th:text="${report.brokenClients().size()}" th:remove="tag">2</span> out of the <span
+            th:text="${report.clientReports().size()}" th:remove="tag">7</span> analyzed clients are impacted by a
+          breaking change.
+        </caption>
+        <thead>
+        <tr>
+          <th scope="col">Client</th>
+          <th scope="col">Status</th>
+          <th scope="col">Broken uses</th>
+        </tr>
+        </thead>
+        <tbody class="table-group-divider" th:remove="all-but-first">
+        <tr th:each="bc : ${bcs}" th:object="${bc}">
+          <th scope="row"><span th:text="*{declaration()}" th:remove="tag">my.example.Declaration</span> (<a href=""
+                                                                                                             th:href="@{*{diffUrl()}}">diff</a>
+            -- <a href="" th:href="@{*{fileUrl()}}">file</a>)
+          </th>
+          <td><a href="" th:href="@{|https://alien-tools.github.io/maracas/bcs/*{change()}|}" th:text="*{change()}">METHOD_REMOVED</a>
+          </td>
+          <td><i class="bi bi-check"></i></td>
+        </tr>
+        <tr>
+          <th>foo/bar</th>
+          <th><span class="badge rounded-pill text-bg-warning">2 broken uses</span></th>
+          <th>nope</th>
+        </tr>
+        <tr>
+          <th>bar/baz</th>
+          <th><span class="badge rounded-pill text-bg-success">Not affected</span></th>
+          <th>nope</th>
+        </tr>
+        </tbody>
+      </table>
     </section>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
 </body>
 </html>
