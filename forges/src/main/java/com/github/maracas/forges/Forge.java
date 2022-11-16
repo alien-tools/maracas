@@ -1,5 +1,7 @@
 package com.github.maracas.forges;
 
+import java.util.List;
+
 public interface Forge {
   Repository fetchRepository(String owner, String name) throws ForgeException;
 
@@ -16,4 +18,6 @@ public interface Forge {
   default Commit fetchCommit(String owner, String name, String sha) throws ForgeException {
     return fetchCommit(fetchRepository(owner, name), sha);
   }
+
+  List<Repository> fetchTopStarredClients(Repository repository, String pkgId, int limit, int minStars) throws ForgeException;
 }

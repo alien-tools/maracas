@@ -4,21 +4,30 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
-		<revision>0.5.0-SNAPSHOT</revision>
+		<!-- Build -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
+		<!-- Plugins -->
 		<maven.surefire.version>2.22.0</maven.surefire.version>
 		<maven.deploy.version>2.8.2</maven.deploy.version>
 		<maven.source.version>3.2.1</maven.source.version>
 		<maven.javadoc.version>3.3.1</maven.javadoc.version>
 		<jacoco.version>0.8.7</jacoco.version>
+		<!-- Dependencies -->
+		<junit.version>5.7.2</junit.version>
+		<hamcrest.version>2.2</hamcrest.version>
+		<guava.version>31.1-jre</guava.version>
+		<log4j.version>2.19.0</log4j.version>
+		<slf4j.version>1.7.36</slf4j.version>
+		<commons-io.version>2.11.0</commons-io.version>
+		<github-api.version>1.313</github-api.version>
 	</properties>
 
 	<groupId>com.github.maracas</groupId>
 	<artifactId>maracas-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>${revision}</version>
+	<version>0.5.0-SNAPSHOT</version>
 	<name>Maracas parent module</name>
 
 	<modules>
@@ -80,6 +89,12 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>${maven.deploy.version}</version>
+			</plugin>
+			<!-- Documentation -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>${maven.javadoc.version}</version>
 				<configuration>
@@ -95,38 +110,52 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven.deploy.version}</version>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>flatten-maven-plugin</artifactId>
-				<version>1.2.7</version>
-				<configuration>
-				</configuration>
-				<executions>
-					<!-- enable flattening -->
-					<execution>
-						<id>flatten</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>flatten</goal>
-						</goals>
-					</execution>
-					<!-- ensure proper cleanup -->
-					<execution>
-						<id>flatten.clean</id>
-						<phase>clean</phase>
-						<goals>
-							<goal>clean</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava-bom</artifactId>
+				<version>${guava.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.hamcrest</groupId>
+				<artifactId>hamcrest</artifactId>
+				<version>${hamcrest.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-core</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.kohsuke</groupId>
+				<artifactId>github-api</artifactId>
+				<version>${github-api.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<distributionManagement>
 		<repository>

@@ -10,17 +10,20 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GitHubForgeTest {
+  GitHub gh;
   GitHubForge github;
 
   @BeforeEach
   void setUp() {
     try {
-      GitHub gh = GitHubBuilder.fromEnvironment().build();
+      gh = GitHubBuilder.fromEnvironment().build();
       github = new GitHubForge(gh);
     } catch (IOException e) {
       e.printStackTrace();
@@ -75,6 +78,7 @@ class GitHubForgeTest {
     assertEquals("alien-tools", pr.repository().owner());
     assertEquals("comp-changes", pr.repository().name());
     assertEquals("main", pr.repository().branch());
+    assertEquals(237, pr.changedFiles().size());
   }
 
   @Test
@@ -89,6 +93,7 @@ class GitHubForgeTest {
     assertEquals("INRIA", pr.repository().owner());
     assertEquals("spoon", pr.repository().name());
     assertEquals("master", pr.repository().branch());
+    assertEquals(6, pr.changedFiles().size());
   }
 
   @Test
@@ -119,5 +124,69 @@ class GitHubForgeTest {
     assertEquals("alien-tools/maracas", c.repository().fullName());
     assertEquals("https://github.com/alien-tools/maracas.git", c.repository().remoteUrl());
     assertEquals("main", c.repository().branch());
+  }
+
+  @Test
+  void fetchCommit_HEAD() {
+    Commit c = github.fetchCommit("alien-tools", "repository-fixture", "HEAD");
+    assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("alien-tools", c.repository().owner());
+    assertEquals("repository-fixture", c.repository().name());
+    assertEquals("alien-tools/repository-fixture", c.repository().fullName());
+    assertEquals("https://github.com/alien-tools/repository-fixture.git", c.repository().remoteUrl());
+    assertEquals("main", c.repository().branch());
+  }
+
+  @Test
+  void fetchCommit_short_sha() {
+    Commit c = github.fetchCommit("alien-tools", "repository-fixture", "15b08c");
+    assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("alien-tools", c.repository().owner());
+    assertEquals("repository-fixture", c.repository().name());
+    assertEquals("alien-tools/repository-fixture", c.repository().fullName());
+    assertEquals("https://github.com/alien-tools/repository-fixture.git", c.repository().remoteUrl());
+    assertEquals("main", c.repository().branch());
+  }
+
+  @Test
+  void fetchTopClients_spoon_core() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 5, -1);
+    assertThat(clients, hasSize(5));
+  }
+
+  @Test
+  void fetchStarredClients_spoon_core() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", -1, 100);
+    assertThat(clients, is(not(empty())));
+    clients.forEach(client -> {
+      try {
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(100)));
+      } catch (IOException e) {
+        fail(e);
+      }
+    });
+  }
+
+  @Test
+  void fetchTopStarredClients_spoon_core() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 10, 500);
+    assertThat(clients, hasSize(lessThan(10)));
+    clients.forEach(client -> {
+      try {
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(500)));
+      } catch (IOException e) {
+        fail(e);
+      }
+    });
+  }
+
+  @Test
+  void fetchTopClients_spoon_unkown() {
+    Repository spoon = github.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = github.fetchTopStarredClients(spoon, "unknown", 10, -1);
+    assertThat(clients, is(empty()));
   }
 }

@@ -4,6 +4,7 @@ import japicmp.util.Optional;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * An AnalysisQuery holds the information about a library's old and new
@@ -24,10 +25,10 @@ public class AnalysisQuery {
 	 */
 	private AnalysisQuery(LibraryJar oldVersion, LibraryJar newVersion,
 	                      Collection<SourcesDirectory> clients, MaracasOptions options) {
-		this.oldVersion = oldVersion;
-		this.newVersion = newVersion;
-		this.clients = clients;
-		this.options = options;
+		this.oldVersion = Objects.requireNonNull(oldVersion);
+		this.newVersion = Objects.requireNonNull(newVersion);
+		this.clients = Objects.requireNonNull(clients);
+		this.options = Objects.requireNonNull(options);
 	}
 
 	/**
@@ -95,10 +96,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the library is null
 		 */
 		public Builder oldVersion(LibraryJar oldVersion) {
-			if (oldVersion == null)
-				throw new IllegalArgumentException("oldVersion is null");
-
-			this.oldVersion = oldVersion;
+			this.oldVersion = Objects.requireNonNull(oldVersion, "oldVersion is null");
 			return this;
 		}
 
@@ -110,10 +108,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the library is null
 		 */
 		public Builder newVersion(LibraryJar newVersion) {
-			if (newVersion == null)
-				throw new IllegalArgumentException("newVersion is null");
-
-			this.newVersion = newVersion;
+			this.newVersion = Objects.requireNonNull(newVersion, "newVersion is null");
 			return this;
 		}
 
@@ -125,8 +120,7 @@ public class AnalysisQuery {
 		 * @throws IllegalArgumentException if the client is null
 		 */
 		public Builder client(SourcesDirectory client) {
-			if (client == null)
-				throw new IllegalArgumentException("client is null");
+			Objects.requireNonNull(client, "client is null");
 
 			if (!this.clients.contains(client))
 				this.clients.add(client);
@@ -141,8 +135,7 @@ public class AnalysisQuery {
 		 * @see #client(SourcesDirectory)
 		 */
 		public Builder clients(Collection<SourcesDirectory> clients) {
-			if (clients == null)
-				throw new IllegalArgumentException("clients is null");
+			Objects.requireNonNull(clients, "clients is null");
 
 			clients.forEach(this::client);
 			return this;
@@ -156,10 +149,7 @@ public class AnalysisQuery {
 		 * @see com.github.maracas.MaracasOptions
 		 */
 		public Builder options(MaracasOptions options) {
-			if (options == null)
-				throw new IllegalArgumentException("options is null");
-
-			this.options = options;
+			this.options = Objects.requireNonNull(options, "options is null");
 			return this;
 		}
 
@@ -171,8 +161,7 @@ public class AnalysisQuery {
 		 * @see japicmp.config.Options#addExcludeFromArgument(japicmp.util.Optional, boolean)
 		 */
 		public Builder exclude(String pattern) {
-			if (pattern == null)
-				throw new IllegalArgumentException("pattern is null");
+			Objects.requireNonNull(pattern, "pattern is null");
 
 			this.options.getJApiOptions().addExcludeFromArgument(Optional.of(pattern), false);
 			return this;

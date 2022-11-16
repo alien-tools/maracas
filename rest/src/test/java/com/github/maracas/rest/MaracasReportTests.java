@@ -14,6 +14,7 @@ import com.github.maracas.*;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubForge;
+import com.github.maracas.rest.data.PackageReport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;
@@ -23,8 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.github.maracas.rest.data.ClientReport;
-import com.github.maracas.rest.data.Delta;
-import com.github.maracas.rest.data.BrokenUse;
+import com.github.maracas.rest.data.DeltaDto;
+import com.github.maracas.rest.data.BrokenUseDto;
 import com.github.maracas.rest.data.MaracasReport;
 
 @SpringBootTest
@@ -55,12 +56,15 @@ class MaracasReportTests {
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(
-			Delta.fromMaracasDelta(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
-			List.of(ClientReport.success("alien-tools/comp-changes-client",
-				result.allBrokenUses()
-					.stream()
-					.map(d -> BrokenUse.fromMaracasBrokenUse(d, clientRepo, "main", c1.getLocation()))
-					.collect(Collectors.toList())
+			List.of(PackageReport.success(
+				"/",
+				DeltaDto.of(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
+				List.of(ClientReport.success("alien-tools/comp-changes-client",
+					result.allBrokenUses()
+						.stream()
+						.map(d -> BrokenUseDto.of(d, clientRepo, "main", c1.getLocation()))
+						.collect(Collectors.toList())
+				))
 			))
 		);
 	}
@@ -77,7 +81,7 @@ class MaracasReportTests {
 		//	))
 		//);
 
-		report.delta().breakingChanges().forEach(d -> {
+		report.reports().get(0).delta().breakingChanges().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -86,8 +90,8 @@ class MaracasReportTests {
 
 	@Test
 	void testSourceLocationsBrokenUses() {
-		assertThat(report.clientReports().size(), is(1));
-		report.clientReports().get(0).brokenUses().forEach(d -> {
+		assertThat(report.reports().get(0).clientReports().size(), is(1));
+		report.reports().get(0).clientReports().get(0).brokenUses().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
 			assertThat(d.startLine(), greaterThan(0));
 			assertThat(d.startLine(), greaterThan(0));
@@ -96,7 +100,7 @@ class MaracasReportTests {
 
 	@Test
 	void testGitHubLocationsDelta() {
-		report.delta().breakingChanges().forEach(d -> {
+		report.reports().get(0).delta().breakingChanges().forEach(d -> {
 			assertThat(d.fileUrl(), not(emptyOrNullString()));
 			assertThat(d.diffUrl(), not(emptyOrNullString()));
 		});
@@ -104,16 +108,16 @@ class MaracasReportTests {
 
 	@Test
 	void testGitHubLocationsBrokenUses() {
-		assertThat(report.clientReports().size(), is(1));
-		assertThat(report.clientReports().get(0).url(), not(emptyOrNullString()));
-		report.clientReports().get(0).brokenUses().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
+		assertThat(report.reports().get(0).clientReports().size(), is(1));
+		assertThat(report.reports().get(0).clientReports().get(0).url(), not(emptyOrNullString()));
+		report.reports().get(0).clientReports().get(0).brokenUses().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
 	void testGithubClientsArePresent() {
-		assertThat(report.clientReports().size(), is(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.clientReports().get(0).brokenUses().size(), is(greaterThan(1)));
+		assertThat(report.reports().get(0).clientReports().size(), is(1));
+		assertThat(report.reports().get(0).clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(report.reports().get(0).clientReports().get(0).brokenUses().size(), is(greaterThan(1)));
 	}
 
 }

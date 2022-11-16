@@ -8,6 +8,7 @@ import japicmp.model.JApiSuperclass;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
@@ -21,8 +22,8 @@ public class TypeBreakingChange extends AbstractBreakingChange {
 
 	public TypeBreakingChange(JApiClass cls, CtTypeReference<?> clsRef, JApiCompatibilityChange change) {
 		super(change);
-		this.jApiCls = cls;
-		this.clsRef = clsRef;
+		this.jApiCls = Objects.requireNonNull(cls);
+		this.clsRef = Objects.requireNonNull(clsRef);
 	}
 
 	@Override
@@ -34,14 +35,13 @@ public class TypeBreakingChange extends AbstractBreakingChange {
 	public BreakingChangeVisitor getVisitor() {
 		return
 			switch (change) {
-				case CLASS_LESS_ACCESSIBLE ->
-					new ClassLessAccessibleVisitor(clsRef, jApiCls.getAccessModifier().getNewModifier().get());
-				case CLASS_NOW_ABSTRACT -> new ClassNowAbstractVisitor(clsRef);
-				case CLASS_NOW_FINAL -> new ClassNowFinalVisitor(clsRef);
+				case CLASS_LESS_ACCESSIBLE       -> new ClassLessAccessibleVisitor(clsRef, jApiCls.getAccessModifier().getNewModifier().get());
+				case CLASS_NOW_ABSTRACT          -> new ClassNowAbstractVisitor(clsRef);
+				case CLASS_NOW_FINAL             -> new ClassNowFinalVisitor(clsRef);
 				case CLASS_NOW_CHECKED_EXCEPTION -> new ClassNowCheckedExceptionVisitor(clsRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToClassVisitor(clsRef);
-				case CLASS_REMOVED -> new ClassRemovedVisitor(clsRef);
-				case METHOD_ADDED_TO_INTERFACE -> new MethodAddedToInterfaceVisitor(clsRef);
+				case CLASS_REMOVED               -> new ClassRemovedVisitor(clsRef);
+				case METHOD_ADDED_TO_INTERFACE   -> new MethodAddedToInterfaceVisitor(clsRef);
 				case INTERFACE_ADDED -> {
 					Set<CtTypeReference<?>> newInterfaces = jApiCls.getInterfaces().stream()
 						.filter(i -> i.getChangeStatus().equals(JApiChangeStatus.NEW))

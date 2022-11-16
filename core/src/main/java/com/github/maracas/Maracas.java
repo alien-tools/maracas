@@ -50,10 +50,10 @@ public class Maracas {
 			return AnalysisResult.noImpact(delta, query.getClients());
 
 		// Compute the impact for each client and return the result
-		return new AnalysisResult(
+		return AnalysisResult.success(
 			delta,
 			query.getClients().parallelStream().collect(toMap(
-				c -> c,
+				SourcesDirectory::getLocation,
 				c -> computeDeltaImpact(c, delta, query.getMaracasOptions()))
 			)
 		);
@@ -123,7 +123,7 @@ public class Maracas {
 		try {
 			Stopwatch sw = Stopwatch.createStarted();
 			client.setClasspath(Collections.singletonList(delta.getOldVersion().getJar()));
-			CtModel model = client.getModel();
+			CtModel model = client.buildModel();
 
 			Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 			CombinedVisitor visitor = new CombinedVisitor(visitors, opts);
@@ -138,6 +138,7 @@ public class Maracas {
 			return new DeltaImpact(client, delta, visitor.getBrokenUses());
 		} catch (Exception e) {
 			logger.warn("Error building the delta impact for {}: {}", client, e);
+			e.printStackTrace();
 			return new DeltaImpact(client, delta, e);
 		}
 	}

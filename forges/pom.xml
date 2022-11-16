@@ -6,16 +6,12 @@
 	<parent>
 		<groupId>com.github.maracas</groupId>
 		<artifactId>maracas-parent</artifactId>
-		<version>${revision}</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>maracas-forges</artifactId>
 	<packaging>jar</packaging>
 	<name>Maracas Forges Support</name>
-
-	<properties>
-		<junit.version>5.8.2</junit.version>
-	</properties>
 
 	<repositories>
 		<repository>
@@ -40,17 +36,17 @@
 		<dependency>
 			<groupId>com.github.maracas</groupId>
 			<artifactId>maracas-core</artifactId>
-			<version>${revision}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-invoker</artifactId>
-			<version>3.1.0</version>
+			<version>3.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
-			<version>3.8.4</version>
+			<version>3.8.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.gradle</groupId>
@@ -60,17 +56,14 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.11.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>31.1-jre</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.17.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -80,7 +73,6 @@
 		<dependency>
 			<groupId>org.kohsuke</groupId>
 			<artifactId>github-api</artifactId>
-			<version>1.301</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -95,13 +87,12 @@
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>4.3.1</version>
-		</dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.15.3</version>
+        </dependency>
     </dependencies>
 </project>

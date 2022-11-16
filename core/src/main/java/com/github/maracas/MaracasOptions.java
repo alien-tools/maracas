@@ -5,6 +5,7 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -15,9 +16,13 @@ public class MaracasOptions {
 	private final Options jApiOptions;
 	private final Set<JApiCompatibilityChange> excludedBreakingChanges = new HashSet<>();
 	private int maxClassLines = Integer.MAX_VALUE;
+	private int clientsPerPackage = Integer.MAX_VALUE;
+	private int minStarsPerClient = 0;
+	private int cloneTimeoutSeconds = Integer.MAX_VALUE;
+	private int buildTimeoutSeconds = Integer.MAX_VALUE;
 
 	private MaracasOptions(Options jApiOptions) {
-		this.jApiOptions = jApiOptions;
+		this.jApiOptions = jApiOptions != null ? jApiOptions : defaultJApiOptions();
 	}
 
 	public static Options defaultJApiOptions() {
@@ -78,17 +83,48 @@ public class MaracasOptions {
 		return excludedBreakingChanges;
 	}
 
-	/**
-	 *
-	 * @param limit
-	 */
-	public void setMaxClassLines(int limit) {
-		maxClassLines = limit;
+	public void setMaxClassLines(int maxClassLines) {
+		if (maxClassLines < 0)
+			throw new IllegalArgumentException("maxClassLines < 0");
+		this.maxClassLines = maxClassLines;
+	}
+
+	public void setClientsPerPackage(int clientsPerPackage) {
+		if (clientsPerPackage < 0)
+			throw new IllegalArgumentException("clientsPerPackage < 0");
+		this.clientsPerPackage = clientsPerPackage;
+	}
+
+
+	public void setMinStarsPerClient(int minStarsPerClient) {
+		if (minStarsPerClient < 0)
+			throw new IllegalArgumentException("minStarsPerClient < 0");
+		this.minStarsPerClient = minStarsPerClient;
+	}
+
+	public void setCloneTimeoutSeconds(int cloneTimeoutSeconds) {
+		if (cloneTimeoutSeconds < 0)
+			throw new IllegalArgumentException("cloneTimeoutSeconds < 0");
+		this.cloneTimeoutSeconds = cloneTimeoutSeconds;
+	}
+
+	public void setBuildTimeoutSeconds(int buildTimeoutSeconds) {
+		if (buildTimeoutSeconds < 0)
+			throw new IllegalArgumentException("buildTimeoutSeconds < 0");
+		this.buildTimeoutSeconds = buildTimeoutSeconds;
 	}
 
 	public int getMaxClassLines() {
 		return maxClassLines;
 	}
+
+	public int getClientsPerPackage() { return clientsPerPackage; }
+
+	public int getMinStarsPerClient() { return minStarsPerClient; }
+
+	public int getCloneTimeoutSeconds() { return cloneTimeoutSeconds; }
+
+	public int getBuildTimeoutSeconds() { return buildTimeoutSeconds; }
 
 	public Options getJApiOptions() {
 		return jApiOptions;

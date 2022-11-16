@@ -18,7 +18,6 @@ import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.reference.CtReference;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,17 +41,17 @@ public class Delta {
 	/**
 	 * The list of {@link BreakingChange} extracted from japicmp's classes
 	 */
-	private final Collection<BreakingChange> breakingChanges;
+	private final List<BreakingChange> breakingChanges;
 
 	private static final Logger logger = LogManager.getLogger(Delta.class);
 
 	/**
 	 * @see #fromJApiCmpDelta(LibraryJar, LibraryJar, List, MaracasOptions)
 	 */
-	private Delta(LibraryJar oldVersion, LibraryJar newVersion, Collection<BreakingChange> breakingChanges) {
-		this.oldVersion = oldVersion;
-		this.newVersion = newVersion;
-		this.breakingChanges = breakingChanges;
+	private Delta(LibraryJar oldVersion, LibraryJar newVersion, List<BreakingChange> breakingChanges) {
+		this.oldVersion = Objects.requireNonNull(oldVersion);
+		this.newVersion = Objects.requireNonNull(newVersion);
+		this.breakingChanges = Objects.requireNonNull(breakingChanges);
 	}
 
 	/**
@@ -76,7 +75,7 @@ public class Delta {
 		JApiCmpDeltaFilter filter = new JApiCmpDeltaFilter(options);
 		filter.filter(classes);
 
-		CtModel model = oldVersion.getModel();
+		CtModel model = oldVersion.buildModel();
 		CtPackage root = model.getRootPackage();
 
 		// Map the BCs from JApi to Spoon elements
@@ -99,19 +98,23 @@ public class Delta {
 		if (!oldVersion.hasSources())
 			return;
 
-		CtModel model = oldVersion.getSources().getModel();
+		CtModel model = oldVersion.getSources().buildModel();
 		CtPackage root = model.getRootPackage();
 
 		Stopwatch sw = Stopwatch.createStarted();
 		BinaryToSourceMapper mapper = new BinaryToSourceMapper(root);
 		breakingChanges.forEach(bc -> {
-			CtReference binaryRef = bc.getReference();
-			CtElement source = mapper.resolve(binaryRef);
+			try {
+				CtReference binaryRef = bc.getReference();
+				CtElement source = mapper.resolve(binaryRef);
 
-			if (source != null)
-				bc.setSourceElement(source);
-			else
-				logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), oldVersion.getSources());
+				if (source != null)
+					bc.setSourceElement(source);
+				else
+					logger.warn("No source location for {} [{}] in {}", binaryRef, bc.getChange(), oldVersion.getSources());
+			} catch (NoClassDefFoundError e) {
+				logger.error(e);
+			}
 		});
 
 		logger.info("Mapping binary breaking changes to source code took {}ms", sw.elapsed().toMillis());
@@ -123,7 +126,7 @@ public class Delta {
 	 * the set of broken uses in client code impacted by this breaking change.
 	 */
 	@JsonIgnore
-	public Collection<BreakingChangeVisitor> getVisitors() {
+	public List<BreakingChangeVisitor> getVisitors() {
 		return
 			breakingChanges.stream()
 				.map(BreakingChange::getVisitor)
@@ -134,7 +137,7 @@ public class Delta {
 	/**
 	 * Returns the list of {@link BreakingChange} in the current delta model
 	 */
-	public Collection<BreakingChange> getBreakingChanges() {
+	public List<BreakingChange> getBreakingChanges() {
 		return breakingChanges;
 	}
 

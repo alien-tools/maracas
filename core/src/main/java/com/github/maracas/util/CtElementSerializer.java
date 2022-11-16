@@ -20,8 +20,8 @@ public final class CtElementSerializer extends StdSerializer<CtElement> {
 	@Override
 	public void serialize(CtElement element, JsonGenerator json, SerializerProvider serializerProvider) throws IOException {
 		SourcePosition pos = element.getPosition();
-		json.writeStartObject();
 
+		json.writeStartObject();
 		if (pos != null && pos.isValidPosition()) {
 			json.writeStringField("file", pos.getFile().getAbsolutePath());
 			json.writeNumberField("startLine", pos.getLine());
@@ -29,7 +29,6 @@ public final class CtElementSerializer extends StdSerializer<CtElement> {
 			json.writeNumberField("startColumn", pos.getColumn());
 			json.writeNumberField("endColumn", pos.getEndColumn());
 		}
-
 		json.writeEndObject();
 	}
 }

@@ -15,12 +15,10 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
-//import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Set;
 
-import com.github.maracas.brokenuse.APIUse;
 import org.junit.jupiter.api.Test;
 
 import com.github.maracas.brokenuse.BrokenUse;
@@ -67,8 +65,8 @@ class MaracasTest {
 
 		assertThat(res.delta(), is(notNullValue()));
 		assertThat(res.deltaImpacts().keySet(), hasSize(2));
-		assertThat(res.deltaImpacts(), hasKey(client));
-		assertThat(res.deltaImpacts(), hasKey(client2));
+		assertThat(res.deltaImpacts(), hasKey(client.getLocation()));
+		assertThat(res.deltaImpacts(), hasKey(client2.getLocation()));
 	}
 
 	@Test

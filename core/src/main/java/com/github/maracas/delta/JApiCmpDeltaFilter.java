@@ -6,19 +6,20 @@ import japicmp.output.OutputFilter;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Extends the default {@link OutputFilter}'s behavior with additional filters:
  * - Remove BCs related to anonymous classes, as they're not exposed
  * - Remove BCs on NEW types, as they won't affect anyone
- * - Remove any BCs that is excluded in Maracas' options
+ * - Remove any BC type that is excluded in Maracas' options
  */
 public class JApiCmpDeltaFilter extends OutputFilter {
 	private final MaracasOptions maracasOptions;
 
 	public JApiCmpDeltaFilter(MaracasOptions options) {
 		super(options.getJApiOptions());
-		this.maracasOptions = options;
+		this.maracasOptions = Objects.requireNonNull(options);
 	}
 
 	@Override

@@ -15,6 +15,8 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtReference;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Objects;
+
 /**
  * Represents a method-level breaking change
  */
@@ -24,8 +26,8 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 
 	public MethodBreakingChange(JApiBehavior method, CtExecutableReference<?> mRef, JApiCompatibilityChange change) {
 		super(change);
-		this.jApiMethod = method;
-		this.mRef = mRef;
+		this.jApiMethod = Objects.requireNonNull(method);
+		this.mRef = Objects.requireNonNull(mRef);
 	}
 
 	@Override
@@ -37,11 +39,12 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 	public BreakingChangeVisitor getVisitor() {
 		return
 			switch (change) {
-				case CONSTRUCTOR_REMOVED        -> new ConstructorRemovedVisitor(mRef);
-				case METHOD_REMOVED             -> new MethodRemovedVisitor(mRef);
-				case METHOD_NOW_FINAL           -> new MethodNowFinalVisitor(mRef);
-				case METHOD_NOW_ABSTRACT        -> new MethodNowAbstractVisitor(mRef);
-				case METHOD_RETURN_TYPE_CHANGED -> {
+				case CONSTRUCTOR_REMOVED         -> new ConstructorRemovedVisitor(mRef);
+				case METHOD_REMOVED              -> new MethodRemovedVisitor(mRef);
+				case METHOD_NOW_FINAL            -> new MethodNowFinalVisitor(mRef);
+				case METHOD_NOW_ABSTRACT         -> new MethodNowAbstractVisitor(mRef);
+				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToMethodVisitor(mRef);
+				case METHOD_RETURN_TYPE_CHANGED  -> {
 						String newTypeName = ((JApiMethod) jApiMethod).getReturnType().getNewReturnType();
 						CtTypeReference<?> newType = mRef.getFactory().Type().createReference(newTypeName);
 						yield new MethodReturnTypeChangedVisitor(mRef, newType);
@@ -55,7 +58,6 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 				case METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION -> null; // TODO: To be implemented
 				case METHOD_ABSTRACT_NOW_DEFAULT -> null; // TODO: To be implemented
 				case CONSTRUCTOR_LESS_ACCESSIBLE -> null; // TODO: To be implemented
-				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToMethodVisitor(mRef);
 				default -> throw new IllegalStateException(this + " was somehow associated to a non-method-level breaking change: " + change);
 			};
 	}

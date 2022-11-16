@@ -14,13 +14,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class SourcesDirectory {
 	private final Path location;
 	@JsonIgnore
 	private List<Path> classpath = Collections.emptyList();
-	@JsonIgnore
-	private CtModel model = null;
 
 	private static final Logger logger = LogManager.getLogger(SourcesDirectory.class);
 
@@ -32,17 +31,10 @@ public class SourcesDirectory {
 	}
 
 	public void setClasspath(List<Path> classpath) {
-		this.classpath = classpath;
-		this.model = null;
+		this.classpath = Objects.requireNonNull(classpath);
 	}
 
-	public CtModel getModel() {
-		if (model == null)
-			model = buildModel();
-		return model;
-	}
-
-	private CtModel buildModel() {
+	public CtModel buildModel() {
 		Stopwatch sw = Stopwatch.createStarted();
 		Launcher launcher;
 

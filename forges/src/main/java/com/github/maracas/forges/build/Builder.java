@@ -4,21 +4,34 @@ import com.github.maracas.forges.build.gradle.GradleBuilder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 public interface Builder {
-  void build() throws BuildException;
+  void build(int timeoutSeconds) throws BuildException;
   Optional<Path> locateJar();
+  Map<Path, String> locateModules();
 
-  static Builder of(BuildConfig config) throws BuildException {
-    Objects.requireNonNull(config);
+  default void build() throws BuildException {
+    build(Integer.MAX_VALUE);
+  }
 
-    if (MavenBuilder.isMavenProject(config.getBasePath()))
-      return new MavenBuilder(config);
-    if (GradleBuilder.isGradleProject(config.getBasePath()))
-      return new GradleBuilder(config);
+  static Builder of(CommitBuilder builder) throws BuildException {
+    Objects.requireNonNull(builder);
 
-    throw new BuildException("Don't know how to build " + config.getBasePath());
+    return Builder.of(builder.getClonePath(), builder.getBuildConfig());
+  }
+
+  static Builder of(Path basePath, BuildConfig buildConfig) throws BuildException {
+    Objects.requireNonNull(basePath);
+    Objects.requireNonNull(buildConfig);
+
+    if (MavenBuilder.isMavenProject(basePath))
+      return new MavenBuilder(basePath, buildConfig);
+    if (GradleBuilder.isGradleProject(basePath))
+      return new GradleBuilder(basePath, buildConfig);
+
+    throw new BuildException("Don't know how to build " + basePath);
   }
 }

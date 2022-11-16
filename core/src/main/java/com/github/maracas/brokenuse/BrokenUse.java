@@ -45,6 +45,13 @@ public record BrokenUse(
 	 */
 	JApiCompatibilityChange change
 ) {
+	public BrokenUse {
+		Objects.requireNonNull(element);
+		Objects.requireNonNull(usedApiElement);
+		Objects.requireNonNull(source);
+		Objects.requireNonNull(use);
+	}
+
 	@Override
 	public String toString() {
 		return """
@@ -69,7 +76,7 @@ public record BrokenUse(
 		// CtElement::equals/hashCode() do not check the position
 		return Objects.hash(
 			element.getPosition().toString(),
-			element.toString(),
+			element.getShortRepresentation(),
 			usedApiElement.getPosition().toString(),
 			source.getPosition().toString(),
 			use,

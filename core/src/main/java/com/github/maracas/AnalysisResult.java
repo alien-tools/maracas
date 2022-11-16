@@ -6,6 +6,9 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -26,11 +29,26 @@ public record AnalysisResult(
 	/*
 	  The delta impact model per analyzed client
 	 */
-	Map<SourcesDirectory, DeltaImpact> deltaImpacts
+	Map<Path, DeltaImpact> deltaImpacts,
+	/*
+		The error we may have got along the way
+	 */
+	String error
 ) {
-	public AnalysisResult {
-		Objects.requireNonNull(delta);
-		Objects.requireNonNull(deltaImpacts);
+	public static AnalysisResult success(Delta delta, Map<Path, DeltaImpact> deltaImpacts) {
+		return new AnalysisResult(
+			Objects.requireNonNull(delta),
+			Objects.requireNonNull(deltaImpacts),
+			null
+		);
+	}
+
+	public static AnalysisResult failure(String message) {
+		return new AnalysisResult(
+			null,
+			null,
+			Objects.requireNonNull(message)
+		);
 	}
 
 	/**
@@ -41,12 +59,14 @@ public record AnalysisResult(
 	 * @return the newly-created {@link AnalysisResult}
 	 */
 	public static AnalysisResult noImpact(Delta delta, Collection<SourcesDirectory> clients) {
-		return new AnalysisResult(
-			delta,
-			clients.stream().collect(toMap(
-				c -> c,
-				c -> new DeltaImpact(c, delta, emptySet()))
-			)
+		return AnalysisResult.success(
+			Objects.requireNonNull(delta),
+			Objects.requireNonNull(clients)
+				.stream()
+				.collect(toMap(
+					SourcesDirectory::getLocation,
+					c -> new DeltaImpact(c, delta, emptySet()))
+				)
 		);
 	}
 
@@ -80,12 +100,17 @@ public record AnalysisResult(
 	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
 	 */
 	public DeltaImpact deltaImpactForClient(SourcesDirectory client) {
-		return deltaImpacts.get(client);
+		return deltaImpacts.get(client.getLocation());
 	}
 
 	public String toJson() throws JsonProcessingException {
 		return new ObjectMapper()
 			.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(this);
+	}
+
+	public void writeJson(File json) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.writerWithDefaultPrettyPrinter().writeValue(json, this);
 	}
 }

@@ -3,7 +3,7 @@ package com.github.maracas.experiments;
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.forges.CommitBuilder;
+import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.Repository;
@@ -31,7 +31,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -120,7 +119,7 @@ public class AnalyzeRepositoryHistory {
 
 		while (iterator.hasNext()) {
 			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
-			var analyzer = new ForgeAnalyzer();
+			var analyzer = new ForgeAnalyzer(forge, clonesPath);
 			var executor = Executors.newFixedThreadPool(threads);
 			var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
 			var csvFile = new File(csvPath.toAbsolutePath().toString());
@@ -143,8 +142,8 @@ public class AnalyzeRepositoryHistory {
 						var forgePr = forge.fetchPullRequest(forgeRepository, pr.getNumber());
 						var cloneV1 = prClone.resolve("base-" + forgePr.mergeBase().sha());
 						var cloneV2 = prClone.resolve("head-" + forgePr.head().sha());
-						var configV1 = new BuildConfig(cloneV1, module);
-						var configV2 = new BuildConfig(cloneV2, module);
+						var configV1 = new BuildConfig(module);
+						var configV2 = new BuildConfig(module);
 						buildProperties.forEach((k, v) -> {
 							configV1.setProperty(k.toString(), v.toString());
 							configV2.setProperty(k.toString(), v.toString());
@@ -279,13 +278,13 @@ public class AnalyzeRepositoryHistory {
 						.resolve(f[0])
 						.resolve(f[1])
 						.resolve(commit.getSHA1());
-				var builder = new CommitBuilder(forgeCommit, wd, Path.of(""));
+				var builder = new CommitBuilder(forgeCommit, wd, BuildConfig.newDefault());
 
 				// FIXME: ;)
 				if ("dspot".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, Path.of("dspot"));
+					builder = new CommitBuilder(forgeCommit, wd, new BuildConfig(Path.of("dspot")));
 				if ("nopol".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, Path.of("nopol"));
+					builder = new CommitBuilder(forgeCommit, wd, new BuildConfig(Path.of("nopol")));
 
 				return builder;
 			})
