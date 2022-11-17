@@ -121,10 +121,10 @@ public class Maracas {
 		MaracasOptions opts = options != null ? options : MaracasOptions.newDefault();
 
 		try {
-			Stopwatch sw = Stopwatch.createStarted();
 			client.setClasspath(Collections.singletonList(delta.getOldVersion().getJar()));
 			CtModel model = client.buildModel();
 
+			Stopwatch sw = Stopwatch.createStarted();
 			Collection<BreakingChangeVisitor> visitors = delta.getVisitors();
 			CombinedVisitor visitor = new CombinedVisitor(visitors, opts);
 
