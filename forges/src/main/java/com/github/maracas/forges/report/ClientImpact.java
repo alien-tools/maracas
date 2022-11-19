@@ -12,10 +12,6 @@ public record ClientImpact(
 	List<ForgeBrokenUse> brokenUses,
 	String error
 ) {
-	public static ClientImpact error(Commit client, String error) {
-		return new ClientImpact(client, Collections.emptyList(), error);
-	}
-
 	public static ClientImpact success(Commit client, DeltaImpact impact, Path clone) {
 		return new ClientImpact(
 			client,
@@ -27,6 +23,18 @@ public record ClientImpact(
 	}
 
 	public static ClientImpact noImpact(Commit client) {
-		return new ClientImpact(client, Collections.emptyList(), null);
+		return new ClientImpact(
+			client,
+			Collections.emptyList(),
+			null
+		);
+	}
+
+	public static ClientImpact error(Commit client, String error) {
+		return new ClientImpact(
+			client,
+			Collections.emptyList(),
+			error
+		);
 	}
 }

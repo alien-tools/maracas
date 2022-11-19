@@ -128,6 +128,9 @@ public class ForgeAnalyzer {
 
 		try {
 			Delta delta = computeDelta(v1, v2, options);
+
+			if (delta.getBreakingChanges().isEmpty())
+				return CommitsReport.noImpact(v1.getCommit(), v2.getCommit(), delta, v1.getClonePath());
 			List<ClientImpact> clientsImpact = computeImpact(delta, clients, options);
 			return CommitsReport.success(v1.getCommit(), v2.getCommit(), delta, clientsImpact, v1.getClonePath());
 		} catch (Exception e) {

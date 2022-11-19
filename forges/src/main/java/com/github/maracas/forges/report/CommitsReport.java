@@ -15,10 +15,31 @@ public record CommitsReport(
 	String error
 ) {
 	public static CommitsReport success(Commit v1, Commit v2, Delta delta, List<ClientImpact> clientsImpact, Path clone) {
-		return new CommitsReport(v1, v2, ForgeDelta.of(delta, v1, v2, clone), clientsImpact, null);
+		return new CommitsReport(
+			v1,
+			v2,
+			ForgeDelta.of(delta, v1, v2, clone),
+			clientsImpact,
+			null
+		);
 	}
 
 	public static CommitsReport error(Commit v1, Commit v2, String error) {
-		return new CommitsReport(v1, v2, null, Collections.emptyList(), error);
+		return new CommitsReport(v1,
+			v2,
+			null,
+			Collections.emptyList(),
+			error
+		);
+	}
+
+	public static CommitsReport noImpact(Commit v1, Commit v2, Delta delta, Path clone) {
+		return new CommitsReport(
+			v1,
+			v2,
+			ForgeDelta.of(delta, v1, v2, clone),
+			Collections.emptyList(),
+			null
+		);
 	}
 }

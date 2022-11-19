@@ -14,6 +14,7 @@ import com.github.maracas.forges.report.ClientImpact;
 import com.github.maracas.forges.report.CommitsReport;
 import com.github.maracas.forges.report.ForgeBreakingChange;
 import com.github.maracas.forges.report.ForgeBrokenUse;
+import com.github.maracas.forges.report.PackageReport;
 import com.github.maracas.forges.report.PullRequestReport;
 import japicmp.model.JApiCompatibilityChange;
 import org.apache.commons.io.FileUtils;
@@ -40,7 +41,27 @@ class ForgeAnalyzerTest {
 
 	Repository fixture;
 	Commit fixtureV1, fixtureV2, clientA, clientB;
-	PullRequest pr1;
+
+	PullRequestAnalysisStrategy clientsForFixture = new PullRequestAnalysisStrategy() {
+		@Override
+		public BuildConfig makeLibraryConfig(Commit c, Path module) {
+			return new BuildConfig(module);
+		}
+
+		@Override
+		public BuildConfig makeClientConfig(Commit c) {
+			return BuildConfig.newDefault();
+		}
+
+		@Override
+		public List<Commit> fetchClientsFor(Package pkg) {
+			if ("com.github.alien-tools:module-a".equals(pkg.id()))
+				return List.of(forge.fetchCommit("alien-tools", "client-fixture-a", "HEAD"));
+			else if ("com.github.alien-tools:nested-b".equals(pkg.id()))
+				return List.of(forge.fetchCommit("alien-tools", "client-fixture-b", "HEAD"));
+			return Collections.emptyList();
+		}
+	};
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -53,7 +74,6 @@ class ForgeAnalyzerTest {
 		fixtureV2 = forge.fetchCommit(fixture, "b22087");
 		clientA = forge.fetchCommit("alien-tools", "client-fixture-a", "0720ff");
 		clientB = forge.fetchCommit("alien-tools", "client-fixture-b", "d0718e");
-		pr1 = forge.fetchPullRequest(fixture, 1);
 	}
 
 	@AfterEach
@@ -94,11 +114,9 @@ class ForgeAnalyzerTest {
 		assertThat(bu.element().toString(), is("a.a()"));
 
 		ClientImpact i2 = report.clientsImpact().get(1);
-		assertThat(i1.error(), is(nullValue()));
+		assertThat(i2.error(), is(nullValue()));
 		assertThat(i2.client(), is(equalTo(clientB)));
 		assertThat(i2.brokenUses(), is(empty()));
-
-		System.out.println(report);
 	}
 
 	@Test
@@ -137,6 +155,22 @@ class ForgeAnalyzerTest {
 		BrokenUse bu = fbu.brokenUse();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
+	}
+
+	@Test
+	void analyzeCommits_fixture_moduleA_noImpact() {
+		CommitsReport report = analyzer.analyzeCommits(
+			new CommitBuilder(fixtureV1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("module-a"))),
+			new CommitBuilder(fixtureV2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("module-a"))),
+			List.of(
+				new CommitBuilder(clientB, workingDirectory.resolve("cb"), BuildConfig.newDefault())
+			),
+			MaracasOptions.newDefault()
+		);
+
+		assertThat(report.clientsImpact(), hasSize(1));
+		ClientImpact client = report.clientsImpact().get(0);
+		assertThat(client.brokenUses(), is(empty()));
 	}
 
 	@Test
@@ -185,9 +219,103 @@ class ForgeAnalyzerTest {
 	}
 
 	@Test
-	void analyzePullRequest_fixture_1() {
-		PullRequestReport report = analyzer.analyzePullRequest(pr1, MaracasOptions.newDefault());
-		System.out.println(report);
+	void analyzePullRequest_fixture_normal() {
+		PullRequest pr = forge.fetchPullRequest(fixture, 1);
+		PullRequestReport report = analyzer.analyzePullRequest(pr, clientsForFixture, MaracasOptions.newDefault());
+
+		assertThat(report.error(), is(nullValue()));
+		assertThat(report.pr().number(), is(equalTo(1)));
+		assertThat(report.pr().baseBranch(), is(equalTo("main")));
+		assertThat(report.pr().headBranch(), is(equalTo("pr-on-modules")));
+		assertThat(report.pr().changedFiles(), hasSize(2));
+		assertThat(report.pr().changedJavaFiles(), hasSize(2));
+
+		assertThat(report.packageReports(), hasSize(2));
+
+		PackageReport moduleA = report.packageReports().get(0);
+		assertThat(moduleA.error(), is(nullValue()));
+		assertThat(moduleA.delta(), is(not(nullValue())));
+		assertThat(moduleA.delta().breakingChanges(), hasSize(1));
+		assertThat(moduleA.clientsImpact(), hasSize(1));
+
+		ForgeBreakingChange fbcA = moduleA.delta().breakingChanges().get(0);
+		assertThat(fbcA.path(), is(equalTo("module-a/src/main/java/modulea/A.java")));
+		assertThat(fbcA.startLine(), is(equalTo(4)));
+		assertThat(fbcA.endLine(), is(equalTo(6)));
+		assertThat(fbcA.fileUrl(), is(equalTo("https://github.com/alien-tools/repository-fixture/blob/main/module-a/src/main/java/modulea/A.java#L4-L6")));
+		assertThat(fbcA.diffUrl(), is(equalTo("https://github.com/alien-tools/repository-fixture/pull/1/files#diff-fbb607db0239487679342dbde80c69e4105cd269a5fa594c3d90d3baf91a8e6eL4-L6")));
+		assertThat(fbcA.breakingChange().getChange(), is(equalTo(JApiCompatibilityChange.METHOD_REMOVED)));
+		assertThat(fbcA.breakingChange().getReference().toString(), is(equalTo("a()")));
+
+		ClientImpact clientA = moduleA.clientsImpact().get(0);
+		assertThat(clientA.client().repository().owner(), is(equalTo("alien-tools")));
+		assertThat(clientA.client().repository().name(), is(equalTo("client-fixture-a")));
+		assertThat(clientA.error(), is(nullValue()));
+		assertThat(clientA.brokenUses(), hasSize(1));
+		ForgeBrokenUse fbuA = clientA.brokenUses().get(0);
+		assertThat(fbuA.path(), is(equalTo("src/main/java/clienta/ClientA.java")));
+		assertThat(fbuA.startLine(), is(equalTo(9)));
+		assertThat(fbuA.endLine(), is(equalTo(9)));
+		assertThat(fbuA.url(), is(equalTo("https://github.com/alien-tools/client-fixture-a/blob/main/src/main/java/clienta/ClientA.java#L9-L9")));
+
+		PackageReport moduleB = report.packageReports().get(1);
+		assertThat(moduleB.error(), is(nullValue()));
+		assertThat(moduleB.delta(), is(not(nullValue())));
+		assertThat(moduleB.delta().breakingChanges(), hasSize(1));
+		assertThat(moduleB.clientsImpact(), hasSize(1));
+
+		ForgeBreakingChange fbcB = moduleB.delta().breakingChanges().get(0);
+		assertThat(fbcB.path(), is(equalTo("module-c/nested-b/src/main/java/nestedb/NestedB.java")));
+		assertThat(fbcB.startLine(), is(equalTo(4)));
+		assertThat(fbcB.endLine(), is(equalTo(6)));
+		assertThat(fbcB.fileUrl(), is(equalTo("https://github.com/alien-tools/repository-fixture/blob/main/module-c/nested-b/src/main/java/nestedb/NestedB.java#L4-L6")));
+		assertThat(fbcB.diffUrl(), is(equalTo("https://github.com/alien-tools/repository-fixture/pull/1/files#diff-fb67a83f3cdd140afada868502de4908e1c98fd6fefc03c05f66139278dda700L4-L6")));
+		assertThat(fbcB.breakingChange().getChange(), is(equalTo(JApiCompatibilityChange.METHOD_REMOVED)));
+		assertThat(fbcB.breakingChange().getReference().toString(), is(equalTo("nestedB()")));
+
+		ClientImpact clientB = moduleB.clientsImpact().get(0);
+		assertThat(clientB.client().repository().owner(), is(equalTo("alien-tools")));
+		assertThat(clientB.client().repository().name(), is(equalTo("client-fixture-b")));
+		assertThat(clientB.error(), is(nullValue()));
+		assertThat(clientB.brokenUses(), hasSize(1));
+		ForgeBrokenUse fbuB = clientB.brokenUses().get(0);
+		assertThat(fbuB.path(), is(equalTo("src/main/java/clientb/ClientB.java")));
+		assertThat(fbuB.startLine(), is(equalTo(14)));
+		assertThat(fbuB.endLine(), is(equalTo(14)));
+		assertThat(fbuB.url(), is(equalTo("https://github.com/alien-tools/client-fixture-b/blob/main/src/main/java/clientb/ClientB.java#L14-L14")));
+	}
+
+	@Test
+	void analyzePullRequest_fixture_noJavaFile() {
+		PullRequest pr = forge.fetchPullRequest(fixture, 2);
+		PullRequestReport report = analyzer.analyzePullRequest(pr, clientsForFixture, MaracasOptions.newDefault());
+
+		assertThat(report.error(), is(nullValue()));
+		assertThat(report.pr().number(), is(equalTo(2)));
+		assertThat(report.pr().baseBranch(), is(equalTo("main")));
+		assertThat(report.pr().headBranch(), is(equalTo("pr-on-readme")));
+		assertThat(report.pr().changedFiles(), hasSize(1));
+		assertThat(report.pr().changedJavaFiles(), hasSize(0));
+
+		assertThat(report.packageReports(), is(empty()));
+	}
+
+	@Test
+	void analyzePullRequest_fixture_pr_on_another_branch() {
+		PullRequest pr = forge.fetchPullRequest(fixture, 3);
+		PullRequestReport report = analyzer.analyzePullRequest(pr, clientsForFixture, MaracasOptions.newDefault());
+
+		assertThat(report.error(), is(nullValue()));
+		assertThat(report.pr().number(), is(equalTo(3)));
+		assertThat(report.pr().baseBranch(), is(equalTo("pr-on-modules")));
+		assertThat(report.pr().headBranch(), is(equalTo("pr-on-a-branch")));
+		assertThat(report.pr().changedFiles(), hasSize(1));
+		assertThat(report.pr().changedJavaFiles(), hasSize(1));
+
+		assertThat(report.packageReports(), hasSize(1));
+		assertThat(report.packageReports().get(0).delta().breakingChanges(), hasSize(1));
+		assertThat(report.packageReports().get(0).clientsImpact(), hasSize(1));
+		assertThat(report.packageReports().get(0).clientsImpact().get(0).brokenUses(), hasSize(0));
 	}
 
 	@Test

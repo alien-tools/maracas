@@ -126,7 +126,7 @@ public class GitCloner implements Cloner {
 				throw new CloneException("%s timed out [> %ds]".formatted(readableCommand, timeout));
 			}
 		} catch (IOException e) {
-			throw new CloneException(e);
+			throw new CloneException(e.getMessage());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}

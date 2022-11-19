@@ -92,7 +92,8 @@ public class Maracas {
 		Delta delta = Delta.fromJApiCmpDelta(oldVersion, newVersion, classes, opts);
 		delta.populateLocations();
 
-		logger.info("Δ({}, {}) took {}ms", oldVersion.getLabel(), newVersion.getLabel(), sw.elapsed().toMillis());
+		logger.info("Δ({}, {}): {} BCs took {}ms",
+			oldVersion.getLabel(), newVersion.getLabel(), delta.getBreakingChanges().size(), sw.elapsed().toMillis());
 		return delta;
 	}
 
@@ -134,7 +135,8 @@ public class Maracas {
 			// We still need to visit the root package afterwards.
 			visitor.scan(model.getRootPackage());
 
-			logger.info("brokenUses({}) took {}ms", client, sw.elapsed().toMillis());
+			logger.info("brokenUses({}): {} BUs took {}ms",
+				client, visitor.getBrokenUses().size(), sw.elapsed().toMillis());
 			return new DeltaImpact(client, delta, visitor.getBrokenUses());
 		} catch (Exception e) {
 			logger.warn("Error building the delta impact for {}: {}", client, e);
