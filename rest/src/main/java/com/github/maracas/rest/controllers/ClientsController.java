@@ -44,7 +44,7 @@ public class ClientsController {
 		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
 		List<GitHubClientsFetcher.Client> clients = clientsService.fetchClients(repository);
 
-		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
+		return ResponseEntity.ok(ClientsResponse.ok(owner, name, packages, clients));
 	}
 
 	@GetMapping("/packages/{owner}/{name}")
@@ -55,20 +55,20 @@ public class ClientsController {
 		Repository repository = forge.fetchRepository(owner, name);
 		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
 
-		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
+		return ResponseEntity.ok(ClientsResponse.ok(owner, name, packages, Collections.emptyList()));
 	}
 
 	@ExceptionHandler({ForgeException.class})
 	public ResponseEntity<ClientsResponse> handleForgeExceptions(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-			.body(new ClientsResponse(e.getMessage()));
+			.body(ClientsResponse.status(e.getMessage()));
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ClientsResponse> handleExceptions(Exception e) {
 		logger.error("Uncaught exception ", e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.body(new ClientsResponse(e.getMessage()));
+			.body(ClientsResponse.status(e.getMessage()));
 	}
 }

@@ -1,9 +1,7 @@
 package com.github.maracas.rest.data;
 
-import com.github.maracas.delta.Delta;
-import com.github.maracas.forges.PullRequest;
+import com.github.maracas.forges.report.ForgeDelta;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public record DeltaDto(
@@ -11,14 +9,11 @@ public record DeltaDto(
 	String jarV2,
 	List<BreakingChangeDto> breakingChanges
 ) {
-	public static DeltaDto of(Delta d, PullRequest pr, Path clone) {
+	public static DeltaDto of(ForgeDelta d) {
 		return new DeltaDto(
-			d.getOldVersion().getJar().getFileName().toString(),
-			d.getNewVersion().getJar().getFileName().toString(),
-			d.getBreakingChanges()
-				.stream()
-				.map(bc -> BreakingChangeDto.of(bc, pr, clone))
-				.toList()
+			d.oldVersion().getJar().getFileName().toString(),
+			d.newVersion().getJar().getFileName().toString(),
+			d.breakingChanges().stream().map(BreakingChangeDto::of).toList()
 		);
 	}
 }

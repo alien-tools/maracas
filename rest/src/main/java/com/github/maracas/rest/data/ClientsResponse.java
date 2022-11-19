@@ -12,11 +12,11 @@ public record ClientsResponse(
 	List<GitHubClientsFetcher.Package> packages,
 	List<GitHubClientsFetcher.Client> clients
 ) {
-	public ClientsResponse(String message) {
-		this(message, "", "", Collections.emptyList(), Collections.emptyList());
+	public static ClientsResponse status(String message) {
+		return new ClientsResponse(message, null, null, Collections.emptyList(), Collections.emptyList());
 	}
 
-	public ClientsResponse(String owner, String name, List<GitHubClientsFetcher.Package> packages, List<GitHubClientsFetcher.Client> clients) {
-		this("ok", owner, name, packages, clients);
+	public static ClientsResponse ok(String owner, String name, List<GitHubClientsFetcher.Package> packages, List<GitHubClientsFetcher.Client> clients) {
+		return new ClientsResponse("ok", owner, name, packages, clients);
 	}
 }

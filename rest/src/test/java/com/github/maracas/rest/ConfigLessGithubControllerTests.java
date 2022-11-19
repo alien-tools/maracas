@@ -1,6 +1,6 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.PackageReport;
+import com.github.maracas.rest.data.PackageReportDto;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
@@ -15,9 +15,9 @@ class ConfigLessGithubControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
 		assertThat(report.clientReports(), empty());
 	}

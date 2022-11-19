@@ -131,7 +131,7 @@ public class GitHubForge implements Forge {
 				commit.getSHA1()
 			);
 		} catch (IOException e) {
-			throw new ForgeException("Couldn't fetch commit %s from repository %s".formatted(sha, repository.fullName()), e);
+			throw new ForgeException("Couldn't fetch client %s from repository %s".formatted(sha, repository.fullName()), e);
 		}
 	}
 

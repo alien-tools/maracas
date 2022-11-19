@@ -1,5 +1,6 @@
 package com.github.maracas.forges.build.gradle;
 
+import com.github.maracas.forges.Package;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
@@ -97,7 +98,7 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public Map<Path, String> locateModules() {
+	public List<Package> locatePackages() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.maracas.forges.PullRequest;
+import com.github.maracas.forges.report.PullRequestReport;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,14 +14,14 @@ public record PullRequestResponse(
 	String message,
 	LocalDateTime date,
 	PullRequestDto pr,
-	MaracasReport report
+	PullRequestReportDto report
 ) {
 	public static PullRequestResponse status(PullRequest pr, String status) {
 		return new PullRequestResponse(status, LocalDateTime.now(), pr != null ? PullRequestDto.of(pr) : null, null);
 	}
 
-	public static PullRequestResponse ok(PullRequest pr, MaracasReport report) {
-		return new PullRequestResponse("ok", LocalDateTime.now(), PullRequestDto.of(pr), report);
+	public static PullRequestResponse ok(PullRequest pr, PullRequestReport report) {
+		return new PullRequestResponse("ok", LocalDateTime.now(), PullRequestDto.of(pr), PullRequestReportDto.of(report));
 	}
 
 	public static PullRequestResponse fromJson(File json) throws IOException {

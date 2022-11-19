@@ -37,18 +37,27 @@ public record PullRequest(
     Objects.requireNonNull(changedFiles);
   }
 
-  public String buildGitHubDiffUrl(String file, int line) {
-    return "https://github.com/%s/%s/pull/%d/files#diff-%sL%d".formatted(
+  public List<Path> changedJavaFiles() {
+    return changedFiles
+      .stream()
+      .filter(f -> f.toString().endsWith(".java"))
+      .toList();
+  }
+
+  public String buildGitHubDiffUrl(String file, int beginLine, int endLine) {
+    return "https://github.com/%s/%s/pull/%d/files#diff-%sL%d-L%d".formatted(
       repository.owner(),
       repository.name(),
       number,
       Hashing.sha256().hashString(file, StandardCharsets.UTF_8),
-      line);
+      beginLine,
+      endLine
+    );
   }
 
   @Override
   public String toString() {
-    return String.format("PR#%d [%s/%s] [base=%s, head=%s]",
+    return "PR#%s[%s/%s] [base=%s, head=%s]".formatted(
       number, repository.owner(), repository.name(), baseBranch, headBranch);
   }
 }

@@ -1,8 +1,8 @@
 package com.github.maracas.rest;
 
 import com.github.maracas.rest.data.BreakingChangeDto;
-import com.github.maracas.rest.data.ClientReport;
-import com.github.maracas.rest.data.PackageReport;
+import com.github.maracas.rest.data.ClientImpactDto;
+import com.github.maracas.rest.data.PackageReportDto;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -27,12 +27,14 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
 		assertThat(report.clientReports(), hasSize(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		ClientImpactDto impact = report.clientReports().get(0);
+		assertThat(impact.owner(), is(equalTo("alien-tools")));
+		assertThat(impact.name(), is(equalTo("comp-changes-client")));
 		assertThat(report.allBrokenUses().size(), greaterThan(0));
 	}
 
@@ -41,12 +43,14 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
 		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		ClientImpactDto impact = report.clientReports().get(0);
+		assertThat(impact.owner(), is(equalTo("alien-tools")));
+		assertThat(impact.name(), is(equalTo("comp-changes-client")));
 		assertThat(report.allBrokenUses().size(), greaterThan(0));
 	}
 
@@ -55,12 +59,14 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
 		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		ClientImpactDto impact = report.clientReports().get(0);
+		assertThat(impact.owner(), is(equalTo("alien-tools")));
+		assertThat(impact.name(), is(equalTo("comp-changes-client")));
 		assertThat(report.allBrokenUses().size(), greaterThan(0));
 	}
 
@@ -110,12 +116,14 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
 		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		ClientImpactDto impact = report.clientReports().get(0);
+		assertThat(impact.owner(), is(equalTo("alien-tools")));
+		assertThat(impact.name(), is(equalTo("comp-changes-client")));
 		assertThat(report.allBrokenUses().size(), greaterThan(0));
 	}
 
@@ -131,21 +139,17 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().packageReports(), hasSize(1));
 
-		PackageReport report = res.report().reports().get(0);
+		PackageReportDto report = res.report().packageReports().get(0);
 		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports(), hasSize(3));
+		assertThat(report.clientReports(), hasSize(2));
 
-		ClientReport unknown = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/unknown-client")).findFirst().get();
-		assertThat(unknown.error(), containsString("Couldn't fetch repository alien-tools/unknown-client"));
-		assertThat(unknown.brokenUses(), is(empty()));
-
-		ClientReport compChanges = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client")).findFirst().get();
+		ClientImpactDto compChanges = report.clientReports().stream().filter(r -> r.name().equals("comp-changes-client")).findFirst().get();
 		assertThat(compChanges.error(), is(nullValue()));
 		assertThat(compChanges.brokenUses(), is(not(empty())));
 
-		ClientReport error = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client-error")).findFirst().get();
+		ClientImpactDto error = report.clientReports().stream().filter(r -> r.name().equals("comp-changes-client-error")).findFirst().get();
 		assertThat(error.error(), containsString("Unable to read the pom"));
 		assertThat(error.brokenUses(), is(empty()));
 	}
@@ -158,10 +162,10 @@ class PullRequestControllerTests extends AbstractControllerTest {
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.report.reports[0].id", equalTo("maracas-data:comp-changes")))
-			.andExpect(jsonPath("$.report.reports[0].error", containsString("Unknown lifecycle phase")))
-			.andExpect(jsonPath("$.report.reports[0].delta", nullValue()))
-			.andExpect(jsonPath("$.report.reports[0].clientReports", empty()));
+			.andExpect(jsonPath("$.report.packageReports[0].id", equalTo("maracas-data:comp-changes")))
+			.andExpect(jsonPath("$.report.packageReports[0].error", containsString("Unknown lifecycle phase")))
+			.andExpect(jsonPath("$.report.packageReports[0].delta", nullValue()))
+			.andExpect(jsonPath("$.report.packageReports[0].clientReports", empty()));
 	}
 
 	@Test
@@ -257,7 +261,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			    - repository: unknown/repository""";
 
 		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
-			.andExpect(jsonPath("$.report.reports[0].clientReports[0].error", containsString("Couldn't fetch repository")));
+			.andExpect(jsonPath("$.report.packageReports[0].clientReports", hasSize(0)));
 	}
 
 	@Test
@@ -325,7 +329,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		PullRequestResponse response = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
 
 		Collection<String> brokenDecls =
-			response.report().reports().get(0).delta().breakingChanges().stream().
+			response.report().packageReports().get(0).delta().breakingChanges().stream().
 				map(BreakingChangeDto::declaration).toList();
 		assertThat(brokenDecls, not(hasItem(containsString("test"))));
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));

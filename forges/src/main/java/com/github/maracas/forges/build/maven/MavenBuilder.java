@@ -1,5 +1,6 @@
 package com.github.maracas.forges.build.maven;
 
+import com.github.maracas.forges.Package;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
@@ -25,10 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -95,8 +95,7 @@ public class MavenBuilder implements Builder {
 				? DEFAULT_PROPERTIES
 				: config.getProperties();
 
-			logger.info("Building {} with module={} goals={} properties={}",
-				pomFile, config.getModule(), goals, properties);
+			logger.info("Building {} with module={} goals={}", pomFile, config.getModule(), goals);
 
 			Stopwatch sw = Stopwatch.createStarted();
 			StringBuilder errors = new StringBuilder();
@@ -128,8 +127,7 @@ public class MavenBuilder implements Builder {
 				if (result.getExitCode() != 0)
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
 
-				logger.info("Building {} with module={} goals={} properties={} took {}ms",
-					pomFile, config.getModule(), goals, properties, sw.elapsed().toMillis());
+				logger.info("Building {} took {}ms", pomFile, sw.elapsed().toMillis());
 			} catch (MavenInvocationException e) {
 				throw new BuildException("Error invoking Maven", e);
 			}
@@ -168,8 +166,8 @@ public class MavenBuilder implements Builder {
 	}
 
 	@Override
-	public Map<Path, String> locateModules() {
-		Map<Path, String> modules = new HashMap<>();
+	public List<Package> locatePackages() {
+		List<Package> packages = new ArrayList<>();
 
 		try (Stream<Path> paths = Files.walk(basePath)) {
 			paths
@@ -182,7 +180,7 @@ public class MavenBuilder implements Builder {
 						String aid = model.getArtifactId();
 
 						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
-							modules.put(basePath.relativize(pomFile.getParent()), String.format("%s:%s", gid, aid));
+							packages.add(new Package(String.format("%s:%s", gid, aid), basePath.relativize(pomFile.getParent())));
 					} catch (IOException | XmlPullParserException e) {
 						logger.error("Couldn't parse {}, skipping", pomFile);
 					}
@@ -191,6 +189,6 @@ public class MavenBuilder implements Builder {
 			logger.error("Error walking directory {}", basePath, e);
 		}
 
-		return modules;
+		return packages;
 	}
 }

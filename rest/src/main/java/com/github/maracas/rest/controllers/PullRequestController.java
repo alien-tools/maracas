@@ -4,8 +4,8 @@ import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.clone.CloneException;
+import com.github.maracas.forges.report.PullRequestReport;
 import com.github.maracas.rest.breakbot.BreakbotException;
-import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.*;
 import org.apache.logging.log4j.LogManager;
@@ -85,7 +85,7 @@ public class PullRequestController {
 		@RequestBody(required=false) String breakbotYaml
 	) {
 		PullRequest pr = prService.fetchPullRequest(owner, name, number);
-		MaracasReport report = prService.analyzePRSync(pr, breakbotYaml);
+		PullRequestReport report = prService.analyzePRSync(pr, breakbotYaml);
 		return ResponseEntity.ok(PullRequestResponse.ok(pr, report));
 	}
 

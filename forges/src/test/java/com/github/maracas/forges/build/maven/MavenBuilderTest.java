@@ -1,5 +1,6 @@
 package com.github.maracas.forges.build.maven;
 
+import com.github.maracas.forges.Package;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.Builder;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -112,22 +114,30 @@ class MavenBuilderTest {
 	}
 
 	@Test
-	void locate_modules_valid() {
+	void locate_packages_valid() {
 		Builder builder = new MavenBuilder(validProject);
-		Map<Path, String> modules = builder.locateModules();
+		List<Package> packages = builder.locatePackages();
 
-		assertThat(modules, is(aMapWithSize(1)));
-		assertThat(modules, hasEntry(Path.of(""), "test:maven-project"));
+		assertThat(packages, hasSize(1));
+
+		Package p = packages.get(0);
+		assertThat(p.id(), is(equalTo("test:maven-project")));
+		assertThat(p.modulePath(), is(equalTo(Path.of(""))));
 	}
 
 	@Test
-	void locate_modules_multi() {
+	void locate_packages_multi() {
 		Builder builder = new MavenBuilder(multiProject);
-		Map<Path, String> modules = builder.locateModules();
+		List<Package> packages = builder.locatePackages();
 
-		assertThat(modules, is(aMapWithSize(3)));
-		assertThat(modules, hasEntry(Path.of(""),             "sample:parent-module"));
-		assertThat(modules, hasEntry(Path.of("core-module"),  "sample:core-module"));
-		assertThat(modules, hasEntry(Path.of("extra-module"), "sample:extra-module"));
+		System.out.println(packages);
+
+		assertThat(packages, hasSize(3));
+		assertThat(packages.get(0).id(), is(equalTo("sample:extra-module")));
+		assertThat(packages.get(0).modulePath(), is(equalTo(Path.of("extra-module"))));
+		assertThat(packages.get(1).id(), is(equalTo("sample:core-module")));
+		assertThat(packages.get(1).modulePath(), is(equalTo(Path.of("core-module"))));
+		assertThat(packages.get(2).id(), is(equalTo("sample:parent-module")));
+		assertThat(packages.get(2).modulePath(), is(equalTo(Path.of(""))));
 	}
 }

@@ -1,28 +1,21 @@
 package com.github.maracas.rest.services;
 
-import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.brokenuse.DeltaImpact;
-import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.build.CommitBuilder;
+import com.github.maracas.forges.PullRequestAnalysisStrategy;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.ForgeException;
+import com.github.maracas.forges.Package;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.github.GitHubForge;
+import com.github.maracas.forges.report.PullRequestReport;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.data.BrokenUseDto;
-import com.github.maracas.rest.data.ClientReport;
-import com.github.maracas.rest.data.DeltaDto;
-import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import japicmp.config.Options;
 import japicmp.util.Optional;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +54,8 @@ public class PullRequestService {
 	private int buildTimeout;
 	@Value("${maracas.clone-timeout:600}")
 	private int cloneTimeout;
+	@Value("${maracas.max-class-lines:20000}")
+	private int maxClassLines;
 
 	private Forge forge;
 	private ForgeAnalyzer forgeAnalyzer;
@@ -94,7 +88,7 @@ public class PullRequestService {
 		logger.info("Queuing analysis for {}", uid);
 		CompletableFuture<Void> future =
 			CompletableFuture
-				.supplyAsync(() -> buildMaracasReport(pr, config))
+				.supplyAsync(() -> buildPullRequestReport(pr, config))
 				.handle((report, ex) -> {
 					jobs.remove(uid);
 
@@ -116,122 +110,77 @@ public class PullRequestService {
 		return reportLocation;
 	}
 
-	public MaracasReport analyzePRSync(PullRequest pr, String breakbotYaml) {
+	public PullRequestReport analyzePRSync(PullRequest pr, String breakbotYaml) {
 		BreakbotConfig config = breakbotService.buildBreakbotConfig(pr.repository(), breakbotYaml);
-		return buildMaracasReport(pr, config);
+		return buildPullRequestReport(pr, config);
 	}
 
-	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
+	private PullRequestReport buildPullRequestReport(PullRequest pr, BreakbotConfig config) {
 		logger.info("[{}] Starting the analysis", prUid(pr));
 
-		MaracasOptions options = makeMaracasOptions(config);
-		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), Path.of(""));
+		Map<Commit, BreakbotConfig.GitHubRepository> clientConfigs = new HashMap<>();
+		return forgeAnalyzer.analyzePullRequest(
+			pr,
+			new PullRequestAnalysisStrategy() {
+				@Override
+				public BuildConfig makeLibraryConfig(Commit c, Path module) {
+					BuildConfig buildConfig = new BuildConfig(module);
+					config.build().goals().forEach(buildConfig::addGoal);
+					config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
-		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
+					return buildConfig;
+				}
 
-		List<PackageReport> packageReports = new ArrayList<>();
-		impactedPackages.keySet().forEach(pkgName -> {
-			try {
-				Path modulePath = impactedPackages.get(pkgName);
-				logger.info("[{}] Now analyzing package {}", prUid(pr), pkgName);
+				@Override
+				public BuildConfig makeClientConfig(Commit c) {
+					BreakbotConfig.GitHubRepository config = clientConfigs.get(c);
 
-				// First, we compute the delta model to look for BCs
-				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), modulePath);
-				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), modulePath);
-				Delta delta = forgeAnalyzer.computeDelta(builderV1, builderV2, options);
+					if (config == null) {
+						return BuildConfig.newDefault();
+					} else {
+						Path clientModule =
+							config.module() != null
+								? Path.of(config.module())
+								: BuildConfig.DEFAULT_MODULE;
 
-				// If we find some, we fetch the appropriate clients and analyze the impact
-				if (!delta.getBreakingChanges().isEmpty()) {
-					logger.info("[{}] Fetching clients for package {}", prUid(pr), pkgName);
-					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkgName);
-					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkgName);
+						return new BuildConfig(clientModule);
+					}
+				}
 
-					Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
-					List<ClientReport> clientReports = new ArrayList<>();
+				@Override
+				public List<Commit> fetchClientsFor(Package pkg) {
+					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkg.id());
+					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkg.id());
+
+					List<Commit> clientCommits = new ArrayList<>();
 					for (BreakbotConfig.GitHubRepository c : clients) {
 						try {
-							CommitBuilder clientBuilder = makeBuilderForClient(pr, c);
-							clientBuilders.put(clientBuilder.getClonePath(), clientBuilder);
+							Commit commit = getCommitForClient(c);
+							clientCommits.add(commit);
+							clientConfigs.putIfAbsent(commit, c);
 						} catch (IOException | ForgeException e) {
-							logger.error("Couldn't create a builder for {}", c.repository(), e);
-							clientReports.add(ClientReport.error(c.repository(), e.getMessage()));
+							logger.error("Couldn't fetch client repository {}", c);
 						}
 					}
 
-					AnalysisResult result = forgeAnalyzer.computeImpact(delta, clientBuilders.values().stream().toList(), options);
-					clientReports.addAll(
-						result.deltaImpacts().keySet().stream()
-							.map(client -> {
-								CommitBuilder builder = clientBuilders.get(client);
-								Repository clientRepo = builder.getCommit().repository();
-								String clientName = clientRepo.owner() + "/" + clientRepo.name();
-								DeltaImpact impact = result.deltaImpacts().get(client);
-								Throwable t = impact.getThrowable();
-
-								if (t != null)
-									return ClientReport.error(clientName, t.getMessage());
-								else
-									return ClientReport.success(clientName,
-										impact.getBrokenUses().stream()
-											.map(bu -> BrokenUseDto.of(bu, clientRepo, clientRepo.branch(), client))
-											.toList());
-							})
-							.toList()
-					);
-
-					packageReports.add(PackageReport.success(
-						pkgName,
-						DeltaDto.of(delta, pr, builderV1.getClonePath()),
-						clientReports
-					));
-				} else {
-					packageReports.add(PackageReport.success(
-						pkgName,
-						DeltaDto.of(delta, pr, builderV1.getClonePath()),
-						Collections.emptyList()
-					));
+					return clientCommits;
 				}
-			} catch (Exception e) {
-				logger.error(e);
-				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
-			}
-		});
-
-		return new MaracasReport(packageReports);
+			},
+			makeMaracasOptions(config)
+		);
 	}
 
-	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config, Path module) {
-		Path commitClonePath = newClonePath(pr, c);
-		BuildConfig buildConfig = new BuildConfig(module);
-		config.goals().forEach(buildConfig::addGoal);
-		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
-
-		return new CommitBuilder(c, commitClonePath, buildConfig);
-	}
-
-	private CommitBuilder makeBuilderForClient(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {
-		String[] fields = c.repository().split("/");
+	private Commit getCommitForClient(BreakbotConfig.GitHubRepository config) throws IOException, ForgeException {
+		String[] fields = config.repository().split("/");
 		String clientOwner = fields[0];
 		String clientName = fields[1];
 
 		Repository clientRepo =
-			StringUtils.isEmpty(c.branch())
+			StringUtils.isEmpty(config.branch())
 				? forge.fetchRepository(clientOwner, clientName)
-				: forge.fetchRepository(clientOwner, clientName, c.branch());
+				: forge.fetchRepository(clientOwner, clientName, config.branch());
 
-		String clientSha = github.getRepository(c.repository()).getBranch(clientRepo.branch()).getSHA1();
-		Commit clientCommit =
-			StringUtils.isEmpty(c.sha())
-				? new Commit(clientRepo, clientSha)
-				: new Commit(clientRepo, c.sha());
-		Path clientClone = newClonePath(pr, clientCommit);
-		Path clientModule =
-			c.module() != null
-				? Path.of(c.module())
-				: Path.of("");
-
-		return new CommitBuilder(clientCommit, clientClone, new BuildConfig(clientModule));
+		return forge.fetchCommit(clientRepo, StringUtils.isEmpty(config.sha()) ? "HEAD" : config.sha());
 	}
 
 	private MaracasOptions makeMaracasOptions(BreakbotConfig config) {
@@ -240,6 +189,7 @@ public class PullRequestService {
 		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 		options.setCloneTimeoutSeconds(cloneTimeout);
 		options.setBuildTimeoutSeconds(buildTimeout);
+		options.setMaxClassLines(maxClassLines);
 		return options;
 	}
 
@@ -285,15 +235,5 @@ public class PullRequestService {
 			.resolve(pr.repository().name())
 			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
 			.toFile();
-	}
-
-	private Path newClonePath(PullRequest pr, Commit c) {
-		return Path.of(clonePath)
-			.resolve(prUid(pr))
-			.resolve(c.repository().owner())
-			.resolve(c.repository().name())
-			.resolve(c.sha())
-			.resolve(RandomStringUtils.randomAlphanumeric(12))
-			.toAbsolutePath();
 	}
 }

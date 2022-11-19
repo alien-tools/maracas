@@ -1,6 +1,5 @@
 package com.github.maracas.forges;
 
-import com.github.maracas.AnalysisResult;
 import com.github.maracas.LibraryJar;
 import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
@@ -11,15 +10,19 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
+import com.github.maracas.forges.report.ClientImpact;
+import com.github.maracas.forges.report.CommitsReport;
+import com.github.maracas.forges.report.PackageReport;
+import com.github.maracas.forges.report.PullRequestReport;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,219 +35,267 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class ForgeAnalyzer {
-  private final Forge forge;
-  private final Path workingDirectory;
-  private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	private final Forge forge;
+	private final Path workingDirectory;
+	private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-  private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
+	private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
-  public ForgeAnalyzer(Forge forge, Path workingDirectory) {
-    Objects.requireNonNull(forge);
-    Objects.requireNonNull(workingDirectory);
-    this.forge = forge;
-    this.workingDirectory = workingDirectory;
-  }
+	public ForgeAnalyzer(Forge forge, Path workingDirectory) {
+		this.forge = Objects.requireNonNull(forge);
+		this.workingDirectory = Objects.requireNonNull(workingDirectory);
+	}
 
-  public List<AnalysisResult> analyzePullRequest(PullRequest pr, MaracasOptions options) {
-    Objects.requireNonNull(pr);
-    Objects.requireNonNull(options);
+	public PullRequestReport analyzePullRequest(PullRequest pr, PullRequestAnalysisStrategy builderFactory, MaracasOptions options) {
+		Objects.requireNonNull(pr);
+		Objects.requireNonNull(builderFactory);
+		Objects.requireNonNull(options);
 
-    // For every package in mergeBase that may be impacted by the PR's changes
-    Commit v1 = pr.mergeBase();
-    Commit v2 = pr.head();
-    Path v1Clone = newClonePath(v1);
-    Path v2Clone = newClonePath(v2);
-    CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, BuildConfig.newDefault());
-    Map<String, Path> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
-    logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
+		logger.info("Now analyzing {}", pr);
 
-    // We need to run the whole analysis for each impacted package in the PR
-    return impactedPackages.entrySet()
-      .stream()
-      .map(e -> analyzePullRequestPackage(pr, v1Clone, v2Clone, e.getKey(), e.getValue(), options))
-      .toList();
-  }
+		// If there's nothing interesting, skip
+		if (pr.changedJavaFiles().isEmpty())
+			return PullRequestReport.success(pr, Collections.emptyList());
 
-  private AnalysisResult analyzePullRequestPackage(PullRequest pr, Path v1Clone, Path v2Clone,
-                                                   String pkgName, Path modulePath, MaracasOptions options) {
-    try {
-      logger.info("[{}] Now analyzing package {}", pr, pkgName);
+		// Pick the commits we're comparing: mergeBase vs head
+		Commit v1 = pr.mergeBase();
+		Commit v2 = pr.head();
+		CommitBuilder builderV1 = new CommitBuilder(v1, newClonePath(v1), builderFactory.makeLibraryConfig(v1, BuildConfig.DEFAULT_MODULE));
+		CommitBuilder builderV2 = new CommitBuilder(v2, newClonePath(v2), builderFactory.makeLibraryConfig(v2, BuildConfig.DEFAULT_MODULE));
 
-      Commit v1 = pr.mergeBase();
-      Commit v2 = pr.head();
+		try {
+			// List the updated files in v1
+			builderV1.cloneCommit(options.getCloneTimeoutSeconds());
+			List<Path> updatedFiles = pr.changedJavaFiles()
+				.stream()
+				.filter(f -> builderV1.getClonePath().resolve(f).toFile().exists())
+				.toList();
 
-      // First, we compute the delta model to look for BCs
-      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
-      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
-      Delta delta = computeDelta(builderV1, builderV2, options);
+			// For every package in v1 that's updated by the PR's changes
+			List<Package> packages = builderV1.getBuilder().locatePackages();
+			List<Package> updatedPackages = inferUpdatedPackages(packages, updatedFiles);
+			logger.info("{} impacts {}/{} packages: {}", pr,
+				updatedPackages.size(), packages.size(), updatedPackages);
 
-      if (delta.getBreakingChanges().isEmpty())
-        return AnalysisResult.noImpact(delta, Collections.emptyList());
+			// We need to run the whole analysis for each updated package
+			return PullRequestReport.success(
+				pr,
+				updatedPackages.stream()
+					.map(pkg -> analyzePackage(pr, pkg, builderV1, builderV2, builderFactory, options))
+					.toList()
+			);
+		} catch (Exception e) {
+			return PullRequestReport.error(pr, e.getMessage());
+		}
+	}
 
-      // If we find some, we fetch the appropriate clients and analyze the impact
-      logger.info("Fetching clients for package {}", pkgName);
-      Collection<Commit> clients =
-        forge.fetchTopStarredClients(pr.repository(), pkgName, options.getClientsPerPackage(), options.getMinStarsPerClient())
-          .stream()
-          .map(repository -> forge.fetchCommit(repository, "HEAD"))
-          .toList();
-      logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+	public PullRequestReport analyzePullRequest(PullRequest pr, MaracasOptions options) {
+		return analyzePullRequest(
+			pr,
+			new PullRequestAnalysisStrategy() {
+				@Override
+				public BuildConfig makeLibraryConfig(Commit c, Path module) {
+					return new BuildConfig(module);
+				}
 
-      return computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options);
-    } catch (Exception e) {
-      return AnalysisResult.failure(e.getMessage());
-    }
-  }
+				@Override
+				public BuildConfig makeClientConfig(Commit c) {
+					return BuildConfig.newDefault();
+				}
 
-  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
-                                       MaracasOptions options)
-    throws BuildException, CloneException {
-    Objects.requireNonNull(v1);
-    Objects.requireNonNull(v2);
-    Objects.requireNonNull(clients);
-    Objects.requireNonNull(options);
+				@Override
+				public List<Commit> fetchClientsFor(Package pkg) {
+					List<Commit> clients =
+						forge.fetchTopStarredClients(pr.repository(), pkg.id(), options.getClientsPerPackage(), options.getMinStarsPerClient())
+							.stream()
+							.map(repository -> forge.fetchCommit(repository, "HEAD"))
+							.toList();
+					logger.info("Found {} clients to analyze for {}", clients.size(), pkg.id());
+					return clients;
+				}
+			},
+			options
+		);
+	}
 
-    Delta delta = computeDelta(v1, v2, options);
-    return computeImpact(delta, clients, options);
-  }
+	public CommitsReport analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
+	                                    MaracasOptions options)
+		throws BuildException, CloneException {
+		Objects.requireNonNull(v1);
+		Objects.requireNonNull(v2);
+		Objects.requireNonNull(clients);
+		Objects.requireNonNull(options);
 
-  public Delta computeDelta(CommitBuilder v1, CommitBuilder v2, MaracasOptions options)
-    throws BuildException, CloneException {
-    Objects.requireNonNull(v1);
-    Objects.requireNonNull(v2);
-    Objects.requireNonNull(options);
+		try {
+			Delta delta = computeDelta(v1, v2, options);
+			List<ClientImpact> clientsImpact = computeImpact(delta, clients, options);
+			return CommitsReport.success(v1.getCommit(), v2.getCommit(), delta, clientsImpact, v1.getClonePath());
+		} catch (Exception e) {
+			return CommitsReport.error(v1.getCommit(), v2.getCommit(), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}
+	}
 
-    CompletableFuture<Optional<Path>> futureV1 =
-      CompletableFuture
-        .supplyAsync(
-          () -> v1.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
-          executorService);
-    CompletableFuture<Optional<Path>> futureV2 =
-      CompletableFuture
-        .supplyAsync(
-          () -> v2.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
-          executorService);
+	private PackageReport analyzePackage(PullRequest pr, Package pkg, CommitBuilder builderV1, CommitBuilder builderV2, PullRequestAnalysisStrategy builderFactory, MaracasOptions options) {
+		try {
+			logger.info("Now analyzing {}", pkg);
 
-    try {
-      CompletableFuture.allOf(futureV1, futureV2).join();
-      Optional<Path> jarV1 = futureV1.get();
-      Optional<Path> jarV2 = futureV2.get();
+			// First, we compute the delta model to look for BCs
+			Commit v1 = builderV1.getCommit();
+			Commit v2 = builderV2.getCommit();
+			CommitBuilder pkgBuilderV1 = new CommitBuilder(v1, builderV1.getClonePath(), builderFactory.makeLibraryConfig(v1, pkg.modulePath()));
+			CommitBuilder pkgBuilderV2 = new CommitBuilder(v2, builderV2.getClonePath(), builderFactory.makeLibraryConfig(v2, pkg.modulePath()));
+			Delta delta = computeDelta(pkgBuilderV1, pkgBuilderV2, options);
 
-      if (jarV1.isEmpty())
-        throw new BuildException("Couldn't find the JAR built from " + v1.getCommit());
-      if (jarV2.isEmpty())
-        throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
+			// If no BC, we stop here
+			if (delta.getBreakingChanges().isEmpty())
+				return PackageReport.success(pkg, delta, Collections.emptyList(), pr, pkgBuilderV1.getClonePath());
 
-      LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
-      LibraryJar libV2 = new LibraryJar(jarV2.get());
-      return Maracas.computeDelta(libV1, libV2, options);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (ExecutionException | CompletionException e) {
-      // Simply unwrap
-      if (e.getCause() instanceof BuildException be)
-        throw be;
-      if (e.getCause() instanceof CloneException ce)
-        throw ce;
-      logger.error(e);
-    }
+			// Otherwise we look at clients
+			List<Commit> clients = builderFactory.fetchClientsFor(pkg);
+			List<CommitBuilder> clientBuilders =
+				clients.stream()
+					.map(c -> new CommitBuilder(c, newClonePath(c), builderFactory.makeClientConfig(c)))
+					.toList();
+			List<ClientImpact> clientsImpact = computeImpact(delta, clientBuilders, options);
+			return PackageReport.success(pkg, delta, clientsImpact, pr, pkgBuilderV1.getClonePath());
+		} catch (Exception e) {
+			return PackageReport.error(pkg, e.getMessage());
+		}
+	}
 
-    return null;
-  }
+	private ClientImpact computeImpact(Delta delta, CommitBuilder client, MaracasOptions options)
+		throws CloneException {
+		if (delta.getBreakingChanges().isEmpty())
+			return ClientImpact.noImpact(client.getCommit());
 
-  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options)
-    throws CloneException {
-    Objects.requireNonNull(delta);
-    Objects.requireNonNull(clients);
-    Objects.requireNonNull(options);
+		try {
+			client.cloneCommit(options.getCloneTimeoutSeconds());
+			SourcesDirectory clientSources = new SourcesDirectory(client.getModulePath());
+			DeltaImpact impact = Maracas.computeDeltaImpact(clientSources, delta, options);
+			return ClientImpact.success(client.getCommit(), impact, client.getClonePath());
+		} catch (CloneException e) {
+			return ClientImpact.error(client.getCommit(), e.getMessage());
+		}
+	}
 
-    if (delta.getBreakingChanges().isEmpty()) {
-      clients.forEach(c -> c.getClonePath().toFile().mkdirs());
-      return AnalysisResult.noImpact(
-        delta,
-        clients.stream().map(c -> new SourcesDirectory(c.getClonePath())).toList()
-      );
-    }
+	public Delta computeDelta(CommitBuilder v1, CommitBuilder v2, MaracasOptions options)
+		throws BuildException, CloneException {
+		Objects.requireNonNull(v1);
+		Objects.requireNonNull(v2);
+		Objects.requireNonNull(options);
 
-    Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
-      clients.stream()
-        .collect(Collectors.toMap(
-          CommitBuilder::getModulePath,
-          c -> CompletableFuture.supplyAsync(
-            () -> {
-              try {
-                c.cloneCommit(options.getCloneTimeoutSeconds());
-              } catch (CloneException e) {
-                Path clientPath = c.getModulePath();
-                clientPath.toFile().mkdirs();
-                return new DeltaImpact(new SourcesDirectory(clientPath), delta, e);
-              }
+		CompletableFuture<Optional<Path>> futureV1 =
+			CompletableFuture
+				.supplyAsync(
+					() -> {
+						v1.cloneCommit(options.getCloneTimeoutSeconds());
+						return v1.buildCommit(options.getBuildTimeoutSeconds());
+					},
+					executorService);
+		CompletableFuture<Optional<Path>> futureV2 =
+			CompletableFuture
+				.supplyAsync(
+					() -> {
+						v2.cloneCommit(options.getCloneTimeoutSeconds());
+						return v2.buildCommit(options.getBuildTimeoutSeconds());
+					},
+					executorService);
 
-              return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
-            },
-            executorService
-         )));
+		try {
+			CompletableFuture.allOf(futureV1, futureV2).join();
+			Optional<Path> jarV1 = futureV1.get();
+			Optional<Path> jarV2 = futureV2.get();
 
-    CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
+			if (jarV1.isEmpty())
+				throw new BuildException("Couldn't find the JAR built from " + v1.getCommit());
+			if (jarV2.isEmpty())
+				throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
 
-    Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
-      try {
-        impacts.put(entry.getKey(), entry.getValue().get());
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      } catch (Exception e) {
-        entry.getKey().toFile().mkdirs();
-        SourcesDirectory client = new SourcesDirectory(entry.getKey());
-        impacts.put(entry.getKey(),
-          new DeltaImpact(client, delta, e.getCause() != null ? e.getCause() : e));
-      }
-    }
+			LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
+			LibraryJar libV2 = new LibraryJar(jarV2.get());
+			return Maracas.computeDelta(libV1, libV2, options);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} catch (ExecutionException | CompletionException e) {
+			// Simply unwrap
+			if (e.getCause() instanceof BuildException be)
+				throw be;
+			if (e.getCause() instanceof CloneException ce)
+				throw ce;
+			logger.error(e);
+		}
 
-    return AnalysisResult.success(delta, impacts);
-  }
+		return null;
+	}
 
-  public void setExecutorService(ExecutorService executorService) {
-    Objects.requireNonNull(executorService);
-    this.executorService = executorService;
-  }
+	public List<ClientImpact> computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options) {
+		Objects.requireNonNull(delta);
+		Objects.requireNonNull(clients);
+		Objects.requireNonNull(options);
 
-  private CommitBuilder makeBuilderForCommit(Commit c) {
-    return new CommitBuilder(c, newClonePath(c), BuildConfig.newDefault());
-  }
+		if (delta.getBreakingChanges().isEmpty()) {
+			return Collections.emptyList();
+		}
 
-  public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
-    builderV1.cloneCommit(cloneTimeoutSeconds);
-    Map<Path, String> modules = builderV1.getBuilder().locateModules();
+		Map<Commit, CompletableFuture<ClientImpact>> clientFutures =
+			clients.stream()
+				.collect(
+					Collectors.toMap(
+						CommitBuilder::getCommit,
+						c -> CompletableFuture.supplyAsync(
+							() -> computeImpact(delta, c, options),
+							executorService
+						))
+				);
 
-    return pr.changedFiles()
-      .stream()
-      // We only want Java files that exist in 'v1', not the new files created by this PR
-      .filter(f -> f.toString().endsWith(".java") && builderV1.getClonePath().resolve(f).toFile().exists())
-      .map(f -> {
-        Optional<Path> matchingPath =
-          modules.keySet()
-            .stream()
-            .filter(p -> f.toString().startsWith(p.toString()))
-            .max(Comparator.comparingInt((Path p) -> p.toString().length()));
+		CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
+		List<ClientImpact> results = new ArrayList<>();
+		for (Map.Entry<Commit, CompletableFuture<ClientImpact>> future : clientFutures.entrySet()) {
+			try {
+				results.add(future.getValue().get());
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			} catch (Exception e) {
+				results.add(ClientImpact.error(future.getKey(), e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
+			}
+		}
 
-        if (matchingPath.isPresent())
-          return Map.entry(modules.get(matchingPath.get()), matchingPath.get());
-        else {
-          logger.warn("Couldn't infer the impacted package for {}", f);
-          return null;
-        }
-      })
-      .filter(Objects::nonNull)
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
-  }
+		return results;
+	}
 
-  private Path newClonePath(Commit c) {
-    return workingDirectory
-      .resolve(c.repository().owner())
-      .resolve(c.repository().name())
-      .resolve(c.sha())
-      .resolve(RandomStringUtils.randomAlphanumeric(12))
-      .toAbsolutePath();
-  }
+	public void setExecutorService(ExecutorService executorService) {
+		Objects.requireNonNull(executorService);
+		this.executorService = executorService;
+	}
+
+	public List<Package> inferUpdatedPackages(List<Package> packages, List<Path> files) {
+		Objects.requireNonNull(packages);
+		Objects.requireNonNull(files);
+
+		List<Package> impacted = new ArrayList<>();
+		for (Path f : files) {
+			Optional<Package> matchingPath =
+				packages.stream()
+					.filter(pkg -> f.toString().startsWith(pkg.modulePath().toString()))
+					.max(Comparator.comparingInt(pkg -> pkg.modulePath().toString().length()));
+
+			if (matchingPath.isPresent()) {
+				Package pkg = matchingPath.get();
+				if (!impacted.contains(pkg))
+					impacted.add(pkg);
+			} else {
+				logger.warn("Couldn't infer the impacted package for {}", f);
+			}
+		}
+		return impacted;
+	}
+
+	private Path newClonePath(Commit c) {
+		return workingDirectory
+			.resolve(c.repository().owner())
+			.resolve(c.repository().name())
+			.resolve(c.sha())
+			.resolve(RandomStringUtils.randomAlphanumeric(12))
+			.toAbsolutePath();
+	}
 }

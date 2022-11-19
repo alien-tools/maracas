@@ -10,9 +10,10 @@ public class BuildConfig {
 	private final Path module;
 	private final List<String> goals = new ArrayList<>();
 	private final Properties properties = new Properties();
+	public static final Path DEFAULT_MODULE = Path.of("");
 
 	public static BuildConfig newDefault() {
-		return new BuildConfig(Path.of(""));
+		return new BuildConfig(DEFAULT_MODULE);
 	}
 
 	public BuildConfig(Path module) {

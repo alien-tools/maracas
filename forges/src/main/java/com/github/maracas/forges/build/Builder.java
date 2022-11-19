@@ -1,17 +1,18 @@
 package com.github.maracas.forges.build;
 
+import com.github.maracas.forges.Package;
 import com.github.maracas.forges.build.gradle.GradleBuilder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public interface Builder {
   void build(int timeoutSeconds) throws BuildException;
   Optional<Path> locateJar();
-  Map<Path, String> locateModules();
+  List<Package> locatePackages();
 
   default void build() throws BuildException {
     build(Integer.MAX_VALUE);

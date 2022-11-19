@@ -1,6 +1,6 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.PackageReport;
+import com.github.maracas.rest.data.PackageReportDto;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -70,9 +70,9 @@ class SpoonTests extends AbstractControllerTest {
 			PullRequestResponse res = resultAsPR(analyzePRSync("INRIA", "spoon", pr.getNumber(), bbConfig));
 			assertThat(res.message(), is("ok"));
 			assertThat(res.report(), is(notNullValue()));
-			assertThat(res.report().reports(), is(not(empty())));
+			assertThat(res.report().packageReports(), is(not(empty())));
 
-			PackageReport report = res.report().reports().get(0);
+			PackageReportDto report = res.report().packageReports().get(0);
 			assertThat(report.delta(), is(notNullValue()));
 			report.clientReports().forEach(r -> {
 				assertThat(r.error(), is(nullValue()));

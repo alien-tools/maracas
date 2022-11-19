@@ -4,6 +4,7 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.github.GitHubForge;
+import com.github.maracas.forges.report.PackageReport;
 import com.google.common.base.Stopwatch;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
@@ -73,21 +74,20 @@ public class AnalyzePRs {
 					opts.setClientsPerPackage(100);
 					opts.setMinStarsPerClient(5);
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyzePullRequest(pr, opts);
+					var report = analyzer.analyzePullRequest(pr, opts);
 					var j = 0;
 
 					c.base = pr.baseBranch();
 					c.head = pr.headBranch();
 					c.changedFiles = pr.changedFiles().size();
-					c.impactedPackages = result.size();
+					c.impactedPackages = report.packageReports().size();
 
-					for (var r : result) {
+					for (PackageReport r : report.packageReports()) {
 						if (r.delta() != null) {
-							c.breakingChanges += r.delta().getBreakingChanges().size();
+							c.breakingChanges += r.delta().breakingChanges().size();
 							c.brokenUses += r.allBrokenUses().size();
-							c.checkedClients += r.deltaImpacts().size();
-							c.brokenClients += r.brokenClients().size();
-							r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
+							c.checkedClients = r.clientsImpact().size();
+							c.brokenClients += r.clientsImpact().stream().filter(client -> !client.brokenUses().isEmpty()).count();
 
 							logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
 								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.checkedClients);
@@ -95,6 +95,8 @@ public class AnalyzePRs {
 							c.errors += r.error();
 						}
 					}
+
+					report.writeJson(REPORTS.resolve(String.format("%s-%s-%s.json", c.owner, c.name, c.number)).toFile());
 				} catch (Exception e) {
 					e.printStackTrace();
 					c.errors += e.getMessage();

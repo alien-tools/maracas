@@ -10,4 +10,9 @@ public record Commit(
     Objects.requireNonNull(repository);
     Objects.requireNonNull(sha);
   }
+
+  @Override
+  public String toString() {
+    return "Commit[%s/%s, sha=%s]".formatted(repository.owner(), repository.name(), sha);
+  }
 }

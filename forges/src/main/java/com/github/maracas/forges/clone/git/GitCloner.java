@@ -37,14 +37,14 @@ public class GitCloner implements Cloner {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
 				String workingDirectory = dest.toAbsolutePath().toString();
-				logger.info("Cloning commit {} from {}",
-					commit::sha, () -> commit.repository().remoteUrl());
+				logger.info("Cloning {} from {}",
+					shortSha(commit.sha()), commit.repository());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
-				logger.info("Cloning commit {} from {} took {}ms",
-					commit::sha, () -> commit.repository().remoteUrl(), () -> sw.elapsed().toMillis());
+				logger.info("Cloning {} from {} took {}ms",
+					shortSha(commit.sha()), commit.repository(), sw.elapsed().toMillis());
 			} catch (CloneException e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
 				try {
@@ -75,8 +75,7 @@ public class GitCloner implements Cloner {
 		} else if (dest.toFile().mkdirs()) {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
-				logger.info("Cloning repository {} [{}]",
-					repository::remoteUrl, repository::branch);
+				logger.info("Cloning repository {}", repository);
 				executeCommand(
 					timeoutSeconds,
 					"git", "clone",
@@ -86,8 +85,7 @@ public class GitCloner implements Cloner {
 					repository.remoteUrl(),
 					dest.toAbsolutePath().toString()
 				);
-				logger.info("Cloning repository {} [{}] took {}ms",
-					repository::remoteUrl, repository::branch, () -> sw.elapsed().toMillis());
+				logger.info("Cloning repository {} {}ms", repository, sw.elapsed().toMillis());
 			} catch (Exception e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
 				try {
@@ -132,5 +130,9 @@ public class GitCloner implements Cloner {
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	private String shortSha(String sha) {
+		return sha.substring(0, Integer.min(7, sha.length()));
 	}
 }

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -46,7 +47,7 @@ public record AnalysisResult(
 	public static AnalysisResult failure(String message) {
 		return new AnalysisResult(
 			null,
-			null,
+			Collections.emptyMap(),
 			Objects.requireNonNull(message)
 		);
 	}
