@@ -2,7 +2,7 @@ package com.github.maracas.experiments;
 
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.analysis.ParallelCommitAnalyzer;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.forges.report.PackageReport;
 import com.google.common.base.Stopwatch;
@@ -54,7 +54,7 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
+		var analyzer = new ParallelCommitAnalyzer(forge, WORKING_DIRECTORY);
 		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {

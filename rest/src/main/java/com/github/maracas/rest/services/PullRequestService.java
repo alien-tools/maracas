@@ -1,15 +1,20 @@
 package com.github.maracas.rest.services;
 
 import com.github.maracas.MaracasOptions;
+import com.github.maracas.forges.ClientFetcher;
 import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.PullRequestAnalysisStrategy;
+import com.github.maracas.forges.analysis.CommitAnalyzer;
+import com.github.maracas.forges.build.CommitBuilderFactory;
+import com.github.maracas.forges.analysis.PullRequestAnalyzer;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.analysis.ParallelCommitAnalyzer;
 import com.github.maracas.forges.ForgeException;
-import com.github.maracas.forges.Package;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
+import com.github.maracas.forges.build.BuilderFactory;
+import com.github.maracas.forges.build.CommitBuilder;
+import com.github.maracas.forges.clone.ClonerFactory;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.forges.report.PullRequestReport;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
@@ -58,7 +63,9 @@ public class PullRequestService {
 	private int maxClassLines;
 
 	private Forge forge;
-	private ForgeAnalyzer forgeAnalyzer;
+	private CommitAnalyzer commitAnalyzer;
+	ClonerFactory clonerFactory = new ClonerFactory();
+	BuilderFactory builderFactory = new BuilderFactory();
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -69,10 +76,9 @@ public class PullRequestService {
 		Path.of(reportPath).toFile().mkdirs();
 
 		forge = new GitHubForge(github);
-		forgeAnalyzer = new ForgeAnalyzer(forge, Path.of(clonePath));
-
-		if (analysisWorkers > 0)
-			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
+		commitAnalyzer = analysisWorkers > 0
+			? new ParallelCommitAnalyzer(Executors.newFixedThreadPool(analysisWorkers))
+			: new ParallelCommitAnalyzer();
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {
@@ -119,55 +125,57 @@ public class PullRequestService {
 		logger.info("[{}] Starting the analysis", prUid(pr));
 
 		Map<Commit, BreakbotConfig.GitHubRepository> clientConfigs = new HashMap<>();
-		return forgeAnalyzer.analyzePullRequest(
-			pr,
-			new PullRequestAnalysisStrategy() {
-				@Override
-				public BuildConfig makeLibraryConfig(Commit c, Path module) {
-					BuildConfig buildConfig = new BuildConfig(module);
-					config.build().goals().forEach(buildConfig::addGoal);
-					config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
 
-					return buildConfig;
+		ClientFetcher clientFetcher = (repository, pkg, maxClients, minStars) -> {
+			List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(repository, config.clients(), pkg.id());
+			logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkg.id());
+
+			List<Commit> clientCommits = new ArrayList<>();
+			for (BreakbotConfig.GitHubRepository c : clients) {
+				try {
+					Commit commit = getCommitForClient(c);
+					clientCommits.add(commit);
+					clientConfigs.putIfAbsent(commit, c);
+				} catch (IOException | ForgeException e) {
+					logger.error("Couldn't fetch client repository {}", c);
 				}
+			}
 
-				@Override
-				public BuildConfig makeClientConfig(Commit c) {
-					BreakbotConfig.GitHubRepository config = clientConfigs.get(c);
+			return clientCommits;
+		};
 
-					if (config == null) {
-						return BuildConfig.newDefault();
-					} else {
-						Path clientModule =
-							config.module() != null
-								? Path.of(config.module())
-								: BuildConfig.DEFAULT_MODULE;
+		CommitBuilderFactory commitBuilderFactory = new CommitBuilderFactory(clonerFactory, builderFactory) {
+			@Override
+			public CommitBuilder createLibraryBuilder(Commit c, Path clonePath, BuildConfig buildConfig) {
+				config.build().goals().forEach(buildConfig::addGoal);
+				config.build().properties().keySet().forEach(k -> buildConfig.setProperty(k, config.build().properties().get(k)));
+				return super.createLibraryBuilder(c, clonePath, buildConfig);
+			}
 
-						return new BuildConfig(clientModule);
-					}
-				}
+			@Override
+			public CommitBuilder createClientBuilder(Commit c, Path clonePath, BuildConfig buildConfig) {
+				BuildConfig customConfig = buildConfig;
 
-				@Override
-				public List<Commit> fetchClientsFor(Package pkg) {
-					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkg.id());
-					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkg.id());
+				BreakbotConfig.GitHubRepository config = clientConfigs.get(c);
+				if (config != null)
+					customConfig = new BuildConfig(
+						config.module() != null
+							? Path.of(config.module())
+							: BuildConfig.DEFAULT_MODULE
+					);
 
-					List<Commit> clientCommits = new ArrayList<>();
-					for (BreakbotConfig.GitHubRepository c : clients) {
-						try {
-							Commit commit = getCommitForClient(c);
-							clientCommits.add(commit);
-							clientConfigs.putIfAbsent(commit, c);
-						} catch (IOException | ForgeException e) {
-							logger.error("Couldn't fetch client repository {}", c);
-						}
-					}
+				return super.createClientBuilder(c, clonePath, customConfig);
+			}
+		};
 
-					return clientCommits;
-				}
-			},
-			makeMaracasOptions(config)
+		PullRequestAnalyzer analyzer = new PullRequestAnalyzer(
+			workingDirectory(pr),
+			commitBuilderFactory,
+			clientFetcher,
+			commitAnalyzer
 		);
+
+		return analyzer.analyze(pr, makeMaracasOptions(config));
 	}
 
 	private Commit getCommitForClient(BreakbotConfig.GitHubRepository config) throws IOException, ForgeException {
@@ -235,5 +243,10 @@ public class PullRequestService {
 			.resolve(pr.repository().name())
 			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
 			.toFile();
+	}
+
+	private Path workingDirectory(PullRequest pr) {
+		return Path.of(clonePath)
+			.resolve(prUid(pr));
 	}
 }

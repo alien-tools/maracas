@@ -4,7 +4,6 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import com.github.maracas.forges.build.CommitBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;

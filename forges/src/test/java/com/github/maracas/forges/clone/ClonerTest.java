@@ -10,15 +10,17 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClonerTest {
+  final ClonerFactory factory = new ClonerFactory();
+
   @Test
   void cloner_From_GitHub() {
     Repository gh = new Repository("owner", "name", "https://github.com/owner/name.git", "branch");
-    assertThat(Cloner.of(gh), instanceOf(GitCloner.class));
+    assertThat(factory.create(gh), instanceOf(GitCloner.class));
   }
 
   @Test
   void cloner_From_Unknown() {
     Repository unknown = new Repository("owner", "name", "remote", "branch");
-    assertThrows(CloneException.class, () -> Cloner.of(unknown));
+    assertThrows(CloneException.class, () -> factory.create(unknown));
   }
 }

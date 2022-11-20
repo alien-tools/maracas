@@ -15,19 +15,21 @@ class BuilderTest {
   final Path gradleProject = Path.of("src/test/resources/gradle-project/");
   final Path invalidProject = Path.of("src/test/resources/");
 
+  final BuilderFactory factory = new BuilderFactory();
+
   @Test
   void build_From_MavenProject() {
-    assertThat(Builder.of(mavenProject, BuildConfig.newDefault()), instanceOf(MavenBuilder.class));
+    assertThat(factory.create(mavenProject, BuildConfig.newDefault()), instanceOf(MavenBuilder.class));
   }
 
   @Test
   void build_From_GradleProject() {
-    assertThat(Builder.of(gradleProject, BuildConfig.newDefault()), instanceOf(GradleBuilder.class));
+    assertThat(factory.create(gradleProject, BuildConfig.newDefault()), instanceOf(GradleBuilder.class));
   }
 
   @Test
   void build_From_UnknownProject() {
     BuildConfig defaultConfig = BuildConfig.newDefault();
-    assertThrows(BuildException.class, () -> Builder.of(invalidProject, defaultConfig));
+    assertThrows(BuildException.class, () -> factory.create(invalidProject, defaultConfig));
   }
 }

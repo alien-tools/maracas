@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -47,27 +48,25 @@ public class GitHubClientsFetcher {
 	}
 
 	public List<Package> fetchPackages() {
-		Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
+		Optional<Document> pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
 
-		if (pkgsPage != null) {
-			return
-				pkgsPage.select("#dependents .select-menu-item").stream()
-					.map(link -> {
-						String name = link.select(".select-menu-item-text").text().trim();
-						String url = "https://github.com" + link.attr("href");
-						return new Package(name, url);
-					}).toList();
-		} else {
-			return Collections.emptyList();
-		}
+		return pkgsPage.map(document -> document.select("#dependents .select-menu-item")
+			.stream()
+			.map(link -> {
+				String name = link.select(".select-menu-item-text").text().trim();
+				String url = "https://github.com" + link.attr("href");
+				return new Package(name, url);
+			})
+			.toList()
+		).orElse(Collections.emptyList());
 	}
 
 	private List<Client> fetchClients(Package pkg, String url) {
 		List<Client> clients = new ArrayList<>();
-		Document pkgPage = fetchPage(url);
+		Optional<Document> pkgPage = fetchPage(url);
 
-		if (pkgPage != null) {
-			List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
+		if (pkgPage.isPresent()) {
+			List<String> clientRows = pkgPage.get().select("#dependents .Box-row").eachText();
 
 			// row should be of the form "org / user stars forks"
 			clientRows.forEach(row -> {
@@ -82,7 +81,7 @@ public class GitHubClientsFetcher {
 			});
 
 			// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
-			Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
+			Elements pagination = pkgPage.get().select("#dependents .paginate-container .BtnGroup-item");
 			if (pagination.size() == 2) {
 				Element nextBtn = pagination.get(1);
 				String nextUrl = nextBtn.attr("abs:href");
@@ -113,7 +112,7 @@ public class GitHubClientsFetcher {
 					.orElse(Collections.emptyList());
 	}
 
-	private Document fetchPage(String url) {
+	private Optional<Document> fetchPage(String url) {
 		try {
 			Connection.Response res =
 				Jsoup.connect(url)
@@ -123,7 +122,7 @@ public class GitHubClientsFetcher {
 					.execute();
 
 			if (res.statusCode() == HTTP_OK) {
-				return res.parse();
+				return Optional.of(res.parse());
 			} else if (res.statusCode() == HTTP_TOO_MANY_REQUESTS) {
 				String retryAfter = res.header("Retry-After");
 				int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : FETCH_WAIT_TIME;
@@ -140,6 +139,6 @@ public class GitHubClientsFetcher {
 			Thread.currentThread().interrupt();
 		}
 
-		return null;
+		return Optional.empty();
 	}
 }

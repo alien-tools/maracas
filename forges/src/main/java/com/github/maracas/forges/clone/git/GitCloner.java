@@ -24,7 +24,7 @@ public class GitCloner implements Cloner {
 	private static final Logger logger = LogManager.getLogger(GitCloner.class);
 
 	@Override
-	public Path clone(Commit commit, Path dest, int timeoutSeconds) {
+	public void clone(Commit commit, Path dest, int timeoutSeconds) {
 		Objects.requireNonNull(commit);
 		Objects.requireNonNull(dest);
 		if (timeoutSeconds < 1)
@@ -32,7 +32,6 @@ public class GitCloner implements Cloner {
 
 		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
-			return dest;
 		} else if (dest.toFile().mkdirs()) {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
@@ -55,15 +54,13 @@ public class GitCloner implements Cloner {
 
 				throw e;
 			}
-
-			return dest;
 		} else {
 			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}
 	}
 
 	@Override
-	public Path clone(Repository repository, Path dest, int timeoutSeconds) {
+	public void clone(Repository repository, Path dest, int timeoutSeconds) {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(dest);
 		if (timeoutSeconds < 1)
@@ -71,7 +68,6 @@ public class GitCloner implements Cloner {
 
 		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
-			return dest;
 		} else if (dest.toFile().mkdirs()) {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
@@ -96,8 +92,6 @@ public class GitCloner implements Cloner {
 
 				throw e;
 			}
-
-			return dest;
 		} else {
 			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}
