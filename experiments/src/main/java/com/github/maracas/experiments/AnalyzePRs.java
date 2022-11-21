@@ -31,6 +31,7 @@ public class AnalyzePRs {
 	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
 	private static final Path PR_CSV = Path.of("./experiments/data/prs-new.csv");
+	private static final Path PR_OLD_CSV = Path.of("./experiments/data/prs.csv");
 	private static final Path RESULTS_CSV = Path.of("./experiments/data/results-new.csv");
 	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
 	private static final Path GH_CACHE = Path.of("./experiments/cache");
@@ -42,12 +43,15 @@ public class AnalyzePRs {
 
 		try (
 			Reader prReader = new FileReader(PR_CSV.toFile());
-			Reader resultsReader = new FileReader(RESULTS_CSV.toFile())
+			Reader oldPrReader = new FileReader(PR_OLD_CSV.toFile());
+			Reader resultsReader = new FileReader(RESULTS_CSV.toFile());
 		) {
 			var casesDone = new CsvToBeanBuilder<Case>(resultsReader).withType(Case.class).build().parse();
+			var oldCases = new CsvToBeanBuilder<Case>(oldPrReader).withType(Case.class).build().parse();
 			this.cases = new CsvToBeanBuilder<Case>(prReader).withType(Case.class).build().parse();
-			this.cases.removeIf(c -> casesDone.stream().anyMatch(done ->
-				c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
+			this.cases.removeIf(c ->
+				casesDone.stream().anyMatch(done ->	c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number) ||
+				oldCases.stream().anyMatch(done ->	c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
