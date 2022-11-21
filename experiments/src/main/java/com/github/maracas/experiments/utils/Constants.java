@@ -11,9 +11,9 @@ public final class Constants {
 	public static final String CLIENTS_CSV_PATH = "data/clients-new.csv";
 	public static final String PRS_CSV_PATH = "data/prs-new.csv";
 
-	public static final LocalDateTime STARTING_DATE = LocalDateTime.of(2022, 11, 13, 0, 0);
-	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 10, 13, 0, 0);
-	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 10, 13, 0, 0);
+	public static final LocalDateTime STARTING_DATE = LocalDateTime.of(2022, 11, 22, 0, 0);
+	public static final LocalDateTime REPO_LAST_PUSHED_DATE = LocalDateTime.of(2022, 11, 21, 0, 0);
+	public static final LocalDateTime PR_LAST_CREATED = LocalDateTime.of(2022, 11, 13, 0, 0);
 
 	public static final int REPO_MIN_STARS = 1_000;
 	public static final int REPO_MIN_CLIENTS = 100;
