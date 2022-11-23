@@ -22,6 +22,7 @@ import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import japicmp.config.Options;
 import japicmp.util.Optional;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -199,6 +200,13 @@ public class PullRequestService {
 				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
 			}
 		});
+
+		try {
+			FileUtils.deleteDirectory(clonePathV1.toFile());
+			FileUtils.deleteDirectory(clonePathV2.toFile());
+		} catch (IOException e) {
+			logger.error(e);
+		}
 
 		return new MaracasReport(packageReports);
 	}
