@@ -32,7 +32,7 @@ public class PullRequestsCSVManager extends CSVManager {
 
 	@Override
 	protected String[] buildColumns() {
-		return new String[] {"cursor", "owner", "name", "repoUrl", "clients",
+		return new String[] {"cursor", "owner", "name", "repoUrl", "clients", "stars",
 			"prUrl", "title", "number", "state", "draft", "files", "javaFiles",
 			"baseRepo", "baseRef", "baseRefPrefix", "headRepo", "headRef", "headRefPrefix",
 			"createdAt", "publishedAt", "mergedAt", "closedAt"};
@@ -47,6 +47,7 @@ public class PullRequestsCSVManager extends CSVManager {
 		map.put("repoUrl", "%s");
 		map.put("prUrl", "%s");
 		map.put("clients", "%d");
+		map.put("stars", "%d");
 		map.put("baseRepo", "%s");
 		map.put("baseRef", "%s");
 		map.put("baseRefPrefix", "%s");
@@ -97,8 +98,9 @@ public class PullRequestsCSVManager extends CSVManager {
 				long javaFiles = pr.getFiles().stream().filter(f -> f.endsWith(".java")).count();
 				String prUrl = "https://github.com/%s/%s/pull/%s".formatted(owner, name, number);
 				int clients = repo.getClients();
+				int stars = repo.getStars();
 
-				printer.printRecord(cursor, owner, name, repoUrl, clients,
+				printer.printRecord(cursor, owner, name, repoUrl, clients, stars,
 					prUrl, title, number, state, draft, files, javaFiles,
 					baseRepo, baseRef, baseRefPrefix, headRepo, headRef, headRefPrefix,
 					createdAt, publishedAt, mergedAt, closedAt);

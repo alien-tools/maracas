@@ -40,7 +40,7 @@ public final class Queries {
 		query {
 		  search(
 		    type: REPOSITORY,
-		    query: "language:Java stars:>%d pushed:>%s archived:false fork:false mirror:false",
+		    query: "language:Java stars:%d..%d pushed:>%s archived:false fork:false mirror:false",
 		    first: 100
 		    %s
 		  ) {

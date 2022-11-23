@@ -177,7 +177,7 @@ public class GitHubRepositoriesFetcher {
 		//		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
 		//			GitHubUtil.toGitHubDateFormat(previousDate),
 		//			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS, Constants.REPO_MAX_STARS,
 			GitHubUtil.toGitHubDateFormat(Constants.REPO_LAST_PUSHED_DATE), cursorQuery);
 
 		try {
