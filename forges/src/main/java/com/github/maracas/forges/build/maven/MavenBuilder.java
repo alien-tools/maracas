@@ -157,10 +157,13 @@ public class MavenBuilder implements Builder {
 			if (Files.exists(jar))
 				return Optional.of(jar);
 			else {
-				// There are several cases that might fail us (e.g. <version>${revision}</version>)
-				// => just attempt to find the best matching JAR, if any
+				// There are cases that might fail us (e.g. <version>${revision}</version>)
+				// => just attempt to find the best matching JAR, if any, avoiding -sources and -javadoc JARs
 				return FileUtils.listFiles(target.toFile(), new WildcardFileFilter(String.format("%s-*.jar", aid)), null)
-					.stream().map(File::toPath).findFirst();
+					.stream()
+					.filter(f -> !f.getName().endsWith("-javadoc.jar") && !f.getName().endsWith("-sources.jar"))
+					.map(File::toPath)
+					.findFirst();
 			}
 		} catch (IOException | XmlPullParserException e) {
 			throw new BuildException("Couldn't parse " + pomFile, e);
