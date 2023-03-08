@@ -63,6 +63,8 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 				case METHOD_MOVED_TO_SUPERCLASS -> null; // TODO: To be implemented
 				case METHOD_PARAMETER_GENERICS_CHANGED -> null; // TODO: To be implemented
 				case METHOD_RETURN_TYPE_GENERICS_CHANGED -> null; // TODO: To be implemented
+				case CLASS_GENERIC_TEMPLATE_CHANGED -> null; // TODO: To be implemented
+				case CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null; // TODO: To be implemented
 				default -> throw new IllegalStateException(this + " was somehow associated to a non-method-level breaking change: " + change);
 			};
 	}
