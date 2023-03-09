@@ -22,6 +22,7 @@ import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import japicmp.config.Options;
 import japicmp.util.Optional;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -125,7 +126,9 @@ public class PullRequestService {
 		logger.info("[{}] Starting the analysis", prUid(pr));
 
 		MaracasOptions options = makeMaracasOptions(config);
-		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), Path.of(""));
+		Path clonePathV1 = newClonePath(pr, pr.mergeBase());
+		Path clonePathV2 = newClonePath(pr, pr.head());
+		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), clonePathV1, Path.of(""));
 
 		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
 		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
@@ -137,8 +140,8 @@ public class PullRequestService {
 				logger.info("[{}] Now analyzing package {}", prUid(pr), pkgName);
 
 				// First, we compute the delta model to look for BCs
-				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), modulePath);
-				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), modulePath);
+				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), clonePathV1, modulePath);
+				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), clonePathV2, modulePath);
 				Delta delta = forgeAnalyzer.computeDelta(builderV1, builderV2, options);
 
 				// If we find some, we fetch the appropriate clients and analyze the impact
@@ -198,16 +201,22 @@ public class PullRequestService {
 			}
 		});
 
+		try {
+			FileUtils.deleteDirectory(clonePathV1.toFile());
+			FileUtils.deleteDirectory(clonePathV2.toFile());
+		} catch (IOException e) {
+			logger.error(e);
+		}
+
 		return new MaracasReport(packageReports);
 	}
 
-	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config, Path module) {
-		Path commitClonePath = newClonePath(pr, c);
+	private CommitBuilder makeBuilderForCommit(PullRequest pr, Commit c, BreakbotConfig.Build config, Path clonePath, Path module) {
 		BuildConfig buildConfig = new BuildConfig(module);
 		config.goals().forEach(buildConfig::addGoal);
 		config.properties().keySet().forEach(k -> buildConfig.setProperty(k, config.properties().get(k)));
 
-		return new CommitBuilder(c, commitClonePath, buildConfig);
+		return new CommitBuilder(c, clonePath, buildConfig);
 	}
 
 	private CommitBuilder makeBuilderForClient(PullRequest pr, BreakbotConfig.GitHubRepository c) throws IOException, ForgeException {

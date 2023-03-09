@@ -1,31 +1,5 @@
 package com.github.maracas.experiments;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Parent;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +16,23 @@ import com.github.maracas.experiments.utils.Constants.ExperimentErrorCode;
 import com.github.maracas.experiments.utils.GitHubUtil;
 import com.github.maracas.experiments.utils.Queries;
 import com.github.maracas.experiments.utils.Util;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -132,8 +123,7 @@ public class GitHubRepositoriesFetcher {
 	}
 
 	/**
-	 * Returns the list of fetched repositories from GitHub. Use it after calling
-	 * the {@link GitHubRepositoriesFetcher#fetchRepositories(int, int)}
+	 * Returns the list of fetched repositories from GitHub.
 	 * method.
 	 *
 	 * @return List of fetched GitHub {@link Repository} instances
@@ -187,97 +177,104 @@ public class GitHubRepositoriesFetcher {
 		//		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
 		//			GitHubUtil.toGitHubDateFormat(previousDate),
 		//			GitHubUtil.toGitHubDateFormat(currentDate), cursorQuery);
-		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS,
+		String query = Queries.GRAPHQL_LIBRARIES_QUERY.formatted(Constants.REPO_MIN_STARS, Constants.REPO_MAX_STARS,
 			GitHubUtil.toGitHubDateFormat(Constants.REPO_LAST_PUSHED_DATE), cursorQuery);
 
 		try {
 			ResponseEntity<String> response = GitHubUtil.postQuery(query,
 				GITHUB_GRAPHQL, GITHUB_ACCESS_TOKEN);
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.getBody());
-			JsonNode data = json.get("data");
 
-			if (data != null) {
-				JsonNode search = data.get("search");
-				int repositoryCount = search.get("repositoryCount").asInt();
-				JsonNode pageInfo = search.get("pageInfo");
-				boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-				String endCursor = pageInfo.get("endCursor").asText();
-				totalCases += repositoryCount;
+			if (response != null) {
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode json = mapper.readTree(response.getBody());
+				JsonNode data = json.get("data");
 
-				for (JsonNode repoEdge: search.withArray("edges")) {
-					analyzedCases++;
-					logger.info("Count: {} of {}", analyzedCases, totalCases);
+				if (data != null) {
+					JsonNode search = data.get("search");
+					int repositoryCount = search.get("repositoryCount").asInt();
+					JsonNode pageInfo = search.get("pageInfo");
+					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
+					String endCursor = pageInfo.get("endCursor").asText();
+					totalCases += repositoryCount;
 
-					String cursor = repoEdge.get("cursor").asText();
-					JsonNode repoJson = repoEdge.get("node");
-					String nameWithOwner = repoJson.get("nameWithOwner").asText();
-					String[] fields = nameWithOwner.split("/");
-					String owner = fields[0];
-					String name = fields[1];
-					boolean disabled = repoJson.get("isDisabled").asBoolean();
-					boolean empty = repoJson.get("isEmpty").asBoolean();
-					boolean locked = repoJson.get("isLocked").asBoolean();
-					int stars = repoJson.get("stargazerCount").asInt();
-					String createdAt = repoJson.get("createdAt").asText();
-					String pushedAt = repoJson.get("pushedAt").asText();
-					String sshUrl = repoJson.get("sshUrl").asText();
-					String url = repoJson.get("url").asText();
-					boolean maven = repoJson.get("pom").hasNonNull("oid");
-					boolean gradle = repoJson.get("gradle").hasNonNull("oid");
+					for (JsonNode repoEdge : search.withArray("edges")) {
+						analyzedCases++;
+						logger.info("Count: {} of {}", analyzedCases, totalCases);
 
-					JsonNode prs = repoJson.get("pullRequests");
-					List<String> lastPR = prs.findValuesAsText("mergedAt");
+						String cursor = repoEdge.get("cursor").asText();
+						JsonNode repoJson = repoEdge.get("node");
+						String nameWithOwner = repoJson.get("nameWithOwner").asText();
+						String[] fields = nameWithOwner.split("/");
+						String owner = fields[0];
+						String name = fields[1];
+						boolean disabled = repoJson.get("isDisabled").asBoolean();
+						boolean empty = repoJson.get("isEmpty").asBoolean();
+						boolean locked = repoJson.get("isLocked").asBoolean();
+						int stars = repoJson.get("stargazerCount").asInt();
+						String createdAt = repoJson.get("createdAt").asText();
+						String pushedAt = repoJson.get("pushedAt").asText();
+						String sshUrl = repoJson.get("sshUrl").asText();
+						String url = repoJson.get("url").asText();
+						boolean maven = repoJson.get("pom").hasNonNull("oid");
+						boolean gradle = repoJson.get("gradle").hasNonNull("oid");
 
-					if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()
-						&& Util.isActive(lastPR.get(0), initialDate, Constants.PR_LAST_MERGED_IN_DAYS)) {
-						Repository repo = new Repository(owner, name, stars, createdAt,
-							pushedAt, sshUrl, url, maven, gradle, cursor);
+						JsonNode prs = repoJson.get("pullRequests");
+						List<String> lastPR = prs.findValuesAsText("mergedAt");
 
-						logger.info("Fetching {}/{} POM files...", owner, name);
-						fetchPomFiles(repo);
+						if (maven && !disabled && !empty && !locked && !lastPR.isEmpty()
+							&& Util.isActive(lastPR.get(0), initialDate, Constants.PR_LAST_MERGED_IN_DAYS)) {
+							Repository repo = new Repository(owner, name, stars, createdAt,
+								pushedAt, sshUrl, url, maven, gradle, cursor);
 
-						logger.info("Fetching {}/{} clients...", owner, name);
-						fetchRepoPackagesAndClients(repo);
+//							logger.info("Fetching {}/{} POM files...", owner, name);
+//							fetchPomFiles(repo);
 
-						logger.info("Fetching {}/{} pull requests...", owner, name);
-						LocalDateTime datetime = LocalDateTime.now();
-						fetchPullRequests(null, datetime, repo);
-						repositories.add(repo);
+							logger.info("Fetching {}/{} clients...", owner, name);
+							fetchRepoPackagesAndClients(repo);
 
-					} else {
-						logger.warn("{} {}/{} cursor:{} [disabled: {}, empty: {}, locked: {}, "
-							+ "maven: {}, active: {}]", ExperimentErrorCode.IRRELEVANT_REPO,
-							owner, name, cursor, disabled, empty, locked, maven, lastPR.isEmpty());
+							logger.info("Found {} total clients for {}/{}", repo.getClients(), owner, name);
+
+							if (repo.getClients() >= Constants.REPO_MIN_CLIENTS) {
+								logger.info("Fetching {}/{} pull requests...", owner, name);
+								LocalDateTime datetime = LocalDateTime.now();
+								fetchPullRequests(null, datetime, repo);
+								repositories.add(repo);
+							} else {
+								logger.info("{}/{} has too few clients, skipping", owner, name);
+							}
+						} else {
+							logger.warn("{} {}/{} cursor:{} [disabled: {}, empty: {}, locked: {}, "
+									+ "maven: {}, active: {}]", ExperimentErrorCode.IRRELEVANT_REPO,
+								owner, name, cursor, disabled, empty, locked, maven, lastPR.isEmpty());
+						}
+					}
+
+					if (hasNextPage)
+						fetchRepositories(endCursor, currentDate);
+					//				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
+					//					fetchRepositories(null, previousDate);
+
+				} else {
+					for (JsonNode error : json.withArray("errors")) {
+						String type = error.get("type").asText();
+						logger.error("{}:{} cursor:{}", ExperimentErrorCode.EXCEEDED_RATE_LIMIT,
+							type, currentCursor);
+					}
+
+					if (!response.getStatusCode().equals(HttpStatus.OK))
+						logger.error("{} cursor:{}: {}/{}", ExperimentErrorCode.GITHUB_API_ERROR,
+							response.getStatusCode(), currentCursor, response.getBody());
+
+					try {
+						logger.info("Too many requests, sleeping...");
+						Thread.sleep(30000);
+						fetchRepositories(currentCursor, currentDate);
+					} catch (InterruptedException e) {
+						logger.error(e);
+						Thread.currentThread().interrupt();
 					}
 				}
-
-				if (hasNextPage)
-					fetchRepositories(endCursor, currentDate);
-				//				else if (previousDate.isAfter(Constants.REPO_LAST_PUSHED_DATE))
-				//					fetchRepositories(null, previousDate);
-
-			} else {
-				for (JsonNode error: json.withArray("errors")) {
-					String type = error.get("type").asText();
-					logger.error("{}:{} cursor:{}", ExperimentErrorCode.EXCEEDED_RATE_LIMIT,
-						type, currentCursor);
-				}
-
-				if (!response.getStatusCode().equals(HttpStatus.OK))
-					logger.error("{} cursor:{}: {}/{}", ExperimentErrorCode.GITHUB_API_ERROR,
-						response.getStatusCode(), currentCursor, response.getBody());
-
-				try {
-					logger.info("Too many requests, sleeping...");
-					Thread.sleep(30000);
-					fetchRepositories(currentCursor, currentDate);
-				} catch (InterruptedException e) {
-					logger.error(e);
-					Thread.currentThread().interrupt();
-				}
 			}
-
 		} catch (JsonProcessingException | MalformedURLException | URISyntaxException e) {
 			logger.error(e);
 		}
@@ -324,6 +321,7 @@ public class GitHubRepositoriesFetcher {
 //						fetchPullRequests(null, previousDate, repo);
 
 				} else {
+					logger.error(json);
 					try {
 						logger.info("Too many requests, sleeping...");
 						Thread.sleep(30000);
@@ -379,136 +377,9 @@ public class GitHubRepositoriesFetcher {
 			logger.info("{}/{} Pull request: {} ({}) - {}", repo.getOwner(), repo.getName(),
 				title, number, state);
 
-			pullRequest.gatherModifiedPackages();
 			pullRequestsCsv.writeRecord(pullRequest);
 			repo.addPullRequest(pullRequest);
 		} catch (NullPointerException e) {
-			logger.error(e);
-		}
-	}
-
-	/**
-	 * Recursively fetches the relative paths of files modified in a given pull
-	 * request.
-	 *
-	 * @param currentCursor      GraphQL query cursor
-	 * @param pullRequest Target pull request
-	 */
-	//	private void fetchPRFiles(int currentPage, PullRequest pullRequest) {
-	//		int pageQuery = currentPage + 1;
-	//		Repository repo = pullRequest.getRepository();
-	//		String url = (GITHUB_REST + "/repos/%s/%s/pulls/%d/files?page=%d&per_page=100")
-	//			.formatted(repo.getOwner(), repo.getName(), pullRequest.getNumber(), pageQuery);
-	//
-	//		try {
-	//			ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
-	//			if (response != null) {
-	//				ObjectMapper mapper = new ObjectMapper();
-	//				JsonNode json = mapper.readTree(response.getBody());
-	//				JsonNode data = json.get("data");
-	//
-	//				if (data != null) {
-	//					JsonNode search = data.get("search");
-	//					JsonNode pr = search.withArray("edges").get(0).get("node").get("pr");
-	//					JsonNode files = pr.get("files");
-	//					JsonNode pageInfo = files.get("pageInfo");
-	//					boolean hasNextPage = pageInfo.get("hasNextPage").asBoolean();
-	//					String endCursor = pageInfo.get("endCursor").asText();
-	//
-	//					for (JsonNode fileEdge: files.withArray("edges")) {
-	//						String file = fileEdge.get("node").get("path").asText();
-	//						pullRequest.addFile(file);
-	//
-	//						logger.info("{} {} ({}) PR file: {}", pullRequest.getBaseRepository(),
-	//							pullRequest.getTitle(), pullRequest.getNumber(), file);
-	//					}
-	//
-	//					if (hasNextPage)
-	//						fetchPRFiles(endCursor, pullRequest);
-	//				} else {
-	//					try {
-	//						Thread.sleep(30000);
-	//						fetchPRFiles(currentCursor, pullRequest);
-	//					} catch (InterruptedException e) {
-	//						logger.error(e);
-	//						Thread.currentThread().interrupt();
-	//					}
-	//				}
-	//			}
-	//		} catch (JsonProcessingException e) {
-	//			logger.error(e);
-	//		}
-	//	}
-
-	/**
-	 * Fetches all POM files within a repository and gather information about
-	 * packages contained in the repository. New packages are added to the
-	 * corresponding repository.
-	 *
-	 * @param repo Target repository
-	 */
-	private void fetchPomFiles(Repository repo) {
-		String url = (GITHUB_SEARCH + "/code?q=repo:%s/%s+filename:pom+extension:xml")
-			.formatted(repo.getOwner(), repo.getName());
-		ResponseEntity<String> response = GitHubUtil.getQuery(url, GITHUB_ACCESS_TOKEN);
-
-		try {
-			if (response != null) {
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode json = mapper.readTree(response.getBody());
-
-				for (JsonNode pomNode: json.withArray("items")) {
-					String path = pomNode.get("path").asText();
-					String pomUrl = pomNode.get("url").asText();
-
-					ResponseEntity<String> pomResponse = GitHubUtil.getQuery(pomUrl, GITHUB_ACCESS_TOKEN);
-					JsonNode pomJson = mapper.readTree(pomResponse.getBody());
-					String downloadUrl = pomJson.get("download_url").asText();
-
-					if (downloadUrl != null && !path.isEmpty() && path.contains("pom.xml")) {
-						MavenXpp3Reader pomReader = new MavenXpp3Reader();
-
-						URL urll = new URL(downloadUrl);
-						Document doc = Jsoup.parse(urll.openStream(), "UTF-8", "", Parser.xmlParser());
-
-						Model model = pomReader.read(new ByteArrayInputStream(doc.toString().getBytes()));
-						String groupId = model.getGroupId();
-						String artifactId = model.getArtifactId();
-						String version = model.getVersion();
-						String packaging = model.getPackaging();
-						String relativePath = path.substring(0, path.indexOf("pom.xml"));
-						relativePath = (relativePath.isEmpty()) ? "/" : relativePath;
-
-						if (packaging != null && !packaging.equals("jar"))
-							continue;
-
-						if (groupId == null || version == null) {
-							Parent parent = model.getParent();
-
-							if (parent != null) {
-								groupId = (groupId == null) ? parent.getGroupId() : groupId;
-								version = (version == null) ? parent.getVersion() : version;
-							}
-
-							if (groupId == null || artifactId == null) {
-								logger.warn("{} {}/{} cursor:{} [groupId: {}, artifactId: {}]",
-									ExperimentErrorCode.INCOMPLETE_POM, repo.getOwner(),
-									repo.getName(), repo.getCursor(), groupId, artifactId);
-								continue;
-							}
-						}
-
-						RepositoryPackage pkg = new RepositoryPackage(groupId,
-							artifactId, version, relativePath, repo);
-						repo.addPackage(pkg);
-
-						logger.info("{}/{} POM: {}:{}:{} - {}", repo.getOwner(),
-							repo.getName(), groupId, artifactId, version, path);
-
-					}
-				}
-			}
-		} catch (XmlPullParserException | IOException e) {
 			logger.error(e);
 		}
 	}
@@ -527,6 +398,7 @@ public class GitHubRepositoriesFetcher {
 		if (doc != null) {
 			List<String> packageRelUrls = doc.select("#dependents .select-menu-item").eachAttr("href");
 			repo.setGitHubPackages(packageRelUrls.size());
+			int clients = 0;
 
 			for (String packageRelUrl: packageRelUrls) {
 				String packageUrl = "https://github.com" + packageRelUrl;
@@ -534,26 +406,13 @@ public class GitHubRepositoriesFetcher {
 
 				if (pkgPage != null) {
 					String name = pkgPage.select("#dependents .select-menu-button").text().replace("Package: ", "");
-					List<String> clientRepos = new ArrayList<String>();
-					fetchGitHubClients(packageUrl, clientRepos);
+					List<String> clientRepos = new ArrayList<>();
 					Element element = pkgPage.select("#dependents .table-list-header-toggle a").first();
 
 					if (element != null) {
 						try {
-							RepositoryPackage pkg = repo.getRepoPackageByName(name);
-
-							if (pkg != null) {
-								String clientsStr = element.text().substring(0, element.text().indexOf(" ")).replace(",", "");
-								int clients = Integer.parseInt(clientsStr);
-								List<Repository> relevantClients = fetchRelevantClients(clientRepos);
-								pkg.setClients(clients);
-								pkg.setRelevantClients(relevantClients);
-								writeCSVClientRecords(pkg);
-							} else {
-								logger.warn("{} {}/{} cursor:{} [name: {}]",
-									ExperimentErrorCode.NO_PKG_IN_REPO, repo.getOwner(),
-									repo.getName(), repo.getCursor(), name);
-							}
+							String clientsStr = element.text().substring(0, element.text().indexOf(" ")).replace(",", "");
+							clients += Integer.parseInt(clientsStr);
 						} catch (NumberFormatException e) {
 							logger.error(e);
 						}
@@ -568,6 +427,8 @@ public class GitHubRepositoriesFetcher {
 						repo.getName(), repo.getCursor(), url);
 				}
 			}
+
+			repo.setClients(clients);
 		} else {
 			logger.warn("{} {}/{} cursor:{} [url: {}]", ExperimentErrorCode.NO_DEPENDANTS_PAGE,
 				repo.getOwner(), repo.getName(), repo.getCursor(), url);
@@ -604,8 +465,6 @@ public class GitHubRepositoriesFetcher {
 	 *
 	 * @param clientRepos List of string representing client repositories
 	 *                    (e.g. {"google/guava", "alien-tools/maracas"})
-	 * @param minStars    Minimum number of stars per client repository
-	 * @param maxStars    Maximum number of stars per client repository
 	 * @return List of client {@link Repository} instances
 	 */
 	private List<Repository> fetchRelevantClients(List<String> clientRepos) {

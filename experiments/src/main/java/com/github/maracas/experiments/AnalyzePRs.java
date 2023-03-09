@@ -7,6 +7,7 @@ import com.github.maracas.forges.github.GitHubForge;
 import com.google.common.base.Stopwatch;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import japicmp.model.JApiCompatibilityChange;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import org.apache.commons.io.FileUtils;
@@ -29,8 +30,9 @@ import java.util.concurrent.TimeUnit;
 public class AnalyzePRs {
 	private final Forge forge;
 	private List<Case> cases = new ArrayList<>();
-	private static final Path PR_CSV = Path.of("./experiments/data/prs.csv");
-	private static final Path RESULTS_CSV = Path.of("./experiments/data/results.csv");
+	private static final Path PR_CSV = Path.of("./experiments/data/prs-new.csv");
+	private static final Path PR_OLD_CSV = Path.of("./experiments/data/prs.csv");
+	private static final Path RESULTS_CSV = Path.of("./experiments/data/results-new.csv");
 	private static final Path WORKING_DIRECTORY = Path.of("./experiments/work");
 	private static final Path GH_CACHE = Path.of("./experiments/cache");
 	private static final Path REPORTS = Path.of("./experiments/reports");
@@ -41,12 +43,15 @@ public class AnalyzePRs {
 
 		try (
 			Reader prReader = new FileReader(PR_CSV.toFile());
-			Reader resultsReader = new FileReader(RESULTS_CSV.toFile())
+			Reader oldPrReader = new FileReader(PR_OLD_CSV.toFile());
+			Reader resultsReader = new FileReader(RESULTS_CSV.toFile());
 		) {
 			var casesDone = new CsvToBeanBuilder<Case>(resultsReader).withType(Case.class).build().parse();
+			var oldCases = new CsvToBeanBuilder<Case>(oldPrReader).withType(Case.class).build().parse();
 			this.cases = new CsvToBeanBuilder<Case>(prReader).withType(Case.class).build().parse();
-			this.cases.removeIf(c -> casesDone.stream().anyMatch(done ->
-				c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
+			this.cases.removeIf(c ->
+				casesDone.stream().anyMatch(done ->	c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number) ||
+				oldCases.stream().anyMatch(done ->	c.owner.equals(done.owner) && c.name.equals(done.name) && c.number == done.number));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -83,7 +88,8 @@ public class AnalyzePRs {
 
 					for (var r : result) {
 						if (r.delta() != null) {
-							c.breakingChanges += r.delta().getBreakingChanges().size();
+							c.deprecations = (int) r.delta().getBreakingChanges().stream().filter(bc -> bc.getChange().equals(JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED)).count();
+							c.breakingChanges += r.delta().getBreakingChanges().size() - c.deprecations;
 							c.brokenUses += r.allBrokenUses().size();
 							c.checkedClients += r.deltaImpacts().size();
 							c.brokenClients += r.brokenClients().size();
@@ -91,7 +97,7 @@ public class AnalyzePRs {
 
 							logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
 								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.checkedClients);
-						} else {
+						} else if (r.error() != null) {
 							c.errors += r.error();
 						}
 					}
@@ -144,6 +150,7 @@ public class AnalyzePRs {
 		int changedFiles;
 		int impactedPackages;
 		int breakingChanges;
+		int deprecations;
 		int brokenUses;
 		int checkedClients;
 		int brokenClients;

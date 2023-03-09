@@ -15,7 +15,7 @@
 
 	<properties>
 		<spoon.version>10.1.1</spoon.version>
-		<japicmp.version>0.16.0</japicmp.version>
+		<japicmp.version>0.17.1</japicmp.version>
 		<gradle.version>7.3.3</gradle.version>
 		<zip4j.version>2.11.2</zip4j.version>
 		<picocli.version>4.6.3</picocli.version>

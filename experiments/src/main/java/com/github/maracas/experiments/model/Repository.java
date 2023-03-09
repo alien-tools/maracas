@@ -62,15 +62,7 @@ public class Repository {
 
 	private final String cursor;
 
-	private List<RepositoryPackage> repoPackages;
-
-	/**
-	 * Map of {@link RepositoryPackage} instances in the repository. Keys are
-	 * the combination of the object ID and the artifact ID (i.e. objectID:artifactID)
-	 */
-	private Map<String, RepositoryPackage> repoPackagesByName;
-
-	private Map<String, RepositoryPackage> repoPackagesByPath;
+	private int clients;
 
 	private int gitHubPackages;
 
@@ -112,11 +104,9 @@ public class Repository {
 		this.maven = maven;
 		this.gradle = gradle;
 		this.cursor = cursor;
-		this.repoPackages = new ArrayList<RepositoryPackage>();
-		this.repoPackagesByName = new HashMap<String, RepositoryPackage>();
-		this.repoPackagesByPath = new HashMap<String, RepositoryPackage>();
 		this.pullRequests = new ArrayList<PullRequest>();
 		this.gitHubPackages = -1;
+		this.clients = -1;
 	}
 
 	/**
@@ -222,19 +212,6 @@ public class Repository {
 	}
 
 	/**
-	 * Adds a new package to the list of {@link RepositoryPackage} instances of
-	 * the repository.
-	 *
-	 * @param pkg {@link RepositoryPackage} instance to add to the packages list
-	 */
-	public void addPackage(RepositoryPackage pkg) {
-		if (pkg != null) {
-			repoPackagesByName.put(pkg.getName(), pkg);
-			repoPackagesByPath.put(pkg.getRelativePath(), pkg);
-		}
-	}
-
-	/**
 	 * Adds a new pull request to the list of {@link PullRequest} instances of
 	 * the repository.
 	 *
@@ -245,40 +222,6 @@ public class Repository {
 			pullRequests.add(pr);
 	}
 
-	/**
-	 * Returns the map of {@link RepositoryPackage} instances of the repository.
-	 *
-	 * @return the map of {@link RepositoryPackage} instances
-	 */
-	public Map<String, RepositoryPackage> getRepoPackagesByName() {
-		return repoPackagesByName;
-	}
-
-	public RepositoryPackage getRepoPackageByName(String name) {
-		return repoPackagesByName.getOrDefault(name, null);
-	}
-
-	public void setRepoPackagesByPath(Map<String, RepositoryPackage> repoPackages) {
-		this.repoPackagesByPath = repoPackages;
-	}
-
-	public Map<String, RepositoryPackage> getRepoPackagesByPath() {
-		return repoPackagesByPath;
-	}
-
-	public RepositoryPackage getRepoPackageByPath(String path) {
-		return repoPackagesByPath.getOrDefault(path, null);
-	}
-
-	/**
-	 * Sets the map of {@link RepositoryPackage} instances of the repository.
-	 *
-	 * @param packages Map of {@link RepositoryPackage} instances
-	 */
-	public void setRepoPackagesByName(Map<String, RepositoryPackage> repoPackages) {
-		this.repoPackagesByName = repoPackages;
-	}
-
 	public int getGitHubPackages() {
 		return gitHubPackages;
 	}
@@ -287,12 +230,16 @@ public class Repository {
 		this.gitHubPackages = gitHubPackages;
 	}
 
-	public URI getSshURL() {
-		return sshURL;
+	public int getClients() {
+		return clients;
 	}
 
-	public List<RepositoryPackage> getRepoPackages() {
-		return repoPackagesByName.values().stream().collect(Collectors.toList());
+	public void setClients(int clients) {
+		this.clients = clients;
+	}
+
+	public URI getSshURL() {
+		return sshURL;
 	}
 
 	/**

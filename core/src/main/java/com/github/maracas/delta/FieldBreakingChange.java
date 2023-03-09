@@ -55,8 +55,9 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 						throw new IllegalStateException("japicmp gave us a FIELD_TYPE_CHANGED without the new type of the field");
 					}
 				}
-				case FIELD_STATIC_AND_OVERRIDES_STATIC -> null; // TODO: To be implemented
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToFieldVisitor(fRef);
+				case FIELD_STATIC_AND_OVERRIDES_STATIC -> null; // TODO: To be implemented
+				case FIELD_GENERICS_CHANGED -> null; // TODO: To be implemented
 				default -> throw new IllegalStateException(this + " was somehow associated to a non-field-level breaking change: " + change);
 			};
 	}

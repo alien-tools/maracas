@@ -69,6 +69,8 @@ public class TypeBreakingChange extends AbstractBreakingChange {
 				case METHOD_ABSTRACT_ADDED_TO_CLASS -> null; // TODO: To be implemented
 				case METHOD_NEW_DEFAULT -> null; // TODO: To be implemented
 				case CLASS_TYPE_CHANGED -> null; // TODO: To be implemented
+				case CLASS_GENERIC_TEMPLATE_CHANGED -> null; // TODO: To be implemented
+				case CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null; // TODO: To be implemented
 				default ->
 					throw new IllegalStateException(this + " was somehow associated to a non-class-level breaking change: " + change);
 			};

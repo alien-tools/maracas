@@ -7,10 +7,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.csv.CSVPrinter;
@@ -18,7 +15,6 @@ import org.apache.commons.csv.CSVPrinter;
 import com.github.maracas.experiments.model.PullRequest;
 import com.github.maracas.experiments.model.PullRequest.State;
 import com.github.maracas.experiments.model.Repository;
-import com.github.maracas.experiments.model.RepositoryPackage;
 
 /**
  * Class in charge of managing the pull requests CSV file.
@@ -36,21 +32,22 @@ public class PullRequestsCSVManager extends CSVManager {
 
 	@Override
 	protected String[] buildColumns() {
-		return new String[] {"cursor", "timestamp", "owner", "name", "sshUrl", "url",
+		return new String[] {"cursor", "owner", "name", "repoUrl", "clients", "stars",
+			"prUrl", "title", "number", "state", "draft", "files", "javaFiles",
 			"baseRepo", "baseRef", "baseRefPrefix", "headRepo", "headRef", "headRefPrefix",
-			"title", "number", "state", "draft", "files", "createdAt", "publishedAt",
-			"mergedAt", "closedAt", "groupId", "artifactId", "version", "filePath"};
+			"createdAt", "publishedAt", "mergedAt", "closedAt"};
 	}
 
 	@Override
 	protected Map<String, String> buildColumnsFormat() {
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<>();
 		map.put("cursor", "%s");
-		map.put("timestamp", "%t");
 		map.put("owner", "%s");
 		map.put("name", "%s");
-		map.put("sshUrl", "%s");
-		map.put("url", "%s");
+		map.put("repoUrl", "%s");
+		map.put("prUrl", "%s");
+		map.put("clients", "%d");
+		map.put("stars", "%d");
 		map.put("baseRepo", "%s");
 		map.put("baseRef", "%s");
 		map.put("baseRefPrefix", "%s");
@@ -66,10 +63,7 @@ public class PullRequestsCSVManager extends CSVManager {
 		map.put("mergedAt", "%t");
 		map.put("closedAt", "%t");
 		map.put("files", "%d");
-		map.put("groupId", "%s");
-		map.put("artifactId", "%s");
-		map.put("version", "%s");
-		map.put("filePath", "%s");
+		map.put("javaFiles", "%d");
 		return map;
 	}
 
@@ -77,15 +71,15 @@ public class PullRequestsCSVManager extends CSVManager {
 	public void writeRecord(Object obj) {
 		if (obj instanceof PullRequest pr) {
 			File csv = new File(path);
-			try (Writer writer = new FileWriter(csv, true);
-				CSVPrinter printer = new CSVPrinter(writer, csvFormat);) {
+			try (
+				Writer writer = new FileWriter(csv, true);
+				CSVPrinter printer = new CSVPrinter(writer, csvFormat)
+			) {
 				Repository repo = pr.getRepository();
 				String cursor = repo.getCursor();
-				LocalDateTime timestamp = LocalDateTime.now(ZoneId.of("Europe/Amsterdam"));
 				String owner = repo.getOwner();
 				String name = repo.getName();
-				URI sshUrl = repo.getSshUrl();
-				URL url = repo.getUrl();
+				URL repoUrl = repo.getUrl();
 				String baseRepo = pr.getBaseRepository();
 				String baseRef = pr.getBaseRef();
 				String baseRefPrefix = pr.getBaseRefPrefix();
@@ -101,22 +95,15 @@ public class PullRequestsCSVManager extends CSVManager {
 				LocalDate mergedAt = pr.getMergedAt();
 				LocalDate closedAt = pr.getClosedAt();
 				int files = pr.getFiles().size();
+				long javaFiles = pr.getFiles().stream().filter(f -> f.endsWith(".java")).count();
+				String prUrl = "https://github.com/%s/%s/pull/%s".formatted(owner, name, number);
+				int clients = repo.getClients();
+				int stars = repo.getStars();
 
-				for (RepositoryPackage pkg: pr.getModifiedPackages()) {
-					String groupId = pkg.getGroup();
-					String artifactId = pkg.getArtifact();
-					String version = pkg.getVersion();
-					List<String> pkgFiles = pr.getFilesPerPackage(pkg.getName());
-
-					for (String filePath : pkgFiles) {
-						printer.printRecord(cursor, timestamp, owner, name, sshUrl,
-							url, baseRepo, baseRef, baseRefPrefix, headRepo, headRef,
-							headRefPrefix, title, number, state, draft, files,
-							createdAt, publishedAt, mergedAt, closedAt, groupId,
-							artifactId, version, filePath);
-					}
-				}
-
+				printer.printRecord(cursor, owner, name, repoUrl, clients, stars,
+					prUrl, title, number, state, draft, files, javaFiles,
+					baseRepo, baseRef, baseRefPrefix, headRepo, headRef, headRefPrefix,
+					createdAt, publishedAt, mergedAt, closedAt);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

@@ -81,9 +81,9 @@ class ClientsServiceTest {
 	void test_fork_has_parent_clients() {
 		BreakbotConfig.Clients config = new BreakbotConfig.Clients(10, 0, Collections.emptyList());
 		List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(
-			new Repository("break-bot", "flowable-engine", "", ""),
+			new Repository("break-bot", "spoon-fork-for-tests", "", ""),
 			config,
-			"org.flowable:flowable-engine");
+			"fr.inria.gforge.spoon:spoon-core");
 		assertThat(clients, hasSize(10));
 	}
 }
