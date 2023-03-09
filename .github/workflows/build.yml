@@ -27,11 +27,11 @@ jobs:
           maven-version: 3.8.6
       - name: Build with Maven
         run: mvn --batch-mode -DskipTests -Dmaven.javadoc.skip -Djacoco.skip verify
+      - name: Run tests
+        run: mvn --batch-mode -Dmaven.test.failure.ignore test
         env:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
           M2_HOME: /opt/hostedtoolcache/maven/3.8.2/x64
-      - name: Run tests
-        run: mvn --batch-mode -Dmaven.test.failure.ignore test
       - name: Build tests report
         uses: dorny/test-reporter@v1
         if: always()
