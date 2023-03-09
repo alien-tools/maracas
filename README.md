@@ -1,13 +1,18 @@
-![Build](https://github.com/alien-tools/maracas/workflows/Java%20CI/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+![Build](https://github.com/alien-tools/maracas/workflows/Java%20CI/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Maracas
 
-Maracas is a source code and bytecode analysis framework—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—designed to analyze how Java libraries evolve and how their evolution impact their clients.
+Maracas is a source code and bytecode analysis framework—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—that tracks how Java libraries evolve and how their evolution impacts their clients. In a nutshell, Maracas makes it easy to:
 
-Currently, Maracas consists of three main components:
-  - The [core API](core/) computes the list of changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
+  - Track the introduction of backward-incompatible breaking changes in your own APIs or the APIs you rely on
+  - Analyze the concrete impact of these breaking changes on the client code using these APIs
+  - Analyze local Java artifacts (source code and JARs) or analyze commits, branches, and pull requests remotely hosted on software forges such as GitHub. if you'd like to automatically check your pull requests for the introduction of breaking changes and their impact, you should give a try to our GitHub App [BreakBot](https://github.com/alien-tools/breakbot) :robot:!
+
+Maracas consists of three main components:
+
+  - The [core API](core/) identifies breaking changes between two binary versions of a library (using [japicmp](https://github.com/siom79/japicmp) under the hood) and the impact these changes have on client code
   - The [forges API](forges/) handles communication with software forges (currently GitHub only) and build systems (currently Maven and Gradle) to gather source code and build JARs that are then analyzed by the core API
-  - The [REST API](rest/) exposes a set of REST endpoints that make it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [BreakBot](https://github.com/alien-tools/breakbot) to analyze pull requests on GitHub and report their impact
+  - The [REST API](rest/) makes it easy to ask Maracas to analyze library versions and clients. In particular, it is used by [BreakBot](https://github.com/alien-tools/breakbot) to analyze pull requests on GitHub.
 
 ## Content
 
@@ -15,7 +20,6 @@ Currently, Maracas consists of three main components:
 - [Deploying Maracas REST](#deploying-maracas-rest)
 - [Documentation](#documentation)
 - [Support](#support)
-- [Contributing](#contributing)
 - [License](#license)
 
 
@@ -25,7 +29,7 @@ Currently, Maracas consists of three main components:
 
 `maracas-core` is deployed on GitHub Packages.
 First, configure [Maven](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry) or [Gradle](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry) to work with GitHub Package.
-Then, declare the following dependency:
+Then, include the following dependency:
 
 ```xml
 <dependency>
@@ -55,6 +59,7 @@ AnalysisQuery query = AnalysisQuery.builder()
 
 AnalysisResult result = Maracas.analyze(query);
 Delta delta = result.delta();
+List<BreakingChange> breakingChanges = delta.getBreakingChanges();
 Set<BrokenUse> brokenUses = result.allBrokenUses();
 
 // Or by directly invoking the analysis methods
@@ -106,20 +111,15 @@ $ docker-compose build
 $ docker-compose up
 ```
 
-The REST server listens on port `8080`. Its documentation is exposed at `http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config`.
+The REST server listens on port `8080`. Its documentation is exposed at `http://localhost:8080/swagger-ui.html`.
 
 
 ## Documentation
-To learn more about Maracas and how to use it, please visit our [GitHub page](https://alien-tools.github.io/maracas/).
+To learn more about Maracas, please visit our [GitHub page](https://alien-tools.github.io/maracas/).
 
 
 ## Support
-If you would like to learn more about Maracas or you are a current user and you need some help, do not hesitate to send us an email at [thomas.degueule \<at> labri.fr](mailto:thomas.degueule@labri.fr?subject=[Maracas]%20Support) or [l.m.ochoa.venegas \<at> tue.nl](mailto:l.m.ochoa.venegas@tue.nl?subject=[Maracas]%20Support).
-
-
-## Contributing
-To learn more about how to contribute to Maracas, please check the provided [guidelines](https://github.com/alien-tools/maracas/blob/main/CONTRIBUTING.md) and the project [code of conduct](https://github.com/alien-tools/maracas/blob/main/CONTRIBUTING.md).
+If you would like to learn more about Maracas or you are a current user and you need some help, do not hesitate to ask questions in issues or to get in touch with [Lina Ochoa](https://github.com/lmove) or [Thomas Degueule](https://github.com/tdegueul).
 
 ## License
 This repository—and all its content—is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).  
-© 2021 Maracas
