@@ -149,20 +149,20 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchTopClients_spoon_core() {
-    Repository spoon = github.fetchRepository("INRIA", "spoon");
-    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 5, -1);
+  void fetchTopClients_drill() {
+    Repository drill = github.fetchRepository("apache", "drill");
+    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
     assertThat(clients, hasSize(5));
   }
 
   @Test
-  void fetchStarredClients_spoon_core() {
-    Repository spoon = github.fetchRepository("INRIA", "spoon");
-    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", -1, 100);
+  void fetchStarredClients_drill() {
+    Repository drill = github.fetchRepository("apache", "drill");
+    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", -1, 10);
     assertThat(clients, is(not(empty())));
     clients.forEach(client -> {
       try {
-        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(100)));
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(10)));
       } catch (IOException e) {
         fail(e);
       }
@@ -170,13 +170,13 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchTopStarredClients_spoon_core() {
-    Repository spoon = github.fetchRepository("INRIA", "spoon");
-    List<Repository> clients = github.fetchTopStarredClients(spoon, "fr.inria.gforge.spoon:spoon-core", 10, 500);
+  void fetchTopStarredClients_drill() {
+    Repository drill = github.fetchRepository("apache", "drill");
+    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 10, 10);
     assertThat(clients, hasSize(lessThan(10)));
     clients.forEach(client -> {
       try {
-        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(500)));
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(10)));
       } catch (IOException e) {
         fail(e);
       }
@@ -184,9 +184,9 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchTopClients_spoon_unkown() {
-    Repository spoon = github.fetchRepository("INRIA", "spoon");
-    List<Repository> clients = github.fetchTopStarredClients(spoon, "unknown", 10, -1);
+  void fetchClients_unknown_package() {
+    Repository drill = github.fetchRepository("apache", "drill");
+    List<Repository> clients = github.fetchTopStarredClients(drill, "unknown", 10, -1);
     assertThat(clients, is(empty()));
   }
 }
