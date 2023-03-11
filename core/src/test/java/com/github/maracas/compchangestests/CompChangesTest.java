@@ -11,7 +11,6 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtNamedElement;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,10 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class CompChangesTest {
 	static Set<BrokenUse> brokenUses;
-	static Set<BrokenUse> found;
 
-	@BeforeAll
-	static void setUp() {
+	static {
 		LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
 		LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
 		SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
@@ -32,17 +29,16 @@ public class CompChangesTest {
 		v1.setNoClasspath(true);
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldVersion(v1)
-			.newVersion(v2)
-			.client(client)
-			.exclude("@main.unstableAnnon.Beta")
-			.exclude("@main.unstableAnnon.IsUnstable")
-			.exclude("(*.)?unstablePkg(.*)?")
-			.build();
+				.oldVersion(v1)
+				.newVersion(v2)
+				.client(client)
+				.exclude("@main.unstableAnnon.Beta")
+				.exclude("@main.unstableAnnon.IsUnstable")
+				.exclude("(*.)?unstablePkg(.*)?")
+				.build();
 
 		AnalysisResult result = Maracas.analyze(query);
 		brokenUses = result.allBrokenUses();
-		found = new HashSet<>();
 	}
 
 	public static void assertBrokenUse(String file, int line, String elem, JApiCompatibilityChange change, APIUse use) {
@@ -52,9 +48,6 @@ public class CompChangesTest {
 			String.format("No broken use found in %s:%d [%s] [%s]",
 				file, line, change, use)
 		);
-
-		// Store the ones we found
-		found.add(find.get());
 	}
 
 	public static void assertBrokenUse(String file, int line, JApiCompatibilityChange change, APIUse use) {

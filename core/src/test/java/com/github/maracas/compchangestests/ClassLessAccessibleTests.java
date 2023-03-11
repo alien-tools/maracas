@@ -1,14 +1,12 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.EXTENDS;
-import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
-import static com.github.maracas.brokenuse.APIUse.IMPORT;
-import static com.github.maracas.brokenuse.APIUse.TYPE_DEPENDENCY;
-import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
-
 import org.junit.jupiter.api.Test;
 
-class ClassLessAccessibleTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.*;
+import static com.github.maracas.compchangestests.CompChangesTest.*;
+import static japicmp.model.JApiCompatibilityChange.CLASS_LESS_ACCESSIBLE;
+
+class ClassLessAccessibleTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(CLASS_LESS_ACCESSIBLE, 64);

@@ -1,11 +1,13 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
-import static japicmp.model.JApiCompatibilityChange.FIELD_REMOVED;
-
 import org.junit.jupiter.api.Test;
 
-class FieldRemovedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
+import static com.github.maracas.compchangestests.CompChangesTest.assertBrokenUse;
+import static com.github.maracas.compchangestests.CompChangesTest.assertNumberBrokenUses;
+import static japicmp.model.JApiCompatibilityChange.FIELD_REMOVED;
+
+class FieldRemovedTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(FIELD_REMOVED, 16);

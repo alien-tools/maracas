@@ -1,17 +1,13 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.EXTENDS;
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
-import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
-import static com.github.maracas.brokenuse.APIUse.METHOD_INVOCATION;
-import static com.github.maracas.brokenuse.APIUse.TYPE_DEPENDENCY;
-import static japicmp.model.JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class AnnotationDeprecatedAddedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.*;
+import static com.github.maracas.compchangestests.CompChangesTest.*;
+import static japicmp.model.JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED;
 
+class AnnotationDeprecatedAddedTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(ANNOTATION_DEPRECATED_ADDED, 49);

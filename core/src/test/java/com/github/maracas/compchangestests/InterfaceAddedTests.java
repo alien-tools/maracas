@@ -1,13 +1,14 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.EXTENDS;
-import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
-import static japicmp.model.JApiCompatibilityChange.INTERFACE_ADDED;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class InterfaceAddedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.EXTENDS;
+import static com.github.maracas.brokenuse.APIUse.IMPLEMENTS;
+import static com.github.maracas.compchangestests.CompChangesTest.*;
+import static japicmp.model.JApiCompatibilityChange.INTERFACE_ADDED;
+
+class InterfaceAddedTests {
 
 	@Test
 	void testNoMore() {

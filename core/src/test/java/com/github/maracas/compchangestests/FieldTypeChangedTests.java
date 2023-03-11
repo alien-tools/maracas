@@ -1,12 +1,14 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
-import static japicmp.model.JApiCompatibilityChange.FIELD_TYPE_CHANGED;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-class FieldTypeChangedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
+import static com.github.maracas.compchangestests.CompChangesTest.assertBrokenUse;
+import static com.github.maracas.compchangestests.CompChangesTest.assertNumberBrokenUses;
+import static japicmp.model.JApiCompatibilityChange.FIELD_TYPE_CHANGED;
+
+class FieldTypeChangedTests {
 	@Disabled("Check false-positives later")
 	@Test
 	void testNoMore() {

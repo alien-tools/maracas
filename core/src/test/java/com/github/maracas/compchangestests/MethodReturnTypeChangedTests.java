@@ -1,13 +1,14 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.METHOD_INVOCATION;
-import static com.github.maracas.brokenuse.APIUse.METHOD_OVERRIDE;
-import static japicmp.model.JApiCompatibilityChange.METHOD_RETURN_TYPE_CHANGED;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class MethodReturnTypeChangedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.METHOD_INVOCATION;
+import static com.github.maracas.brokenuse.APIUse.METHOD_OVERRIDE;
+import static com.github.maracas.compchangestests.CompChangesTest.*;
+import static japicmp.model.JApiCompatibilityChange.METHOD_RETURN_TYPE_CHANGED;
+
+class MethodReturnTypeChangedTests {
 
 	@Test
 	void testNoMore() {

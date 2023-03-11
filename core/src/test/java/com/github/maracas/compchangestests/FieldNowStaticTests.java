@@ -1,10 +1,11 @@
 package com.github.maracas.compchangestests;
 
-import static japicmp.model.JApiCompatibilityChange.FIELD_NOW_STATIC;
-
 import org.junit.jupiter.api.Test;
 
-class FieldNowStaticTests extends CompChangesTest {
+import static com.github.maracas.compchangestests.CompChangesTest.assertNumberBrokenUses;
+import static japicmp.model.JApiCompatibilityChange.FIELD_NOW_STATIC;
+
+class FieldNowStaticTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(FIELD_NOW_STATIC, 0);

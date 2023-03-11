@@ -1,14 +1,11 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
-import static com.github.maracas.brokenuse.APIUse.METHOD_INVOCATION;
-import static com.github.maracas.brokenuse.APIUse.METHOD_OVERRIDE;
-import static com.github.maracas.brokenuse.APIUse.TYPE_DEPENDENCY;
-import static japicmp.model.JApiCompatibilityChange.SUPERCLASS_REMOVED;
-
 import org.junit.jupiter.api.Test;
 
-public class SuperclassRemovedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.*;
+import static japicmp.model.JApiCompatibilityChange.SUPERCLASS_REMOVED;
+
+class SuperclassRemovedTests extends CompChangesTest {
 
 	@Test
 	void testNoMore() {

@@ -1,11 +1,13 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
-import static japicmp.model.JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE;
-
 import org.junit.jupiter.api.Test;
 
-class FieldLessAccessibleTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.FIELD_ACCESS;
+import static com.github.maracas.compchangestests.CompChangesTest.assertBrokenUse;
+import static com.github.maracas.compchangestests.CompChangesTest.assertNumberBrokenUses;
+import static japicmp.model.JApiCompatibilityChange.FIELD_LESS_ACCESSIBLE;
+
+class FieldLessAccessibleTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(FIELD_LESS_ACCESSIBLE, 21);

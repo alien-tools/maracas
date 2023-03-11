@@ -1,11 +1,13 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.EXTENDS;
-import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
-
 import org.junit.jupiter.api.Test;
 
-class ClassNowFinalTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.EXTENDS;
+import static com.github.maracas.compchangestests.CompChangesTest.assertBrokenUse;
+import static com.github.maracas.compchangestests.CompChangesTest.assertNumberBrokenUses;
+import static japicmp.model.JApiCompatibilityChange.CLASS_NOW_FINAL;
+
+class ClassNowFinalTests {
 	@Test
 	void testNoMore() {
 		assertNumberBrokenUses(CLASS_NOW_FINAL, 6);

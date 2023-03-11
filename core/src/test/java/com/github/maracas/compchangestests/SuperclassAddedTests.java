@@ -1,12 +1,13 @@
 package com.github.maracas.compchangestests;
 
-import static com.github.maracas.brokenuse.APIUse.EXTENDS;
-import static japicmp.model.JApiCompatibilityChange.SUPERCLASS_ADDED;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class SuperclassAddedTests extends CompChangesTest {
+import static com.github.maracas.brokenuse.APIUse.EXTENDS;
+import static com.github.maracas.compchangestests.CompChangesTest.*;
+import static japicmp.model.JApiCompatibilityChange.SUPERCLASS_ADDED;
+
+class SuperclassAddedTests {
 
 	@Test
 	void testNoMore() {
