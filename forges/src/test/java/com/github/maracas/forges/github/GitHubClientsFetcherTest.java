@@ -11,16 +11,16 @@ import static org.hamcrest.Matchers.hasSize;
 
 class GitHubClientsFetcherTest {
 	@Test
-	void fetch_packages_spoon() {
-		Repository spoon = new Repository("INRIA", "spoon", "", "");
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(spoon);
-		assertThat(fetcher.fetchPackages(), hasSize(4));
+	void fetch_packages_drill() {
+		Repository drill = new Repository("apache", "drill", "", "");
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(drill);
+		assertThat(fetcher.fetchPackages(), hasSize(11));
 	}
 
 	@Test
-	void fetch_clients_spoon() {
-		Repository spoon = new Repository("INRIA", "spoon", "", "");
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(spoon);
+	void fetch_clients_drill() {
+		Repository drill = new Repository("apache", "drill", "", "");
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(drill);
 		assertThat(fetcher.fetchClients(), is(not(empty())));
 	}
 
