@@ -9,11 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -22,18 +20,15 @@ import java.util.stream.Stream;
 
 @Service
 public class ClientsService {
-	@Autowired
-	private GitHub github;
-	private GitHubForge forge;
-	@Value("${maracas.client-path:./clients}")
-	private String clientPath;
-	@Value("${maracas.client-cache-expiration:7}")
-	private int clientsCacheExpiration;
+	private final GitHub github;
+	private final GitHubForge forge;
 
 	private static final Logger logger = LogManager.getLogger(ClientsService.class);
 
-	@PostConstruct
-	public void initialize() {
+	public ClientsService(GitHub github,
+												@Value("${maracas.client-path:./clients}") String clientPath,
+												@Value("${maracas.client-cache-expiration:7}") int clientsCacheExpiration) {
+		this.github = github;
 		Path.of(clientPath).toFile().mkdirs();
 		forge = new GitHubForge(github);
 		forge.setClientsCacheExpirationDays(clientsCacheExpiration);
