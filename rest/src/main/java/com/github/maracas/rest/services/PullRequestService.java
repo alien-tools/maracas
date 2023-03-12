@@ -5,13 +5,13 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeAnalyzer;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
+import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
 import com.github.maracas.rest.data.BrokenUseDto;
@@ -28,11 +28,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,39 +45,40 @@ import java.util.concurrent.Executors;
 
 @Service
 public class PullRequestService {
-	@Autowired
-	private BreakbotService breakbotService;
-	@Autowired
-	private ClientsService clientsService;
-	@Autowired
-	private GitHub github;
-	@Value("${maracas.clone-path:./clones}")
-	private String clonePath;
-	@Value("${maracas.report-path:./reports}")
-	private String reportPath;
-	@Value("${maracas.analysis-workers:-1}")
-	private int analysisWorkers;
-	@Value("${maracas.build-timeout:600}")
-	private int buildTimeout;
-	@Value("${maracas.clone-timeout:600}")
-	private int cloneTimeout;
+	private final BreakbotService breakbotService;
+	private final ClientsService clientsService;
+	private final GitHub github;
+	private final Forge forge;
+	private final ForgeAnalyzer forgeAnalyzer;
 
-	private Forge forge;
-	private ForgeAnalyzer forgeAnalyzer;
+
+	private final Path clonePath;
+	private final Path reportPath;
+	private final int analysisWorkers;
+	private final int cloneTimeout;
+	private final int buildTimeout;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
 
-	@PostConstruct
-	public void initialize() {
-		Path.of(clonePath).toFile().mkdirs();
-		Path.of(reportPath).toFile().mkdirs();
+	public PullRequestService(Environment env, BreakbotService breakbotService, ClientsService clientsService, GitHub github) {
+		this.breakbotService = breakbotService;
+		this.clientsService = clientsService;
+		this.github = github;
+		this.forge = new GitHubForge(github);
 
-		forge = new GitHubForge(github);
-		forgeAnalyzer = new ForgeAnalyzer(forge, Path.of(clonePath));
+		this.clonePath = Path.of(env.getProperty("maracas.clone-path", "./clones"));
+		this.reportPath = Path.of(env.getProperty("maracas.report-path", "./reports"));
+		this.analysisWorkers = env.getProperty("maracas.analysis-workers", Integer.class, -1);
+		this.buildTimeout = env.getProperty("maracas.build-timeout", Integer.class, 600);
+		this.cloneTimeout = env.getProperty("maracas.clone-timeout", Integer.class, 600);
 
-		if (analysisWorkers > 0)
-			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
+		this.clonePath.toFile().mkdirs();
+		this.reportPath.toFile().mkdirs();
+
+		this.forgeAnalyzer = new ForgeAnalyzer(forge, clonePath);
+		if (this.analysisWorkers > 0)
+			forgeAnalyzer.setExecutorService(Executors.newFixedThreadPool(this.analysisWorkers));
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {
@@ -249,6 +248,7 @@ public class PullRequestService {
 		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(Optional.of(excl), false));
 		options.setCloneTimeoutSeconds(cloneTimeout);
 		options.setBuildTimeoutSeconds(buildTimeout);
+
 		return options;
 	}
 
@@ -289,7 +289,7 @@ public class PullRequestService {
 	}
 
 	private File reportFile(PullRequest pr) {
-		return Path.of(reportPath)
+		return reportPath
 			.resolve(pr.repository().owner())
 			.resolve(pr.repository().name())
 			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
@@ -297,7 +297,7 @@ public class PullRequestService {
 	}
 
 	private Path newClonePath(PullRequest pr, Commit c) {
-		return Path.of(clonePath)
+		return clonePath
 			.resolve(prUid(pr))
 			.resolve(c.repository().owner())
 			.resolve(c.repository().name())

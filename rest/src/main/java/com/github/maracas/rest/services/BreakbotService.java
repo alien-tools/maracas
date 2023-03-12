@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,12 +20,15 @@ import java.net.URI;
 
 @Service
 public class BreakbotService {
-	@Autowired
-	private GitHub github;
-	@Value("${maracas.breakbot-file:.github/breakbot.yml}")
-	private String breakbotFile;
+	private final GitHub github;
+	private final String breakbotFile;
 
 	private static final Logger logger = LogManager.getLogger(BreakbotService.class);
+
+	public BreakbotService(GitHub github, @Value("${maracas.breakbot-file:.github/breakbot.yml}") String breakbotFile) {
+		this.github = github;
+		this.breakbotFile = breakbotFile;
+	}
 
 	public void sendPullRequestResponse(PullRequestResponse pr, String callback, String installationId) {
 		try {

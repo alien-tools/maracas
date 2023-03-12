@@ -10,29 +10,24 @@ import com.github.maracas.rest.services.ClientsService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/github")
 public class ClientsController {
-	@Autowired
-	private GitHub github;
-	@Autowired
-	private ClientsService clientsService;
-	private Forge forge;
+	private final ClientsService clientsService;
+	private final Forge forge;
 
 	private static final Logger logger = LogManager.getLogger(ClientsController.class);
 
-	@PostConstruct
-	public void initialize() {
-		forge = new GitHubForge(github);
+	public ClientsController(GitHub github, ClientsService clientsService) {
+		this.clientsService = clientsService;
+		this.forge = new GitHubForge(github);
 	}
 
 	@GetMapping("/clients/{owner}/{name}")

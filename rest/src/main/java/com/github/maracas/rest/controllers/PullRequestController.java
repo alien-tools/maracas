@@ -7,10 +7,10 @@ import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.rest.breakbot.BreakbotException;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
-import com.github.maracas.rest.services.*;
+import com.github.maracas.rest.services.BreakbotService;
+import com.github.maracas.rest.services.PullRequestService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +18,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/github")
 public class PullRequestController {
-	@Autowired
-	private PullRequestService prService;
-	@Autowired
-	private BreakbotService breakbotService;
+	private final PullRequestService prService;
+	private final BreakbotService breakbotService;
 
 	private static final Logger logger = LogManager.getLogger(PullRequestController.class);
+
+	public PullRequestController(PullRequestService prService, BreakbotService breakbotService) {
+		this.prService = prService;
+		this.breakbotService = breakbotService;
+	}
 
 	@PostMapping("/pr/{owner}/{name}/{number}")
 	public ResponseEntity<PullRequestResponse> analyzePullRequest(
@@ -90,21 +93,21 @@ public class PullRequestController {
 	}
 
 	@ExceptionHandler({BuildException.class, CloneException.class})
-	public ResponseEntity<PullRequestResponse> handleInternalExceptions(BuildException e) {
+	public ResponseEntity<PullRequestResponse> handleInternalException(BuildException e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(PullRequestResponse.status(null, e.getMessage()));
 	}
 
 	@ExceptionHandler({BreakbotException.class, ForgeException.class})
-	public ResponseEntity<PullRequestResponse> handleGitHubExceptions(Exception e) {
+	public ResponseEntity<PullRequestResponse> handleGitHubException(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(PullRequestResponse.status(null, e.getMessage()));
 	}
 
 	@ExceptionHandler(Throwable.class)
-	public ResponseEntity<PullRequestResponse> handleThrowables(Throwable t) {
+	public ResponseEntity<PullRequestResponse> handleThrowable(Throwable t) {
 		logger.error("Uncaught throwable", t);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(PullRequestResponse.status(null, t.getMessage()));

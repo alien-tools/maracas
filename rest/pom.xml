@@ -15,7 +15,7 @@
 	<name>Maracas REST API</name>
 
 	<properties>
-		<spring.version>2.6.0</spring.version>
+		<spring-boot.version>3.0.4</spring-boot.version>
 	</properties>
 
 	<build>
@@ -23,7 +23,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${spring.version}</version>
+				<version>${spring-boot.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -56,13 +56,18 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
 				<type>pom</type>
-				<version>${spring.version}</version>
+				<version>${spring-boot.version}</version>
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-properties-migrator</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.github.maracas</groupId>
 			<artifactId>maracas-forges</artifactId>
