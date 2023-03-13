@@ -2,6 +2,7 @@ package com.github.maracas.forges.build.maven;
 
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.Builder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,12 +10,12 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MavenBuilderTest {
@@ -114,20 +115,20 @@ class MavenBuilderTest {
 	@Test
 	void locate_modules_valid() {
 		Builder builder = new MavenBuilder(validProject);
-		Map<Path, String> modules = builder.locateModules();
+		List<BuildModule> modules = builder.locateModules();
 
-		assertThat(modules, is(aMapWithSize(1)));
-		assertThat(modules, hasEntry(Path.of(""), "test:maven-project"));
+		assertThat(modules, contains(new BuildModule("test:maven-project", Path.of(""))));
 	}
 
 	@Test
 	void locate_modules_multi() {
 		Builder builder = new MavenBuilder(multiProject);
-		Map<Path, String> modules = builder.locateModules();
+		List<BuildModule> modules = builder.locateModules();
 
-		assertThat(modules, is(aMapWithSize(3)));
-		assertThat(modules, hasEntry(Path.of(""),             "sample:parent-module"));
-		assertThat(modules, hasEntry(Path.of("core-module"),  "sample:core-module"));
-		assertThat(modules, hasEntry(Path.of("extra-module"), "sample:extra-module"));
+		assertThat(modules, containsInAnyOrder(
+				new BuildModule("sample:parent-module", Path.of("")),
+				new BuildModule("sample:core-module", Path.of("core-module")),
+				new BuildModule("sample:extra-module", Path.of("extra-module"))
+		));
 	}
 }

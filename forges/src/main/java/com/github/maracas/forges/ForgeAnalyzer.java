@@ -9,6 +9,7 @@ import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -39,10 +40,8 @@ public class ForgeAnalyzer {
   private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
 
   public ForgeAnalyzer(Forge forge, Path workingDirectory) {
-    Objects.requireNonNull(forge);
-    Objects.requireNonNull(workingDirectory);
-    this.forge = forge;
-    this.workingDirectory = workingDirectory;
+    this.forge = Objects.requireNonNull(forge);
+    this.workingDirectory = Objects.requireNonNull(workingDirectory);
   }
 
   public List<AnalysisResult> analyzePullRequest(PullRequest pr, MaracasOptions options) {
@@ -55,40 +54,39 @@ public class ForgeAnalyzer {
     Path v1Clone = newClonePath(v1);
     Path v2Clone = newClonePath(v2);
     CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, BuildConfig.newDefault());
-    Map<String, Path> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
+    List<BuildModule> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
     logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
     // We need to run the whole analysis for each impacted package in the PR
-    return impactedPackages.entrySet()
-      .stream()
-      .map(e -> analyzePullRequestPackage(pr, v1Clone, v2Clone, e.getKey(), e.getValue(), options))
+    return impactedPackages.stream()
+      .map(e -> analyzePullRequestPackage(pr, v1Clone, v2Clone, e, options))
       .toList();
   }
 
   private AnalysisResult analyzePullRequestPackage(PullRequest pr, Path v1Clone, Path v2Clone,
-                                                   String pkgName, Path modulePath, MaracasOptions options) {
+                                                   BuildModule pkg, MaracasOptions options) {
     try {
-      logger.info("[{}] Now analyzing package {}", pr, pkgName);
+      logger.info("[{}] Now analyzing package {}", pr, pkg.name());
 
       Commit v1 = pr.mergeBase();
       Commit v2 = pr.head();
 
       // First, we compute the delta model to look for BCs
-      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(modulePath));
-      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(modulePath));
+      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(pkg.path()));
+      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(pkg.path()));
       Delta delta = computeDelta(builderV1, builderV2, options);
 
       if (delta.getBreakingChanges().isEmpty())
         return AnalysisResult.noImpact(delta, Collections.emptyList());
 
       // If we find some, we fetch the appropriate clients and analyze the impact
-      logger.info("Fetching clients for package {}", pkgName);
+      logger.info("Fetching clients for package {}", pkg.name());
       Collection<Commit> clients =
-        forge.fetchTopStarredClients(pr.repository(), pkgName, options.getClientsPerPackage(), options.getMinStarsPerClient())
+        forge.fetchTopStarredClients(pr.repository(), pkg.name(), options.getClientsPerPackage(), options.getMinStarsPerClient())
           .stream()
           .map(repository -> forge.fetchCommit(repository, "HEAD"))
           .toList();
-      logger.info("Found {} clients to analyze for {}", clients.size(), pkgName);
+      logger.info("Found {} clients to analyze for {}", clients.size(), pkg.name());
 
       return computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options);
     } catch (Exception e) {
@@ -205,38 +203,36 @@ public class ForgeAnalyzer {
   }
 
   public void setExecutorService(ExecutorService executorService) {
-    Objects.requireNonNull(executorService);
-    this.executorService = executorService;
+    this.executorService = Objects.requireNonNull(executorService);
   }
 
   private CommitBuilder makeBuilderForCommit(Commit c) {
     return new CommitBuilder(c, newClonePath(c), BuildConfig.newDefault());
   }
 
-  public Map<String, Path> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
+  public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
     builderV1.cloneCommit(cloneTimeoutSeconds);
-    Map<Path, String> modules = builderV1.getBuilder().locateModules();
+    List<BuildModule> modules = builderV1.getBuilder().locateModules();
 
     return pr.changedFiles()
       .stream()
       // We only want Java files that exist in 'v1', not the new files created by this PR
       .filter(f -> f.toString().endsWith(".java") && builderV1.getClonePath().resolve(f).toFile().exists())
       .map(f -> {
-        Optional<Path> matchingPath =
-          modules.keySet()
-            .stream()
-            .filter(p -> f.toString().startsWith(p.toString()))
-            .max(Comparator.comparingInt((Path p) -> p.toString().length()));
+        // Find the most nested module that matches the impacted file
+        Optional<BuildModule> matchingModule =
+          modules.stream()
+            .filter(m -> f.toString().startsWith(m.path().toString()))
+            .max(Comparator.comparingInt(m -> m.path().toString().length()));
 
-        if (matchingPath.isPresent())
-          return Map.entry(modules.get(matchingPath.get()), matchingPath.get());
-        else {
+        if (matchingModule.isEmpty())
           logger.warn("Couldn't infer the impacted package for {}", f);
-          return null;
-        }
+
+        return matchingModule;
       })
-      .filter(Objects::nonNull)
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
+      .flatMap(Optional::stream)
+      .distinct()
+      .toList();
   }
 
   private Path newClonePath(Commit c) {

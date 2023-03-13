@@ -2,6 +2,7 @@ package com.github.maracas.forges.build.gradle;
 
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.Builder;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -97,7 +98,7 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public Map<Path, String> locateModules() {
+	public List<BuildModule> locateModules() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 

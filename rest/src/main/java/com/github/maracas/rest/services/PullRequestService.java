@@ -11,6 +11,7 @@ import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.breakbot.BreakbotConfig;
@@ -129,25 +130,24 @@ public class PullRequestService {
 		Path clonePathV2 = newClonePath(pr, pr.head());
 		CommitBuilder baseBuilder = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), clonePathV1, Path.of(""));
 
-		Map<String, Path> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
+		List<BuildModule> impactedPackages = forgeAnalyzer.inferImpactedPackages(pr, baseBuilder, options.getCloneTimeoutSeconds());
 		logger.info("[{}] {} packages impacted: {}", prUid(pr), impactedPackages.size(), impactedPackages);
 
 		List<PackageReport> packageReports = new ArrayList<>();
-		impactedPackages.keySet().forEach(pkgName -> {
+		impactedPackages.forEach(pkg -> {
 			try {
-				Path modulePath = impactedPackages.get(pkgName);
-				logger.info("[{}] Now analyzing package {}", prUid(pr), pkgName);
+				logger.info("[{}] Now analyzing package {}", prUid(pr), pkg.name());
 
 				// First, we compute the delta model to look for BCs
-				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), clonePathV1, modulePath);
-				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), clonePathV2, modulePath);
+				CommitBuilder builderV1 = makeBuilderForCommit(pr, pr.mergeBase(), config.build(), clonePathV1, pkg.path());
+				CommitBuilder builderV2 = makeBuilderForCommit(pr, pr.head(), config.build(), clonePathV2, pkg.path());
 				Delta delta = forgeAnalyzer.computeDelta(builderV1, builderV2, options);
 
 				// If we find some, we fetch the appropriate clients and analyze the impact
 				if (!delta.getBreakingChanges().isEmpty()) {
-					logger.info("[{}] Fetching clients for package {}", prUid(pr), pkgName);
-					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkgName);
-					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkgName);
+					logger.info("[{}] Fetching clients for package {}", prUid(pr), pkg.name());
+					List<BreakbotConfig.GitHubRepository> clients = clientsService.buildClientsList(pr.repository(), config.clients(), pkg.name());
+					logger.info("[{}] Found {} clients to analyze for package {}", prUid(pr), clients.size(), pkg.name());
 
 					Map<Path, CommitBuilder> clientBuilders = new HashMap<>();
 					List<ClientReport> clientReports = new ArrayList<>();
@@ -183,20 +183,20 @@ public class PullRequestService {
 					);
 
 					packageReports.add(PackageReport.success(
-						pkgName,
+							pkg.name(),
 						DeltaDto.of(delta, pr, builderV1.getClonePath()),
 						clientReports
 					));
 				} else {
 					packageReports.add(PackageReport.success(
-						pkgName,
+							pkg.name(),
 						DeltaDto.of(delta, pr, builderV1.getClonePath()),
 						Collections.emptyList()
 					));
 				}
 			} catch (Exception e) {
 				logger.error(e);
-				packageReports.add(PackageReport.error(pkgName, e.getMessage()));
+				packageReports.add(PackageReport.error(pkg.name(), e.getMessage()));
 			}
 		});
 

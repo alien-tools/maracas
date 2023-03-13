@@ -2,6 +2,7 @@ package com.github.maracas.forges.build.maven;
 
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.Builder;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.io.FileUtils;
@@ -25,10 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -67,10 +67,8 @@ public class MavenBuilder implements Builder {
 	}
 
 	public MavenBuilder(Path basePath, BuildConfig config) {
-		Objects.requireNonNull(basePath);
-		Objects.requireNonNull(config);
-		this.basePath = basePath;
-		this.config = config;
+		this.basePath = Objects.requireNonNull(basePath);
+		this.config = Objects.requireNonNull(config);
 	}
 
 	public MavenBuilder(Path basePath) {
@@ -79,8 +77,10 @@ public class MavenBuilder implements Builder {
 
 	@Override
 	public void build(int timeoutSeconds) {
-		File pomFile = basePath.resolve(BUILD_FILE).toFile();
+		if (timeoutSeconds <= 0)
+			throw new IllegalArgumentException("timeoutSeconds should be > 0");
 
+		File pomFile = basePath.resolve(BUILD_FILE).toFile();
 		if (!pomFile.exists())
 			throw new BuildException("Couldn't find pom.xml in %s".formatted(basePath));
 		if (!basePath.resolve(config.getModule()).toFile().exists())
@@ -171,8 +171,8 @@ public class MavenBuilder implements Builder {
 	}
 
 	@Override
-	public Map<Path, String> locateModules() {
-		Map<Path, String> modules = new HashMap<>();
+	public List<BuildModule> locateModules() {
+		List<BuildModule> modules = new ArrayList<>();
 
 		try (Stream<Path> paths = Files.walk(basePath)) {
 			paths
@@ -185,7 +185,7 @@ public class MavenBuilder implements Builder {
 						String aid = model.getArtifactId();
 
 						if (!StringUtils.isEmpty(gid) && !StringUtils.isEmpty(aid))
-							modules.put(basePath.relativize(pomFile.getParent()), String.format("%s:%s", gid, aid));
+							modules.add(new BuildModule(String.format("%s:%s", gid, aid), basePath.relativize(pomFile.getParent())));
 					} catch (IOException | XmlPullParserException e) {
 						logger.error("Couldn't parse {}, skipping", pomFile);
 					}

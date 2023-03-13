@@ -4,6 +4,7 @@ import com.github.maracas.forges.build.gradle.GradleBuilder;
 import com.github.maracas.forges.build.maven.MavenBuilder;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,7 +12,7 @@ import java.util.Optional;
 public interface Builder {
   void build(int timeoutSeconds) throws BuildException;
   Optional<Path> locateJar();
-  Map<Path, String> locateModules();
+  List<BuildModule> locateModules();
 
   default void build() throws BuildException {
     build(Integer.MAX_VALUE);

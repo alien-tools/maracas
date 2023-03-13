@@ -16,8 +16,7 @@ public class BuildConfig {
 	}
 
 	public BuildConfig(Path module) {
-		Objects.requireNonNull(module);
-		this.module = module;
+		this.module = Objects.requireNonNull(module);
 	}
 
 	public void addGoal(String goal) {
