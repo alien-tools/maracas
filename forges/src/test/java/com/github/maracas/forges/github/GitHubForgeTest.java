@@ -129,7 +129,7 @@ class GitHubForgeTest {
   @Test
   void fetchCommit_HEAD() {
     Commit c = github.fetchCommit("alien-tools", "repository-fixture", "HEAD");
-    assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("fb25deb0e1dd827140886fddb74314ef6a61c66c", c.sha());
     assertEquals("alien-tools", c.repository().owner());
     assertEquals("repository-fixture", c.repository().name());
     assertEquals("alien-tools/repository-fixture", c.repository().fullName());
