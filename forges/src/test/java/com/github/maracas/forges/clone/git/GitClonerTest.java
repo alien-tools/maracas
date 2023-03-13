@@ -104,7 +104,7 @@ class GitClonerTest {
 		Commit commit = new Commit(fixtureMain, "HEAD");
 		cloner.clone(commit, clone);
 		assertThat(clone.resolve("pom.xml").toFile().exists(), is(true));
-		assertThat(readHEAD(clone), is(equalTo("15b08c0f6acba8fe369d0076c583fb22311f8524")));
+		assertThat(readHEAD(clone), is(equalTo("fb25deb0e1dd827140886fddb74314ef6a61c66c")));
 	}
 
 	@Test
