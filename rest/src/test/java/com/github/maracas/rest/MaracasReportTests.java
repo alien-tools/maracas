@@ -70,7 +70,7 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testSourceLocationsDelta() {
+	void source_locations_delta() {
 		// Hamcrest's hasProperty doesn't work with records yet
 		//assertThat(
 		//	report.delta().breakingChanges(),
@@ -89,7 +89,7 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testSourceLocationsBrokenUses() {
+	void source_locations_brokenUses() {
 		assertThat(report.reports().get(0).clientReports().size(), is(1));
 		report.reports().get(0).clientReports().get(0).brokenUses().forEach(d -> {
 			assertThat(d.path(),      not(emptyOrNullString()));
@@ -99,7 +99,7 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testGitHubLocationsDelta() {
+	void github_locations_delta() {
 		report.reports().get(0).delta().breakingChanges().forEach(d -> {
 			assertThat(d.fileUrl(), not(emptyOrNullString()));
 			assertThat(d.diffUrl(), not(emptyOrNullString()));
@@ -107,17 +107,16 @@ class MaracasReportTests {
 	}
 
 	@Test
-	void testGitHubLocationsBrokenUses() {
+	void github_locations_brokenUses() {
 		assertThat(report.reports().get(0).clientReports().size(), is(1));
 		assertThat(report.reports().get(0).clientReports().get(0).url(), not(emptyOrNullString()));
 		report.reports().get(0).clientReports().get(0).brokenUses().forEach(d -> assertThat(d.url(), not(emptyOrNullString())));
 	}
 
 	@Test
-	void testGithubClientsArePresent() {
+	void github_clients_are_present() {
 		assertThat(report.reports().get(0).clientReports().size(), is(1));
 		assertThat(report.reports().get(0).clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
 		assertThat(report.reports().get(0).clientReports().get(0).brokenUses().size(), is(greaterThan(1)));
 	}
-
 }

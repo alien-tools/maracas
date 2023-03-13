@@ -20,22 +20,22 @@ class ClientsControllerTests {
 	protected MockMvc mvc;
 
 	@Test
-	void get_clients_spoon() throws Exception {
-		mvc.perform(get("/github/clients/INRIA/spoon"))
+	void get_clients_drill() throws Exception {
+		mvc.perform(get("/github/clients/apache/drill"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.owner", is("INRIA")))
-			.andExpect(jsonPath("$.name", is("spoon")))
-			.andExpect(jsonPath("$.packages[*].url", hasSize(4)))
+			.andExpect(jsonPath("$.owner", is("apache")))
+			.andExpect(jsonPath("$.name", is("drill")))
+			.andExpect(jsonPath("$.packages[*].url", hasSize(11)))
 			.andExpect(jsonPath("$.clients[*].owner", is(not(empty()))));
 	}
 
 	@Test
-	void get_packages_spoon() throws Exception {
-		mvc.perform(get("/github/packages/INRIA/spoon"))
+	void get_packages_drill() throws Exception {
+		mvc.perform(get("/github/packages/apache/drill"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.owner", is("INRIA")))
-			.andExpect(jsonPath("$.name", is("spoon")))
-			.andExpect(jsonPath("$.packages[*].url", hasSize(4)))
+			.andExpect(jsonPath("$.owner", is("apache")))
+			.andExpect(jsonPath("$.name", is("drill")))
+			.andExpect(jsonPath("$.packages[*].url", hasSize(11)))
 			.andExpect(jsonPath("$.clients", is(empty())));
 	}
 

@@ -10,7 +10,7 @@ import static org.hamcrest.Matchers.*;
 
 class BreakbotConfigTests {
 	@Test
-	void testDefaultConfiguration() {
+	void default_configuration() {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();
 		assertThat(c.excludes(), is(empty()));
 		assertThat(c.build().goals(), is(empty()));
@@ -22,13 +22,13 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testInvalidConfiguration() {
+	void invalid_configuration() {
 		String s = "nope";
 		Assertions.assertThrows(BreakbotException.class, () -> BreakbotConfig.fromYaml(s));
 	}
 
 	@Test
-	void testOneClient() {
+	void one_client() {
 		String s = """
 			clients:
 			  repositories:
@@ -44,7 +44,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testSeveralClients() {
+	void several_clients() {
 		String s = """
 			clients:
 			  repositories:
@@ -74,7 +74,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testClientsWithSources() {
+	void clients_with_sources() {
 		String s = """
 			clients:
 			  repositories:
@@ -98,7 +98,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testCustomBuild() {
+	void custom_build() {
 		String s = """
 			build:
 			  goals: [a, b]
@@ -116,7 +116,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testCustomOutput() {
+	void custom_output() {
 		String s = """
 			build:
 			  jar: build/out.jar""";
@@ -127,7 +127,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testCustomBuildOutput() {
+	void custom_build_output() {
 		String s = """
 			build:
 			  goals: [custom]
@@ -141,7 +141,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testClientWithCommitOrBranch() {
+	void client_with_commit_or_branch() {
 		String s = """
 			clients:
 			  repositories:
@@ -167,7 +167,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testWithExcludes() {
+	void with_excludes() {
 		String s = """
 			excludes:
 			  # '@' and '*' cannot start a YAML token, we have to quote
@@ -179,7 +179,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testIgnoreUnknownProperties() {
+	void ignore_unknown_properties() {
 		String s = """
 			a: b
 			excludes:
@@ -193,7 +193,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testTopClients() {
+	void top_clients() {
 		String s = """
 			clients:
 			  top: 10
@@ -205,7 +205,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testPopularClients() {
+	void popular_clients() {
 		String s = """
 			clients:
 			  stars: 100
@@ -217,7 +217,7 @@ class BreakbotConfigTests {
 	}
 
 	@Test
-	void testTopClientsWithCustom() {
+	void top_clients_with_custom() {
 		String s = """
 			clients:
 			  top: 10

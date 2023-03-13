@@ -11,14 +11,20 @@ import static org.hamcrest.Matchers.*;
 @TestPropertySource(properties = {"maracas.breakbot-file=.not-found"})
 class ConfigLessGithubControllerTests extends AbstractControllerTest {
 	@Test
-	void testAnalyzePRPushConfigLess() {
-		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
+	void analyze_PR_push_configLess() {
+		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "repository-fixture", 1));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports(), empty());
+		PackageReport reportA = res.report().reports().get(0);
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), is(empty()));
+		assertThat(reportA.allBrokenUses(), is(empty()));
+
+		PackageReport reportB = res.report().reports().get(1);
+		assertThat(reportB.delta().breakingChanges(), hasSize(1));
+		assertThat(reportB.clientReports(), is(empty()));
+		assertThat(reportB.allBrokenUses(), is(empty()));
 	}
 }

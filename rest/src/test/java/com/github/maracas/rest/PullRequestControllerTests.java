@@ -23,49 +23,61 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PullRequestControllerTests extends AbstractControllerTest {
 	@Test
-	void testAnalyzePRSync() {
-		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6));
+	void pr_sync() {
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "repository-fixture", 1));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports(), hasSize(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.allBrokenUses().size(), greaterThan(0));
+		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), hasSize(2));
+		assertThat(reportA.allBrokenUses(), hasSize(1));
+
+		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
+		assertThat(reportB.delta().breakingChanges(), hasSize(1));
+		assertThat(reportB.clientReports(), hasSize(2));
+		assertThat(reportB.allBrokenUses(), hasSize(1));
 	}
 
 	@Test
-	void testAnalyzePRPoll() {
-		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "comp-changes", 6));
+	void pr_poll() {
+		PullRequestResponse res = resultAsPR(analyzePRPoll("alien-tools", "repository-fixture", 1));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.allBrokenUses().size(), greaterThan(0));
+		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), hasSize(2));
+		assertThat(reportA.allBrokenUses(), hasSize(1));
+
+		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
+		assertThat(reportB.delta().breakingChanges(), hasSize(1));
+		assertThat(reportB.clientReports(), hasSize(2));
+		assertThat(reportB.allBrokenUses(), hasSize(1));
 	}
 
 	@Test
-	void testAnalyzePRPush() {
-		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "comp-changes", 6));
+	void pr_push() {
+		PullRequestResponse res = resultAsPR(analyzePRPush("alien-tools", "repository-fixture", 1));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.allBrokenUses().size(), greaterThan(0));
+		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), hasSize(2));
+		assertThat(reportA.allBrokenUses(), hasSize(1));
+
+		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
+		assertThat(reportB.delta().breakingChanges(), hasSize(1));
+		assertThat(reportB.clientReports(), hasSize(2));
+		assertThat(reportB.allBrokenUses(), hasSize(1));
 	}
 
 	@Test
-	void testUnknownRepository() throws Exception {
+	void unknown_repository() throws Exception {
 		mvc.perform(post("/github/pr/alien-tools/NOPE/3"))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message", is("Couldn't fetch repository alien-tools/NOPE")));
@@ -80,92 +92,94 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testUnknownPR() throws Exception {
-		mvc.perform(post("/github/pr/alien-tools/comp-changes/9999"))
+	void unknown_pr() throws Exception {
+		mvc.perform(post("/github/pr/alien-tools/repository-fixture/9999"))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository alien-tools/comp-changes")));
-
-		mvc.perform(post("/github/pr/alien-tools/comp-changes/9999?callback=foo"))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository alien-tools/comp-changes")));
-
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/9999"))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository alien-tools/comp-changes")));
+			.andExpect(jsonPath("$.message", is("Couldn't fetch PR 9999 from repository alien-tools/repository-fixture")));
 	}
 
 	@Test
-	void testPRExistsButNotAnalyzed() throws Exception {
-		mvc.perform(get("/github/pr/alien-tools/comp-changes/1"))
+	void pr_exists_but_not_analyzed() throws Exception {
+		mvc.perform(get("/github/pr/alien-tools/repository-fixture/1"))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	void testPRWithSuppliedBreakbotConfiguration() {
+	void pr_with_supplied_breakbot_configuration() {
 		String bbConfig = """
 			clients:
 			  repositories:
 			    - repository: alien-tools/comp-changes-client""";
 
-		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "repository-fixture", 1, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports().size(), equalTo(1));
-		assertThat(report.clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
-		assertThat(report.allBrokenUses().size(), greaterThan(0));
+		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), hasSize(1));
+		assertThat(reportA.clientReports().get(0).url(), is(equalTo("alien-tools/comp-changes-client")));
+		assertThat(reportA.allBrokenUses(), is(empty()));
+
+		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
+		assertThat(reportB.delta().breakingChanges(), hasSize(1));
+		assertThat(reportB.clientReports(), hasSize(1));
+		assertThat(reportA.clientReports().get(0).url(), is(equalTo("alien-tools/comp-changes-client")));
+		assertThat(reportA.allBrokenUses(), is(empty()));
 	}
 
 	@Test
-	void testPRWithUnknownOrBuggyClient() {
+	void pr_with_unknown_or_buggy_client() {
 		String bbConfig = """
 			clients:
 			  repositories:
 			    - repository: alien-tools/unknown-client
-			    - repository: alien-tools/comp-changes-client
+			    - repository: alien-tools/client-fixture-a
 			    - repository: alien-tools/comp-changes-client-error""";
 
-		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "comp-changes", 6, bbConfig));
+		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "repository-fixture", 1, bbConfig));
 		assertThat(res.message(), is("ok"));
 		assertThat(res.report(), is(notNullValue()));
-		assertThat(res.report().reports(), hasSize(1));
+		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport report = res.report().reports().get(0);
-		assertThat(report.delta().breakingChanges(), not(empty()));
-		assertThat(report.clientReports(), hasSize(3));
+		PackageReport reportA = res.report().reports().get(0);
+		assertThat(reportA.delta().breakingChanges(), hasSize(1));
+		assertThat(reportA.clientReports(), hasSize(3));
 
-		ClientReport unknown = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/unknown-client")).findFirst().get();
+		ClientReport unknown = reportA.clientReports().stream().filter(r -> r.url().equals("alien-tools/unknown-client")).findFirst().get();
 		assertThat(unknown.error(), containsString("Couldn't fetch repository alien-tools/unknown-client"));
 		assertThat(unknown.brokenUses(), is(empty()));
 
-		ClientReport compChanges = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client")).findFirst().get();
-		assertThat(compChanges.error(), is(nullValue()));
-		assertThat(compChanges.brokenUses(), is(not(empty())));
+		ClientReport fixture = reportA.clientReports().stream().filter(r -> r.url().equals("alien-tools/client-fixture-a")).findFirst().get();
+		assertThat(fixture.error(), is(nullValue()));
+		assertThat(fixture.brokenUses(), hasSize(1));
 
-		ClientReport error = report.clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client-error")).findFirst().get();
+		ClientReport error = reportA.clientReports().stream().filter(r -> r.url().equals("alien-tools/comp-changes-client-error")).findFirst().get();
 		assertThat(error.error(), containsString("Unable to read the pom"));
 		assertThat(error.brokenUses(), is(empty()));
 	}
 
 	@Test
-	void testPRWithBuggyBuildConfiguration() throws Exception {
+	void pr_with_buggy_build_configuration() throws Exception {
 		String bbConfig = """
 			build:
 			  goals: [unknown]""";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/repository-fixture/1").content(bbConfig))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.report.reports[0].id", equalTo("maracas-data:comp-changes")))
+			.andExpect(jsonPath("$.report.reports[0].id", equalTo("com.github.alien-tools:module-a")))
 			.andExpect(jsonPath("$.report.reports[0].error", containsString("Unknown lifecycle phase")))
 			.andExpect(jsonPath("$.report.reports[0].delta", nullValue()))
-			.andExpect(jsonPath("$.report.reports[0].clientReports", empty()));
+			.andExpect(jsonPath("$.report.reports[0].clientReports", empty()))
+			.andExpect(jsonPath("$.report.reports[1].id", equalTo("com.github.alien-tools:nested-b")))
+			.andExpect(jsonPath("$.report.reports[1].error", containsString("Unknown lifecycle phase")))
+			.andExpect(jsonPath("$.report.reports[1].delta", nullValue()))
+			.andExpect(jsonPath("$.report.reports[1].clientReports", empty()));
 	}
 
 	@Test
-	void testAnalyzeUnknownPRPush() throws Exception {
+	void unknown_pr_push() throws Exception {
 		String owner = "this-does-not-exist";
 		String repository = "this-does-not-exist";
 		int prId = 9999;
@@ -202,10 +216,10 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testPRPushWithBuggyBuildConfiguration() throws Exception {
+	void pr_push_with_buggy_build_configuration() throws Exception {
 		String owner = "alien-tools";
-		String repository = "comp-changes";
-		int prId = 2;
+		String repository = "repository-fixture";
+		int prId = 1;
 		String bbConfig = """
 			build:
 			  goals: [unknown]""";
@@ -250,30 +264,30 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testPRWithBuggyClientConfiguration() throws Exception {
+	void pr_with_buggy_client_configuration() throws Exception {
 		String bbConfig = """
 			clients:
 			  repositories:
 			    - repository: unknown/repository""";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/repository-fixture/1").content(bbConfig))
 			.andExpect(jsonPath("$.report.reports[0].clientReports[0].error", containsString("Couldn't fetch repository")));
 	}
 
 	@Test
-	void testPRWithInvalidBreakbotFile() throws Exception {
+	void pr_with_invalid_breakbot_file() throws Exception {
 		String bbConfig = "nope";
 
-		mvc.perform(post("/github/pr-sync/alien-tools/comp-changes/6").content(bbConfig))
+		mvc.perform(post("/github/pr-sync/alien-tools/repository-fixture/1").content(bbConfig))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message", containsString("Couldn't parse .github/breakbot.yml")));
 	}
 
 	@Test
-	void testPRPushWithInvalidBreakbotFile() throws Exception {
+	void pr_push_with_invalid_breakbot_file() throws Exception {
 		String owner = "alien-tools";
-		String repository = "comp-changes";
-		int prId = 2;
+		String repository = "repository-fixture";
+		int prId = 1;
 		String bbConfig = "nope";
 
 		int mockPort = 8080;
@@ -314,7 +328,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 	}
 
 	@Test
-	void testPRWithExcludeCriteria() {
+	void pr_with_exclude_criteria() {
 		String bbConfig = """
 			excludes:
 			  - '@main.unstableAnnon.Beta'

@@ -24,7 +24,7 @@ class SpoonTests extends AbstractControllerTest {
 	 * Checks the latest 5 PRs affecting Java code on INRIA/spoon
 	 */
 	@Test
-	void testLatest5PRs() throws Exception {
+	void latest_5_prs() throws Exception {
 		List<GHPullRequest> javaPRs =
 			github.getRepository("INRIA/spoon")
 				.getPullRequests(GHIssueState.OPEN)
