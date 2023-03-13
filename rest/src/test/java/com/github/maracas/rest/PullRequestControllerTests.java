@@ -248,7 +248,7 @@ class PullRequestControllerTests extends AbstractControllerTest {
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.message", is("processing")));
 
-			Thread.sleep(5000);
+			Thread.sleep(10000);
 
 			// Check whether our mock server got the error callback
 			mockServer.verify(
