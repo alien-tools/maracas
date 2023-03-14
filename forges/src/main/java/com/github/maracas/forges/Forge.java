@@ -1,5 +1,7 @@
 package com.github.maracas.forges;
 
+import com.github.maracas.forges.github.BreakbotConfig;
+
 import java.util.List;
 
 public interface Forge {
@@ -20,4 +22,10 @@ public interface Forge {
   }
 
   List<Repository> fetchTopStarredClients(Repository repository, String pkgId, int limit, int minStars) throws ForgeException;
+
+  List<Repository> fetchCustomClients(Repository repository) throws ForgeException;
+
+  List<Repository> fetchAllClients(Repository repository, String pkgId, int limit, int minStars) throws ForgeException;
+
+  BreakbotConfig readBreakbotConfig(Repository repository) throws ForgeException;
 }

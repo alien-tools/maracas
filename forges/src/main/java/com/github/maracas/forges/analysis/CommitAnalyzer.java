@@ -1,4 +1,4 @@
-package com.github.maracas.forges;
+package com.github.maracas.forges.analysis;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.LibraryJar;
@@ -7,9 +7,8 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.forges.build.BuildConfig;
+import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -18,10 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,66 +28,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class ForgeAnalyzer {
-  private final Forge forge;
+public class CommitAnalyzer {
   private final Path workingDirectory;
   private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-  private static final Logger logger = LogManager.getLogger(ForgeAnalyzer.class);
+  private static final Logger logger = LogManager.getLogger(CommitAnalyzer.class);
 
-  public ForgeAnalyzer(Forge forge, Path workingDirectory) {
-    this.forge = Objects.requireNonNull(forge);
+  public CommitAnalyzer(Path workingDirectory) {
     this.workingDirectory = Objects.requireNonNull(workingDirectory);
-  }
-
-  public List<AnalysisResult> analyzePullRequest(PullRequest pr, MaracasOptions options) {
-    Objects.requireNonNull(pr);
-    Objects.requireNonNull(options);
-
-    // For every package in mergeBase that may be impacted by the PR's changes
-    Commit v1 = pr.mergeBase();
-    Commit v2 = pr.head();
-    Path v1Clone = newClonePath(v1);
-    Path v2Clone = newClonePath(v2);
-    CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, BuildConfig.newDefault());
-    List<BuildModule> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
-    logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
-
-    // We need to run the whole analysis for each impacted package in the PR
-    return impactedPackages.stream()
-      .map(e -> analyzePullRequestPackage(pr, v1Clone, v2Clone, e, options))
-      .toList();
-  }
-
-  private AnalysisResult analyzePullRequestPackage(PullRequest pr, Path v1Clone, Path v2Clone,
-                                                   BuildModule pkg, MaracasOptions options) {
-    try {
-      logger.info("[{}] Now analyzing package {}", pr, pkg.name());
-
-      Commit v1 = pr.mergeBase();
-      Commit v2 = pr.head();
-
-      // First, we compute the delta model to look for BCs
-      CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, new BuildConfig(pkg.path()));
-      CommitBuilder builderV2 = new CommitBuilder(v2, v2Clone, new BuildConfig(pkg.path()));
-      Delta delta = computeDelta(builderV1, builderV2, options);
-
-      if (delta.getBreakingChanges().isEmpty())
-        return AnalysisResult.noImpact(delta, Collections.emptyList());
-
-      // If we find some, we fetch the appropriate clients and analyze the impact
-      logger.info("Fetching clients for package {}", pkg.name());
-      Collection<Commit> clients =
-        forge.fetchTopStarredClients(pr.repository(), pkg.name(), options.getClientsPerPackage(), options.getMinStarsPerClient())
-          .stream()
-          .map(repository -> forge.fetchCommit(repository, "HEAD"))
-          .toList();
-      logger.info("Found {} clients to analyze for {}", clients.size(), pkg.name());
-
-      return computeImpact(delta, clients.stream().map(this::makeBuilderForCommit).toList(), options);
-    } catch (Exception e) {
-      return AnalysisResult.failure(e.getMessage());
-    }
   }
 
   public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
@@ -206,36 +150,7 @@ public class ForgeAnalyzer {
     this.executorService = Objects.requireNonNull(executorService);
   }
 
-  private CommitBuilder makeBuilderForCommit(Commit c) {
-    return new CommitBuilder(c, newClonePath(c), BuildConfig.newDefault());
-  }
-
-  public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
-    builderV1.cloneCommit(cloneTimeoutSeconds);
-    List<BuildModule> modules = builderV1.getBuilder().locateModules();
-
-    return pr.changedFiles()
-      .stream()
-      // We only want Java files that exist in 'v1', not the new files created by this PR
-      .filter(f -> f.toString().endsWith(".java") && builderV1.getClonePath().resolve(f).toFile().exists())
-      .map(f -> {
-        // Find the most nested module that matches the impacted file
-        Optional<BuildModule> matchingModule =
-          modules.stream()
-            .filter(m -> f.toString().startsWith(m.path().toString()))
-            .max(Comparator.comparingInt(m -> m.path().toString().length()));
-
-        if (matchingModule.isEmpty())
-          logger.warn("Couldn't infer the impacted package for {}", f);
-
-        return matchingModule;
-      })
-      .flatMap(Optional::stream)
-      .distinct()
-      .toList();
-  }
-
-  private Path newClonePath(Commit c) {
+  public Path newClonePath(Commit c) {
     return workingDirectory
       .resolve(c.repository().owner())
       .resolve(c.repository().name())

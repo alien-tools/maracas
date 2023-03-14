@@ -3,31 +3,35 @@ package com.github.maracas.rest.controllers;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.github.Client;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
+import com.github.maracas.forges.github.Package;
 import com.github.maracas.rest.data.ClientsResponse;
-import com.github.maracas.rest.services.ClientsService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/github")
 public class ClientsController {
-	private final ClientsService clientsService;
 	private final Forge forge;
 
 	private static final Logger logger = LogManager.getLogger(ClientsController.class);
 
-	public ClientsController(GitHub github, ClientsService clientsService) {
-		this.clientsService = clientsService;
-		this.forge = new GitHubForge(github);
+	public ClientsController(GitHub github) {
+		this.forge = new GitHubForge(Objects.requireNonNull(github));
 	}
 
 	@GetMapping("/clients/{owner}/{name}")
@@ -36,8 +40,9 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
-		List<GitHubClientsFetcher.Client> clients = clientsService.fetchClients(repository);
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
+		List<Package> packages = fetcher.fetchPackages();
+		List<Client> clients = fetcher.fetchClients();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
 	}
@@ -48,7 +53,8 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		List<GitHubClientsFetcher.Package> packages = clientsService.fetchPackages(repository);
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
+		List<Package> packages = fetcher.fetchPackages();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
 	}

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GitClonerTest {
 	final Path clone = Path.of("./clones");
-	Cloner cloner = new GitCloner();
+	final Cloner cloner = new GitCloner();
 
 	@BeforeEach
 	void setUp() throws IOException {

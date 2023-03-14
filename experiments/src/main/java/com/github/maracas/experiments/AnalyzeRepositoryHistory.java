@@ -5,7 +5,7 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.analysis.CommitAnalyzer;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.github.GitHubForge;
@@ -119,7 +119,7 @@ public class AnalyzeRepositoryHistory {
 
 		while (iterator.hasNext()) {
 			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
-			var analyzer = new ForgeAnalyzer(forge, clonesPath);
+			var analyzer = new CommitAnalyzer(clonesPath);
 			var executor = Executors.newFixedThreadPool(threads);
 			var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
 			var csvFile = new File(csvPath.toAbsolutePath().toString());

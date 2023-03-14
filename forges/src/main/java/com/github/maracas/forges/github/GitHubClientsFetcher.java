@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -39,11 +40,8 @@ public class GitHubClientsFetcher {
 
 	private static final Logger logger = LogManager.getLogger(GitHubClientsFetcher.class);
 
-	public record Package(String name, String url) {}
-	public record Client(Package pkg, String owner, String name, int stars, int forks) {}
-
 	public GitHubClientsFetcher(Repository repository) {
-		this.repository = repository;
+		this.repository = Objects.requireNonNull(repository);
 	}
 
 	public List<Package> fetchPackages() {

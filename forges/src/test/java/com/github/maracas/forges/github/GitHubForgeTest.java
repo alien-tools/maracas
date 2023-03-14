@@ -153,6 +153,9 @@ class GitHubForgeTest {
     Repository drill = github.fetchRepository("apache", "drill");
     List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
     assertThat(clients, hasSize(5));
+
+    List<Repository> cachedClients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
+    assertThat(cachedClients, hasSize(5));
   }
 
   @Test

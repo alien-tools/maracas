@@ -1,6 +1,6 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.breakbot.BreakbotConfig;
+import com.github.maracas.forges.github.BreakbotConfig;
 import com.github.maracas.rest.breakbot.BreakbotException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -4,7 +4,6 @@ import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.clone.CloneException;
-import com.github.maracas.rest.breakbot.BreakbotException;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.BreakbotService;
@@ -99,7 +98,7 @@ public class PullRequestController {
 			.body(PullRequestResponse.status(null, e.getMessage()));
 	}
 
-	@ExceptionHandler({BreakbotException.class, ForgeException.class})
+	@ExceptionHandler({ForgeException.class})
 	public ResponseEntity<PullRequestResponse> handleGitHubException(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
