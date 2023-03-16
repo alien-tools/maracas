@@ -4,12 +4,16 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -153,9 +157,33 @@ class GitHubForgeTest {
     Repository drill = github.fetchRepository("apache", "drill");
     List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
     assertThat(clients, hasSize(5));
+  }
 
-    List<Repository> cachedClients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
-    assertThat(cachedClients, hasSize(5));
+  @Test
+  void fetchAllClients_cache() throws IOException {
+    Repository repo = github.fetchRepository("alien-tools", "repository-fixture");
+    Path cacheDir = Files.createTempDirectory("test-clients-cache");
+    File expectedCacheFile = cacheDir.resolve("alien-tools/repository-fixture/module-a-clients.json").toFile();
+    github.setClientsCacheDirectory(cacheDir);
+    github.setClientsCacheExpirationDays(1);
+
+    assertThat(expectedCacheFile.exists(), is(false));
+
+    List<Repository> clients = github.fetchAllClients(repo, "module-a", -1, -1);
+    assertThat(clients, hasSize(2));
+    assertThat(expectedCacheFile.exists(), is(true));
+
+    Files.writeString(expectedCacheFile.toPath(), """
+      [{ "owner": "alien-tools", "name": "maracas", "stars": 2, "forks": 3 }]""");
+    List<Repository> overwrittenClients = github.fetchAllClients(repo, "module-a", 10, -1);
+    assertThat(overwrittenClients, hasSize(3));
+    assertThat(overwrittenClients, containsInAnyOrder(
+      new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),
+      new Repository("alien-tools", "client-fixture-b", "https://github.com/alien-tools/client-fixture-b.git", "main"),
+      new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas.git", "main")
+    ));
+
+    FileUtils.deleteDirectory(cacheDir.toFile());
   }
 
   @Test
@@ -191,5 +219,23 @@ class GitHubForgeTest {
     Repository drill = github.fetchRepository("apache", "drill");
     List<Repository> clients = github.fetchTopStarredClients(drill, "unknown", 10, -1);
     assertThat(clients, is(empty()));
+  }
+
+  @Test
+  void fetchAllClients_from_fork() {
+    Repository drillFork = github.fetchRepository("break-bot", "drill-fork-for-tests");
+    List<Repository> clients = github.fetchAllClients(drillFork, "org.apache.drill.exec:drill-rpc", 10, -1);
+    assertThat(clients, hasSize(10));
+  }
+
+  @Test
+  void fetchCustomClients_fixture() {
+    Repository repo = new Repository("alien-tools", "repository-fixture", "", "");
+    List<Repository> clients = github.fetchCustomClients(repo);
+    assertThat(clients, hasSize(2));
+    assertThat(clients, containsInAnyOrder(
+      new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),
+      new Repository("alien-tools", "client-fixture-b", "https://github.com/alien-tools/client-fixture-b.git", "main")
+    ));
   }
 }
