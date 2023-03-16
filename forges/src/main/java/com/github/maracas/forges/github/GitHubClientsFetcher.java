@@ -60,6 +60,24 @@ public class GitHubClientsFetcher {
 		}
 	}
 
+	public List<GitHubClient> fetchClients() {
+		return fetchPackages()
+			.stream()
+			.map(pkg -> fetchClients(pkg, pkg.url()))
+			.flatMap(Collection::stream)
+			.toList();
+	}
+
+	public List<GitHubClient> fetchClients(String pkg) {
+		return !StringUtils.isEmpty(pkg)
+			? fetchPackages().stream()
+					.filter(p -> p.id().equals(pkg))
+					.findFirst()
+					.map(p -> fetchClients(p, p.url()))
+					.orElse(Collections.emptyList())
+			: Collections.emptyList();
+	}
+
 	private List<GitHubClient> fetchClients(GitHubPackage pkg, String url) {
 		List<GitHubClient> clients = new ArrayList<>();
 		Document pkgPage = fetchPage(url);
@@ -92,24 +110,6 @@ public class GitHubClientsFetcher {
 		}
 
 		return clients;
-	}
-
-	public List<GitHubClient> fetchClients() {
-		return fetchPackages()
-			.stream()
-			.map(pkg -> fetchClients(pkg, pkg.url()))
-			.flatMap(Collection::stream)
-			.toList();
-	}
-
-	public List<GitHubClient> fetchClients(String pkg) {
-		return StringUtils.isEmpty(pkg)
-			? fetchClients()
-			: fetchPackages().stream()
-					.filter(p -> p.id().equals(pkg))
-					.findFirst()
-					.map(p -> fetchClients(p, p.url()))
-					.orElse(Collections.emptyList());
 	}
 
 	private Document fetchPage(String url) {
