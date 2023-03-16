@@ -16,16 +16,11 @@ public record Repository(
   }
 
   public String fullName() {
-    return owner + "/" + name;
+    return "%s/%s".formatted(owner, name);
   }
 
   public String buildGitHubFileUrl(String ref, String file, int beginLine, int endLine) {
     return "https://github.com/%s/%s/blob/%s/%s#L%d-L%d".formatted(
-      owner,
-      name,
-      ref,
-      file,
-      beginLine,
-      endLine);
+      owner, name, ref, file, beginLine, endLine);
   }
 }

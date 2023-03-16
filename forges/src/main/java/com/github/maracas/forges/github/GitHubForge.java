@@ -7,6 +7,7 @@ import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -155,10 +156,10 @@ public class GitHubForge implements Forge {
 			logger.error(e);
 		}
 
-		List<Client> clients = fetchClients(actualRepository, pkgId);
+		List<GitHubClient> clients = fetchClients(actualRepository, pkgId);
 		return clients
 			.stream()
-			.sorted(Comparator.comparingInt(Client::stars).reversed())
+			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
 			.filter(client -> {
 				// FIXME: Kinda harsh, but there are too many "unofficial" forks
 				if (client.name().equals(repository.name()))
@@ -186,9 +187,9 @@ public class GitHubForge implements Forge {
 		return readBreakbotConfig(repository).clients().repositories()
 			.stream()
 			.map(c -> {
-				String[] fields = c.repository().split("/");
-				String clientOwner = fields[0];
-				String clientName = fields[1];
+				List<String> fields = Splitter.on("/").splitToList(c.repository());
+				String clientOwner = fields.get(0);
+				String clientName = fields.get(1);
 
 				return
 					StringUtils.isEmpty(c.branch())
@@ -218,13 +219,13 @@ public class GitHubForge implements Forge {
 		}
 	}
 
-	private List<Client> fetchClients(Repository repository, String pkgId) {
+	private List<GitHubClient> fetchClients(Repository repository, String pkgId) {
 		File cacheFile = clientsCacheFile(repository, pkgId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		if (clientsCacheIsValid(cacheFile)) {
 			try {
-				List<Client> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
+				List<GitHubClient> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
 				logger.info("Fetched {} total clients for {} [package: {}] from {}",
 						clients.size(), repository, pkgId, cacheFile);
 				return clients;
@@ -235,7 +236,7 @@ public class GitHubForge implements Forge {
 
 		Stopwatch sw = Stopwatch.createStarted();
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<Client> clients = fetcher.fetchClients(pkgId);
+		List<GitHubClient> clients = fetcher.fetchClients(pkgId);
 		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
 				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 

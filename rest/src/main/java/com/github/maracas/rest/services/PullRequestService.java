@@ -52,9 +52,9 @@ public class PullRequestService {
 		clonePath.toFile().mkdirs();
 		this.reportPath.toFile().mkdirs();
 
-		CommitAnalyzer commitAnalyzer = new CommitAnalyzer(clonePath);
-		if (analysisWorkers > 0)
-			commitAnalyzer.setExecutorService(Executors.newFixedThreadPool(analysisWorkers));
+		CommitAnalyzer commitAnalyzer = analysisWorkers > 0
+			? new CommitAnalyzer(clonePath, Executors.newFixedThreadPool(analysisWorkers))
+			: new CommitAnalyzer(clonePath);
 		this.analyzer = new PullRequestAnalyzer(forge, commitAnalyzer);
 	}
 

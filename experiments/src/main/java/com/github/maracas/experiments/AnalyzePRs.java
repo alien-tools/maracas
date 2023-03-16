@@ -59,8 +59,7 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var commitAnalyzer = new CommitAnalyzer(WORKING_DIRECTORY);
-		commitAnalyzer.setExecutorService(Executors.newFixedThreadPool(4));
+		var commitAnalyzer = new CommitAnalyzer(WORKING_DIRECTORY, Executors.newFixedThreadPool(4));
 		var analyzer = new PullRequestAnalyzer(forge, commitAnalyzer);
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {

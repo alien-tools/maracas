@@ -36,8 +36,7 @@ class PullRequestAnalyzerTest {
   void setUp() throws IOException {
     FileUtils.deleteDirectory(workingDirectory.toFile());
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(workingDirectory);
-    commitAnalyzer.setExecutorService(Executors.newFixedThreadPool(4));
+    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(workingDirectory, Executors.newFixedThreadPool(4));
     analyzer = new PullRequestAnalyzer(forge, commitAnalyzer);
   }
 

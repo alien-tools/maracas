@@ -99,5 +99,11 @@
 			<artifactId>jackson-dataformat-yaml</artifactId>
 			<version>2.14.2</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>5.2.0</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

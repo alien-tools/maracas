@@ -30,16 +30,20 @@ import java.util.stream.Collectors;
 
 public class CommitAnalyzer {
   private final Path workingDirectory;
-  private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+  private final ExecutorService executorService;
 
   private static final Logger logger = LogManager.getLogger(CommitAnalyzer.class);
 
-  public CommitAnalyzer(Path workingDirectory) {
+  public CommitAnalyzer(Path workingDirectory, ExecutorService executorService) {
     this.workingDirectory = Objects.requireNonNull(workingDirectory);
+    this.executorService = Objects.requireNonNull(executorService);
   }
 
-  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients,
-                                       MaracasOptions options)
+  public CommitAnalyzer(Path workingDirectory) {
+    this(workingDirectory, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+  }
+
+  public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
     throws BuildException, CloneException {
     Objects.requireNonNull(v1);
     Objects.requireNonNull(v2);
@@ -56,16 +60,8 @@ public class CommitAnalyzer {
     Objects.requireNonNull(v2);
     Objects.requireNonNull(options);
 
-    CompletableFuture<Optional<Path>> futureV1 =
-      CompletableFuture
-        .supplyAsync(
-          () -> v1.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
-          executorService);
-    CompletableFuture<Optional<Path>> futureV2 =
-      CompletableFuture
-        .supplyAsync(
-          () -> v2.cloneAndBuildCommit(options.getCloneTimeoutSeconds(), options.getBuildTimeoutSeconds()),
-          executorService);
+    CompletableFuture<Optional<Path>> futureV1 = cloneAndBuild(v1, options);
+    CompletableFuture<Optional<Path>> futureV2 = cloneAndBuild(v2, options);
 
     try {
       CompletableFuture.allOf(futureV1, futureV2).join();
@@ -77,13 +73,13 @@ public class CommitAnalyzer {
       if (jarV2.isEmpty())
         throw new BuildException("Couldn't find the JAR built from " + v2.getCommit());
 
-      LibraryJar libV1 = new LibraryJar(jarV1.get(), new SourcesDirectory(v1.getModulePath()));
-      LibraryJar libV2 = new LibraryJar(jarV2.get());
+      LibraryJar libV1 = LibraryJar.withSources(jarV1.get(), SourcesDirectory.of(v1.getModulePath()));
+      LibraryJar libV2 = LibraryJar.withoutSources(jarV2.get());
       return Maracas.computeDelta(libV1, libV2, options);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException | CompletionException e) {
-      // Simply unwrap
+      // Simply unwrap and rethrow
       if (e.getCause() instanceof BuildException be)
         throw be;
       if (e.getCause() instanceof CloneException ce)
@@ -94,17 +90,16 @@ public class CommitAnalyzer {
     return null;
   }
 
-  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options)
-    throws CloneException {
+  public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options) {
     Objects.requireNonNull(delta);
     Objects.requireNonNull(clients);
     Objects.requireNonNull(options);
 
+    // If there are no BCs, there's no impact
     if (delta.getBreakingChanges().isEmpty()) {
-      clients.forEach(c -> c.getClonePath().toFile().mkdirs());
       return AnalysisResult.noImpact(
         delta,
-        clients.stream().map(c -> new SourcesDirectory(c.getClonePath())).toList()
+        clients.stream().map(c -> SourcesDirectory.of(c.getClonePath())).toList()
       );
     }
 
@@ -118,14 +113,13 @@ public class CommitAnalyzer {
                 c.cloneCommit(options.getCloneTimeoutSeconds());
               } catch (CloneException e) {
                 Path clientPath = c.getModulePath();
-                clientPath.toFile().mkdirs();
-                return new DeltaImpact(new SourcesDirectory(clientPath), delta, e);
+                return new DeltaImpact(SourcesDirectory.of(clientPath), delta, e);
               }
 
-              return Maracas.computeDeltaImpact(new SourcesDirectory(c.getModulePath()), delta, options);
+              return Maracas.computeDeltaImpact(SourcesDirectory.of(c.getModulePath()), delta, options);
             },
             executorService
-         )));
+          )));
 
     CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
 
@@ -136,8 +130,7 @@ public class CommitAnalyzer {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (Exception e) {
-        entry.getKey().toFile().mkdirs();
-        SourcesDirectory client = new SourcesDirectory(entry.getKey());
+        SourcesDirectory client = SourcesDirectory.of(entry.getKey());
         impacts.put(entry.getKey(),
           new DeltaImpact(client, delta, e.getCause() != null ? e.getCause() : e));
       }
@@ -146,8 +139,13 @@ public class CommitAnalyzer {
     return AnalysisResult.success(delta, impacts);
   }
 
-  public void setExecutorService(ExecutorService executorService) {
-    this.executorService = Objects.requireNonNull(executorService);
+  private CompletableFuture<Optional<Path>> cloneAndBuild(CommitBuilder builder, MaracasOptions options) {
+    return CompletableFuture.supplyAsync(
+      () -> {
+        builder.cloneCommit(options.getCloneTimeoutSeconds());
+        return builder.buildCommit(options.getBuildTimeoutSeconds());
+      },
+      executorService);
   }
 
   public Path newClonePath(Commit c) {

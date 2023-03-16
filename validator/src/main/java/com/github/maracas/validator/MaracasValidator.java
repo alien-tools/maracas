@@ -104,9 +104,9 @@ public class MaracasValidator {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
         BuildHandler handler = new MavenBuildHandler(srcClient);
-        LibraryJar v1 = new LibraryJar(jarApi1);
-        LibraryJar v2 = new LibraryJar(jarApi2);
-        SourcesDirectory client = new SourcesDirectory(srcClient);
+        LibraryJar v1 = LibraryJar.withoutSources(jarApi1);
+        LibraryJar v2 = LibraryJar.withoutSources(jarApi2);
+        SourcesDirectory client = SourcesDirectory.of(srcClient);
         Delta delta = Maracas.computeDelta(v1, v2);
         DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
         this.brokenUses = deltaImpact.getBrokenUses();

@@ -40,8 +40,7 @@ class CommitAnalyzerTest {
 	void setUp() throws IOException {
 		FileUtils.deleteDirectory(workingDirectory.toFile());
 		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		analyzer = new CommitAnalyzer(workingDirectory);
-		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
+		analyzer = new CommitAnalyzer(workingDirectory, Executors.newFixedThreadPool(4));
 	}
 
 	@AfterEach

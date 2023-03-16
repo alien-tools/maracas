@@ -1,11 +1,11 @@
 package com.github.maracas.forges.github;
 
-public record Client(
-  Package pkg,
+public record GitHubClient(
   String owner,
   String name,
   int stars,
-  int forks
+  int forks,
+  GitHubPackage dependency
 ) {
 
 }

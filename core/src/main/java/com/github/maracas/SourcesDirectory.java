@@ -2,7 +2,6 @@ package com.github.maracas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.maracas.util.GradleLauncher;
-import com.github.maracas.util.PathHelpers;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,11 +22,12 @@ public class SourcesDirectory {
 
 	private static final Logger logger = LogManager.getLogger(SourcesDirectory.class);
 
-	public SourcesDirectory(Path location) {
-		if (!PathHelpers.isValidDirectory(location))
-			throw new IllegalArgumentException("Not a valid source directory: " + location);
-
+	protected SourcesDirectory(Path location) {
 		this.location = location.toAbsolutePath();
+	}
+
+	public static SourcesDirectory of(Path location) {
+		return new SourcesDirectory(location);
 	}
 
 	public void setClasspath(List<Path> classpath) {

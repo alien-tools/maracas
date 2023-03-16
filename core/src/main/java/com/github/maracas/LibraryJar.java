@@ -51,17 +51,21 @@ public class LibraryJar {
 		TMP_DIR = tmp;
 	}
 
-	public LibraryJar(Path jar) {
-		this(jar, null);
-	}
-
-	public LibraryJar(Path jar, SourcesDirectory sources) {
+	protected LibraryJar(Path jar, SourcesDirectory sources) {
 		if (!PathHelpers.isValidJar(jar))
 			throw new IllegalArgumentException("Not a valid JAR: " + jar);
 
 		this.jar = jar.toAbsolutePath();
 		this.label = jar.getFileName().toString();
 		this.sources = sources;
+	}
+
+	public static LibraryJar withSources(Path jar, SourcesDirectory sources) {
+		return new LibraryJar(jar, sources);
+	}
+
+	public static LibraryJar withoutSources(Path jar) {
+		return new LibraryJar(jar, null);
 	}
 
 	public CtModel buildModel() {

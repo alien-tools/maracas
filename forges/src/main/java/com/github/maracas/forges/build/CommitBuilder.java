@@ -36,11 +36,6 @@ public class CommitBuilder {
 		return builder.locateJar();
 	}
 
-	public Optional<Path> cloneAndBuildCommit(int cloneTimeoutSeconds, int buildTimeoutSeconds) throws CloneException, BuildException {
-		cloneCommit(cloneTimeoutSeconds);
-		return buildCommit(buildTimeoutSeconds);
-	}
-
 	public Commit getCommit() {
 		return this.commit;
 	}

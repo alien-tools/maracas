@@ -74,9 +74,9 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
-		LibraryJar oldVersion = new LibraryJar(oldJar, new SourcesDirectory(sources));
-		LibraryJar newVersion = new LibraryJar(newJar);
-		SourcesDirectory client = new SourcesDirectory(sources);
+		LibraryJar oldVersion = LibraryJar.withSources(oldJar, SourcesDirectory.of(sources));
+		LibraryJar newVersion = LibraryJar.withoutSources(newJar);
+		SourcesDirectory client = SourcesDirectory.of(sources);
 
 		// Since we're using the libraries as clients themselves (so all package names clash),
 		// the overhead of PACKAGE_PROTECTED is huge; stick with PROTECTED for those tests
@@ -119,9 +119,9 @@ class MavenLibrariesTest {
 		Path newJar = download(coordinatesToJarURL(gid, aid, v2));
 		Path sources = downloadAndExtractSources(coordinatesToSourcesURL(gid, aid, v1));
 
-		LibraryJar oldVersion = new LibraryJar(oldJar, new SourcesDirectory(sources));
-		LibraryJar newVersion = new LibraryJar(newJar);
-		SourcesDirectory client = new SourcesDirectory(sources);
+		LibraryJar oldVersion = LibraryJar.withSources(oldJar, SourcesDirectory.of(sources));
+		LibraryJar newVersion = LibraryJar.withoutSources(newJar);
+		SourcesDirectory client = SourcesDirectory.of(sources);
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldVersion(oldVersion)

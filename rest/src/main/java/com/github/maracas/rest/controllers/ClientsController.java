@@ -3,10 +3,10 @@ package com.github.maracas.rest.controllers;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.Repository;
-import com.github.maracas.forges.github.Client;
+import com.github.maracas.forges.github.GitHubClient;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
-import com.github.maracas.forges.github.Package;
+import com.github.maracas.forges.github.GitHubPackage;
 import com.github.maracas.rest.data.ClientsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,8 +41,8 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<Package> packages = fetcher.fetchPackages();
-		List<Client> clients = fetcher.fetchClients();
+		List<GitHubPackage> packages = fetcher.fetchPackages();
+		List<GitHubClient> clients = fetcher.fetchClients();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
 	}
@@ -54,7 +54,7 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<Package> packages = fetcher.fetchPackages();
+		List<GitHubPackage> packages = fetcher.fetchPackages();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
 	}
