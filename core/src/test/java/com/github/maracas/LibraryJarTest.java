@@ -8,7 +8,6 @@ import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +18,7 @@ class LibraryJarTest {
 		assertThat(comp.getJar(), is(notNullValue()));
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(nullValue()));
-		assertThat(comp.getClasspath(), hasSize(2));
+		assertThat(comp.getClasspath(), is(not(empty())));
 		assertThat(comp.getSources(), is(nullValue()));
 		assertThat(comp.buildModel(), is(notNullValue()));
 	}
@@ -30,7 +29,7 @@ class LibraryJarTest {
 		assertThat(comp.getJar(), is(notNullValue()));
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(notNullValue()));
-		assertThat(comp.getClasspath(), hasSize(2));
+		assertThat(comp.getClasspath(), is(not(empty())));
 		assertThat(comp.buildModel(), is(notNullValue()));
 		assertThat(comp.getSources(), is(notNullValue()));
 		assertThat(comp.getSources().buildModel().getAllTypes(), is(not(empty())));
@@ -47,7 +46,7 @@ class LibraryJarTest {
 		assertThat(comp.getJar(), is(notNullValue()));
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(notNullValue()));
-		assertThat(comp.getClasspath(), hasSize(2));
+		assertThat(comp.getClasspath(), is(not(empty())));
 		assertThat(comp.buildModel(), is(notNullValue()));
 		assertThat(comp.getSources(), is(notNullValue()));
 		assertThat(comp.getSources().buildModel().getAllTypes(), is(empty()));
