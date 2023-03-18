@@ -161,7 +161,7 @@ public class GitHubForge implements Forge {
 			.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
 			.filter(client -> {
-				// FIXME: Kinda harsh, but there are too many "unofficial" forks
+				// Kinda harsh, but there are too many "unofficial" forks
 				if (client.name().equals(repository.name()))
 					return false;
 
@@ -241,9 +241,10 @@ public class GitHubForge implements Forge {
 				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 
 		try {
-			cacheFile.getParentFile().mkdirs();
-			objectMapper.writeValue(cacheFile, clients);
-			logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
+			if (cacheFile.getParentFile().mkdirs()) {
+				objectMapper.writeValue(cacheFile, clients);
+				logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
+			}
 		} catch (IOException e) {
 			logger.error(e);
 		}

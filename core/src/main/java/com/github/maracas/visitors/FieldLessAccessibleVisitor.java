@@ -45,22 +45,22 @@ public class FieldLessAccessibleVisitor extends BreakingChangeVisitor {
 
 			switch (newAccessModifier) {
 				// Private always breaks
-				case PRIVATE:
-					brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
-					break;
+				case PRIVATE -> brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
+
 				// Package-private breaks if packages do not match
-				case PACKAGE_PROTECTED:
+				case PACKAGE_PROTECTED -> {
 					if (!enclosingPkg.equals(expectedPkg))
 						brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
-					break;
+				}
 				// Protected fails if not a subtype and packages do not match
-				case PROTECTED:
+				case PROTECTED -> {
 					if (!fieldAccess.getParent(CtType.class).isSubtypeOf(fRef.getDeclaringType()) &&
 						!enclosingPkg.equals(expectedPkg))
 						brokenUse(fieldAccess, fieldAccess.getVariable(), fRef, APIUse.FIELD_ACCESS);
-					break;
-				default:
-					// Can't happen
+				}
+				default -> {
+				}
+				// Can't happen
 			}
 		}
 	}

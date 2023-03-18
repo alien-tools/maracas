@@ -1,4 +1,4 @@
-package com.github.maracas.rest;
+package com.github.maracas.forges.github;
 
 import com.github.maracas.forges.github.BreakbotConfig;
 import org.junit.jupiter.api.Test;

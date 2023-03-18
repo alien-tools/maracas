@@ -45,8 +45,8 @@ public class PullRequestService {
 		this.buildTimeout = env.getProperty("maracas.build-timeout", Integer.class, 600);
 		this.cloneTimeout = env.getProperty("maracas.clone-timeout", Integer.class, 600);
 
-		clonePath.toFile().mkdirs();
-		this.reportPath.toFile().mkdirs();
+		if (!clonePath.toFile().mkdirs() || !this.reportPath.toFile().mkdirs())
+			throw new IllegalStateException("Cannot create the necessary directories");
 
 		CommitAnalyzer commitAnalyzer = analysisWorkers > 0
 			? new CommitAnalyzer(Executors.newFixedThreadPool(analysisWorkers))
@@ -110,8 +110,8 @@ public class PullRequestService {
 	private void serializeResponse(PullRequestResponse report, File reportFile) {
 		try {
 			logger.info("Serializing {}", reportFile);
-			reportFile.getParentFile().mkdirs();
-			report.writeJson(reportFile);
+			if (reportFile.getParentFile().mkdirs())
+				report.writeJson(reportFile);
 		} catch (IOException e) {
 			logger.error(e);
 		}

@@ -28,16 +28,15 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 
 			switch (newAccessModifier) {
 				// Private always breaks
-				case PRIVATE:
-					brokenUse(reference.getParent(), reference, clsRef, use);
-					break;
+				case PRIVATE -> brokenUse(reference.getParent(), reference, clsRef, use);
+
 				// Package-private breaks if packages do not match
-				case PACKAGE_PROTECTED:
+				case PACKAGE_PROTECTED -> {
 					if (!enclosingPkg.equals(expectedPkg))
 						brokenUse(reference.getParent(), reference, clsRef, use);
-					break;
+				}
 				// Protected fails if not a subtype and packages do not match
-				case PROTECTED:
+				case PROTECTED -> {
 					CtType<?> parent = reference.getParent(CtType.class);
 					boolean refersToClassTopLevel = parent != null
 						&& parent.isTopLevel()
@@ -48,12 +47,10 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 						&& !parent.isSubtypeOf(clsRef)
 						&& !parent.isSubtypeOf(clsRef.getTopLevelType())
 						&& !enclosingPkg.equals(expectedPkg);
-
 					if (importsClass || refersToClassTopLevel || usesClassInBreakingManner)
 						brokenUse(reference.getParent(), reference, clsRef, use);
-					break;
-				default:
-					// Can't happen
+				}
+				case PUBLIC -> throw new IllegalStateException("Can't happen");
 			}
 		}
 	}

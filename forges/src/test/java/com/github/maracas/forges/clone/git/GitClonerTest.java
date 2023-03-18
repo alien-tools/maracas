@@ -82,8 +82,10 @@ class GitClonerTest {
 	@Test
 	void clone_repository_invalid_location() {
 		Path readOnly = clone.resolve("read-only");
-		readOnly.toFile().mkdirs();
-		readOnly.toFile().setReadOnly();
+		if (!readOnly.toFile().mkdirs())
+			fail();
+		if (!readOnly.toFile().setReadOnly())
+			fail();
 		Path clone = readOnly.resolve("clone");
 
 		Repository fixtureMain = new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas", "main");
