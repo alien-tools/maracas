@@ -31,10 +31,10 @@ import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
 	final LibraryJar v1 = LibraryJar.withoutSources(TestData.compChangesV1);
-	final LibraryJar v1WithSources = LibraryJar.withSources(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+	final LibraryJar v1WithSources = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
 	final LibraryJar v2 = LibraryJar.withoutSources(TestData.compChangesV2);
-	final SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
-	final SourcesDirectory client2 = new SourcesDirectory(TestData.compChangesSources);
+	final SourcesDirectory client = SourcesDirectory.of(TestData.compChangesClient);
+	final SourcesDirectory client2 = SourcesDirectory.of(TestData.compChangesSources);
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {

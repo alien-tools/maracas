@@ -51,7 +51,7 @@ public class LibraryJar {
 		TMP_DIR = tmp;
 	}
 
-	protected LibraryJar(Path jar, SourcesDirectory sources) {
+	private LibraryJar(Path jar, SourcesDirectory sources) {
 		if (!PathHelpers.isValidJar(jar))
 			throw new IllegalArgumentException("Not a valid JAR: " + jar);
 

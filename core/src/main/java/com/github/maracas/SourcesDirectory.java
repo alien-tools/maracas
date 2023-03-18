@@ -22,8 +22,8 @@ public class SourcesDirectory {
 
 	private static final Logger logger = LogManager.getLogger(SourcesDirectory.class);
 
-	protected SourcesDirectory(Path location) {
-		this.location = location.toAbsolutePath();
+	private SourcesDirectory(Path location) {
+		this.location = Objects.requireNonNull(location).toAbsolutePath();
 	}
 
 	public static SourcesDirectory of(Path location) {
