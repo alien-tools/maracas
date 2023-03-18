@@ -4,14 +4,10 @@ import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.analysis.CommitAnalyzer;
-import com.github.maracas.forges.analysis.PullRequestAnalysisResult;
 import com.github.maracas.forges.analysis.PullRequestAnalyzer;
-import com.github.maracas.forges.github.BreakbotConfig;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
-import japicmp.config.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GitHub;
@@ -62,26 +58,22 @@ public class PullRequestService {
 		return forge.fetchPullRequest(owner, repository, number);
 	}
 
-	public String analyzePR(PullRequest pr, String callback, String installationId, String breakbotYaml) {
-		BreakbotConfig config = !StringUtils.isEmpty(breakbotYaml)
-			? BreakbotConfig.fromYaml(breakbotYaml)
-			: null;
-		String uid = prUid(pr);
+	public String analyzePR(PullRequest pr, String callback, String installationId) {
 		File reportFile = reportFile(pr);
 		String reportLocation = "/github/pr/%s/%s/%s".formatted(pr.repository().owner(), pr.repository().name(), pr.number());
 
-		logger.info("Queuing analysis for {}", uid);
+		logger.info("Queuing analysis for {}", pr.uid());
 		CompletableFuture<Void> future =
 			CompletableFuture
-				.supplyAsync(() -> buildMaracasReport(pr, config))
+				.supplyAsync(() -> buildMaracasReport(pr))
 				.handle((report, ex) -> {
-					jobs.remove(uid);
+					jobs.remove(pr.uid());
 
 					if (ex != null) {
-						logger.error("Error analyzing {}", uid, ex);
+						logger.error("Error analyzing {}", pr.uid(), ex);
 						return PullRequestResponse.status(pr, ex.getCause().getMessage());
 					} else {
-						logger.info("Done analyzing {}", uid);
+						logger.info("Done analyzing {}", pr.uid());
 						return PullRequestResponse.ok(pr, report);
 					}
 				})
@@ -91,46 +83,28 @@ public class PullRequestService {
 						breakbotService.sendPullRequestResponse(response, callback, installationId);
 				});
 
-		jobs.put(uid, future);
+		jobs.put(pr.uid(), future);
 		return reportLocation;
 	}
 
-	public MaracasReport analyzePRSync(PullRequest pr, String breakbotYaml) {
-		BreakbotConfig config = !StringUtils.isEmpty(breakbotYaml)
-				? BreakbotConfig.fromYaml(breakbotYaml)
-				: null;
-		return buildMaracasReport(pr, config);
+	public MaracasReport analyzePRSync(PullRequest pr) {
+		return buildMaracasReport(pr);
 	}
 
-	private MaracasReport buildMaracasReport(PullRequest pr, BreakbotConfig config) {
-		logger.info("[{}] Starting the analysis", prUid(pr));
-
-		PullRequestAnalysisResult result = analyzer.analyze(pr, makeMaracasOptions(config), config);
-
-		/*
-		FIXME:
-		try {
-			FileUtils.deleteDirectory(clonePathV1.toFile());
-			FileUtils.deleteDirectory(clonePathV2.toFile());
-		} catch (IOException e) {
-			logger.error(e);
-		}*/
-
-		return MaracasReport.of(result);
+	private MaracasReport buildMaracasReport(PullRequest pr) {
+		logger.info("[{}] Starting the analysis", pr.uid());
+		return MaracasReport.of(analyzer.analyze(pr, makeMaracasOptions()));
 	}
 
-	private MaracasOptions makeMaracasOptions(BreakbotConfig config) {
+	private MaracasOptions makeMaracasOptions() {
 		MaracasOptions options = MaracasOptions.newDefault();
-		Options jApiOptions = options.getJApiOptions();
-		config.excludes().forEach(excl -> jApiOptions.addExcludeFromArgument(japicmp.util.Optional.of(excl), false));
 		options.setCloneTimeoutSeconds(cloneTimeout);
 		options.setBuildTimeoutSeconds(buildTimeout);
-
 		return options;
 	}
 
 	public boolean isProcessing(PullRequest pr) {
-		return jobs.containsKey(prUid(pr));
+		return jobs.containsKey(pr.uid());
 	}
 
 	private void serializeResponse(PullRequestResponse report, File reportFile) {
@@ -156,20 +130,7 @@ public class PullRequestService {
 		return null;
 	}
 
-	private String prUid(PullRequest pr) {
-		return "%s-%s-%s-%s".formatted(
-			pr.repository().owner(),
-			pr.repository().name(),
-			pr.number(),
-			pr.head().sha()
-		);
-	}
-
 	private File reportFile(PullRequest pr) {
-		return reportPath
-			.resolve(pr.repository().owner())
-			.resolve(pr.repository().name())
-			.resolve("%d-%s.json".formatted(pr.number(), pr.head().sha()))
-			.toFile();
+		return reportPath.resolve(pr.uid()).toFile();
 	}
 }

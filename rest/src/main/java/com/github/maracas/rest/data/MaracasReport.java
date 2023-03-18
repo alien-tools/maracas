@@ -1,9 +1,9 @@
 package com.github.maracas.rest.data;
 
+import com.github.maracas.brokenuse.DeltaImpact;
+import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.analysis.PullRequestAnalysisResult;
 
-import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 
 public record MaracasReport(
@@ -16,8 +16,22 @@ public record MaracasReport(
 				.map(pkg -> new PackageReport(
 					pkg.pkdId(),
 					pkg.error(),
-					DeltaDto.of(pkg.delta(), result.pr(), Path.of("") /* FIXME */),
-					Collections.emptyList()
+					DeltaDto.of(pkg.delta(), result.pr(), result.basePath()),
+					pkg.clientResults().entrySet()
+						.stream()
+						.map(r -> {
+							Repository client = r.getKey();
+							DeltaImpact impact = r.getValue();
+
+							return ClientReport.success(
+								client.githubWebUrl(),
+								impact.getBrokenUses()
+									.stream()
+									.map(bu -> BrokenUseDto.of(bu, client, client.branch(), impact.getClient().getLocation()))
+									.toList()
+							);
+						})
+						.toList()
 				))
 				.toList()
 		);

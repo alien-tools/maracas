@@ -1,25 +1,22 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.BreakingChangeDto;
-import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
-import org.springframework.http.MediaType;
 
-import java.util.Collection;
+import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class PullRequestControllerTests extends AbstractControllerTest {
 	@Test
@@ -38,6 +35,12 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(reportB.delta().breakingChanges(), hasSize(1));
 		assertThat(reportB.clientReports(), hasSize(2));
 		assertThat(reportB.allBrokenUses(), hasSize(1));
+
+		try {
+			System.out.println(res.toJson());
+		} catch (IOException e) {
+
+		}
 	}
 
 	@Test
@@ -104,6 +107,46 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			.andExpect(status().isNotFound());
 	}
 
+	@Test
+	void unknown_pr_push() throws Exception {
+		String owner = "this-does-not-exist";
+		String repository = "this-does-not-exist";
+		int prId = 9999;
+
+		int mockPort = 8080;
+		int installationId = 123456789;
+		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
+
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+			// Start a mock server that waits for our callback request
+			mockServer.when(
+				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+			).respond(
+				response().withBody("received")
+			);
+
+			// Check whether our analysis request is properly received
+			mvc.perform(
+					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
+						.header("installationId", installationId)
+				)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message", is("Couldn't fetch repository this-does-not-exist/this-does-not-exist")));
+
+			// Check whether our mock server got the error callback
+			mockServer.verify(
+				request()
+					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+					.withMethod("POST")
+					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", \"report\": null}")),
+				exactly(1)
+			);
+		}
+	}
+
+	/**
+	 * These ones shall be migrated to forges/
+	 *
 	@Test
 	void pr_with_supplied_breakbot_configuration() {
 		String bbConfig = """
@@ -176,43 +219,6 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			.andExpect(jsonPath("$.report.reports[1].error", containsString("Unknown lifecycle phase")))
 			.andExpect(jsonPath("$.report.reports[1].delta", nullValue()))
 			.andExpect(jsonPath("$.report.reports[1].clientReports", empty()));
-	}
-
-	@Test
-	void unknown_pr_push() throws Exception {
-		String owner = "this-does-not-exist";
-		String repository = "this-does-not-exist";
-		int prId = 9999;
-
-		int mockPort = 8080;
-		int installationId = 123456789;
-		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
-
-		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
-			// Start a mock server that waits for our callback request
-			mockServer.when(
-				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
-			).respond(
-				response().withBody("received")
-			);
-
-			// Check whether our analysis request is properly received
-			mvc.perform(
-					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
-						.header("installationId", installationId)
-				)
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message", is("Couldn't fetch repository this-does-not-exist/this-does-not-exist")));
-
-			// Check whether our mock server got the error callback
-			mockServer.verify(
-				request()
-					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
-					.withMethod("POST")
-					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", \"report\": null}")),
-				exactly(1)
-			);
-		}
 	}
 
 	@Test
@@ -345,5 +351,5 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));
 		assertThat(brokenDecls, not(hasItem(containsString("main.unstableAnnon.classRemoved.ClassRemoved"))));
-	}
+	}*/
 }

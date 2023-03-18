@@ -184,7 +184,7 @@ public class GitHubForge implements Forge {
 	public List<Repository> fetchCustomClients(Repository repository) {
 		Objects.requireNonNull(repository);
 
-		return readBreakbotConfig(repository).clients().repositories()
+		return fetchBreakbotConfig(repository).clients().repositories()
 			.stream()
 			.map(c -> {
 				List<String> fields = Splitter.on("/").splitToList(c.repository());
@@ -208,7 +208,7 @@ public class GitHubForge implements Forge {
 	}
 
 	@Override
-	public BreakbotConfig readBreakbotConfig(Repository repository) {
+	public BreakbotConfig fetchBreakbotConfig(Repository repository) {
 		Objects.requireNonNull(repository);
 
 		try (InputStream configIn = gh.getRepository(repository.fullName()).getFileContent(BREAKBOT_FILE).read()) {

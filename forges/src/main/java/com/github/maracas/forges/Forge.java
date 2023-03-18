@@ -27,5 +27,5 @@ public interface Forge {
 
   List<Repository> fetchAllClients(Repository repository, String pkgId, int limit, int minStars) throws ForgeException;
 
-  BreakbotConfig readBreakbotConfig(Repository repository) throws ForgeException;
+  BreakbotConfig fetchBreakbotConfig(Repository repository) throws ForgeException;
 }

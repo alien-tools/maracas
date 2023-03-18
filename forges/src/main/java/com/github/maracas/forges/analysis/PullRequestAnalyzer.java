@@ -10,7 +10,6 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.BreakbotConfig;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,20 +37,18 @@ public class PullRequestAnalyzer {
 		this.commitAnalyzer = Objects.requireNonNull(commitAnalyzer);
 	}
 
-	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options, BreakbotConfig config) {
+	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options) {
 		Objects.requireNonNull(pr);
 		Objects.requireNonNull(options);
 
 		// Configuring Maracas according to BreakBot
+		BreakbotConfig config = forge.fetchBreakbotConfig(pr.repository());
 		config.excludes().forEach(excl -> options.getJApiOptions().addExcludeFromArgument(japicmp.util.Optional.of(excl), false));
 
 		// For every package in mergeBase that may be impacted by the PR
 		Commit v1 = pr.mergeBase();
-		Commit v2 = pr.head();
-		Path v1Clone = newClonePath(v1);
-		Path v2Clone = newClonePath(v2);
-		CommitBuilder builderV1 = new CommitBuilder(v1, v1Clone, BuildConfig.newDefault());
-		List<BuildModule> impactedPackages = inferImpactedPackages(pr, builderV1, options.getCloneTimeoutSeconds());
+		CommitBuilder builderV1 = makeBuilderForLibrary(pr, v1, Path.of(""), config.build());
+		List<BuildModule> impactedPackages = inferImpactedPackages(pr, builderV1, options);
 		logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
 
 		// We need to run the whole analysis for each impacted package in the PR
@@ -59,17 +56,13 @@ public class PullRequestAnalyzer {
 			pr,
 			impactedPackages.stream().collect(Collectors.toMap(
 				BuildModule::name,
-				pkg -> analyzePackage(pr, v1Clone, v2Clone, pkg, config, options)
-			))
+				pkg -> analyzePackage(pr, pkg, config.build(), options)
+			)),
+			builderV1.getClonePath()
 		);
 	}
 
-	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options) {
-		return analyze(pr, options, BreakbotConfig.defaultConfig());
-	}
-
-	private PackageAnalysisResult analyzePackage(PullRequest pr, Path v1Clone, Path v2Clone,
-	                                             BuildModule pkg, BreakbotConfig config, MaracasOptions options) {
+	private PackageAnalysisResult analyzePackage(PullRequest pr, BuildModule pkg, BreakbotConfig.Build buildConfig, MaracasOptions options) {
 		try {
 			logger.info("[{}] Now analyzing package {}", pr, pkg.name());
 
@@ -77,8 +70,8 @@ public class PullRequestAnalyzer {
 			Commit v2 = pr.head();
 
 			// First, we compute the delta model to look for BCs
-			CommitBuilder builderV1 = makeBuilderForLibrary(v1, v1Clone, pkg.path(), config.build());
-			CommitBuilder builderV2 = makeBuilderForLibrary(v2, v2Clone, pkg.path(), config.build());
+			CommitBuilder builderV1 = makeBuilderForLibrary(pr, v1, pkg.path(), buildConfig);
+			CommitBuilder builderV2 = makeBuilderForLibrary(pr, v2, pkg.path(), buildConfig);
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
 			if (delta.getBreakingChanges().isEmpty())
@@ -94,7 +87,7 @@ public class PullRequestAnalyzer {
 			logger.info("Found {} clients to analyze for {}", clients.size(), pkg.name());
 
 			Map<Commit, CommitBuilder> builders = new HashMap<>();
-			clients.forEach(c -> builders.put(c, makeBuilderForClient(c)));
+			clients.forEach(c -> builders.put(c, makeBuilderForClient(pr, c)));
 
 			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options);
 			return PackageAnalysisResult.success(
@@ -110,14 +103,14 @@ public class PullRequestAnalyzer {
 		}
 	}
 
-	public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builderV1, int cloneTimeoutSeconds) {
-		builderV1.cloneCommit(cloneTimeoutSeconds);
-		List<BuildModule> modules = builderV1.getBuilder().locateModules();
+	public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builder, MaracasOptions options) {
+		builder.cloneCommit(options.getCloneTimeoutSeconds());
+		List<BuildModule> modules = builder.getBuilder().locateModules();
 
 		return pr.changedFiles()
 			.stream()
 			// We only want Java files that exist in 'v1', not the new files created by this PR
-			.filter(f -> f.toString().endsWith(".java") && builderV1.getClonePath().resolve(f).toFile().exists())
+			.filter(f -> f.toString().endsWith(".java") && builder.getClonePath().resolve(f).toFile().exists())
 			.map(f -> {
 				// Find the most nested module that matches the impacted file
 				Optional<BuildModule> matchingModule =
@@ -135,24 +128,22 @@ public class PullRequestAnalyzer {
 			.toList();
 	}
 
-	private CommitBuilder makeBuilderForLibrary(Commit c, Path clonePath, Path module, BreakbotConfig.Build build) {
+	private CommitBuilder makeBuilderForLibrary(PullRequest pr, Commit c, Path module, BreakbotConfig.Build build) {
 		BuildConfig buildConfig = new BuildConfig(module);
 		build.goals().forEach(buildConfig::addGoal);
 		build.properties().keySet().forEach(k -> buildConfig.setProperty(k, build.properties().get(k)));
 
-		return new CommitBuilder(c, clonePath, buildConfig);
+		return new CommitBuilder(c, makeClonePath(pr, c), buildConfig);
 	}
 
-	private CommitBuilder makeBuilderForClient(Commit c) {
-		return new CommitBuilder(c, newClonePath(c), BuildConfig.newDefault());
+	private CommitBuilder makeBuilderForClient(PullRequest pr, Commit c) {
+		return new CommitBuilder(c, makeClonePath(pr, c), BuildConfig.newDefault());
 	}
 
-  public Path newClonePath(Commit c) {
+  public Path makeClonePath(PullRequest pr, Commit c) {
     return workingDirectory
-      .resolve(c.repository().owner())
-      .resolve(c.repository().name())
-      .resolve(c.sha())
-      .resolve(RandomStringUtils.randomAlphanumeric(12))
+	    .resolve(pr.uid())
+      .resolve(c.uid())
       .toAbsolutePath();
   }
 }

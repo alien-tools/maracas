@@ -49,7 +49,7 @@ public class AbstractControllerTest {
 		FileUtils.deleteDirectory(new File(reportPath));
 	}
 
-	protected MvcResult analyzePRPush(String owner, String repository, int prId, String config) {
+	protected MvcResult analyzePRPush(String owner, String repository, int prId) {
 		try {
 			int mockPort = 8080;
 			int installationId = 123456789;
@@ -67,7 +67,6 @@ public class AbstractControllerTest {
 				mvc.perform(
 						post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
 							.header("installationId", installationId)
-							.content(config)
 					)
 					.andExpect(status().isAccepted())
 					.andExpect(header().stringValues("Location",
@@ -101,19 +100,9 @@ public class AbstractControllerTest {
 		}
 	}
 
-	protected MvcResult analyzePRPush(String owner, String repository, int prId) {
-		return analyzePRPush(owner, repository, prId, "");
-	}
-
 	protected MvcResult analyzePRSync(String owner, String repository, int prId) {
-		return analyzePRSync(owner, repository, prId, "");
-	}
-
-	protected MvcResult analyzePRSync(String owner, String repository, int prId, String config) {
 		try {
-			ResultActions result = mvc.perform(
-				post("/github/pr-sync/%s/%s/%d".formatted(owner, repository, prId)).content(config)
-			);
+			ResultActions result = mvc.perform(post("/github/pr-sync/%s/%s/%d".formatted(owner, repository, prId)));
 			checkReportIsValid(result);
 			return result.andReturn();
 		} catch (Exception e) {

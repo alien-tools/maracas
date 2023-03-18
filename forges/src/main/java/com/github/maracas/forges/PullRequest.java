@@ -48,6 +48,15 @@ public record PullRequest(
       line);
   }
 
+  public String uid() {
+    return "%s-%s-%s-%s".formatted(
+      repository().owner(),
+      repository().name(),
+      number(),
+      head().sha()
+    );
+  }
+
   @Override
   public String toString() {
     return "PR#%d [%s/%s] [base=%s, head=%s]".formatted(
