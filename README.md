@@ -1,4 +1,4 @@
-![Build](https://github.com/alien-tools/maracas/workflows/Java%20CI/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/workflows/CodeQL/badge.svg?branch=main)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Build & Test](https://github.com/alien-tools/maracas/actions/workflows/build.yml/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/actions/workflows/codeql-analysis.yml/badge.svg?branch=main) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Maracas
 
