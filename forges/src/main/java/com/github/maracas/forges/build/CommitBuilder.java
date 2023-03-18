@@ -26,19 +26,14 @@ public class CommitBuilder {
 		this(commit, clonePath, BuildConfig.newDefault());
 	}
 
-	public Path cloneCommit(int timeoutSeconds) throws CloneException {
-		return getCloner().clone(commit, clonePath, timeoutSeconds);
+	public void cloneCommit(int timeoutSeconds) throws CloneException {
+		getCloner().clone(commit, clonePath, timeoutSeconds);
 	}
 
 	public Optional<Path> buildCommit(int timeoutSeconds) throws BuildException {
 		Builder builder = getBuilder();
 		builder.build(timeoutSeconds);
 		return builder.locateJar();
-	}
-
-	public Optional<Path> cloneAndBuildCommit(int cloneTimeoutSeconds, int buildTimeoutSeconds) throws CloneException, BuildException {
-		cloneCommit(cloneTimeoutSeconds);
-		return buildCommit(buildTimeoutSeconds);
 	}
 
 	public Commit getCommit() {

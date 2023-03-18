@@ -1,4 +1,4 @@
-package com.github.maracas.rest.breakbot;
+package com.github.maracas.forges.github;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +18,8 @@ public record BreakbotConfig(
 	Build build,
 	Clients clients
 ) {
-	public record Build(
+
+  public record Build(
 		List<String> goals,
 		Map<String, String> properties,
 		String jar
@@ -66,7 +67,8 @@ public record BreakbotConfig(
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 			return mapper.readValue(in, BreakbotConfig.class);
 		} catch (IOException e) {
-			throw new BreakbotException("Couldn't parse .github/breakbot.yml: ", e);
+			e.printStackTrace();
+			return BreakbotConfig.defaultConfig();
 		}
 	}
 

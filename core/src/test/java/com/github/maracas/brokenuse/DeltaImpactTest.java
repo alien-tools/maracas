@@ -11,9 +11,9 @@ import com.github.maracas.*;
 import org.junit.jupiter.api.Test;
 
 class DeltaImpactTest {
-  final LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
-  final LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
-  final SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
+  final LibraryJar v1 = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
+  final LibraryJar v2 = LibraryJar.withoutSources(TestData.compChangesV2);
+  final SourcesDirectory client = SourcesDirectory.of(TestData.compChangesClient);
 
   @Test
   void testJsonSerialization() throws IOException {

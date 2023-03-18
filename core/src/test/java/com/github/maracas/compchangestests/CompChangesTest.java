@@ -21,9 +21,9 @@ public class CompChangesTest {
 	static Set<BrokenUse> brokenUses;
 
 	static {
-		LibraryJar v1 = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
-		LibraryJar v2 = new LibraryJar(TestData.compChangesV2);
-		SourcesDirectory client = new SourcesDirectory(TestData.compChangesClient);
+		LibraryJar v1 = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
+		LibraryJar v2 = LibraryJar.withoutSources(TestData.compChangesV2);
+		SourcesDirectory client = SourcesDirectory.of(TestData.compChangesClient);
 
 		// We don't care about proper classpath for these tests
 		v1.setNoClasspath(true);

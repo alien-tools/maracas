@@ -13,9 +13,11 @@ import java.util.Objects;
  *           \
  *            \--- d --- e (head)
  *
- * base      => 'c'
- * head      => 'e'
- * mergeBase => 'a'
+ * base       => 'c'
+ * head       => 'e'
+ * mergeBase  => 'a'
+ * baseBranch => 'base'
+ * headBranch => 'head'
  */
 public record PullRequest(
   Repository repository,
@@ -46,9 +48,18 @@ public record PullRequest(
       line);
   }
 
+  public String uid() {
+    return "%s-%s-%s-%s".formatted(
+      repository().owner(),
+      repository().name(),
+      number(),
+      head().sha()
+    );
+  }
+
   @Override
   public String toString() {
-    return String.format("PR#%d [%s/%s] [base=%s, head=%s]",
+    return "PR#%d [%s/%s] [base=%s, head=%s]".formatted(
       number, repository.owner(), repository.name(), baseBranch, headBranch);
   }
 }

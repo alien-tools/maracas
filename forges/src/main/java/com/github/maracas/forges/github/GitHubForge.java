@@ -7,7 +7,9 @@ import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHBranch;
@@ -20,6 +22,7 @@ import org.kohsuke.github.GitHub;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -28,16 +31,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class GitHubForge implements Forge {
 	private final GitHub gh;
 	private Path clientsCacheDirectory;
 	private int clientsCacheExpirationDays = 1;
+	private static final String BREAKBOT_FILE = ".github/breakbot.yml";
 
 	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
 
 	public GitHubForge(GitHub gh) {
-		this.gh = gh;
+		this.gh = Objects.requireNonNull(gh);
 
 		Path dir;
 		try {
@@ -136,17 +141,27 @@ public class GitHubForge implements Forge {
 	}
 
 	@Override
-	public List<Repository> fetchTopStarredClients(Repository repository, String packageId, int limit, int minStars) {
+	public List<Repository> fetchTopStarredClients(Repository repository, String pkgId, int limit, int minStars) {
 		Objects.requireNonNull(repository);
-		Objects.requireNonNull(packageId);
+		Objects.requireNonNull(pkgId);
 
-		List<GitHubClientsFetcher.Client> clients = fetchClients(repository, packageId);
+		// Beware: if 'repository' is a fork, we retrieve the clients from the original repository
+		Repository actualRepository = repository;
+		try {
+			GHRepository repo = gh.getRepository(String.format("%s/%s", repository.owner(), repository.name()));
+			if (repo != null && repo.getParent() != null) {
+				actualRepository = fetchRepository(repo.getParent().getOwnerName(), repo.getParent().getName());
+			}
+		} catch (IOException e) {
+			logger.error(e);
+		}
 
+		List<GitHubClient> clients = fetchClients(actualRepository, pkgId);
 		return clients
 			.stream()
-			.sorted(Comparator.comparingInt(GitHubClientsFetcher.Client::stars).reversed())
+			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
 			.filter(client -> {
-				// FIXME: Kinda harsh, but there are too many "unofficial" forks
+				// Kinda harsh, but there are too many "unofficial" forks
 				if (client.name().equals(repository.name()))
 					return false;
 
@@ -165,15 +180,54 @@ public class GitHubForge implements Forge {
 			.toList();
 	}
 
-	public List<GitHubClientsFetcher.Client> fetchClients(Repository repository, String packageId) {
-		File cacheFile = clientsCacheFile(repository, packageId);
+	@Override
+	public List<Repository> fetchCustomClients(Repository repository) {
+		Objects.requireNonNull(repository);
+
+		return fetchBreakbotConfig(repository).clients().repositories()
+			.stream()
+			.map(c -> {
+				List<String> fields = Splitter.on("/").splitToList(c.repository());
+				String clientOwner = fields.get(0);
+				String clientName = fields.get(1);
+
+				return
+					StringUtils.isEmpty(c.branch())
+						? fetchRepository(clientOwner, clientName)
+						: fetchRepository(clientOwner, clientName, c.branch());
+			})
+			.toList();
+	}
+
+	@Override
+	public List<Repository> fetchAllClients(Repository repository, String pkgId, int limit, int minStars) {
+		return Stream.concat(
+			fetchCustomClients(repository).stream(),
+			fetchTopStarredClients(repository, pkgId, limit, minStars).stream()
+		).toList();
+	}
+
+	@Override
+	public BreakbotConfig fetchBreakbotConfig(Repository repository) {
+		Objects.requireNonNull(repository);
+
+		try (InputStream configIn = gh.getRepository(repository.fullName()).getFileContent(BREAKBOT_FILE).read()) {
+			return BreakbotConfig.fromYaml(configIn);
+		} catch (IOException e) {
+			logger.error(e);
+			return BreakbotConfig.defaultConfig();
+		}
+	}
+
+	private List<GitHubClient> fetchClients(Repository repository, String pkgId) {
+		File cacheFile = clientsCacheFile(repository, pkgId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		if (clientsCacheIsValid(cacheFile)) {
 			try {
-				List<GitHubClientsFetcher.Client> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
+				List<GitHubClient> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
 				logger.info("Fetched {} total clients for {} [package: {}] from {}",
-					clients.size(), repository, packageId, cacheFile);
+						clients.size(), repository, pkgId, cacheFile);
 				return clients;
 			} catch (IOException e) {
 				logger.error(e);
@@ -182,14 +236,15 @@ public class GitHubForge implements Forge {
 
 		Stopwatch sw = Stopwatch.createStarted();
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClientsFetcher.Client> clients = fetcher.fetchClients(packageId);
+		List<GitHubClient> clients = fetcher.fetchClients(pkgId);
 		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
-			clients.size(), repository, packageId, sw.elapsed().toSeconds());
+				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 
 		try {
-			cacheFile.getParentFile().mkdirs();
-			objectMapper.writeValue(cacheFile, clients);
-			logger.info("Serialized clients for {} [package: {}] in {}", repository, packageId, cacheFile);
+			if (cacheFile.getParentFile().mkdirs()) {
+				objectMapper.writeValue(cacheFile, clients);
+				logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
+			}
 		} catch (IOException e) {
 			logger.error(e);
 		}

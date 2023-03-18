@@ -1,27 +1,60 @@
 package com.github.maracas.rest;
 
-import com.github.maracas.rest.data.BreakingChangeDto;
-import com.github.maracas.rest.data.ClientReport;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
+import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class PullRequestControllerTests extends AbstractControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class PullRequestControllerTests {
+	@Autowired
+	protected MockMvc mvc;
+	@Autowired
+	protected ObjectMapper objectMapper;
+
+	@Value("${maracas.clone-path}")
+	protected String clonePath;
+	@Value("${maracas.report-path}")
+	protected String reportPath;
+
+	@BeforeEach
+	public void cleanData() throws IOException {
+		FileUtils.deleteDirectory(new File(clonePath));
+		FileUtils.deleteDirectory(new File(reportPath));
+	}
+
 	@Test
 	void pr_sync() {
 		PullRequestResponse res = resultAsPR(analyzePRSync("alien-tools", "repository-fixture", 1));
@@ -29,15 +62,24 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
-		assertThat(reportA.delta().breakingChanges(), hasSize(1));
-		assertThat(reportA.clientReports(), hasSize(2));
-		assertThat(reportA.allBrokenUses(), hasSize(1));
+		List<PackageReport> reports = res.report().reports();
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
+			.findFirst()
+			.ifPresentOrElse(reportA -> {
+				assertThat(reportA.delta().breakingChanges(), hasSize(1));
+				assertThat(reportA.clientReports(), hasSize(2));
+				assertThat(reportA.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 
-		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
-		assertThat(reportB.delta().breakingChanges(), hasSize(1));
-		assertThat(reportB.clientReports(), hasSize(2));
-		assertThat(reportB.allBrokenUses(), hasSize(1));
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:nested-b"))
+			.findFirst()
+			.ifPresentOrElse(reportB -> {
+				assertThat(reportB.delta().breakingChanges(), hasSize(1));
+				assertThat(reportB.clientReports(), hasSize(2));
+				assertThat(reportB.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 	}
 
 	@Test
@@ -47,15 +89,24 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
-		assertThat(reportA.delta().breakingChanges(), hasSize(1));
-		assertThat(reportA.clientReports(), hasSize(2));
-		assertThat(reportA.allBrokenUses(), hasSize(1));
+		List<PackageReport> reports = res.report().reports();
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
+			.findFirst()
+			.ifPresentOrElse(reportA -> {
+				assertThat(reportA.delta().breakingChanges(), hasSize(1));
+				assertThat(reportA.clientReports(), hasSize(2));
+				assertThat(reportA.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 
-		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
-		assertThat(reportB.delta().breakingChanges(), hasSize(1));
-		assertThat(reportB.clientReports(), hasSize(2));
-		assertThat(reportB.allBrokenUses(), hasSize(1));
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:nested-b"))
+			.findFirst()
+			.ifPresentOrElse(reportB -> {
+				assertThat(reportB.delta().breakingChanges(), hasSize(1));
+				assertThat(reportB.clientReports(), hasSize(2));
+				assertThat(reportB.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 	}
 
 	@Test
@@ -65,15 +116,24 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		PackageReport reportA = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:module-a")).findFirst().get();
-		assertThat(reportA.delta().breakingChanges(), hasSize(1));
-		assertThat(reportA.clientReports(), hasSize(2));
-		assertThat(reportA.allBrokenUses(), hasSize(1));
+		List<PackageReport> reports = res.report().reports();
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
+			.findFirst()
+			.ifPresentOrElse(reportA -> {
+				assertThat(reportA.delta().breakingChanges(), hasSize(1));
+				assertThat(reportA.clientReports(), hasSize(2));
+				assertThat(reportA.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 
-		PackageReport reportB = res.report().reports().stream().filter(r -> r.id().equals("com.github.alien-tools:nested-b")).findFirst().get();
-		assertThat(reportB.delta().breakingChanges(), hasSize(1));
-		assertThat(reportB.clientReports(), hasSize(2));
-		assertThat(reportB.allBrokenUses(), hasSize(1));
+		reports.stream()
+			.filter(r -> r.id().equals("com.github.alien-tools:nested-b"))
+			.findFirst()
+			.ifPresentOrElse(reportB -> {
+				assertThat(reportB.delta().breakingChanges(), hasSize(1));
+				assertThat(reportB.clientReports(), hasSize(2));
+				assertThat(reportB.allBrokenUses(), hasSize(1));
+			}, Assertions::fail);
 	}
 
 	@Test
@@ -104,6 +164,158 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			.andExpect(status().isNotFound());
 	}
 
+	@Test
+	void unknown_pr_push() throws Exception {
+		String owner = "this-does-not-exist";
+		String repository = "this-does-not-exist";
+		int prId = 9999;
+
+		int mockPort = 8080;
+		int installationId = 123456789;
+		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
+
+		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+			// Start a mock server that waits for our callback request
+			mockServer.when(
+				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+			).respond(
+				response().withBody("received")
+			);
+
+			// Check whether our analysis request is properly received
+			mvc.perform(
+					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
+						.header("installationId", installationId)
+				)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message", is("Couldn't fetch repository this-does-not-exist/this-does-not-exist")));
+
+			// Check whether our mock server got the error callback
+			mockServer.verify(
+				request()
+					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+					.withMethod("POST")
+					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", \"report\": null}")),
+				exactly(1)
+			);
+		}
+	}
+
+	protected MvcResult analyzePRPush(String owner, String repository, int prId) {
+		try {
+			int mockPort = 8080;
+			int installationId = 123456789;
+			String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
+
+			try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
+				// Start a mock server that waits for our callback request
+				mockServer.when(
+					request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+				).respond(
+					response().withBody("received")
+				);
+
+				// Check whether our analysis request is properly received
+				mvc.perform(
+						post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
+							.header("installationId", installationId)
+					)
+					.andExpect(status().isAccepted())
+					.andExpect(header().stringValues("Location",
+						"/github/pr/%s/%s/%d".formatted(owner, repository, prId)))
+					.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+					.andExpect(jsonPath("$.message", is("processing")));
+
+				// Check whether the analysis is ongoing
+				mvc.perform(get("/github/pr/%s/%s/%d".formatted(owner, repository, prId)))
+					.andExpect(status().isProcessing())
+					.andExpect(jsonPath("$.message", is("processing")));
+
+				// Wait for the analysis to finish
+				ResultActions result = waitForPRAnalysis(mvc, "/github/pr/%s/%s/%d".formatted(owner, repository, prId));
+
+				// Check whether our mock server got the callback
+				mockServer.verify(
+					request()
+						.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
+						.withMethod("POST")
+						.withHeader("installationId", String.valueOf(installationId))
+						.withContentType(org.mockserver.model.MediaType.APPLICATION_JSON),
+					exactly(1)
+				);
+
+				return result.andReturn();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected MvcResult analyzePRSync(String owner, String repository, int prId) {
+		try {
+			ResultActions result = mvc.perform(post("/github/pr-sync/%s/%s/%d".formatted(owner, repository, prId)));
+			checkReportIsValid(result);
+			return result.andReturn();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected MvcResult analyzePRPoll(String owner, String repository, int prId) {
+		try {
+			mvc.perform(post("/github/pr/%s/%s/%d".formatted(owner, repository, prId)))
+				.andExpect(status().isAccepted())
+				.andExpect(header().stringValues("Location", "/github/pr/%s/%s/%d".formatted(owner, repository, prId)))
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.message", is("processing")));
+
+			ResultActions result = waitForPRAnalysis(mvc, "/github/pr/%s/%s/%d".formatted(owner, repository, prId));
+			return result.andReturn();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected PullRequestResponse resultAsPR(MvcResult result) {
+		try {
+			return objectMapper.readValue(result.getResponse().getContentAsString(), PullRequestResponse.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected static void checkReportIsValid(ResultActions res) throws Exception {
+		res
+			.andExpect(status().isOk())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$.message", is("ok")));
+	}
+
+	// Sigh
+	protected static ResultActions waitForPRAnalysis(MockMvc mvc, String uri) throws Exception {
+		CompletableFuture<ResultActions> future = CompletableFuture.supplyAsync(() -> {
+			ResultActions res = null;
+			try {
+				do {
+					res = mvc.perform(get(uri));
+					Thread.sleep(1000);
+				} while(res.andReturn().getResponse().getStatus() != HttpStatus.SC_OK);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return res;
+		});
+
+		return future.get(30, TimeUnit.SECONDS);
+	}
+
+	/*
+	 * These shall be migrated to forges/
+	 *
 	@Test
 	void pr_with_supplied_breakbot_configuration() {
 		String bbConfig = """
@@ -176,43 +388,6 @@ class PullRequestControllerTests extends AbstractControllerTest {
 			.andExpect(jsonPath("$.report.reports[1].error", containsString("Unknown lifecycle phase")))
 			.andExpect(jsonPath("$.report.reports[1].delta", nullValue()))
 			.andExpect(jsonPath("$.report.reports[1].clientReports", empty()));
-	}
-
-	@Test
-	void unknown_pr_push() throws Exception {
-		String owner = "this-does-not-exist";
-		String repository = "this-does-not-exist";
-		int prId = 9999;
-
-		int mockPort = 8080;
-		int installationId = 123456789;
-		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
-
-		try (ClientAndServer mockServer = ClientAndServer.startClientAndServer(mockPort)) {
-			// Start a mock server that waits for our callback request
-			mockServer.when(
-				request().withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
-			).respond(
-				response().withBody("received")
-			);
-
-			// Check whether our analysis request is properly received
-			mvc.perform(
-					post("/github/pr/%s/%s/%d?callback=%s".formatted(owner, repository, prId, callback))
-						.header("installationId", installationId)
-				)
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message", is("Couldn't fetch repository this-does-not-exist/this-does-not-exist")));
-
-			// Check whether our mock server got the error callback
-			mockServer.verify(
-				request()
-					.withPath("/breakbot/pr/%s/%s/%d".formatted(owner, repository, prId))
-					.withMethod("POST")
-					.withBody(json("{\"message\": \"Couldn't fetch repository this-does-not-exist/this-does-not-exist\", \"report\": null}")),
-				exactly(1)
-			);
-		}
 	}
 
 	@Test
@@ -345,5 +520,5 @@ class PullRequestControllerTests extends AbstractControllerTest {
 		assertThat(brokenDecls, not(hasItem(containsString("tests"))));
 		assertThat(brokenDecls, not(hasItem(containsString("unstablePkg"))));
 		assertThat(brokenDecls, not(hasItem(containsString("main.unstableAnnon.classRemoved.ClassRemoved"))));
-	}
+	}*/
 }

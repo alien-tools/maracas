@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -39,14 +40,11 @@ public class GitHubClientsFetcher {
 
 	private static final Logger logger = LogManager.getLogger(GitHubClientsFetcher.class);
 
-	public record Package(String name, String url) {}
-	public record Client(Package pkg, String owner, String name, int stars, int forks) {}
-
 	public GitHubClientsFetcher(Repository repository) {
-		this.repository = repository;
+		this.repository = Objects.requireNonNull(repository);
 	}
 
-	public List<Package> fetchPackages() {
+	public List<GitHubPackage> fetchPackages() {
 		Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
 
 		if (pkgsPage != null) {
@@ -55,15 +53,33 @@ public class GitHubClientsFetcher {
 					.map(link -> {
 						String name = link.select(".select-menu-item-text").text().trim();
 						String url = "https://github.com" + link.attr("href");
-						return new Package(name, url);
+						return new GitHubPackage(repository, name, url);
 					}).toList();
 		} else {
 			return Collections.emptyList();
 		}
 	}
 
-	private List<Client> fetchClients(Package pkg, String url) {
-		List<Client> clients = new ArrayList<>();
+	public List<GitHubClient> fetchClients() {
+		return fetchPackages()
+			.stream()
+			.map(pkg -> fetchClients(pkg, pkg.url()))
+			.flatMap(Collection::stream)
+			.toList();
+	}
+
+	public List<GitHubClient> fetchClients(String pkg) {
+		return !StringUtils.isEmpty(pkg)
+			? fetchPackages().stream()
+					.filter(p -> p.id().equals(pkg))
+					.findFirst()
+					.map(p -> fetchClients(p, p.url()))
+					.orElse(Collections.emptyList())
+			: Collections.emptyList();
+	}
+
+	private List<GitHubClient> fetchClients(GitHubPackage pkg, String url) {
+		List<GitHubClient> clients = new ArrayList<>();
 		Document pkgPage = fetchPage(url);
 
 		if (pkgPage != null) {
@@ -73,11 +89,12 @@ public class GitHubClientsFetcher {
 			clientRows.forEach(row -> {
 				String[] fields = row.split(" ");
 				if (fields.length == 5) {
-					clients.add(new Client(
-						pkg,
-						fields[0].trim(), fields[2].trim(),
+					clients.add(new GitHubClient(
+						fields[0].trim(),
+						fields[2].trim(),
 						Integer.parseInt(fields[3].trim().replaceAll("\\D", "")),
-						Integer.parseInt(fields[4].trim().replaceAll("\\D", ""))));
+						Integer.parseInt(fields[4].trim().replaceAll("\\D", "")),
+						pkg));
 				} else logger.error("Couldn't parse row {}", row);
 			});
 
@@ -93,24 +110,6 @@ public class GitHubClientsFetcher {
 		}
 
 		return clients;
-	}
-
-	public List<Client> fetchClients() {
-		return fetchPackages()
-			.stream()
-			.map(pkg -> fetchClients(pkg, pkg.url()))
-			.flatMap(Collection::stream)
-			.toList();
-	}
-
-	public List<Client> fetchClients(String pkg) {
-		return StringUtils.isEmpty(pkg)
-			? fetchClients()
-			: fetchPackages().stream()
-					.filter(p -> p.name().equals(pkg))
-					.findFirst()
-					.map(p -> fetchClients(p, p.url()))
-					.orElse(Collections.emptyList());
 	}
 
 	private Document fetchPage(String url) {

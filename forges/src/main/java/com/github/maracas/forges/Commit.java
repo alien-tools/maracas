@@ -10,4 +10,8 @@ public record Commit(
     Objects.requireNonNull(repository);
     Objects.requireNonNull(sha);
   }
+
+  public String uid() {
+    return "%s-%s-%s".formatted(repository.owner(), repository.name(), sha);
+  }
 }

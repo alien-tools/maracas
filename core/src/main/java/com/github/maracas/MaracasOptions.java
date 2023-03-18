@@ -5,7 +5,6 @@ import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**

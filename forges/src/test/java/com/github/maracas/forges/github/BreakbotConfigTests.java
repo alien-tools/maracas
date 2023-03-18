@@ -1,8 +1,6 @@
-package com.github.maracas.rest;
+package com.github.maracas.forges.github;
 
-import com.github.maracas.rest.breakbot.BreakbotConfig;
-import com.github.maracas.rest.breakbot.BreakbotException;
-import org.junit.jupiter.api.Assertions;
+import com.github.maracas.forges.github.BreakbotConfig;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +22,7 @@ class BreakbotConfigTests {
 	@Test
 	void invalid_configuration() {
 		String s = "nope";
-		Assertions.assertThrows(BreakbotException.class, () -> BreakbotConfig.fromYaml(s));
+		assertThat(BreakbotConfig.fromYaml(s), is(equalTo(BreakbotConfig.defaultConfig())));
 	}
 
 	@Test

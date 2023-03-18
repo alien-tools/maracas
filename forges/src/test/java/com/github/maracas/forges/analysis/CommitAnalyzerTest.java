@@ -1,4 +1,4 @@
-package com.github.maracas.forges;
+package com.github.maracas.forges.analysis;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
@@ -7,9 +7,10 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
+import com.github.maracas.forges.Commit;
+import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
-import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.github.GitHubForge;
@@ -30,17 +31,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ForgeAnalyzerTest {
-	Path workingDirectory = Path.of("./clones");
+class CommitAnalyzerTest {
+	final Path workingDirectory = Path.of("./test-clones");
 	Forge forge;
-	ForgeAnalyzer analyzer;
+	CommitAnalyzer analyzer;
 
 	@BeforeEach
 	void setUp() throws IOException {
 		FileUtils.deleteDirectory(workingDirectory.toFile());
 		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		analyzer = new ForgeAnalyzer(forge, workingDirectory);
-		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
+		analyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
 	}
 
 	@AfterEach
@@ -75,14 +75,14 @@ class ForgeAnalyzerTest {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./clones/ca"));
+		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./test-clones/ca"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i1.getBrokenUses(), hasSize(1));
 		BrokenUse bu = i1.getBrokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("a.a()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./clones/cb"));
+		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./test-clones/cb"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i2.getBrokenUses(), is(empty()));
 	}
@@ -114,14 +114,14 @@ class ForgeAnalyzerTest {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./clones/cb"));
+		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./test-clones/cb"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i1.getBrokenUses(), hasSize(1));
 		BrokenUse bu = i1.getBrokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./clones/ca"));
+		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./test-clones/ca"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i2.getBrokenUses(), is(empty()));
 	}
@@ -197,35 +197,5 @@ class ForgeAnalyzerTest {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(3)));
 		assertThat(result.deltaImpacts().values(), hasItem(hasProperty("throwable", hasProperty("message", containsString("timed out")))));
-	}
-
-	@Test
-	void inferImpactedPackages_fixture_two_impacted_modules() {
-		PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 1);
-		CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
-		List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, 100);
-
-		assertThat(impacted, containsInAnyOrder(
-				new BuildModule("com.github.alien-tools:module-a", Path.of("module-a")),
-				new BuildModule("com.github.alien-tools:nested-b", Path.of("module-c/nested-b"))
-		));
-	}
-
-	@Test
-	void inferImpactedPackages_fixture_no_impacted_module() {
-		PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 2);
-		CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
-		List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, 100);
-
-		assertThat(impacted, is(empty()));
-	}
-
-	@Test
-	void inferImpactedPackages_fixture_one_impacted_module() {
-		PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 4);
-		CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
-		List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, 100);
-
-		assertThat(impacted, contains(new BuildModule("com.github.alien-tools:module-a", Path.of("module-a"))));
 	}
 }

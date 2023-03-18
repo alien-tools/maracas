@@ -1,19 +1,17 @@
 package com.github.maracas.rest;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyOrNullString;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.github.maracas.*;
+import com.github.maracas.AnalysisQuery;
+import com.github.maracas.AnalysisResult;
+import com.github.maracas.LibraryJar;
+import com.github.maracas.Maracas;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubForge;
+import com.github.maracas.rest.data.BrokenUseDto;
+import com.github.maracas.rest.data.ClientReport;
+import com.github.maracas.rest.data.DeltaDto;
+import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PackageReport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,10 +21,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.github.maracas.rest.data.ClientReport;
-import com.github.maracas.rest.data.DeltaDto;
-import com.github.maracas.rest.data.BrokenUseDto;
-import com.github.maracas.rest.data.MaracasReport;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,11 +38,11 @@ class MaracasReportTests {
 
 	@BeforeEach
 	void setUp() {
-		LibraryJar v1 = new LibraryJar(
+		LibraryJar v1 = LibraryJar.withSources(
 			Path.of("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar"),
-			new SourcesDirectory(Path.of("../test-data/comp-changes/old/")));
-		LibraryJar v2 = new LibraryJar(Path.of("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar"));
-		SourcesDirectory c1 = new SourcesDirectory(Path.of("../test-data/comp-changes/client/"));
+			SourcesDirectory.of(Path.of("../test-data/comp-changes/old/")));
+		LibraryJar v2 = LibraryJar.withoutSources(Path.of("../test-data/comp-changes/new/target/comp-changes-new-0.0.1.jar"));
+		SourcesDirectory c1 = SourcesDirectory.of(Path.of("../test-data/comp-changes/client/"));
 
 		AnalysisQuery query = AnalysisQuery.builder()
 			.oldVersion(v1)

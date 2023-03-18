@@ -4,6 +4,7 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.Builder;
+import com.google.common.base.Splitter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,9 +13,15 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 
 /**
  * There doesn't seem to be a way to skip tasks (e.g., "-x test"),
@@ -116,11 +123,11 @@ public class GradleBuilder implements Builder {
 			.forTasks("properties")
 			.run();
 
-		baos.toString().lines().forEach(l -> {
-			String[] fields = l.split(": ");
+		baos.toString(StandardCharsets.UTF_8).lines().forEach(l -> {
+			List<String> fields = Splitter.on(": ").splitToList(l);
 
-			if (fields.length == 2)
-				props.put(fields[0], fields[1]);
+			if (fields.size() == 2)
+				props.put(fields.get(0), fields.get(1));
 		});
 
 		return props;

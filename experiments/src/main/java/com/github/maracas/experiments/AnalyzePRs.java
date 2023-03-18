@@ -2,7 +2,8 @@ package com.github.maracas.experiments;
 
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.ForgeAnalyzer;
+import com.github.maracas.forges.analysis.CommitAnalyzer;
+import com.github.maracas.forges.analysis.PullRequestAnalyzer;
 import com.github.maracas.forges.github.GitHubForge;
 import com.google.common.base.Stopwatch;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -58,8 +59,8 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var analyzer = new ForgeAnalyzer(forge, WORKING_DIRECTORY);
-		analyzer.setExecutorService(Executors.newFixedThreadPool(4));
+		var commitAnalyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
+		var analyzer = new PullRequestAnalyzer(WORKING_DIRECTORY, forge, commitAnalyzer);
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
 			var beanToCsv = new StatefulBeanToCsvBuilder<Case>(writer).build();
@@ -78,22 +79,22 @@ public class AnalyzePRs {
 					opts.setClientsPerPackage(100);
 					opts.setMinStarsPerClient(5);
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyzePullRequest(pr, opts);
+					var result = analyzer.analyze(pr, opts);
 					var j = 0;
 
 					c.base = pr.baseBranch();
 					c.head = pr.headBranch();
 					c.changedFiles = pr.changedFiles().size();
-					c.impactedPackages = result.size();
+					c.impactedPackages = result.packageResults().size();
 
-					for (var r : result) {
+					for (var r : result.packageResults().values()) {
 						if (r.delta() != null) {
 							c.deprecations = (int) r.delta().getBreakingChanges().stream().filter(bc -> bc.getChange().equals(JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED)).count();
 							c.breakingChanges += r.delta().getBreakingChanges().size() - c.deprecations;
 							c.brokenUses += r.allBrokenUses().size();
-							c.checkedClients += r.deltaImpacts().size();
+							c.checkedClients += r.clientResults().size();
 							c.brokenClients += r.brokenClients().size();
-							r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
+							//r.writeJson(REPORTS.resolve(String.format("%s-%s-%d-%d.json", c.owner, c.name, c.number, ++j)).toFile());
 
 							logger.info("[{}/{}] PR#{} of {}/{}: found {} BCs and {} broken uses in {}/{} clients",
 								i, cases.size(), c.number, c.owner, c.name, c.breakingChanges, c.brokenUses, c.brokenClients, c.checkedClients);

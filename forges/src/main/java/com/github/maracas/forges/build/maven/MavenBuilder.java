@@ -95,8 +95,8 @@ public class MavenBuilder implements Builder {
 				? DEFAULT_PROPERTIES
 				: config.getProperties();
 
-			logger.info("Building {} with module={} goals={} properties={}",
-				pomFile, config.getModule(), goals, properties);
+			logger.info("Building {} with module={} goals={}",
+				pomFile, config.getModule(), goals);
 
 			Stopwatch sw = Stopwatch.createStarted();
 			StringBuilder errors = new StringBuilder();
@@ -128,8 +128,8 @@ public class MavenBuilder implements Builder {
 				if (result.getExitCode() != 0)
 					throw new BuildException("%s failed (%d): %s".formatted(goals, result.getExitCode(), errors.toString()));
 
-				logger.info("Building {} with module={} goals={} properties={} took {}ms",
-					pomFile, config.getModule(), goals, properties, sw.elapsed().toMillis());
+				logger.info("Building {} with module={} goals={} took {}ms",
+					pomFile, config.getModule(), goals, sw.elapsed().toMillis());
 			} catch (MavenInvocationException e) {
 				throw new BuildException("Error invoking Maven", e);
 			}

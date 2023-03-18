@@ -8,6 +8,7 @@ import com.github.maracas.forges.PullRequest;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public record PullRequestResponse(
 	String message,
@@ -16,11 +17,11 @@ public record PullRequestResponse(
 	MaracasReport report
 ) {
 	public static PullRequestResponse status(PullRequest pr, String status) {
-		return new PullRequestResponse(status, LocalDateTime.now(), pr != null ? PullRequestDto.of(pr) : null, null);
+		return new PullRequestResponse(status, LocalDateTime.now(ZoneId.systemDefault()), pr != null ? PullRequestDto.of(pr) : null, null);
 	}
 
 	public static PullRequestResponse ok(PullRequest pr, MaracasReport report) {
-		return new PullRequestResponse("ok", LocalDateTime.now(), PullRequestDto.of(pr), report);
+		return new PullRequestResponse("ok", LocalDateTime.now(ZoneId.systemDefault()), PullRequestDto.of(pr), report);
 	}
 
 	public static PullRequestResponse fromJson(File json) throws IOException {

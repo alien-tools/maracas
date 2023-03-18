@@ -37,32 +37,19 @@ public class DeltaImpact {
 	 */
 	private final Throwable throwable;
 
-	/**
-	 * Creates a {@link DeltaImpact} instance.
-	 *
-	 * @param client     the client project
-	 * @param delta      the {@link Delta} model computed between two versions of a library
-	 * @param brokenUses the set of computed {@link BrokenUse} instances
-	 */
-	public DeltaImpact(SourcesDirectory client, Delta delta, Set<BrokenUse> brokenUses) {
+	private DeltaImpact(SourcesDirectory client, Delta delta, Set<BrokenUse> brokenUses, Throwable throwable) {
 		this.client = Objects.requireNonNull(client);
 		this.delta = Objects.requireNonNull(delta);
 		this.brokenUses = Objects.requireNonNull(brokenUses);
-		this.throwable = null;
+		this.throwable = throwable;
 	}
 
-	/**
-	 * Creates a failed {@link DeltaImpact} instance.
-	 *
-	 * @param client    the client project
-	 * @param delta     the {@link Delta} model computed between two versions of a library
-	 * @param throwable the {@link Throwable} that was raised while attempting to compute broken uses
-	 */
-	public DeltaImpact(SourcesDirectory client, Delta delta, Throwable throwable) {
-		this.client = Objects.requireNonNull(client);
-		this.delta = Objects.requireNonNull(delta);
-		this.brokenUses = Collections.emptySet();
-		this.throwable = Objects.requireNonNull(throwable);
+	public static DeltaImpact success(SourcesDirectory client, Delta delta, Set<BrokenUse> brokenUses) {
+		return new DeltaImpact(client, delta, brokenUses, null);
+	}
+
+	public static DeltaImpact error(SourcesDirectory client, Delta delta, Throwable throwable) {
+		return new DeltaImpact(client, delta, Collections.emptySet(), throwable);
 	}
 
 	/**

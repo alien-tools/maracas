@@ -4,7 +4,6 @@ import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.clone.CloneException;
-import com.github.maracas.rest.breakbot.BreakbotException;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import com.github.maracas.rest.services.BreakbotService;
@@ -34,12 +33,11 @@ public class PullRequestController {
 		@PathVariable String name,
 		@PathVariable Integer number,
 		@RequestParam(required=false) String callback,
-		@RequestHeader(required=false) String installationId,
-		@RequestBody(required=false) String breakbotYaml
+		@RequestHeader(required=false) String installationId
 	) {
 		try {
 			PullRequest pr = prService.fetchPullRequest(owner, name, number);
-			String location = prService.analyzePR(pr, callback, installationId, breakbotYaml);
+			String location = prService.analyzePR(pr, callback, installationId);
 			return ResponseEntity
 				.accepted()
 				.header("Location", location)
@@ -84,11 +82,10 @@ public class PullRequestController {
 	public ResponseEntity<PullRequestResponse> analyzePullRequestSync(
 		@PathVariable String owner,
 		@PathVariable String name,
-		@PathVariable Integer number,
-		@RequestBody(required=false) String breakbotYaml
+		@PathVariable Integer number
 	) {
 		PullRequest pr = prService.fetchPullRequest(owner, name, number);
-		MaracasReport report = prService.analyzePRSync(pr, breakbotYaml);
+		MaracasReport report = prService.analyzePRSync(pr);
 		return ResponseEntity.ok(PullRequestResponse.ok(pr, report));
 	}
 
@@ -99,7 +96,7 @@ public class PullRequestController {
 			.body(PullRequestResponse.status(null, e.getMessage()));
 	}
 
-	@ExceptionHandler({BreakbotException.class, ForgeException.class})
+	@ExceptionHandler({ForgeException.class})
 	public ResponseEntity<PullRequestResponse> handleGitHubException(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)

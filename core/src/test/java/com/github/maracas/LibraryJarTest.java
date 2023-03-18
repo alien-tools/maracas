@@ -1,6 +1,5 @@
 package com.github.maracas;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtType;
@@ -8,43 +7,62 @@ import spoon.reflect.declaration.CtType;
 import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LibraryJarTest {
-	@Disabled("This one's flaky for some reason, CP size varies from 1 to 2??")
 	@Test
 	void test_compChanges_withoutSources() {
-		LibraryJar comp = new LibraryJar(TestData.compChangesV1);
+		LibraryJar comp = LibraryJar.withoutSources(TestData.compChangesV1);
 		assertThat(comp.getJar(), is(notNullValue()));
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(nullValue()));
-		assertThat(comp.getClasspath(), hasSize(2));
+		assertThat(comp.getClasspath(), is(not(empty())));
+		assertThat(comp.getSources(), is(nullValue()));
 		assertThat(comp.buildModel(), is(notNullValue()));
 	}
 
 	@Test
 	void test_compChanges_withSources() {
-		LibraryJar comp = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+		LibraryJar comp = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
 		assertThat(comp.getJar(), is(notNullValue()));
 		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
 		assertThat(comp.getSources(), is(notNullValue()));
-		assertThat(comp.getClasspath(), hasSize(2));
+		assertThat(comp.getClasspath(), is(not(empty())));
 		assertThat(comp.buildModel(), is(notNullValue()));
-		assertThat(comp.getSources().buildModel(), is(notNullValue()));
+		assertThat(comp.getSources(), is(notNullValue()));
+		assertThat(comp.getSources().buildModel().getAllTypes(), is(not(empty())));
+	}
+
+	@Test
+	void test_withoutSources_invalidJar() {
+		assertThrows(IllegalArgumentException.class, () -> LibraryJar.withoutSources(TestData.invalidJar));
+	}
+
+	@Test
+	void test_withSources_invalidSources() {
+		LibraryJar comp = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.invalidDirectory));
+		assertThat(comp.getJar(), is(notNullValue()));
+		assertThat(comp.getLabel(), is("comp-changes-old-0.0.1.jar"));
+		assertThat(comp.getSources(), is(notNullValue()));
+		assertThat(comp.getClasspath(), is(not(empty())));
+		assertThat(comp.buildModel(), is(notNullValue()));
+		assertThat(comp.getSources(), is(notNullValue()));
+		assertThat(comp.getSources().buildModel().getAllTypes(), is(empty()));
 	}
 
 	@Test
 	void test_source_binary_models_match_compChanges() {
-		LibraryJar comp = new LibraryJar(TestData.compChangesV1, new SourcesDirectory(TestData.compChangesSources));
+		LibraryJar comp = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
 		assertSourceMatchesBinary(comp);
 	}
 
 	@Test
 	void test_source_binary_models_match_jarWithDeps() {
-		LibraryJar withDeps = new LibraryJar(Path.of("./src/test/resources/jar-with-deps/target/jar-with-deps-1.0-SNAPSHOT.jar"),
-			new SourcesDirectory(Path.of("./src/test/resources/jar-with-deps")));
+		LibraryJar withDeps = LibraryJar.withSources(
+			Path.of("./src/test/resources/jar-with-deps/target/jar-with-deps-1.0-SNAPSHOT.jar"),
+			SourcesDirectory.of(Path.of("./src/test/resources/jar-with-deps")));
 		assertSourceMatchesBinary(withDeps);
 	}
 
