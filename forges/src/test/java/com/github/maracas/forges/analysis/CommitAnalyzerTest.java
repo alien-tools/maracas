@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CommitAnalyzerTest {
-	final Path workingDirectory = Path.of("./clones");
+	final Path workingDirectory = Path.of("./test-clones");
 	Forge forge;
 	CommitAnalyzer analyzer;
 
@@ -40,7 +40,7 @@ class CommitAnalyzerTest {
 	void setUp() throws IOException {
 		FileUtils.deleteDirectory(workingDirectory.toFile());
 		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		analyzer = new CommitAnalyzer(workingDirectory, Executors.newFixedThreadPool(4));
+		analyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
 	}
 
 	@AfterEach

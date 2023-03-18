@@ -53,9 +53,9 @@ public class PullRequestService {
 		this.reportPath.toFile().mkdirs();
 
 		CommitAnalyzer commitAnalyzer = analysisWorkers > 0
-			? new CommitAnalyzer(clonePath, Executors.newFixedThreadPool(analysisWorkers))
-			: new CommitAnalyzer(clonePath);
-		this.analyzer = new PullRequestAnalyzer(forge, commitAnalyzer);
+			? new CommitAnalyzer(Executors.newFixedThreadPool(analysisWorkers))
+			: new CommitAnalyzer();
+		this.analyzer = new PullRequestAnalyzer(clonePath, forge, commitAnalyzer);
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {

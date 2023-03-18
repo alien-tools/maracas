@@ -65,7 +65,7 @@ public record AnalysisResult(
 				.stream()
 				.collect(toMap(
 					SourcesDirectory::getLocation,
-					c -> new DeltaImpact(c, delta, emptySet()))
+					c -> DeltaImpact.success(c, delta, emptySet()))
 				)
 		);
 	}

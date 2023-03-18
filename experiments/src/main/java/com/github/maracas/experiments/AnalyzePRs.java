@@ -59,8 +59,8 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var commitAnalyzer = new CommitAnalyzer(WORKING_DIRECTORY, Executors.newFixedThreadPool(4));
-		var analyzer = new PullRequestAnalyzer(forge, commitAnalyzer);
+		var commitAnalyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
+		var analyzer = new PullRequestAnalyzer(WORKING_DIRECTORY, forge, commitAnalyzer);
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
 			var beanToCsv = new StatefulBeanToCsvBuilder<Case>(writer).build();
