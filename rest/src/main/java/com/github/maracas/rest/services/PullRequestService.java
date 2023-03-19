@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Service
@@ -49,10 +50,13 @@ public class PullRequestService {
 			(!this.reportPath.toFile().exists() && !this.reportPath.toFile().mkdirs()))
 			throw new IllegalStateException("Cannot create the necessary directories");
 
-		CommitAnalyzer commitAnalyzer = analysisWorkers > 0
-			? new CommitAnalyzer(Executors.newFixedThreadPool(analysisWorkers))
-			: new CommitAnalyzer();
-		this.analyzer = new PullRequestAnalyzer(clonePath, forge, commitAnalyzer);
+		if (analysisWorkers > 0) {
+			ExecutorService executor = Executors.newFixedThreadPool(analysisWorkers);
+			CommitAnalyzer commitAnalyzer = new CommitAnalyzer(executor);
+			this.analyzer = new PullRequestAnalyzer(clonePath, forge, commitAnalyzer, executor);
+		} else {
+			this.analyzer = new PullRequestAnalyzer(clonePath, forge, new CommitAnalyzer());
+		}
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {

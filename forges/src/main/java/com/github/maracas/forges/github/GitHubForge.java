@@ -20,7 +20,6 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -220,12 +219,12 @@ public class GitHubForge implements Forge {
 	}
 
 	private List<GitHubClient> fetchClients(Repository repository, String pkgId) {
-		File cacheFile = clientsCacheFile(repository, pkgId);
+		Path cacheFile = clientsCacheFile(repository, pkgId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		if (clientsCacheIsValid(cacheFile)) {
 			try {
-				List<GitHubClient> clients = objectMapper.readValue(cacheFile, new TypeReference<>(){});
+				List<GitHubClient> clients = objectMapper.readValue(cacheFile.toFile(), new TypeReference<>(){});
 				logger.info("Fetched {} total clients for {} [package: {}] from {}",
 						clients.size(), repository, pkgId, cacheFile);
 				return clients;
@@ -241,10 +240,9 @@ public class GitHubForge implements Forge {
 				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 
 		try {
-			if (cacheFile.getParentFile().exists() || cacheFile.getParentFile().mkdirs()) {
-				objectMapper.writeValue(cacheFile, clients);
-				logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
-			}
+			Files.createDirectories(cacheFile.getParent());
+			objectMapper.writeValue(cacheFile.toFile(), clients);
+			logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
 		} catch (IOException e) {
 			logger.error(e);
 		}
@@ -259,15 +257,15 @@ public class GitHubForge implements Forge {
 	}
 
 	public void setClientsCacheDirectory(Path dir) {
-		if (dir == null || !dir.toFile().exists())
+		if (dir == null || !Files.exists(dir))
 			throw new IllegalArgumentException("dir does not exist");
 
 		this.clientsCacheDirectory = dir;
 	}
 
-	private boolean clientsCacheIsValid(File cacheFile) {
-		if (cacheFile.exists()) {
-			Date modified = new Date(cacheFile.lastModified());
+	private boolean clientsCacheIsValid(Path cacheFile) {
+		if (Files.exists(cacheFile)) {
+			Date modified = new Date(cacheFile.toFile().lastModified());
 			Date now = Date.from(Instant.now());
 
 			long daysDiff = TimeUnit.DAYS.convert(Math.abs(now.getTime() - modified.getTime()), TimeUnit.MILLISECONDS);
@@ -277,12 +275,11 @@ public class GitHubForge implements Forge {
 		return false;
 	}
 
-	private File clientsCacheFile(Repository repository, String packageId) {
+	private Path clientsCacheFile(Repository repository, String packageId) {
 		return clientsCacheDirectory
 			.resolve(repository.owner())
 			.resolve(repository.name())
 			.resolve(packageId + "-clients.json")
-			.toAbsolutePath()
-			.toFile();
+			.toAbsolutePath();
 	}
 }

@@ -15,16 +15,16 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class CommitAnalyzer {
   private final ExecutorService executorService;
@@ -73,14 +73,15 @@ public class CommitAnalyzer {
       LibraryJar libV2 = LibraryJar.withoutSources(jarV2.get());
       return Maracas.computeDelta(libV1, libV2, options);
     } catch (InterruptedException e) {
+      logger.error(e);
       Thread.currentThread().interrupt();
     } catch (ExecutionException | CompletionException e) {
+      logger.error(e);
       // Simply unwrap and rethrow
       if (e.getCause() instanceof BuildException be)
         throw be;
       if (e.getCause() instanceof CloneException ce)
         throw ce;
-      logger.error(e);
     }
 
     return null;
@@ -99,28 +100,22 @@ public class CommitAnalyzer {
       );
     }
 
-    Map<Path, CompletableFuture<DeltaImpact>> clientFutures =
+    Map<Path, DeltaImpact> impacts = new ConcurrentHashMap<>();
+    List<CompletableFuture<Void>> clientFutures =
       clients.stream()
-        .collect(Collectors.toMap(
-          CommitBuilder::getModulePath,
-          c -> cloneAndAnalyzeClient(delta, c, options)
-        ));
+        .map(c -> cloneAndAnalyzeClient(delta, c, options)
+          .exceptionally(t ->
+            impacts.put(
+              c.getModulePath(),
+              DeltaImpact.error(
+                SourcesDirectory.of(c.getModulePath()),
+                delta,
+                t.getCause() != null ? t.getCause() : t)))
+          .thenAccept(impact -> impacts.put(c.getModulePath(), impact))
+        )
+          .toList();
 
-    CompletableFuture.allOf(clientFutures.values().toArray(CompletableFuture[]::new)).join();
-
-    Map<Path, DeltaImpact> impacts = new HashMap<>();
-    for (Map.Entry<Path, CompletableFuture<DeltaImpact>> entry : clientFutures.entrySet()) {
-      try {
-        impacts.put(entry.getKey(), entry.getValue().get());
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      } catch (Exception e) {
-        SourcesDirectory client = SourcesDirectory.of(entry.getKey());
-        impacts.put(entry.getKey(),
-          DeltaImpact.error(client, delta, e.getCause() != null ? e.getCause() : e));
-      }
-    }
-
+    CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
     return AnalysisResult.success(delta, impacts);
   }
 

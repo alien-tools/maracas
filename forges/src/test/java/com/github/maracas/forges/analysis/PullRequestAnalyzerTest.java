@@ -22,6 +22,7 @@ import org.kohsuke.github.GitHubBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,10 +35,11 @@ class PullRequestAnalyzerTest {
 
   @BeforeEach
   void setUp() throws IOException {
+    ExecutorService executor = Executors.newFixedThreadPool(4);
     FileUtils.deleteDirectory(workingDirectory.toFile());
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
-    analyzer = new PullRequestAnalyzer(workingDirectory, forge, commitAnalyzer);
+    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(executor);
+    analyzer = new PullRequestAnalyzer(workingDirectory, forge, commitAnalyzer, executor);
   }
 
   @AfterEach
