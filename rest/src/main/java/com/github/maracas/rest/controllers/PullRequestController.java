@@ -12,7 +12,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/github")
@@ -32,8 +39,8 @@ public class PullRequestController {
 		@PathVariable String owner,
 		@PathVariable String name,
 		@PathVariable Integer number,
-		@RequestParam(required=false) String callback,
-		@RequestHeader(required=false) String installationId
+		@RequestParam(required = false) String callback,
+		@RequestHeader(required = false) String installationId
 	) {
 		try {
 			PullRequest pr = prService.fetchPullRequest(owner, name, number);
@@ -96,7 +103,7 @@ public class PullRequestController {
 			.body(PullRequestResponse.status(null, e.getMessage()));
 	}
 
-	@ExceptionHandler({ForgeException.class})
+	@ExceptionHandler(ForgeException.class)
 	public ResponseEntity<PullRequestResponse> handleGitHubException(Exception e) {
 		logger.error(e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)

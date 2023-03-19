@@ -241,7 +241,7 @@ public class GitHubForge implements Forge {
 				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 
 		try {
-			if (cacheFile.getParentFile().mkdirs()) {
+			if (cacheFile.getParentFile().exists() || cacheFile.getParentFile().mkdirs()) {
 				objectMapper.writeValue(cacheFile, clients);
 				logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
 			}
