@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommitAnalyzerTest {
 	@TempDir
@@ -190,6 +191,6 @@ class CommitAnalyzerTest {
 		);
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(3)));
-		assertThat(result.deltaImpacts().values(), hasItem(hasProperty("throwable", hasProperty("message", containsString("timed out")))));
+		assertTrue(result.deltaImpacts().values().stream().anyMatch(i -> i.throwable() != null && i.throwable().getMessage().contains("timed out")));
 	}
 }
