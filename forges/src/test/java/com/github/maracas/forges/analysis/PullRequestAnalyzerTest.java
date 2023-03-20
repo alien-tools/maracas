@@ -13,10 +13,9 @@ import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import japicmp.model.JApiCompatibilityChange;
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
@@ -29,22 +28,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 class PullRequestAnalyzerTest {
-  final Path workingDirectory = Path.of("./test-clones");
+  @TempDir
+  Path workingDirectory;
   Forge forge;
   PullRequestAnalyzer analyzer;
 
   @BeforeEach
   void setUp() throws IOException {
     ExecutorService executor = Executors.newFixedThreadPool(4);
-    FileUtils.deleteDirectory(workingDirectory.toFile());
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
     CommitAnalyzer commitAnalyzer = new CommitAnalyzer(executor);
     analyzer = new PullRequestAnalyzer(workingDirectory, forge, commitAnalyzer, executor);
-  }
-
-  @AfterEach
-  void tearDown() throws IOException {
-    FileUtils.deleteDirectory(workingDirectory.toFile());
   }
 
   @Test

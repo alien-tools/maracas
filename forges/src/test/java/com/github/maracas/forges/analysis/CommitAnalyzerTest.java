@@ -15,10 +15,9 @@ import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.github.GitHubForge;
 import japicmp.model.JApiCompatibilityChange;
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
@@ -32,20 +31,15 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CommitAnalyzerTest {
-	final Path workingDirectory = Path.of("./test-clones");
+	@TempDir
+	Path workingDirectory;
 	Forge forge;
 	CommitAnalyzer analyzer;
 
 	@BeforeEach
 	void setUp() throws IOException {
-		FileUtils.deleteDirectory(workingDirectory.toFile());
 		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
 		analyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
-	}
-
-	@AfterEach
-	void tearDown() throws IOException {
-		FileUtils.deleteDirectory(workingDirectory.toFile());
 	}
 
 	@Test
@@ -75,15 +69,15 @@ class CommitAnalyzerTest {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./test-clones/ca"));
+		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i1.getBrokenUses(), hasSize(1));
 		BrokenUse bu = i1.getBrokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("a.a()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./test-clones/cb"));
-		assertThat(i1.getThrowable(), is(nullValue()));
+		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
+		assertThat(i2.getThrowable(), is(nullValue()));
 		assertThat(i2.getBrokenUses(), is(empty()));
 	}
 
@@ -114,15 +108,15 @@ class CommitAnalyzerTest {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(Path.of("./test-clones/cb"));
+		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
 		assertThat(i1.getThrowable(), is(nullValue()));
 		assertThat(i1.getBrokenUses(), hasSize(1));
 		BrokenUse bu = i1.getBrokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(Path.of("./test-clones/ca"));
-		assertThat(i1.getThrowable(), is(nullValue()));
+		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
+		assertThat(i2.getThrowable(), is(nullValue()));
 		assertThat(i2.getBrokenUses(), is(empty()));
 	}
 

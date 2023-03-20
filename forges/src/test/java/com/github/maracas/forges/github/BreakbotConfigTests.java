@@ -1,6 +1,5 @@
 package com.github.maracas.forges.github;
 
-import com.github.maracas.forges.github.BreakbotConfig;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
