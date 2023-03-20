@@ -38,6 +38,7 @@ public class LibraryJar {
 	private static final Logger logger = LogManager.getLogger(LibraryJar.class);
 
 	private static final Path TMP_DIR;
+
 	// I can't seem to find a way to convince the compiler
 	// that TMP_DIR will be initialized without introducing
 	// an intermediate variable :(
@@ -173,14 +174,14 @@ public class LibraryJar {
 	}
 
 	private Path extractPomFromJar() {
-		try(JarFile jarFile = new JarFile(jar.toFile())) {
+		try (JarFile jarFile = new JarFile(jar.toFile())) {
 			List<JarEntry> poms = jarFile.stream().filter(e -> e.getName().endsWith("pom.xml")).toList();
 
 			if (poms.size() == 1) {
 				JarEntry pom = poms.get(0);
 				InputStream pomStream = jarFile.getInputStream(pom);
 
-				Path out = Files.createTempFile(TMP_DIR,"pom", ".xml");
+				Path out = Files.createTempFile(TMP_DIR, "pom", ".xml");
 				Files.copy(pomStream, out, StandardCopyOption.REPLACE_EXISTING);
 				return out;
 			} else

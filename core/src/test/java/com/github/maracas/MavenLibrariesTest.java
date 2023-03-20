@@ -3,26 +3,25 @@ package com.github.maracas;
 import japicmp.model.AccessModifier;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
 
 /**
  * Run the Maracas analysis on some popular libraries from Maven Central
@@ -30,7 +29,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @Tag("slow")
 class MavenLibrariesTest {
-	static final Path TMP_PATH = Path.of("./maracas-test-libs");
+	@TempDir
+	Path workingDirectory;
 
 	static Stream<Arguments> popularLibraries() {
 		return Stream.of(
@@ -54,16 +54,6 @@ class MavenLibrariesTest {
 			Arguments.of("org.mockito", "mockito-core", "3.12.4", "4.0.0"),
 			Arguments.of("com.github.gumtreediff", "core", "2.1.2", "3.0.0")
 		);
-	}
-
-	@BeforeAll
-	static void setUp() {
-		TMP_PATH.toFile().mkdirs();
-	}
-
-	@AfterAll
-	static void cleanUp() throws IOException {
-		FileUtils.deleteDirectory(TMP_PATH.toFile());
 	}
 
 	// The old version of the library is used as client for broken use analysis.
@@ -93,15 +83,21 @@ class MavenLibrariesTest {
 		AnalysisResult result = Maracas.analyze(query);
 		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
-		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
-			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
+		System.out.printf("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)%n",
+			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2);
 
-		result.delta().getBreakingChanges().forEach(bc -> assertThat(bc.getReference(), is(notNullValue())));
+		result.delta().getBreakingChanges().forEach(bc -> {
+			assertThat(bc.getReference(), is(notNullValue()));
+			assertThat(bc.getReference().getSimpleName(), is(not(emptyString())));
+			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
+			assertThat(bc.getSourceElement().getPosition(), is(not(instanceOf(NoSourcePosition.class))));
+		});
 		result.allBrokenUses().forEach(d -> {
 			assertThat(d.element(), is(notNullValue()));
 			assertThat(d.element().getPosition().isValidPosition(), is(true));
 			assertThat(d.usedApiElement(), is(notNullValue()));
 			assertThat(d.source(), is(notNullValue()));
+			assertThat(d.source().getSimpleName(), is(not(emptyString())));
 		});
 	}
 
@@ -132,8 +128,8 @@ class MavenLibrariesTest {
 		AnalysisResult result = Maracas.analyze(query);
 		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
-		System.out.println("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)".formatted(
-			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2));
+		System.out.printf("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)%n",
+			result.delta().getBreakingChanges().size(), result.allBrokenUses().size(), gid, aid, v1, v2);
 
 		result.delta().getBreakingChanges().forEach(bc -> assertThat(bc.getReference(), is(notNullValue())));
 		result.allBrokenUses().forEach(d -> {
@@ -154,33 +150,28 @@ class MavenLibrariesTest {
 			gid.replaceAll("\\.", "/"), aid, v, aid, v);
 	}
 
-	static Path download(String uri) {
-		try {
-			URL url = new URL(uri);
-			String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1);
-			Path dest = TMP_PATH.resolve(filename);
-			ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-			FileOutputStream fileOutputStream = new FileOutputStream(dest.toFile());
+	Path download(String uri) throws IOException {
+		URL url = new URL(uri);
+		String filename = url.getFile().substring(url.getFile().lastIndexOf("/") + 1);
+		Path dest = workingDirectory.resolve(filename);
+		ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+		try (FileOutputStream fileOutputStream = new FileOutputStream(dest.toFile())) {
 			fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
 			return dest;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
 		}
 	}
 
-	static Path downloadAndExtractSources(String uri) {
+	Path downloadAndExtractSources(String uri) throws IOException {
 		Path sourcesJar = download(uri);
 		String filename = sourcesJar.getFileName().toString();
-		Path dest = TMP_PATH.resolve(filename.substring(0, filename.length() - 4));
+		Path dest = workingDirectory.resolve(filename.substring(0, filename.length() - 4));
 		Path srcPath = dest.resolve("src/main/java");
-		srcPath.toFile().mkdir();
+		Files.createDirectories(srcPath);
 
-		try {
-			ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString());
+		try (ZipFile zipFile = new ZipFile(sourcesJar.toAbsolutePath().toString())) {
 			zipFile.extractAll(srcPath.toAbsolutePath().toString());
 		} catch (ZipException e) {
-			e.printStackTrace();
+			throw new IOException(e);
 		}
 
 		return dest;

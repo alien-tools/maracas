@@ -59,11 +59,11 @@ public class Delta {
 	 *
 	 * @param oldVersion the old version of the library
 	 * @param newVersion the new version of the library
-	 * @param classes the list of changes extracted using
-	 *                {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
-	 * @param options Maracas' options
-	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
+	 * @param classes    the list of changes extracted using
+	 *                   {@link japicmp.cmp.JarArchiveComparator#compare(japicmp.cmp.JApiCmpArchive, japicmp.cmp.JApiCmpArchive)}
+	 * @param options    Maracas' options
 	 * @return the corresponding delta model
+	 * @throws SpoonException if we cannot build the Spoon model from {@code oldJar}
 	 */
 	public static Delta fromJApiCmpDelta(LibraryJar oldVersion, LibraryJar newVersion, List<JApiClass> classes, MaracasOptions options) {
 		Objects.requireNonNull(oldVersion);

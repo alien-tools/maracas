@@ -25,9 +25,9 @@ public record MaracasReport(
 
 							return ClientReport.success(
 								client.githubWebUrl(),
-								impact.getBrokenUses()
+								impact.brokenUses()
 									.stream()
-									.map(bu -> BrokenUseDto.of(bu, client, client.branch(), impact.getClient().getLocation()))
+									.map(bu -> BrokenUseDto.of(bu, client, client.branch(), impact.client().getLocation()))
 									.toList()
 							);
 						})

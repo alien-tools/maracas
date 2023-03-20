@@ -66,15 +66,15 @@ class PullRequestAnalyzerTest {
     assertThat(resultA.clientResults(), is(aMapWithSize(2)));
 
     DeltaImpact ia1 = resultA.clientResults().get(clientA);
-    assertThat(ia1.getThrowable(), is(nullValue()));
-    assertThat(ia1.getBrokenUses(), hasSize(1));
-    BrokenUse bua = ia1.getBrokenUses().iterator().next();
+    assertThat(ia1.throwable(), is(nullValue()));
+    assertThat(ia1.brokenUses(), hasSize(1));
+    BrokenUse bua = ia1.brokenUses().iterator().next();
     assertThat(bua.use(), is(APIUse.METHOD_INVOCATION));
     assertThat(bua.element().toString(), is("a.a()"));
 
     DeltaImpact ia2 = resultA.clientResults().get(clientB);
-    assertThat(ia2.getThrowable(), is(nullValue()));
-    assertThat(ia2.getBrokenUses(), is(empty()));
+    assertThat(ia2.throwable(), is(nullValue()));
+    assertThat(ia2.brokenUses(), is(empty()));
 
     // nested-b
     assertThat(resultB.error(), is(emptyOrNullString()));
@@ -88,15 +88,15 @@ class PullRequestAnalyzerTest {
     assertThat(resultB.clientResults(), is(aMapWithSize(2)));
 
     DeltaImpact ib1 = resultB.clientResults().get(clientB);
-    assertThat(ib1.getThrowable(), is(nullValue()));
-    assertThat(ib1.getBrokenUses(), hasSize(1));
-    BrokenUse bub = ib1.getBrokenUses().iterator().next();
+    assertThat(ib1.throwable(), is(nullValue()));
+    assertThat(ib1.brokenUses(), hasSize(1));
+    BrokenUse bub = ib1.brokenUses().iterator().next();
     assertThat(bub.use(), is(APIUse.METHOD_INVOCATION));
     assertThat(bub.element().toString(), is("nestedB.nestedB()"));
 
     DeltaImpact ib2 = resultB.clientResults().get(clientA);
-    assertThat(ib2.getThrowable(), is(nullValue()));
-    assertThat(ib2.getBrokenUses(), is(empty()));
+    assertThat(ib2.throwable(), is(nullValue()));
+    assertThat(ib2.brokenUses(), is(empty()));
   }
 
   @Test

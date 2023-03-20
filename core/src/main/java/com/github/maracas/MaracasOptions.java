@@ -117,13 +117,21 @@ public class MaracasOptions {
 		return maxClassLines;
 	}
 
-	public int getClientsPerPackage() { return clientsPerPackage; }
+	public int getClientsPerPackage() {
+		return clientsPerPackage;
+	}
 
-	public int getMinStarsPerClient() { return minStarsPerClient; }
+	public int getMinStarsPerClient() {
+		return minStarsPerClient;
+	}
 
-	public int getCloneTimeoutSeconds() { return cloneTimeoutSeconds; }
+	public int getCloneTimeoutSeconds() {
+		return cloneTimeoutSeconds;
+	}
 
-	public int getBuildTimeoutSeconds() { return buildTimeoutSeconds; }
+	public int getBuildTimeoutSeconds() {
+		return buildTimeoutSeconds;
+	}
 
 	public Options getJApiOptions() {
 		return jApiOptions;

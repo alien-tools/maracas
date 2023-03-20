@@ -1,6 +1,11 @@
 package com.github.maracas.util;
 
-import spoon.reflect.code.*;
+import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtIf;
+import spoon.reflect.code.CtLoop;
+import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtSynchronized;
+import spoon.reflect.code.CtThrow;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;

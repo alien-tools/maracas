@@ -1,7 +1,14 @@
 package com.github.maracas.delta;
 
 import com.github.maracas.util.SpoonHelpers;
-import japicmp.model.*;
+import japicmp.model.JApiAnnotation;
+import japicmp.model.JApiClass;
+import japicmp.model.JApiCompatibilityChange;
+import japicmp.model.JApiConstructor;
+import japicmp.model.JApiField;
+import japicmp.model.JApiImplementedInterface;
+import japicmp.model.JApiMethod;
+import japicmp.model.JApiSuperclass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;

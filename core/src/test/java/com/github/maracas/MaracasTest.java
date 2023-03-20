@@ -190,7 +190,7 @@ class MaracasTest {
 	void computeBrokenUses_isValid() {
 		Delta delta = Maracas.computeDelta(v1, v2);
 		DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
-		Set<BrokenUse> ds = deltaImpact.getBrokenUses();
+		Set<BrokenUse> ds = deltaImpact.brokenUses();
 
 		assertThat(ds, is(not(empty())));
 		// No hasProperty() on records :(

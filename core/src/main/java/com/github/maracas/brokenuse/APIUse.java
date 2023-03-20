@@ -1,7 +1,7 @@
 package com.github.maracas.brokenuse;
 
 /**
- * Represents how a particular element in client source code uses a declaration impacted by a breaking change, e.g.:
+ * Represents how a particular element in client code uses a declaration impacted by a breaking change, e.g.:
  * <ul>
  *   <li>{@code obj.removedMethod()} uses {@code removedMethod()} through {@code METHOD_INVOCATION}</li>
  *   <li>{@code throw new RemovedException()} uses {@code RemovedException} through {@code THROWS}</li>

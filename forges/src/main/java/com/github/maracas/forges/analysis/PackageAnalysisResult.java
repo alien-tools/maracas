@@ -27,7 +27,7 @@ public record PackageAnalysisResult(
   public List<BrokenUse> allBrokenUses() {
     return clientResults.values()
       .stream()
-      .map(DeltaImpact::getBrokenUses)
+      .map(DeltaImpact::brokenUses)
       .flatMap(Collection::stream)
       .toList();
   }
@@ -35,7 +35,7 @@ public record PackageAnalysisResult(
   public List<Repository> brokenClients() {
     return clientResults.keySet()
       .stream()
-      .filter(c -> !clientResults.get(c).getBrokenUses().isEmpty())
+      .filter(c -> !clientResults.get(c).brokenUses().isEmpty())
       .toList();
   }
 }

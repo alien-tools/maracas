@@ -12,37 +12,23 @@ import spoon.reflect.reference.CtReference;
 import java.util.Objects;
 
 /**
- * A broken use is a source code location in client code that is impacted
- * by a breaking change.
+ * A broken use is a source code location in client code that is impacted by a breaking change.
+ *
+ * @param element        the impacted {@link CtElement} in the client's AST
+ * @param usedApiElement the {@link CtElement} in the library's code that is directly used by the {@link #element}
+ * @param source         the original declaration affected by a breaking change in the library's code
+ *                       (often times the same as {@link #usedApiElement})
+ * @param use            the kind of use relationship between the {@link #element} and {@link #usedApiElement}
+ * @param change         the kind of breaking change affecting {@link #source}
  */
 public record BrokenUse(
-	/*
-	  The impacted {@link CtElement} in the client's AST
-	 */
 	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement element,
-
-	/*
-	  The {@link CtElement} in the library's code that is directly used by the {@link #element}
-	 */
 	@JsonSerialize(using = CtElementSerializer.class)
 	CtElement usedApiElement,
-
-	/*
-	  The original declaration affected by a breaking change in the library's code (often times the same as
-	  {@link #usedApiElement})
-	 */
 	@JsonSerialize(using = ToStringSerializer.class)
 	CtReference source,
-
-	/*
-	  The kind of use relationship between the {@link #element} and {@link #usedApiElement}
-	 */
 	APIUse use,
-
-	/*
-	  The kind of breaking change affecting {@link #source}
-	 */
 	JApiCompatibilityChange change
 ) {
 	public BrokenUse {
@@ -56,10 +42,10 @@ public record BrokenUse(
 	public String toString() {
 		return """
 			[%s]
-				Element: %s (%s:%d)
-				Used:    %s
-				Source:  %s
-				Use:     %s\
+			    Element: %s (%s:%d)
+			    Used:    %s
+			    Source:  %s
+			    Use:     %s
 			""".formatted(
 			change,
 			element instanceof CtNamedElement namedElement ? namedElement.getSimpleName() : element.toString(),

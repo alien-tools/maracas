@@ -78,7 +78,7 @@ public record AnalysisResult(
 	public Set<BrokenUse> allBrokenUses() {
 		return deltaImpacts.values()
 			.stream()
-			.map(DeltaImpact::getBrokenUses)
+			.map(DeltaImpact::brokenUses)
 			.flatMap(Collection::stream)
 			.collect(toSet());
 	}
@@ -89,7 +89,7 @@ public record AnalysisResult(
 	public Set<DeltaImpact> brokenClients() {
 		return deltaImpacts.values()
 			.stream()
-			.filter(i -> !i.getBrokenUses().isEmpty())
+			.filter(i -> !i.brokenUses().isEmpty())
 			.collect(toSet());
 	}
 

@@ -188,8 +188,8 @@ public class AnalyzeRepositoryHistory {
 
 								String clientErrors = result.deltaImpacts().values().stream().map(
 									i ->
-										i.getThrowable() != null
-											? i.getThrowable().getClass().toString() + ":" + i.getThrowable().getMessage()
+										i.throwable() != null
+											? i.toString().getClass().toString() + ":" + i.throwable().getMessage()
 											: "none"
 								).collect(joining("+"));
 

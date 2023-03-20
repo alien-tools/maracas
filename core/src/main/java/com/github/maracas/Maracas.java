@@ -37,7 +37,7 @@ public class Maracas {
 	 * @param query The query to analyze
 	 * @return the resulting {@link AnalysisResult} with delta and broken uses
 	 * @throws NullPointerException if query is null
-	 * @throws SpoonException if we cannot build the Spoon model from the old JAR or source directory
+	 * @throws SpoonException       if we cannot build the Spoon model from the old JAR or source directory
 	 */
 	public static AnalysisResult analyze(AnalysisQuery query) {
 		Objects.requireNonNull(query);
@@ -65,10 +65,10 @@ public class Maracas {
 	 *
 	 * @param oldVersion the library's old version
 	 * @param newVersion the library's new version
-	 * @param options Maracas and JApiCmp options
+	 * @param options    Maracas and JApiCmp options
 	 * @return a new delta model based on JapiCmp's results
 	 * @throws NullPointerException if oldVersion or newVersion is null
-	 * @throws SpoonException if we cannot build the Spoon model from the old version
+	 * @throws SpoonException       if we cannot build the Spoon model from the old version
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
 	 * @see #computeDelta(LibraryJar, LibraryJar, MaracasOptions)
 	 */
@@ -107,12 +107,12 @@ public class Maracas {
 	 * Computes the impact the {@code delta} model has on {@code client} and
 	 * returns the corresponding {@link DeltaImpact}.
 	 *
-	 * @param client the client to analyze
-	 * @param delta  the delta model
+	 * @param client  the client to analyze
+	 * @param delta   the delta model
 	 * @param options Maracas' options passed to the analysis
 	 * @return the corresponding {@link DeltaImpact}, possibly holding a {@link Throwable} if a problem was encountered
-	 * @throws NullPointerException     if client or delta is null
-	 * @throws SpoonException           if we cannot build the Spoon model from {@code client}
+	 * @throws NullPointerException if client or delta is null
+	 * @throws SpoonException       if we cannot build the Spoon model from {@code client}
 	 */
 	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta, MaracasOptions options) {
 		Objects.requireNonNull(client);

@@ -7,7 +7,6 @@ import com.github.maracas.visitors.MethodNowAbstractVisitor;
 import com.github.maracas.visitors.MethodNowFinalVisitor;
 import com.github.maracas.visitors.MethodRemovedVisitor;
 import com.github.maracas.visitors.MethodReturnTypeChangedVisitor;
-
 import japicmp.model.JApiBehavior;
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiMethod;
@@ -45,27 +44,29 @@ public class MethodBreakingChange extends AbstractBreakingChange {
 				case METHOD_NOW_ABSTRACT         -> new MethodNowAbstractVisitor(mRef);
 				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToMethodVisitor(mRef);
 				case METHOD_RETURN_TYPE_CHANGED  -> {
-						String newTypeName = ((JApiMethod) jApiMethod).getReturnType().getNewReturnType();
-						CtTypeReference<?> newType = mRef.getFactory().Type().createReference(newTypeName);
-						yield new MethodReturnTypeChangedVisitor(mRef, newType);
+					String newTypeName = ((JApiMethod) jApiMethod).getReturnType().getNewReturnType();
+					CtTypeReference<?> newType = mRef.getFactory().Type().createReference(newTypeName);
+					yield new MethodReturnTypeChangedVisitor(mRef, newType);
 				}
-				case METHOD_LESS_ACCESSIBLE -> null; // TODO: To be implemented
-				case METHOD_IS_STATIC_AND_OVERRIDES_NOT_STATIC -> null; // TODO: To be implemented
-				case METHOD_NOW_STATIC -> null; // TODO: To be implemented
-				case METHOD_NO_LONGER_STATIC -> null; // TODO: To be implemented
-				case METHOD_ADDED_TO_INTERFACE -> null; // TODO: To be implemented
-				case METHOD_NOW_THROWS_CHECKED_EXCEPTION -> null; // TODO: To be implemented
-				case METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION -> null; // TODO: To be implemented
-				case METHOD_ABSTRACT_NOW_DEFAULT -> null; // TODO: To be implemented
-				case CONSTRUCTOR_LESS_ACCESSIBLE -> null; // TODO: To be implemented
-				case METHOD_NOW_VARARGS -> null; // TODO: To be implemented
-				case METHOD_NO_LONGER_VARARGS -> null; // TODO: To be implemented
-				case METHOD_MOVED_TO_SUPERCLASS -> null; // TODO: To be implemented
-				case METHOD_PARAMETER_GENERICS_CHANGED -> null; // TODO: To be implemented
-				case METHOD_RETURN_TYPE_GENERICS_CHANGED -> null; // TODO: To be implemented
-				case CLASS_GENERIC_TEMPLATE_CHANGED -> null; // TODO: To be implemented
-				case CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null; // TODO: To be implemented
-				default -> throw new IllegalStateException(this + " was somehow associated to a non-method-level breaking change: " + change);
+				// TODO: to be implemented
+				case METHOD_LESS_ACCESSIBLE,
+					METHOD_IS_STATIC_AND_OVERRIDES_NOT_STATIC,
+					METHOD_NOW_STATIC,
+					METHOD_NO_LONGER_STATIC,
+					METHOD_ADDED_TO_INTERFACE,
+					METHOD_NOW_THROWS_CHECKED_EXCEPTION,
+					METHOD_NO_LONGER_THROWS_CHECKED_EXCEPTION,
+					METHOD_ABSTRACT_NOW_DEFAULT,
+					CONSTRUCTOR_LESS_ACCESSIBLE,
+					METHOD_NOW_VARARGS,
+					METHOD_NO_LONGER_VARARGS,
+					METHOD_MOVED_TO_SUPERCLASS,
+					METHOD_PARAMETER_GENERICS_CHANGED,
+					METHOD_RETURN_TYPE_GENERICS_CHANGED,
+					CLASS_GENERIC_TEMPLATE_CHANGED,
+					CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null;
+				default ->
+					throw new IllegalStateException(this + " was somehow associated to a non-method-level breaking change: " + change);
 			};
 	}
 }

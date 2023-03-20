@@ -1,6 +1,17 @@
 package com.github.maracas.delta;
 
-import com.github.maracas.visitors.*;
+import com.github.maracas.visitors.AnnotationDeprecatedAddedToClassVisitor;
+import com.github.maracas.visitors.BreakingChangeVisitor;
+import com.github.maracas.visitors.ClassLessAccessibleVisitor;
+import com.github.maracas.visitors.ClassNowAbstractVisitor;
+import com.github.maracas.visitors.ClassNowCheckedExceptionVisitor;
+import com.github.maracas.visitors.ClassNowFinalVisitor;
+import com.github.maracas.visitors.ClassRemovedVisitor;
+import com.github.maracas.visitors.InterfaceAddedVisitor;
+import com.github.maracas.visitors.InterfaceRemovedVisitor;
+import com.github.maracas.visitors.MethodAddedToInterfaceVisitor;
+import com.github.maracas.visitors.SuperclassAddedVisitor;
+import com.github.maracas.visitors.SuperclassRemovedVisitor;
 import japicmp.model.JApiChangeStatus;
 import japicmp.model.JApiClass;
 import japicmp.model.JApiCompatibilityChange;
@@ -66,11 +77,12 @@ public class TypeBreakingChange extends AbstractBreakingChange {
 					CtTypeReference<?> oldSuper = clsRef.getFactory().Type().createReference(superClass.getSuperclassOld());
 					yield new SuperclassRemovedVisitor(clsRef, oldSuper);
 				}
-				case METHOD_ABSTRACT_ADDED_TO_CLASS -> null; // TODO: To be implemented
-				case METHOD_NEW_DEFAULT -> null; // TODO: To be implemented
-				case CLASS_TYPE_CHANGED -> null; // TODO: To be implemented
-				case CLASS_GENERIC_TEMPLATE_CHANGED -> null; // TODO: To be implemented
-				case CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null; // TODO: To be implemented
+				// TODO: To be implemented
+				case METHOD_ABSTRACT_ADDED_TO_CLASS,
+					METHOD_NEW_DEFAULT,
+					CLASS_TYPE_CHANGED,
+					CLASS_GENERIC_TEMPLATE_CHANGED,
+					CLASS_GENERIC_TEMPLATE_GENERICS_CHANGED -> null;
 				default ->
 					throw new IllegalStateException(this + " was somehow associated to a non-class-level breaking change: " + change);
 			};

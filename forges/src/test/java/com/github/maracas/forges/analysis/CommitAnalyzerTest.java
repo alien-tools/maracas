@@ -70,15 +70,15 @@ class CommitAnalyzerTest {
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
 		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
-		assertThat(i1.getThrowable(), is(nullValue()));
-		assertThat(i1.getBrokenUses(), hasSize(1));
-		BrokenUse bu = i1.getBrokenUses().iterator().next();
+		assertThat(i1.throwable(), is(nullValue()));
+		assertThat(i1.brokenUses(), hasSize(1));
+		BrokenUse bu = i1.brokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("a.a()"));
 
 		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
-		assertThat(i2.getThrowable(), is(nullValue()));
-		assertThat(i2.getBrokenUses(), is(empty()));
+		assertThat(i2.throwable(), is(nullValue()));
+		assertThat(i2.brokenUses(), is(empty()));
 	}
 
 	@Test
@@ -109,15 +109,15 @@ class CommitAnalyzerTest {
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
 		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
-		assertThat(i1.getThrowable(), is(nullValue()));
-		assertThat(i1.getBrokenUses(), hasSize(1));
-		BrokenUse bu = i1.getBrokenUses().iterator().next();
+		assertThat(i1.throwable(), is(nullValue()));
+		assertThat(i1.brokenUses(), hasSize(1));
+		BrokenUse bu = i1.brokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
 
 		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
-		assertThat(i2.getThrowable(), is(nullValue()));
-		assertThat(i2.getBrokenUses(), is(empty()));
+		assertThat(i2.throwable(), is(nullValue()));
+		assertThat(i2.brokenUses(), is(empty()));
 	}
 
 	@Test

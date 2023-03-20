@@ -109,7 +109,7 @@ public class MaracasValidator {
         SourcesDirectory client = SourcesDirectory.of(srcClient);
         Delta delta = Maracas.computeDelta(v1, v2);
         DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
-        this.brokenUses = deltaImpact.getBrokenUses();
+        this.brokenUses = deltaImpact.brokenUses();
 
         logger.info("Updating and compiling client source code");
         MavenHelper.updateDependency(srcClient, pomClient, upgrade);

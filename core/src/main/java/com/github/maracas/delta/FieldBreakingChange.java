@@ -8,7 +8,6 @@ import com.github.maracas.visitors.FieldNowFinalVisitor;
 import com.github.maracas.visitors.FieldNowStaticVisitor;
 import com.github.maracas.visitors.FieldRemovedVisitor;
 import com.github.maracas.visitors.FieldTypeChangedVisitor;
-
 import japicmp.model.JApiCompatibilityChange;
 import japicmp.model.JApiField;
 import javassist.NotFoundException;
@@ -40,12 +39,13 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 	public BreakingChangeVisitor getVisitor() {
 		return
 			switch (change) {
-				case FIELD_REMOVED          -> new FieldRemovedVisitor(fRef);
-				case FIELD_NOW_FINAL        -> new FieldNowFinalVisitor(fRef);
-				case FIELD_NO_LONGER_STATIC -> new FieldNoLongerStaticVisitor(fRef);
-				case FIELD_NOW_STATIC       -> new FieldNowStaticVisitor(fRef);
-				case FIELD_LESS_ACCESSIBLE  -> new FieldLessAccessibleVisitor(fRef, jApiField.getAccessModifier().getNewModifier().get());
-				case FIELD_TYPE_CHANGED     -> {
+				case FIELD_REMOVED               -> new FieldRemovedVisitor(fRef);
+				case FIELD_NOW_FINAL             -> new FieldNowFinalVisitor(fRef);
+				case FIELD_NO_LONGER_STATIC      -> new FieldNoLongerStaticVisitor(fRef);
+				case FIELD_NOW_STATIC            -> new FieldNowStaticVisitor(fRef);
+				case FIELD_LESS_ACCESSIBLE       -> new FieldLessAccessibleVisitor(fRef, jApiField.getAccessModifier().getNewModifier().get());
+				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToFieldVisitor(fRef);
+				case FIELD_TYPE_CHANGED -> {
 					try {
 						// Thanks for the checked exception japi <3
 						String newTypeName = jApiField.getNewFieldOptional().get().getType().getName();
@@ -55,10 +55,10 @@ public class FieldBreakingChange extends AbstractBreakingChange {
 						throw new IllegalStateException("japicmp gave us a FIELD_TYPE_CHANGED without the new type of the field");
 					}
 				}
-				case ANNOTATION_DEPRECATED_ADDED -> new AnnotationDeprecatedAddedToFieldVisitor(fRef);
-				case FIELD_STATIC_AND_OVERRIDES_STATIC -> null; // TODO: To be implemented
-				case FIELD_GENERICS_CHANGED -> null; // TODO: To be implemented
-				default -> throw new IllegalStateException(this + " was somehow associated to a non-field-level breaking change: " + change);
+				// TODO: To be implemented
+				case FIELD_STATIC_AND_OVERRIDES_STATIC, FIELD_GENERICS_CHANGED -> null;
+				default ->
+					throw new IllegalStateException(this + " was somehow associated to a non-field-level breaking change: " + change);
 			};
 	}
 }
