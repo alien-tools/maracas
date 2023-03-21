@@ -43,6 +43,9 @@ public class GitHubForge implements Forge {
 	public GitHubForge(GitHub gh) {
 		this.gh = Objects.requireNonNull(gh);
 
+		if (gh.isAnonymous())
+			logger.warn("Unauthenticated access to GitHub APIs; likely to hit rate limit soon");
+
 		Path dir;
 		try {
 			dir = Files.createTempDirectory("clients").toAbsolutePath();
