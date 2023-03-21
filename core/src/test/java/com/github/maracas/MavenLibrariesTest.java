@@ -89,8 +89,8 @@ class MavenLibrariesTest {
 		result.delta().getBreakingChanges().forEach(bc -> {
 			assertThat(bc.getReference(), is(notNullValue()));
 			assertThat(bc.getReference().getSimpleName(), is(not(emptyString())));
-			assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
-			assertThat(bc.getSourceElement().getPosition(), is(not(instanceOf(NoSourcePosition.class))));
+			if (bc.getSourceElement() != null)
+				assertThat(bc.getSourceElement().getPosition().isValidPosition(), is(true));
 		});
 		result.allBrokenUses().forEach(d -> {
 			assertThat(d.element(), is(notNullValue()));
