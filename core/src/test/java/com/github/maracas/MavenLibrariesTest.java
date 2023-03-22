@@ -80,7 +80,7 @@ class MavenLibrariesTest {
 			.options(opts)
 			.build();
 
-		AnalysisResult result = Maracas.analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.printf("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)%n",
@@ -125,7 +125,7 @@ class MavenLibrariesTest {
 			.client(client)
 			.build();
 
-		AnalysisResult result = Maracas.analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 		result.delta().populateLocations();
 		assertThat(result.delta(), is(notNullValue()));
 		System.out.printf("Found %s breaking changes and %d broken uses in %s:%s (%s -> %s)%n",

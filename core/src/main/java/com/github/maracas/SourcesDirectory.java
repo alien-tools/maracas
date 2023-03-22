@@ -74,4 +74,17 @@ public class SourcesDirectory {
 	public String toString() {
 		return String.format("SourceDirectory %s", location);
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SourcesDirectory that = (SourcesDirectory) o;
+		return com.google.common.base.Objects.equal(location, that.location);
+	}
+
+	@Override
+	public int hashCode() {
+		return com.google.common.base.Objects.hashCode(location);
+	}
 }

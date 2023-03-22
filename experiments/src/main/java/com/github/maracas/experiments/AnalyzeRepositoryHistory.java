@@ -1,6 +1,7 @@
 package com.github.maracas.experiments;
 
 import com.github.maracas.AnalysisResult;
+import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.CommitBuilder;
@@ -119,7 +120,7 @@ public class AnalyzeRepositoryHistory {
 
 		while (iterator.hasNext()) {
 			var prs = iterator.nextPage().stream().filter(this::affectsJavaFiles).toList();
-			var analyzer = new CommitAnalyzer();
+			var analyzer = new CommitAnalyzer(new Maracas());
 			var executor = Executors.newFixedThreadPool(threads);
 			var csvPath = workingDirectory.resolve("%s-%s.csv".formatted(owner, name));
 			var csvFile = new File(csvPath.toAbsolutePath().toString());

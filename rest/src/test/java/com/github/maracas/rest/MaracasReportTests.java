@@ -49,7 +49,7 @@ class MaracasReportTests {
 			.newVersion(v2)
 			.client(c1)
 			.build();
-		AnalysisResult result = Maracas.analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 
 		GitHubForge forge = new GitHubForge(github);
 		PullRequest pr = forge.fetchPullRequest("alien-tools", "comp-changes", 6);

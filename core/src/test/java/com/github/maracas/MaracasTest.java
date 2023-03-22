@@ -30,6 +30,7 @@ import japicmp.model.JApiCompatibilityChange;
 import spoon.reflect.cu.position.NoSourcePosition;
 
 class MaracasTest {
+	final Maracas maracas = new Maracas();
 	final LibraryJar v1 = LibraryJar.withoutSources(TestData.compChangesV1);
 	final LibraryJar v1WithSources = LibraryJar.withSources(TestData.compChangesV1, SourcesDirectory.of(TestData.compChangesSources));
 	final LibraryJar v2 = LibraryJar.withoutSources(TestData.compChangesV2);
@@ -38,7 +39,7 @@ class MaracasTest {
 
 	@Test
 	void analyze_QueryWithoutClient_hasNoBrokenUse() {
-		AnalysisResult res = Maracas.analyze(
+		AnalysisResult res = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -55,7 +56,7 @@ class MaracasTest {
 
 	@Test
 	void analyze_QueryWithTwoClients_hasTwoClientBrokenUses() {
-		AnalysisResult res = Maracas.analyze(
+		AnalysisResult res = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -71,7 +72,7 @@ class MaracasTest {
 
 	@Test
 	void analyze_QueryWithSources_hasSourceLocations() {
-		AnalysisResult res = Maracas.analyze(
+		AnalysisResult res = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1WithSources)
 				.newVersion(v2)
@@ -90,14 +91,14 @@ class MaracasTest {
 		MaracasOptions privateOpts = MaracasOptions.newDefault();
 		privateOpts.getJApiOptions().setAccessModifier(AccessModifier.PRIVATE);
 
-		AnalysisResult resPublic = Maracas.analyze(
+		AnalysisResult resPublic = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
 				.options(publicOpts)
 				.build());
 
-		AnalysisResult resPrivate = Maracas.analyze(
+		AnalysisResult resPrivate = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -110,7 +111,7 @@ class MaracasTest {
 
 	@Test
 	void analyze_QueryWithExcludedBC_IsConsidered() {
-		AnalysisResult resWithoutOpts = Maracas.analyze(
+		AnalysisResult resWithoutOpts = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -118,7 +119,7 @@ class MaracasTest {
 
 		MaracasOptions opts = MaracasOptions.newDefault();
 		opts.excludeBreakingChange(JApiCompatibilityChange.METHOD_REMOVED);
-		AnalysisResult resWithOpts = Maracas.analyze(
+		AnalysisResult resWithOpts = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -137,7 +138,7 @@ class MaracasTest {
 
 	@Test
 	void analyze_QueryWithMaxClassLines_IsConsidered() {
-		AnalysisResult resWithoutOpts = Maracas.analyze(
+		AnalysisResult resWithoutOpts = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -146,7 +147,7 @@ class MaracasTest {
 
 		MaracasOptions opts = MaracasOptions.newDefault();
 		opts.setMaxClassLines(5);
-		AnalysisResult resWithOpts = Maracas.analyze(
+		AnalysisResult resWithOpts = maracas.analyze(
 			AnalysisQuery.builder()
 				.oldVersion(v1)
 				.newVersion(v2)
@@ -161,7 +162,7 @@ class MaracasTest {
 
 	@Test
 	void computeDelta_isValid() {
-		Delta d1 = Maracas.computeDelta(v1, v2);
+		Delta d1 = maracas.computeDelta(v1, v2);
 
 		assertThat(d1, is(notNullValue()));
 		assertThat(d1.getOldVersion(), is(equalTo(v1)));
@@ -173,7 +174,7 @@ class MaracasTest {
 			hasProperty("sourceElement", is(nullValue()))
 		)));
 
-		Delta d2 = Maracas.computeDelta(v1WithSources, v2);
+		Delta d2 = maracas.computeDelta(v1WithSources, v2);
 
 		assertThat(d2, is(notNullValue()));
 		assertThat(d2.getOldVersion(), is(equalTo(v1WithSources)));
@@ -188,8 +189,8 @@ class MaracasTest {
 
 	@Test
 	void computeBrokenUses_isValid() {
-		Delta delta = Maracas.computeDelta(v1, v2);
-		DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
+		Delta delta = maracas.computeDelta(v1, v2);
+		DeltaImpact deltaImpact = maracas.computeDeltaImpact(client, delta);
 		Set<BrokenUse> ds = deltaImpact.brokenUses();
 
 		assertThat(ds, is(not(empty())));
@@ -206,34 +207,34 @@ class MaracasTest {
 	@Test
 	void analyze_aNullQuery_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.analyze(null)
+			maracas.analyze(null)
 		);
 	}
 
 	@Test
 	void computeDelta_nullVersions_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDelta(v1, null)
+			maracas.computeDelta(v1, null)
 		);
 
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDelta(null, v2)
+			maracas.computeDelta(null, v2)
 		);
 	}
 
 	@Test
 	void computeDeltaImpact_nullClient_throwsException() {
-		Delta d = Maracas.computeDelta(v1, v2);
+		Delta d = maracas.computeDelta(v1, v2);
 
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDeltaImpact(null, d)
+			maracas.computeDeltaImpact(null, d)
 		);
 	}
 
 	@Test
 	void computeDeltaImpact_nullDelta_throwsException() {
 		assertThrows(NullPointerException.class, () ->
-			Maracas.computeDeltaImpact(client, null)
+			maracas.computeDeltaImpact(client, null)
 		);
 	}
 

@@ -103,12 +103,13 @@ public class MaracasValidator {
     public void validate(MatcherFilter filter) {
         // Compute Maracas data
         logger.info("Computing delta and broken uses for client {}", srcClient);
+        Maracas maracas = new Maracas();
         BuildHandler handler = new MavenBuildHandler(srcClient);
         LibraryJar v1 = LibraryJar.withoutSources(jarApi1);
         LibraryJar v2 = LibraryJar.withoutSources(jarApi2);
         SourcesDirectory client = SourcesDirectory.of(srcClient);
-        Delta delta = Maracas.computeDelta(v1, v2);
-        DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
+        Delta delta = maracas.computeDelta(v1, v2);
+        DeltaImpact deltaImpact = maracas.computeDeltaImpact(client, delta);
         this.brokenUses = deltaImpact.brokenUses();
 
         logger.info("Updating and compiling client source code");

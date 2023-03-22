@@ -1,5 +1,6 @@
 package com.github.maracas.experiments;
 
+import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.analysis.CommitAnalyzer;
@@ -59,7 +60,7 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var commitAnalyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
+		var commitAnalyzer = new CommitAnalyzer(new Maracas(), Executors.newFixedThreadPool(4));
 		var analyzer = new PullRequestAnalyzer(WORKING_DIRECTORY, forge, commitAnalyzer);
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {

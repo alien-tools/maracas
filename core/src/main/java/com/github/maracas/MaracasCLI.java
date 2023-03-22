@@ -46,7 +46,7 @@ public class MaracasCLI implements Runnable {
 				.newVersion(newVersion)
 				.clients(clients)
 				.build();
-			AnalysisResult result = Maracas.analyze(query);
+			AnalysisResult result = new Maracas().analyze(query);
 
 			System.out.println("""
 				+------------------+

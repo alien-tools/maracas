@@ -1,5 +1,6 @@
 package com.github.maracas.rest.services;
 
+import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
@@ -52,10 +53,10 @@ public class PullRequestService {
 
 		if (analysisWorkers > 0) {
 			ExecutorService executor = Executors.newFixedThreadPool(analysisWorkers);
-			CommitAnalyzer commitAnalyzer = new CommitAnalyzer(executor);
+			CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
 			this.analyzer = new PullRequestAnalyzer(clonePath, forge, commitAnalyzer, executor);
 		} else {
-			this.analyzer = new PullRequestAnalyzer(clonePath, forge, new CommitAnalyzer());
+			this.analyzer = new PullRequestAnalyzer(clonePath, forge, new CommitAnalyzer(new Maracas()));
 		}
 	}
 

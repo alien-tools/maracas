@@ -16,7 +16,7 @@ public class Main {
 			.client(client)
 			.build();
 
-		AnalysisResult result = Maracas.analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 		System.out.println("Changes: " + result.delta());
 		System.out.println("Impact:  " + result.allBrokenUses());
 	}

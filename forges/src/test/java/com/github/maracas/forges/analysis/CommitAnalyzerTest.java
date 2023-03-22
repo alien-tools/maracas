@@ -1,196 +1,325 @@
 package com.github.maracas.forges.analysis;
 
 import com.github.maracas.AnalysisResult;
+import com.github.maracas.LibraryJar;
+import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
-import com.github.maracas.brokenuse.APIUse;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
-import com.github.maracas.forges.Commit;
-import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
-import com.github.maracas.forges.github.GitHubForge;
-import japicmp.model.JApiCompatibilityChange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.kohsuke.github.GitHubBuilder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.AdditionalMatchers.gt;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class CommitAnalyzerTest {
-	@TempDir
-	Path workingDirectory;
-	Forge forge;
+	@Mock
+	Maracas maracas;
 	CommitAnalyzer analyzer;
+	Path jar = Path.of("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");
 
 	@BeforeEach
-	void setUp() throws IOException {
-		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		analyzer = new CommitAnalyzer(Executors.newFixedThreadPool(4));
+	void setUp() {
+		analyzer = new CommitAnalyzer(maracas, Executors.newFixedThreadPool(4));
 	}
 
 	@Test
-	void analyzeCommits_fixture_moduleA() {
-		Commit v1 = forge.fetchCommit("alien-tools", "repository-fixture", "15b08c");
-		Commit v2 = forge.fetchCommit("alien-tools", "repository-fixture", "b22087");
-		Commit client1 = forge.fetchCommit("alien-tools", "client-fixture-a", "0720ff");
-		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "d0718e");
-
-		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("module-a"))),
-			new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("module-a"))),
-			List.of(
-				new CommitBuilder(client1, workingDirectory.resolve("ca"), BuildConfig.newDefault()),
-				new CommitBuilder(client2, workingDirectory.resolve("cb"), BuildConfig.newDefault())
-			),
-			MaracasOptions.newDefault()
-		);
-
-		assertThat(result.error(), is(emptyOrNullString()));
-		assertThat(result.delta(), is(not(nullValue())));
-		assertThat(result.delta().getBreakingChanges(), hasSize(1));
-
-		BreakingChange bc = result.delta().getBreakingChanges().get(0);
-		assertThat(bc.getChange(), is(equalTo(JApiCompatibilityChange.METHOD_REMOVED)));
-		assertThat(bc.getReference().getSimpleName(), is(equalTo("a")));
-
-		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
-
-		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
-		assertThat(i1.throwable(), is(nullValue()));
-		assertThat(i1.brokenUses(), hasSize(1));
-		BrokenUse bu = i1.brokenUses().iterator().next();
-		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
-		assertThat(bu.element().toString(), is("a.a()"));
-
-		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
-		assertThat(i2.throwable(), is(nullValue()));
-		assertThat(i2.brokenUses(), is(empty()));
-	}
-
-	@Test
-	void analyzeCommits_fixture_nestedB() {
-		Commit v1 = forge.fetchCommit("alien-tools", "repository-fixture", "15b08c");
-		Commit v2 = forge.fetchCommit("alien-tools", "repository-fixture", "b22087");
-		Commit client1 = forge.fetchCommit("alien-tools", "client-fixture-a", "0720ff");
-		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "d0718e");
-
-		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("module-c/nested-b"))),
-			new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("module-c/nested-b"))),
-			List.of(
-				new CommitBuilder(client1, workingDirectory.resolve("ca"), BuildConfig.newDefault()),
-				new CommitBuilder(client2, workingDirectory.resolve("cb"), BuildConfig.newDefault())
-			),
-			MaracasOptions.newDefault()
-		);
-
-		assertThat(result.error(), is(emptyOrNullString()));
-		assertThat(result.delta(), is(not(nullValue())));
-		assertThat(result.delta().getBreakingChanges(), hasSize(1));
-
-		BreakingChange bc = result.delta().getBreakingChanges().get(0);
-		assertThat(bc.getChange(), is(equalTo(JApiCompatibilityChange.METHOD_REMOVED)));
-		assertThat(bc.getReference().getSimpleName(), is(equalTo("nestedB")));
-
-		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
-
-		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
-		assertThat(i1.throwable(), is(nullValue()));
-		assertThat(i1.brokenUses(), hasSize(1));
-		BrokenUse bu = i1.brokenUses().iterator().next();
-		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
-		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
-
-		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
-		assertThat(i2.throwable(), is(nullValue()));
-		assertThat(i2.brokenUses(), is(empty()));
-	}
-
-	@Test
-	void analyzeCommits_GumTree() {
-		Commit v1 = forge.fetchCommit("GumTreeDiff", "gumtree", "2570d34");
-		Commit v2 = forge.fetchCommit("GumTreeDiff", "gumtree", "7925aa5");
-		Commit client = forge.fetchCommit("SpoonLabs", "gumtree-spoon-ast-diff", "6533706");
-
-		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("core"))),
-			new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("core"))),
-			Collections.singletonList(new CommitBuilder(client, workingDirectory.resolve("client"))),
-			MaracasOptions.newDefault()
-		);
-
-		assertThat(result.delta(), is(not(nullValue())));
-		assertThat(result.deltaImpacts(), is(aMapWithSize(1)));
-	}
-
-	@Test
-	void computeDelta_maracas_withBuildTimeout() {
-		Commit v1 = forge.fetchCommit("alien-tools", "maracas", "b7e1cd");
-		Commit v2 = forge.fetchCommit("alien-tools", "maracas", "69a666");
-		CommitBuilder cb1 = new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("core")));
-		CommitBuilder cb2 = new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("core")));
+	void computeDelta_success() {
+		Path module = Path.of("moduleA");
+		LibraryJar v1 = LibraryJar.withSources(jar, SourcesDirectory.of(module));
+		LibraryJar v2 = LibraryJar.withoutSources(jar);
+		CommitBuilder builderV1 = mock();
+		CommitBuilder builderV2 = mock();
+		Delta emptyDelta = new Delta(v1, v2, Collections.emptyList());
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		opts.setBuildTimeoutSeconds(1);
-		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
-		assertThat(thrown.getMessage(), containsString("timed out"));
+		when(builderV1.getModulePath()).thenReturn(module);
+		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(maracas.computeDelta(v1, v2, opts)).thenReturn(emptyDelta);
+
+		Delta res = analyzer.computeDelta(builderV1, builderV2, opts);
+
+		assertThat(res.getOldVersion(), is(equalTo(v1)));
+		assertThat(res.getNewVersion(), is(equalTo(v2)));
+		assertThat(res.getBreakingChanges(), is(empty()));
+
+		verify(builderV1).cloneCommit(gt(0));
+		verify(builderV1).buildCommit(gt(0));
+		verify(builderV2).cloneCommit(gt(0));
+		verify(builderV2).buildCommit(gt(0));
+		verify(maracas).computeDelta(v1, v2, opts);
 	}
 
 	@Test
-	void computeDelta_maracas_withCloneTimeout() {
-		Commit v1 = forge.fetchCommit("alien-tools", "maracas", "b7e1cd");
-		Commit v2 = forge.fetchCommit("alien-tools", "maracas", "69a666");
-		CommitBuilder cb1 = new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("core")));
-		CommitBuilder cb2 = new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("core")));
+	void computeDelta_cloneException() {
+		CommitBuilder builderV1 = mock();
+		CommitBuilder builderV2 = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		opts.setCloneTimeoutSeconds(1);
-		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
-		assertThat(thrown.getMessage(), containsString("timed out"));
+		doThrow(new CloneException("nope")).when(builderV1).cloneCommit(gt(0));
+
+		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
+
+		assertThat(thrown.getMessage(), is(equalTo("nope")));
+
+		verify(builderV1).cloneCommit(gt(0));
+		verify(builderV2).cloneCommit(gt(0));
+		verify(builderV1, never()).buildCommit(anyInt());
+		verify(builderV2).buildCommit(gt(0));
+		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
 	@Test
-	void computeImpact_fixture_withCloneTimeout() {
-		Commit v1 = forge.fetchCommit("alien-tools", "repository-fixture", "15b08c0");
-		Commit v2 = forge.fetchCommit("alien-tools", "repository-fixture", "b220873");
-		Commit client1 = forge.fetchCommit("alien-tools", "client-fixture-a", "HEAD");
-		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "HEAD");
-		Commit client3 = forge.fetchCommit("torvalds", "linux", "HEAD");
+	void computeDelta_buildException() {
+		CommitBuilder builderV1 = mock();
+		CommitBuilder builderV2 = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		Delta delta = analyzer.computeDelta(
-			new CommitBuilder(v1, workingDirectory.resolve("v1"), new BuildConfig(Path.of("module-a"))),
-			new CommitBuilder(v2, workingDirectory.resolve("v2"), new BuildConfig(Path.of("module-a"))),
-			opts
-		);
+		when(builderV1.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
+		when(builderV2.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
 
-		opts.setCloneTimeoutSeconds(2);
-		AnalysisResult result = analyzer.computeImpact(
-			delta,
-			List.of(
-				new CommitBuilder(client1, workingDirectory.resolve("client1")),
-				new CommitBuilder(client2, workingDirectory.resolve("client2")),
-				new CommitBuilder(client3, workingDirectory.resolve("client3"))
-			),
-			opts
-		);
+		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
 
-		assertThat(result.deltaImpacts(), is(aMapWithSize(3)));
-		assertTrue(result.deltaImpacts().values().stream().anyMatch(i -> i.throwable() != null && i.throwable().getMessage().contains("timed out")));
+		assertThat(thrown.getMessage(), is(equalTo("nope")));
+
+		verify(builderV1).cloneCommit(gt(0));
+		verify(builderV1).buildCommit(gt(0));
+		verify(builderV2).cloneCommit(gt(0));
+		verify(builderV2).buildCommit(gt(0));
+		verify(maracas, never()).computeDelta(any(), any(), any());
+	}
+
+	@Test
+	void computeDelta_no_JAR_created() {
+		CommitBuilder builderV1 = mock();
+		CommitBuilder builderV2 = mock();
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.empty());
+		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+
+		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
+
+		assertThat(thrown.getMessage(), containsString("Couldn't find the JAR"));
+
+		verify(builderV1).cloneCommit(gt(0));
+		verify(builderV1).buildCommit(gt(0));
+		verify(builderV2).cloneCommit(gt(0));
+		verify(builderV2).buildCommit(gt(0));
+		verify(maracas, never()).computeDelta(any(), any(), any());
+	}
+
+	@Test
+	void computeImpact_two_clients_success() {
+		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		Path clientModule1 = Path.of("client1/module");
+		Path clientModule2 = Path.of("client2/module");
+		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
+		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
+		CommitBuilder client1 = mock();
+		CommitBuilder client2 = mock();
+
+		when(client1.getModulePath()).thenReturn(clientModule1);
+		when(client2.getModulePath()).thenReturn(clientModule2);
+		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
+			if (invocation.getArgument(0).equals(clientSources1))
+				return DeltaImpact.success(clientSources1, delta, Collections.emptySet());
+			else
+				return DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class)));
+		});
+
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+
+		assertThat(res.delta().getBreakingChanges(), hasSize(1));
+		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
+		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
+		assertThat(di1.brokenUses(), is(empty()));
+		assertThat(di1.throwable(), is(nullValue()));
+		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
+		assertThat(di2.brokenUses(), hasSize(1));
+		assertThat(di2.throwable(), is(nullValue()));
+
+		verify(client1).cloneCommit(gt(0));
+		verify(client2).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(clientSources1, delta, opts);
+		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+	}
+
+	@Test
+	void computeImpact_two_clients_one_analysis_fails() {
+		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		Path clientModule1 = Path.of("client1/module");
+		Path clientModule2 = Path.of("client2/module");
+		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
+		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
+		CommitBuilder client1 = mock();
+		CommitBuilder client2 = mock();
+
+		when(client1.getModulePath()).thenReturn(clientModule1);
+		when(client2.getModulePath()).thenReturn(clientModule2);
+		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
+			if (invocation.getArgument(0).equals(clientSources1))
+				return DeltaImpact.error(clientSources1, delta, new RuntimeException("nope"));
+			else
+				return DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class)));
+		});
+
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+
+		assertThat(res.delta().getBreakingChanges(), hasSize(1));
+		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
+		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
+		assertThat(di1.brokenUses(), is(empty()));
+		assertThat(di1.throwable(), is(not(nullValue())));
+		assertThat(di1.throwable().getMessage(), is(equalTo("nope")));
+		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
+		assertThat(di2.brokenUses(), hasSize(1));
+		assertThat(di2.throwable(), is(nullValue()));
+
+		verify(client1).cloneCommit(gt(0));
+		verify(client2).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(clientSources1, delta, opts);
+		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+	}
+
+	@Test
+	void computeImpact_two_clients_one_clone_timeout() {
+		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		Path clientModule1 = Path.of("client1/module");
+		Path clientModule2 = Path.of("client2/module");
+		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
+		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
+		CommitBuilder client1 = mock();
+		CommitBuilder client2 = mock();
+
+		when(client1.getModulePath()).thenReturn(clientModule1);
+		when(client2.getModulePath()).thenReturn(clientModule2);
+		doThrow(new CloneException("nope")).when(client1).cloneCommit(gt(0));
+		when(maracas.computeDeltaImpact(any(), any(), any())).thenReturn(DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class))));
+
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+
+		assertThat(res.delta().getBreakingChanges(), hasSize(1));
+		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
+		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
+		assertThat(di1.brokenUses(), is(empty()));
+		assertThat(di1.throwable(), is(not(nullValue())));
+		assertThat(di1.throwable().getMessage(), is(equalTo("nope")));
+		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
+		assertThat(di2.brokenUses(), hasSize(1));
+		assertThat(di2.throwable(), is(nullValue()));
+
+		verify(client1).cloneCommit(gt(0));
+		verify(client2).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+	}
+
+	@Test
+	void computeImpact_no_client() {
+		Path module = Path.of("moduleA");
+		LibraryJar v1 = LibraryJar.withSources(jar, SourcesDirectory.of(module));
+		LibraryJar v2 = LibraryJar.withoutSources(jar);
+		BreakingChange bc = mock();
+		Delta delta = new Delta(v1, v2, List.of(bc));
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		AnalysisResult res = analyzer.computeImpact(delta, Collections.emptyList(), opts);
+
+		assertThat(res.delta().getBreakingChanges(), hasSize(1));
+		assertThat(res.deltaImpacts(), is(anEmptyMap()));
+
+		verify(maracas, never()).computeDeltaImpact(any(), any(), any());
+	}
+
+	@Test
+	void computeImpact_no_BC_in_delta() {
+		Path module = Path.of("moduleA");
+		LibraryJar v1 = LibraryJar.withSources(jar, SourcesDirectory.of(module));
+		LibraryJar v2 = LibraryJar.withoutSources(jar);
+		Delta emptyDelta = new Delta(v1, v2, Collections.emptyList());
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		CommitBuilder client1 = mock();
+		CommitBuilder client2 = mock();
+
+		when(client1.getClonePath()).thenReturn(Path.of("client1"));
+		when(client2.getClonePath()).thenReturn(Path.of("client2"));
+
+		AnalysisResult res = analyzer.computeImpact(emptyDelta, List.of(client1, client2), opts);
+
+		assertThat(res.delta().getBreakingChanges(), is(empty()));
+		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
+
+		verify(maracas, never()).computeDeltaImpact(any(), any(), any());
+	}
+
+	@Test
+	void analyzeCommits_success() {
+		Path module = Path.of("moduleA");
+		LibraryJar v1 = LibraryJar.withSources(jar, SourcesDirectory.of(module));
+		LibraryJar v2 = LibraryJar.withoutSources(jar);
+		Delta emptyDelta = new Delta(v1, v2, Collections.emptyList());
+		MaracasOptions opts = MaracasOptions.newDefault();
+
+		CommitBuilder builderV1 = mock();
+		CommitBuilder builderV2 = mock();
+
+		when(builderV1.getModulePath()).thenReturn(module);
+		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(maracas.computeDelta(v1, v2, opts)).thenReturn(emptyDelta);
+
+		AnalysisResult res = analyzer.analyzeCommits(builderV1, builderV2, Collections.emptyList(), opts);
+
+		assertThat(res.error(), is(nullValue()));
+		assertThat(res.delta().getBreakingChanges(), is(empty()));
+		assertThat(res.deltaImpacts(), is(aMapWithSize(0)));
+
+		verify(builderV1).cloneCommit(gt(0));
+		verify(builderV1).buildCommit(gt(0));
+		verify(builderV2).cloneCommit(gt(0));
+		verify(builderV2).buildCommit(gt(0));
+		verify(maracas).computeDelta(v1, v2, opts);
 	}
 }

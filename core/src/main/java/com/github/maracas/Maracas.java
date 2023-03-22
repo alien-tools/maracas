@@ -26,11 +26,6 @@ import static java.util.stream.Collectors.toMap;
 public class Maracas {
 	private static final Logger logger = LogManager.getLogger(Maracas.class);
 
-	// Just use the static methods
-	private Maracas() {
-
-	}
-
 	/**
 	 * Analyzes the given {@code query}
 	 *
@@ -39,7 +34,7 @@ public class Maracas {
 	 * @throws NullPointerException if query is null
 	 * @throws SpoonException       if we cannot build the Spoon model from the old JAR or source directory
 	 */
-	public static AnalysisResult analyze(AnalysisQuery query) {
+	public AnalysisResult analyze(AnalysisQuery query) {
 		Objects.requireNonNull(query);
 
 		// Compute the delta model between old and new JARs
@@ -72,7 +67,7 @@ public class Maracas {
 	 * @see JarArchiveComparator#compare(JApiCmpArchive, JApiCmpArchive)
 	 * @see #computeDelta(LibraryJar, LibraryJar, MaracasOptions)
 	 */
-	public static Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion, MaracasOptions options) {
+	public Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion, MaracasOptions options) {
 		Objects.requireNonNull(oldVersion);
 		Objects.requireNonNull(newVersion);
 
@@ -99,7 +94,7 @@ public class Maracas {
 	/**
 	 * @see #computeDelta(LibraryJar, LibraryJar, MaracasOptions)
 	 */
-	public static Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion) {
+	public Delta computeDelta(LibraryJar oldVersion, LibraryJar newVersion) {
 		return computeDelta(oldVersion, newVersion, MaracasOptions.newDefault());
 	}
 
@@ -114,7 +109,7 @@ public class Maracas {
 	 * @throws NullPointerException if client or delta is null
 	 * @throws SpoonException       if we cannot build the Spoon model from {@code client}
 	 */
-	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta, MaracasOptions options) {
+	public DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta, MaracasOptions options) {
 		Objects.requireNonNull(client);
 		Objects.requireNonNull(delta);
 
@@ -146,7 +141,7 @@ public class Maracas {
 	/**
 	 * @see #computeDeltaImpact(SourcesDirectory, Delta, MaracasOptions)
 	 */
-	public static DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta) {
+	public DeltaImpact computeDeltaImpact(SourcesDirectory client, Delta delta) {
 		return computeDeltaImpact(client, delta, MaracasOptions.newDefault());
 	}
 }

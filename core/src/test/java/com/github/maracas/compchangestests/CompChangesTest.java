@@ -37,7 +37,7 @@ public class CompChangesTest {
 				.exclude("(*.)?unstablePkg(.*)?")
 				.build();
 
-		AnalysisResult result = Maracas.analyze(query);
+		AnalysisResult result = new Maracas().analyze(query);
 		brokenUses = result.allBrokenUses();
 	}
 

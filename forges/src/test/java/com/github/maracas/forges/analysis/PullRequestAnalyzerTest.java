@@ -1,5 +1,6 @@
 package com.github.maracas.forges.analysis;
 
+import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.brokenuse.APIUse;
 import com.github.maracas.brokenuse.BrokenUse;
@@ -37,7 +38,7 @@ class PullRequestAnalyzerTest {
   void setUp() throws IOException {
     ExecutorService executor = Executors.newFixedThreadPool(4);
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(executor);
+    CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
     analyzer = new PullRequestAnalyzer(workingDirectory, forge, commitAnalyzer, executor);
   }
 

@@ -97,6 +97,6 @@ public class OnTheFlyMaracasCase {
 			.client(client)
 			.build();
 
-		return Maracas.analyze(query);
+		return new Maracas().analyze(query);
 	}
 }

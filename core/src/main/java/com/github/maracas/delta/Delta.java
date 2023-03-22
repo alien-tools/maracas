@@ -45,10 +45,7 @@ public class Delta {
 
 	private static final Logger logger = LogManager.getLogger(Delta.class);
 
-	/**
-	 * @see #fromJApiCmpDelta(LibraryJar, LibraryJar, List, MaracasOptions)
-	 */
-	private Delta(LibraryJar oldVersion, LibraryJar newVersion, List<BreakingChange> breakingChanges) {
+	public Delta(LibraryJar oldVersion, LibraryJar newVersion, List<BreakingChange> breakingChanges) {
 		this.oldVersion = Objects.requireNonNull(oldVersion);
 		this.newVersion = Objects.requireNonNull(newVersion);
 		this.breakingChanges = Objects.requireNonNull(breakingChanges);

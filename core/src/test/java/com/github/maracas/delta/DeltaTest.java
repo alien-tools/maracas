@@ -17,7 +17,7 @@ class DeltaTest {
 
   @Test
   void test_JsonSerialization_WithSources() throws IOException {
-    AnalysisResult res = Maracas.analyze(
+    AnalysisResult res = new Maracas().analyze(
       AnalysisQuery.builder()
         .oldVersion(v1WithSources)
         .newVersion(v2)
@@ -30,7 +30,7 @@ class DeltaTest {
 
   @Test
   void test_JsonSerialization_WithoutSources() throws IOException {
-    AnalysisResult res = Maracas.analyze(
+    AnalysisResult res = new Maracas().analyze(
       AnalysisQuery.builder()
         .oldVersion(v1)
         .newVersion(v2)

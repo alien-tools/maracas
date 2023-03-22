@@ -3,6 +3,7 @@ package com.github.maracas;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.maracas.util.ParentLastURLClassLoader;
 import com.github.maracas.util.PathHelpers;
+import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -197,5 +198,18 @@ public class LibraryJar {
 	public String toString() {
 		return String.format("Library %s [jar=%s sources=%s]",
 			label, jar, sources);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		LibraryJar that = (LibraryJar) o;
+		return Objects.equal(jar, that.jar) && Objects.equal(label, that.label) && Objects.equal(sources, that.sources);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(jar, label, sources);
 	}
 }
