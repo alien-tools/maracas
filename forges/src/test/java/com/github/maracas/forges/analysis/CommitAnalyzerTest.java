@@ -37,8 +37,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.gt;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -87,40 +87,40 @@ class CommitAnalyzerTest {
 
 	@Test
 	void computeDelta_cloneException() {
-		CommitBuilder builderV1 = mock();
-		CommitBuilder builderV2 = mock();
+		CommitBuilder failedBuilder = mock();
+		CommitBuilder successBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		doThrow(new CloneException("nope")).when(builderV1).cloneCommit(gt(0));
+		doThrow(new CloneException("nope")).when(failedBuilder).cloneCommit(gt(0));
 
-		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
+		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(failedBuilder, successBuilder, opts));
 
 		assertThat(thrown.getMessage(), is(equalTo("nope")));
 
-		verify(builderV1).cloneCommit(gt(0));
-		verify(builderV2).cloneCommit(gt(0));
-		verify(builderV1, never()).buildCommit(anyInt());
-		verify(builderV2).buildCommit(gt(0));
+		verify(failedBuilder).cloneCommit(gt(0));
+		verify(failedBuilder, never()).buildCommit(gt(0));
+		verify(successBuilder, atMostOnce()).cloneCommit(gt(0));
+		verify(successBuilder, atMostOnce()).buildCommit(gt(0));
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
 	@Test
 	void computeDelta_buildException() {
-		CommitBuilder builderV1 = mock();
-		CommitBuilder builderV2 = mock();
+		CommitBuilder successBuilder = mock();
+		CommitBuilder failedBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		when(builderV1.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
-		when(builderV2.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
+		when(successBuilder.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(failedBuilder.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
 
-		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
+		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(successBuilder, failedBuilder, opts));
 
 		assertThat(thrown.getMessage(), is(equalTo("nope")));
 
-		verify(builderV1).cloneCommit(gt(0));
-		verify(builderV1).buildCommit(gt(0));
-		verify(builderV2).cloneCommit(gt(0));
-		verify(builderV2).buildCommit(gt(0));
+		verify(successBuilder, atMostOnce()).cloneCommit(gt(0));
+		verify(successBuilder, atMostOnce()).buildCommit(gt(0));
+		verify(failedBuilder).cloneCommit(gt(0));
+		verify(failedBuilder).buildCommit(gt(0));
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
