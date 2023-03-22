@@ -1,4 +1,4 @@
-package com.github.maracas.forges;
+package com.github.maracas.forges.integration;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
@@ -8,6 +8,8 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
+import com.github.maracas.forges.Commit;
+import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.analysis.CommitAnalyzer;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;

@@ -149,37 +149,37 @@ class CommitAnalyzerTest {
 		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		Path clientModule1 = Path.of("client1/module");
-		Path clientModule2 = Path.of("client2/module");
-		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
-		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
-		CommitBuilder client1 = mock();
-		CommitBuilder client2 = mock();
+		Path notBrokenModule = Path.of("not-broken/module");
+		Path brokenModule = Path.of("broken/module");
+		SourcesDirectory notBrokenSources = SourcesDirectory.of(notBrokenModule);
+		SourcesDirectory brokenSources = SourcesDirectory.of(brokenModule);
+		CommitBuilder notBrokenClient = mock();
+		CommitBuilder brokenClient = mock();
 
-		when(client1.getModulePath()).thenReturn(clientModule1);
-		when(client2.getModulePath()).thenReturn(clientModule2);
+		when(notBrokenClient.getModulePath()).thenReturn(notBrokenModule);
+		when(brokenClient.getModulePath()).thenReturn(brokenModule);
 		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
-			if (invocation.getArgument(0).equals(clientSources1))
-				return DeltaImpact.success(clientSources1, delta, Collections.emptySet());
+			if (invocation.getArgument(0).equals(notBrokenSources))
+				return DeltaImpact.success(notBrokenSources, delta, Collections.emptySet());
 			else
-				return DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class)));
+				return DeltaImpact.success(brokenSources, delta, Set.of(mock(BrokenUse.class)));
 		});
 
-		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(notBrokenClient, brokenClient), opts);
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
-		assertThat(di1.brokenUses(), is(empty()));
-		assertThat(di1.throwable(), is(nullValue()));
-		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
-		assertThat(di2.brokenUses(), hasSize(1));
-		assertThat(di2.throwable(), is(nullValue()));
+		DeltaImpact notBrokenImpact = res.deltaImpacts().get(notBrokenModule);
+		assertThat(notBrokenImpact.brokenUses(), is(empty()));
+		assertThat(notBrokenImpact.throwable(), is(nullValue()));
+		DeltaImpact brokenImpact = res.deltaImpacts().get(brokenModule);
+		assertThat(brokenImpact.brokenUses(), hasSize(1));
+		assertThat(brokenImpact.throwable(), is(nullValue()));
 
-		verify(client1).cloneCommit(gt(0));
-		verify(client2).cloneCommit(gt(0));
-		verify(maracas).computeDeltaImpact(clientSources1, delta, opts);
-		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+		verify(notBrokenClient).cloneCommit(gt(0));
+		verify(brokenClient).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(notBrokenSources, delta, opts);
+		verify(maracas).computeDeltaImpact(brokenSources, delta, opts);
 	}
 
 	@Test
@@ -187,38 +187,38 @@ class CommitAnalyzerTest {
 		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		Path clientModule1 = Path.of("client1/module");
-		Path clientModule2 = Path.of("client2/module");
-		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
-		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
-		CommitBuilder client1 = mock();
-		CommitBuilder client2 = mock();
+		Path failedModule = Path.of("failed-client/module");
+		Path successModule = Path.of("success-client/module");
+		SourcesDirectory failedSources = SourcesDirectory.of(failedModule);
+		SourcesDirectory successSources = SourcesDirectory.of(successModule);
+		CommitBuilder failedClient = mock();
+		CommitBuilder successClient = mock();
 
-		when(client1.getModulePath()).thenReturn(clientModule1);
-		when(client2.getModulePath()).thenReturn(clientModule2);
+		when(failedClient.getModulePath()).thenReturn(failedModule);
+		when(successClient.getModulePath()).thenReturn(successModule);
 		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
-			if (invocation.getArgument(0).equals(clientSources1))
-				return DeltaImpact.error(clientSources1, delta, new RuntimeException("nope"));
+			if (invocation.getArgument(0).equals(failedSources))
+				return DeltaImpact.error(failedSources, delta, new RuntimeException("nope"));
 			else
-				return DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class)));
+				return DeltaImpact.success(successSources, delta, Set.of(mock(BrokenUse.class)));
 		});
 
-		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(failedClient, successClient), opts);
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
-		assertThat(di1.brokenUses(), is(empty()));
-		assertThat(di1.throwable(), is(not(nullValue())));
-		assertThat(di1.throwable().getMessage(), is(equalTo("nope")));
-		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
-		assertThat(di2.brokenUses(), hasSize(1));
-		assertThat(di2.throwable(), is(nullValue()));
+		DeltaImpact failedImpact = res.deltaImpacts().get(failedModule);
+		assertThat(failedImpact.brokenUses(), is(empty()));
+		assertThat(failedImpact.throwable(), is(not(nullValue())));
+		assertThat(failedImpact.throwable().getMessage(), is(equalTo("nope")));
+		DeltaImpact successImpact = res.deltaImpacts().get(successModule);
+		assertThat(successImpact.brokenUses(), hasSize(1));
+		assertThat(successImpact.throwable(), is(nullValue()));
 
-		verify(client1).cloneCommit(gt(0));
-		verify(client2).cloneCommit(gt(0));
-		verify(maracas).computeDeltaImpact(clientSources1, delta, opts);
-		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+		verify(failedClient).cloneCommit(gt(0));
+		verify(successClient).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(failedSources, delta, opts);
+		verify(maracas).computeDeltaImpact(successSources, delta, opts);
 	}
 
 	@Test
@@ -226,33 +226,32 @@ class CommitAnalyzerTest {
 		Delta delta = new Delta(mock(), mock(), List.of(mock(BreakingChange.class)));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		Path clientModule1 = Path.of("client1/module");
-		Path clientModule2 = Path.of("client2/module");
-		SourcesDirectory clientSources1 = SourcesDirectory.of(clientModule1);
-		SourcesDirectory clientSources2 = SourcesDirectory.of(clientModule2);
-		CommitBuilder client1 = mock();
-		CommitBuilder client2 = mock();
+		Path timeoutModule = Path.of("client-timeout/module");
+		Path successModule = Path.of("client/module");
+		SourcesDirectory successSources = SourcesDirectory.of(successModule);
+		CommitBuilder timeoutClient = mock();
+		CommitBuilder successClient = mock();
 
-		when(client1.getModulePath()).thenReturn(clientModule1);
-		when(client2.getModulePath()).thenReturn(clientModule2);
-		doThrow(new CloneException("nope")).when(client1).cloneCommit(gt(0));
-		when(maracas.computeDeltaImpact(any(), any(), any())).thenReturn(DeltaImpact.success(clientSources2, delta, Set.of(mock(BrokenUse.class))));
+		when(timeoutClient.getModulePath()).thenReturn(timeoutModule);
+		when(successClient.getModulePath()).thenReturn(successModule);
+		doThrow(new CloneException("nope")).when(timeoutClient).cloneCommit(gt(0));
+		when(maracas.computeDeltaImpact(any(), any(), any())).thenReturn(DeltaImpact.success(successSources, delta, Set.of(mock(BrokenUse.class))));
 
-		AnalysisResult res = analyzer.computeImpact(delta, List.of(client1, client2), opts);
+		AnalysisResult res = analyzer.computeImpact(delta, List.of(timeoutClient, successClient), opts);
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact di1 = res.deltaImpacts().get(clientModule1);
-		assertThat(di1.brokenUses(), is(empty()));
-		assertThat(di1.throwable(), is(not(nullValue())));
-		assertThat(di1.throwable().getMessage(), is(equalTo("nope")));
-		DeltaImpact di2 = res.deltaImpacts().get(clientModule2);
-		assertThat(di2.brokenUses(), hasSize(1));
-		assertThat(di2.throwable(), is(nullValue()));
+		DeltaImpact timeoutImpact = res.deltaImpacts().get(timeoutModule);
+		assertThat(timeoutImpact.brokenUses(), is(empty()));
+		assertThat(timeoutImpact.throwable(), is(not(nullValue())));
+		assertThat(timeoutImpact.throwable().getMessage(), is(equalTo("nope")));
+		DeltaImpact successImpact = res.deltaImpacts().get(successModule);
+		assertThat(successImpact.brokenUses(), hasSize(1));
+		assertThat(successImpact.throwable(), is(nullValue()));
 
-		verify(client1).cloneCommit(gt(0));
-		verify(client2).cloneCommit(gt(0));
-		verify(maracas).computeDeltaImpact(clientSources2, delta, opts);
+		verify(timeoutClient).cloneCommit(gt(0));
+		verify(successClient).cloneCommit(gt(0));
+		verify(maracas).computeDeltaImpact(successSources, delta, opts);
 	}
 
 	@Test
