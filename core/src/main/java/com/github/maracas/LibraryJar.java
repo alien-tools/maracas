@@ -66,6 +66,10 @@ public class LibraryJar {
 		return new LibraryJar(jar, sources);
 	}
 
+	public static LibraryJar withSources(Path jar, Path sources) {
+		return new LibraryJar(jar, SourcesDirectory.of(sources));
+	}
+
 	public static LibraryJar withoutSources(Path jar) {
 		return new LibraryJar(jar, null);
 	}

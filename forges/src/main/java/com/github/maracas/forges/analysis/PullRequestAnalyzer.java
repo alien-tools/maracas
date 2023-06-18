@@ -47,6 +47,10 @@ public class PullRequestAnalyzer {
 		this(workingDirectory, forge, commitAnalyzer, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 	}
 
+	public PullRequestAnalyzer(Path workingDirectory, Forge forge) {
+		this(workingDirectory, forge, new CommitAnalyzer());
+	}
+
 	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options) {
 		Objects.requireNonNull(pr);
 		Objects.requireNonNull(options);

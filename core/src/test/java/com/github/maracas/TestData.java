@@ -1,7 +1,6 @@
 package com.github.maracas;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class TestData {
 	public static Path validJar = Path.of("../test-data/comp-changes/old/target/comp-changes-old-0.0.1.jar");

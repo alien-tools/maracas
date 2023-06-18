@@ -35,45 +35,73 @@ Then, include the following dependency:
 <dependency>
   <groupId>com.github.maracas</groupId>
   <artifactId>maracas-core</artifactId>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 
-### As an API
-One may use Maracas to compute the changes between two versions of a library as well as their impact on a particular client as follows.
+### Analyzing local libraries and clients
+One can use Maracas to compute the changes between two versions of a library as well as their impact on a particular client as follows.
 
 *Note that both versions of the library must be provided as binary JARs, while the client is provided as source code.*
 
 ```java
-// Setting up the library versions and clients
-LibraryJar v1 = new LibraryJar(Path.of("v1.jar"));
-LibraryJar v2 = new LibraryJar(Path.of("v2.jar"));
-SourcesDirectory client = new SourcesDirectory(Path.of("/path/to/client"));
+Maracas maracas = new Maracas();
 
-// Using a query/result
+// Setting up the library versions and clients
+LibraryJar v1 = LibraryJar.withSources(Path.of("v1.jar"), Path.of("v1-sources/"));
+LibraryJar v2 = LibraryJar.withoutSources(Path.of("v2.jar"));
+SourcesDirectory client = SourcesDirectory.of(Path.of("/path/to/client"));
+
+// Option 1: using the query/result API
 AnalysisQuery query = AnalysisQuery.builder()
   .oldVersion(v1)
   .newVersion(v2)
   .client(client)
   .build();
 
-AnalysisResult result = Maracas.analyze(query);
+AnalysisResult result = maracas.analyze(query);
 Delta delta = result.delta();
 List<BreakingChange> breakingChanges = delta.getBreakingChanges();
 Set<BrokenUse> brokenUses = result.allBrokenUses();
 
-// Or by directly invoking the analysis methods
-Delta delta = Maracas.computeDelta(v1, v2);
+// Option 2: invoking the analyses directly
+Delta delta = maracas.computeDelta(v1, v2);
 Collection<BreakingChange> breakingChanges = delta.getBreakingChanges();
 
-DeltaImpact deltaImpact = Maracas.computeDeltaImpact(client, delta);
-Set<BrokenUse> brokenUses = deltaImpact.getBrokenUses();
+DeltaImpact deltaImpact = maracas.computeDeltaImpact(client, delta);
+Set<BrokenUse> brokenUses = deltaImpact.brokenUses();
+```
 
-// Delta models are built from JARs and lack source code locations.
-// To map breaking changes to precise locations in source code,
-// create a library jar with its corresponding source code
-LibraryJar v1 = new LibraryJar(Path.of("v1.jar"),
-	new SourcesDirectory(Path.of("/path/to/v1/src")));
+### Analyzing GitHub repositories
+
+Alternatively, one can use the [forges API](forges/) to analyze artifacts hosted on GitHub.
+
+```java
+// See https://github-api.kohsuke.org/ to setup the GitHubBuilder
+GitHubForge forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
+
+// Option 1: analyzing a pull request
+PullRequestAnalyzer analyzer = new PullRequestAnalyzer(Path.of("/tmp"), forge);
+PullRequest pr = forge.fetchPullRequest("owner", "library", 42);
+
+PullRequestAnalysisResult result = analyzer.analyze(pr, MaracasOptions.newDefault());
+List<BreakingChange> breakingChanges = result.breakingChanges();
+Set<BrokenUse> brokenUses = result.brokenUses();
+
+// Option 2: analyzing two arbitrary commits
+CommitAnalyzer analyzer = new CommitAnalyzer();
+Commit v1 = forge.fetchCommit("owner", "library", "sha-v1");
+Commit v2 = forge.fetchCommit("owner", "library", "sha-v2");
+Commit client = forge.fetchCommit("owner", "client", "sha");
+CommitBuilder builderV1 = new CommitBuilder(v1, Path.of("clone-v1/"));
+CommitBuilder builderV2 = new CommitBuilder(v2, Path.of("clone-v2/"));
+CommitBuilder builderClient = new CommitBuilder(client, Path.of("clone-client/"));
+
+AnalysisResult result = analyzer.analyzeCommits(builderV1, builderV2,
+  List.of(builderClient), MaracasOptions.newDefault());
+
+List<BreakingChange> breakingChanges = result.delta().getBreakingChanges();
+Set<BrokenUse> brokenUses = result.allBrokenUses();
 ```
 
 ### From the command line

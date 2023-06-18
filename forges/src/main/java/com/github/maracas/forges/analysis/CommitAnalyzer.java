@@ -40,6 +40,10 @@ public class CommitAnalyzer {
 		this(maracas, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 	}
 
+	public CommitAnalyzer() {
+		this(new Maracas());
+	}
+
 	public AnalysisResult analyzeCommits(CommitBuilder v1, CommitBuilder v2, Collection<CommitBuilder> clients, MaracasOptions options)
 		throws CloneException, BuildException {
 		Objects.requireNonNull(v1);
