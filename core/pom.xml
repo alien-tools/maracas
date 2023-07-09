@@ -14,7 +14,7 @@
 	<name>Maracas core implementation</name>
 
 	<properties>
-		<spoon.version>10.1.1</spoon.version>
+		<spoon.version>10.4.0</spoon.version>
 		<japicmp.version>0.17.1</japicmp.version>
 		<gradle.version>7.3.3</gradle.version>
 		<zip4j.version>2.11.3</zip4j.version>

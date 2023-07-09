@@ -7,7 +7,7 @@ import spoon.reflect.reference.CtTypeReference;
 /**
  * Generic visitor in charge of gathering type reference issues in client code.
  * <p>
- * It creates a broken use for every reference to the supplied {code clsRef}.
+ * It creates a broken use for every reference to the supplied {@link #clsRef}.
  * The visitor detects the following cases:
  * <ul>
  * <li> Any reference to the referenced class. Example:

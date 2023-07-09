@@ -12,7 +12,7 @@ public class ConstructorRemovedTests {
 
 	@Test
 	void testNoMore() {
-		assertNumberBrokenUses(CONSTRUCTOR_REMOVED, 12); // Diff coming from ClassNowAbstract
+		assertNumberBrokenUses(CONSTRUCTOR_REMOVED, 18); // Diff coming from ClassNowAbstract
 	}
 
 	@Test

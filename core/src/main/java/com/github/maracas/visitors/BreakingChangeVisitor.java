@@ -59,11 +59,6 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 	 * @param use            type of use of the API declaration
 	 */
 	protected void brokenUse(CtElement element, CtElement usedApiElement, CtReference source, APIUse use) {
-		// We don't want to create broken uses for implicit elements: they do not
-		// exist in the source code of the client anyway
-		if (element.isImplicit())
-			return;
-
 		// In case we don't get a source code position for the element, we default
 		// to the first parent that can be located
 		CtElement locatableElement =
@@ -96,12 +91,11 @@ public abstract class BreakingChangeVisitor extends CtAbstractVisitor {
 			// FIXME: try to distinguish between regular access to a type,
 			// and access to a type by instantiation (new)
 			case ACCESSED_TYPE, ARGUMENT_TYPE, BOUNDING_TYPE, CAST, DECLARING_TYPE,
-				MULTI_TYPE, THROWN, TYPE, TYPE_ARGUMENT, TYPE_REF -> APIUse.TYPE_DEPENDENCY;
+				MULTI_TYPE, THROWN, TYPE, TYPE_ARGUMENT, TYPE_REF, DECLARED_TYPE_REF -> APIUse.TYPE_DEPENDENCY;
 			case SUPER_TYPE -> APIUse.EXTENDS;
 			case INTERFACE -> APIUse.IMPLEMENTS;
 			case ANNOTATION_TYPE -> APIUse.ANNOTATION;
 			case IMPORT_REFERENCE -> APIUse.IMPORT;
-			case DECLARED_TYPE_REF -> APIUse.TYPE_DEPENDENCY; // FIXME: This one is weird
 			default ->
 				throw new RuntimeException("Unmanaged role " + role + " for " + element + " in " + element.getParent());
 		};

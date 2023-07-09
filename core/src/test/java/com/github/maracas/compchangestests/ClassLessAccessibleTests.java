@@ -59,7 +59,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testPro2PackPrivInvokePublicMethodInner2() {
-		assertBrokenUse("ClassLessAccessiblePro2PackPrivExt.java", 18, "super.publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassLessAccessiblePro2PackPrivExt.java", 18, "publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test
@@ -104,7 +104,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testPro2PrivInvokePublicMethodInner2() {
-		assertBrokenUse("ClassLessAccessiblePro2PrivExt.java", 18, "super.publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassLessAccessiblePro2PrivExt.java", 18, "publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test
@@ -164,7 +164,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testExtendsPub2PackPrivInvokePublicMethod2() {
-		assertBrokenUse("ClassLessAccessiblePub2PackPrivExt.java", 17, "super.publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassLessAccessiblePub2PackPrivExt.java", 17, "publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test
@@ -209,7 +209,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testPub2PackPrivInvokePublicMethod2() {
-		assertBrokenUse("ClassLessAccessiblePub2PackPrivImp.java", 15, "main.classLessAccessible.IClassLessAccessiblePub2PackPriv.publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassLessAccessiblePub2PackPrivImp.java", 15, "publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test
@@ -264,7 +264,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testPub2PrivExtInnerInvokePublicMethod2() {
-		assertBrokenUse("ClassLessAccessiblePub2PrivExt.java", 19, "super.publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassLessAccessiblePub2PrivExt.java", 19, "publicMethod()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test
@@ -355,7 +355,7 @@ class ClassLessAccessibleTests {
 
 	@Test
 	void testNoLongerPublicExtAccessSuperMethodSuper2() {
-		assertBrokenUse("ClassNoLongerPublicExt.java", 20, "super.method()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
+		assertBrokenUse("ClassNoLongerPublicExt.java", 20, "method()", CLASS_LESS_ACCESSIBLE, TYPE_DEPENDENCY);
 	}
 
 //	@Test

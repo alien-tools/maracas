@@ -29,7 +29,6 @@ public class ClassLessAccessibleVisitor extends BreakingChangeVisitor {
 			switch (newAccessModifier) {
 				// Private always breaks
 				case PRIVATE -> brokenUse(reference.getParent(), reference, clsRef, use);
-
 				// Package-private breaks if packages do not match
 				case PACKAGE_PROTECTED -> {
 					if (!enclosingPkg.equals(expectedPkg))
