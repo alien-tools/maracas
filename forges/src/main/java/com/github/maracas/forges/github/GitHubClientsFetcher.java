@@ -45,16 +45,23 @@ public class GitHubClientsFetcher {
 	}
 
 	public List<GitHubPackage> fetchPackages() {
-		Document pkgsPage = fetchPage(PACKAGES_URL.formatted(repository.owner(), repository.name()));
+		String pkgsPageUrl = PACKAGES_URL.formatted(repository.owner(), repository.name());
+		Document pkgsPage = fetchPage(pkgsPageUrl);
 
 		if (pkgsPage != null) {
-			return
-				pkgsPage.select("#dependents .select-menu-item").stream()
-					.map(link -> {
-						String name = link.select(".select-menu-item-text").text().trim();
-						String url = "https://github.com" + link.attr("href");
-						return new GitHubPackage(repository, name, url);
-					}).toList();
+			Elements pkgs = pkgsPage.select("#dependents .select-menu-item");
+
+			if (!pkgs.isEmpty()) { // This repository has >= 1 packages
+				return
+					pkgs.stream()
+						.map(link -> {
+							String name = link.select(".select-menu-item-text").text().trim();
+							String url = "https://github.com" + link.attr("href");
+							return new GitHubPackage(repository, name, url);
+						}).toList();
+			} else { // This repository does not have any package
+				return List.of(new GitHubPackage(repository, "default_package", pkgsPageUrl));
+			}
 		} else {
 			return Collections.emptyList();
 		}

@@ -229,6 +229,13 @@ class GitHubForgeTest {
   }
 
   @Test
+  void fetchAllClients_no_package() {
+    Repository ews = github.fetchRepository("OfficeDev", "ews-java-api");
+    List<Repository> clients = github.fetchAllClients(ews, "default_package", 10, -1);
+    assertThat(clients, hasSize(10));
+  }
+
+  @Test
   void fetchCustomClients_fixture() {
     Repository repo = new Repository("alien-tools", "repository-fixture", "", "");
     List<Repository> clients = github.fetchCustomClients(repo);
