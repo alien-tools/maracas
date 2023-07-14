@@ -36,8 +36,8 @@ public class GitCloner implements Cloner {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
 				String workingDirectory = dest.toAbsolutePath().toString();
-				logger.info("Cloning commit {} from {}",
-					commit::sha, () -> commit.repository().remoteUrl());
+				logger.info("Cloning commit {} from {} into {}",
+					commit::sha, () -> commit.repository().remoteUrl(), () -> dest);
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
@@ -54,7 +54,6 @@ public class GitCloner implements Cloner {
 
 				throw e;
 			}
-
 		} else {
 			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}
@@ -72,8 +71,8 @@ public class GitCloner implements Cloner {
 		} else if (dest.toFile().mkdirs()) {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
-				logger.info("Cloning repository {} [{}]",
-					repository::remoteUrl, repository::branch);
+				logger.info("Cloning repository {} [{}] into {}",
+					repository::remoteUrl, repository::branch, () -> dest);
 				executeCommand(
 					timeoutSeconds,
 					"git", "clone",
@@ -95,7 +94,6 @@ public class GitCloner implements Cloner {
 
 				throw e;
 			}
-
 		} else {
 			throw new CloneException("Couldn't create clone directory %s".formatted(dest));
 		}

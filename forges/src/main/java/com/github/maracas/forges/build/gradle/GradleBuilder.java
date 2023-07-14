@@ -33,7 +33,7 @@ public class GradleBuilder implements Builder {
 	private final BuildConfig config;
 	public static final String BUILD_FILE = "build.gradle";
 	public static final List<String> DEFAULT_GOALS = List.of("build");
-	public static final Properties DEFAULT_PROPERTIES = new Properties();
+	protected static final Properties DEFAULT_PROPERTIES = new Properties();
 	private static final Logger logger = LogManager.getLogger(GradleBuilder.class);
 
 	public static boolean isGradleProject(Path basePath) {

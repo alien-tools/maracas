@@ -60,8 +60,9 @@ public class AnalyzePRs {
 	}
 
 	public void run() {
-		var commitAnalyzer = new CommitAnalyzer(new Maracas(), Executors.newFixedThreadPool(4));
-		var analyzer = new PullRequestAnalyzer(WORKING_DIRECTORY, forge, commitAnalyzer);
+		var executor = Executors.newFixedThreadPool(4);
+		var commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
+		var analyzer = new PullRequestAnalyzer(forge, commitAnalyzer, WORKING_DIRECTORY, executor);
 
 		try (var writer = new FileWriter(RESULTS_CSV.toFile(), true)) {
 			var beanToCsv = new StatefulBeanToCsvBuilder<Case>(writer).build();

@@ -149,8 +149,8 @@ public class AnalyzeRepositoryHistory {
 							configV1.setProperty(k.toString(), v.toString());
 							configV2.setProperty(k.toString(), v.toString());
 						});
-						var buildV1 = new CommitBuilder(forgePr.mergeBase(), cloneV1, configV1);
-						var buildV2 = new CommitBuilder(forgePr.head(), cloneV2, configV2);
+						var buildV1 = new CommitBuilder(forgePr.mergeBase(), configV1, cloneV1);
+						var buildV2 = new CommitBuilder(forgePr.head(), configV2, cloneV2);
 
 						var reportFile = reportsPath.resolve(pr.getNumber() + "-report.json");
 
@@ -279,13 +279,13 @@ public class AnalyzeRepositoryHistory {
 						.resolve(f[0])
 						.resolve(f[1])
 						.resolve(commit.getSHA1());
-				var builder = new CommitBuilder(forgeCommit, wd, BuildConfig.newDefault());
+				var builder = new CommitBuilder(forgeCommit, BuildConfig.newDefault(), wd);
 
 				// FIXME: ;)
 				if ("dspot".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, new BuildConfig(Path.of("dspot")));
+					builder = new CommitBuilder(forgeCommit, new BuildConfig(Path.of("dspot")), wd);
 				if ("nopol".equals(f[1]))
-					builder = new CommitBuilder(forgeCommit, wd, new BuildConfig(Path.of("nopol")));
+					builder = new CommitBuilder(forgeCommit, new BuildConfig(Path.of("nopol")), wd);
 
 				return builder;
 			})

@@ -36,19 +36,19 @@ public class PullRequestAnalyzer {
 
 	private static final Logger logger = LogManager.getLogger(PullRequestAnalyzer.class);
 
-	public PullRequestAnalyzer(Path workingDirectory, Forge forge, CommitAnalyzer commitAnalyzer, ExecutorService executorService) {
-		this.workingDirectory = Objects.requireNonNull(workingDirectory);
+	public PullRequestAnalyzer(Forge forge, CommitAnalyzer commitAnalyzer, Path workingDirectory, ExecutorService executorService) {
 		this.forge = Objects.requireNonNull(forge);
 		this.commitAnalyzer = Objects.requireNonNull(commitAnalyzer);
+		this.workingDirectory = Objects.requireNonNull(workingDirectory);
 		this.executorService = Objects.requireNonNull(executorService);
 	}
 
-	public PullRequestAnalyzer(Path workingDirectory, Forge forge, CommitAnalyzer commitAnalyzer) {
-		this(workingDirectory, forge, commitAnalyzer, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+	public PullRequestAnalyzer(Forge forge, CommitAnalyzer commitAnalyzer) {
+		this(forge, commitAnalyzer, Path.of("pr-analysis"), Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 	}
 
-	public PullRequestAnalyzer(Path workingDirectory, Forge forge) {
-		this(workingDirectory, forge, new CommitAnalyzer());
+	public PullRequestAnalyzer(Forge forge) {
+		this(forge, new CommitAnalyzer());
 	}
 
 	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options) {
@@ -152,11 +152,11 @@ public class PullRequestAnalyzer {
 		build.goals().forEach(buildConfig::addGoal);
 		build.properties().keySet().forEach(k -> buildConfig.setProperty(k, build.properties().get(k)));
 
-		return new CommitBuilder(c, makeClonePath(pr, module, c), buildConfig);
+		return new CommitBuilder(c, buildConfig, makeClonePath(pr, module, c));
 	}
 
 	private CommitBuilder makeBuilderForClient(PullRequest pr, BuildModule module, Commit c) {
-		return new CommitBuilder(c, makeClonePath(pr, module, c), BuildConfig.newDefault());
+		return new CommitBuilder(c, BuildConfig.newDefault(), makeClonePath(pr, module, c));
 	}
 
   public Path makeClonePath(PullRequest pr, BuildModule module, Commit c) {

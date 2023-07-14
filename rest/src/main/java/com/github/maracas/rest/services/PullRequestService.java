@@ -51,13 +51,9 @@ public class PullRequestService {
 			(!this.reportPath.toFile().exists() && !this.reportPath.toFile().mkdirs()))
 			throw new IllegalStateException("Cannot create the necessary directories");
 
-		if (analysisWorkers > 0) {
-			ExecutorService executor = Executors.newFixedThreadPool(analysisWorkers);
-			CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
-			this.analyzer = new PullRequestAnalyzer(clonePath, forge, commitAnalyzer, executor);
-		} else {
-			this.analyzer = new PullRequestAnalyzer(clonePath, forge, new CommitAnalyzer(new Maracas()));
-		}
+		ExecutorService executor = Executors.newFixedThreadPool(analysisWorkers > 0 ? analysisWorkers : Runtime.getRuntime().availableProcessors());
+		CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
+		this.analyzer = new PullRequestAnalyzer(forge, commitAnalyzer, clonePath, executor);
 	}
 
 	public PullRequest fetchPullRequest(String owner, String repository, int number) {

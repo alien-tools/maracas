@@ -81,7 +81,7 @@ Alternatively, one can use the [forges API](forges/) to analyze artifacts hosted
 GitHubForge forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
 
 // Option 1: analyzing a pull request
-PullRequestAnalyzer analyzer = new PullRequestAnalyzer(Path.of("/tmp"), forge);
+PullRequestAnalyzer analyzer = new PullRequestAnalyzer(forge);
 PullRequest pr = forge.fetchPullRequest("owner", "library", 42);
 
 PullRequestAnalysisResult result = analyzer.analyze(pr, MaracasOptions.newDefault());
@@ -92,13 +92,10 @@ Set<BrokenUse> brokenUses = result.brokenUses();
 CommitAnalyzer analyzer = new CommitAnalyzer();
 Commit v1 = forge.fetchCommit("owner", "library", "sha-v1");
 Commit v2 = forge.fetchCommit("owner", "library", "sha-v2");
-Commit client = forge.fetchCommit("owner", "client", "sha");
-CommitBuilder builderV1 = new CommitBuilder(v1, Path.of("clone-v1/"));
-CommitBuilder builderV2 = new CommitBuilder(v2, Path.of("clone-v2/"));
-CommitBuilder builderClient = new CommitBuilder(client, Path.of("clone-client/"));
+Commit client = forge.fetchCommit("owner", "client", "sha-client");
 
-AnalysisResult result = analyzer.analyzeCommits(builderV1, builderV2,
-  List.of(builderClient), MaracasOptions.newDefault());
+AnalysisResult result = analyzer.analyzeCommits(new CommitBuilder(v1), new CommitBuilder(v2),
+    List.of(new CommitBuilder(client)), MaracasOptions.newDefault());
 
 List<BreakingChange> breakingChanges = result.delta().getBreakingChanges();
 Set<BrokenUse> brokenUses = result.allBrokenUses();

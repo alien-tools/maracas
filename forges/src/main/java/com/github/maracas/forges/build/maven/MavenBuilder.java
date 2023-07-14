@@ -39,7 +39,7 @@ public class MavenBuilder implements Builder {
 	private final BuildConfig config;
 	public static final String BUILD_FILE = "pom.xml";
 	public static final List<String> DEFAULT_GOALS = List.of("package");
-	public static final Properties DEFAULT_PROPERTIES = new Properties();
+	protected static final Properties DEFAULT_PROPERTIES = new Properties();
 	private static final Logger logger = LogManager.getLogger(MavenBuilder.class);
 
 	// Skippable goals from https://maven.apache.org/plugins/

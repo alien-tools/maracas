@@ -9,11 +9,12 @@ import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
-import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import japicmp.model.JApiCompatibilityChange;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,7 +27,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 
 class PullRequestAnalyzerTest {
   @TempDir
@@ -39,7 +49,12 @@ class PullRequestAnalyzerTest {
     ExecutorService executor = Executors.newFixedThreadPool(4);
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
     CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
-    analyzer = new PullRequestAnalyzer(workingDirectory, forge, commitAnalyzer, executor);
+    analyzer = new PullRequestAnalyzer(forge, commitAnalyzer, workingDirectory, executor);
+  }
+
+  @AfterEach
+  void tearDown() throws IOException {
+    FileUtils.deleteDirectory(workingDirectory.toFile());
   }
 
   @Test
@@ -103,7 +118,7 @@ class PullRequestAnalyzerTest {
   @Test
   void inferImpactedPackages_fixture_two_impacted_modules() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 1);
-    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
+    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
     List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
 
     assertThat(impacted, containsInAnyOrder(
@@ -115,7 +130,7 @@ class PullRequestAnalyzerTest {
   @Test
   void inferImpactedPackages_fixture_no_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 2);
-    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
+    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
     List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
 
     assertThat(impacted, is(empty()));
@@ -124,7 +139,7 @@ class PullRequestAnalyzerTest {
   @Test
   void inferImpactedPackages_fixture_one_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 4);
-    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase(), workingDirectory.resolve("v1"), BuildConfig.newDefault());
+    CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
     List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
 
     assertThat(impacted, contains(new BuildModule("com.github.alien-tools:module-a", Path.of("module-a"))));
