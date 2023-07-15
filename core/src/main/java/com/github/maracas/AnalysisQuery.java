@@ -3,6 +3,7 @@ package com.github.maracas;
 import japicmp.util.Optional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -113,6 +114,20 @@ public class AnalysisQuery {
 		}
 
 		/**
+		 * Sets the library's old version and new version.
+		 *
+		 * @param oldVersion The library's old version
+		 * @param newVersion The library's new version
+		 * @return the builder
+		 * @throws IllegalArgumentException if either the old version or new version is null
+		 */
+		public Builder of(LibraryJar oldVersion, LibraryJar newVersion) {
+			oldVersion(oldVersion);
+			newVersion(newVersion);
+			return this;
+		}
+
+		/**
 		 * Includes a client into the analysis.
 		 *
 		 * @param client A client to analyze
@@ -130,6 +145,7 @@ public class AnalysisQuery {
 		/**
 		 * Includes a set of clients into the analysis.
 		 *
+		 * @param clients the clients to be included
 		 * @return the builder
 		 * @throws IllegalArgumentException if clients is null
 		 * @see #client(SourcesDirectory)
@@ -138,6 +154,18 @@ public class AnalysisQuery {
 			Objects.requireNonNull(clients, "clients is null");
 
 			clients.forEach(this::client);
+			return this;
+		}
+
+		/**
+		 * Includes a set of clients into the analysis.
+		 *
+		 * @param clients the clients to be included
+		 * @return the builder
+		 * @see #clients(Collection) 
+		 */
+		public Builder clients(SourcesDirectory... clients) {
+			clients(Arrays.asList(clients));
 			return this;
 		}
 

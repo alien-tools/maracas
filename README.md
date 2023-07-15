@@ -54,8 +54,7 @@ SourcesDirectory client = SourcesDirectory.of(Path.of("/path/to/client"));
 
 // Option 1: using the query/result API
 AnalysisQuery query = AnalysisQuery.builder()
-  .oldVersion(v1)
-  .newVersion(v2)
+  .of(v1, v2)
   .client(client)
   .build();
 

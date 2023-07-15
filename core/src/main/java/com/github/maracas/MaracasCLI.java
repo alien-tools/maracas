@@ -44,8 +44,7 @@ public class MaracasCLI implements Runnable {
 			LibraryJar newVersion = LibraryJar.withoutSources(v2);
 			List<SourcesDirectory> clients = clientPaths.stream().map(SourcesDirectory::of).toList();
 			AnalysisQuery query = AnalysisQuery.builder()
-				.oldVersion(oldVersion)
-				.newVersion(newVersion)
+				.of(oldVersion, newVersion)
 				.clients(clients)
 				.build();
 			AnalysisResult result = new Maracas().analyze(query);

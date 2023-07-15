@@ -20,9 +20,8 @@ class Usage {
 		SourcesDirectory client = SourcesDirectory.of(Path.of("test-data/comp-changes/client/"));
 
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldVersion(v1)
-			.newVersion(v2)
-			.client(client)
+			.of(v1, v2)
+			.clients(client)
 			.build();
 
 		AnalysisResult result = new Maracas().analyze(query);
@@ -40,9 +39,8 @@ class Usage {
 
 		// Option 1: using the query/result API
 		AnalysisQuery query = AnalysisQuery.builder()
-			.oldVersion(v1)
-			.newVersion(v2)
-			.client(client)
+			.of(v1, v2)
+			.clients(client)
 			.build();
 
 		AnalysisResult result = maracas.analyze(query);
