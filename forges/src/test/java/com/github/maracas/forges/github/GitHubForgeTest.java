@@ -123,6 +123,7 @@ class GitHubForgeTest {
   void fetchCommit_valid() {
     Commit c = github.fetchCommit("alien-tools", "repository-fixture", "fec2de87113764cdfeee36c16c84ca3af0d323b9");
     assertEquals("fec2de87113764cdfeee36c16c84ca3af0d323b9", c.sha());
+    assertEquals("fec2de8", c.shortSha());
     assertEquals("alien-tools", c.repository().owner());
     assertEquals("repository-fixture", c.repository().name());
     assertEquals("alien-tools/repository-fixture", c.repository().fullName());
@@ -134,6 +135,7 @@ class GitHubForgeTest {
   void fetchCommit_HEAD() {
     Commit c = github.fetchCommit("alien-tools", "repository-fixture", "HEAD");
     assertEquals("fb25deb0e1dd827140886fddb74314ef6a61c66c", c.sha());
+    assertEquals("fb25deb", c.shortSha());
     assertEquals("alien-tools", c.repository().owner());
     assertEquals("repository-fixture", c.repository().name());
     assertEquals("alien-tools/repository-fixture", c.repository().fullName());
@@ -145,6 +147,7 @@ class GitHubForgeTest {
   void fetchCommit_short_sha() {
     Commit c = github.fetchCommit("alien-tools", "repository-fixture", "15b08c");
     assertEquals("15b08c0f6acba8fe369d0076c583fb22311f8524", c.sha());
+    assertEquals("15b08c0", c.shortSha());
     assertEquals("alien-tools", c.repository().owner());
     assertEquals("repository-fixture", c.repository().name());
     assertEquals("alien-tools/repository-fixture", c.repository().fullName());

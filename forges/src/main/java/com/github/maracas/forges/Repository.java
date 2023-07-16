@@ -27,4 +27,9 @@ public record Repository(
     return "https://github.com/%s/%s/blob/%s/%s#L%d-L%d".formatted(
       owner, name, ref, file, beginLine, endLine);
   }
+
+  @Override
+  public String toString() {
+    return "%s/%s@%s".formatted(owner, name, branch);
+  }
 }

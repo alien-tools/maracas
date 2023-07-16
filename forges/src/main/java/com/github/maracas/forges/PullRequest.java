@@ -53,7 +53,7 @@ public record PullRequest(
       repository().owner(),
       repository().name(),
       number(),
-      head().sha()
+      head().shortSha()
     );
   }
 

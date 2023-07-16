@@ -36,14 +36,12 @@ public class GitCloner implements Cloner {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
 				String workingDirectory = dest.toAbsolutePath().toString();
-				logger.info("Cloning commit {} from {} into {}",
-					commit::sha, () -> commit.repository().remoteUrl(), () -> dest);
+				logger.info("Cloning commit {} into {}", () -> commit, () -> dest);
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
 				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
-				logger.info("Cloning commit {} from {} took {}ms",
-					commit::sha, () -> commit.repository().remoteUrl(), () -> sw.elapsed().toMillis());
+				logger.info("Cloning commit {} took {}ms", () -> commit, () -> sw.elapsed().toMillis());
 			} catch (CloneException e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
 				try {
@@ -71,8 +69,7 @@ public class GitCloner implements Cloner {
 		} else if (dest.toFile().mkdirs()) {
 			try {
 				Stopwatch sw = Stopwatch.createStarted();
-				logger.info("Cloning repository {} [{}] into {}",
-					repository::remoteUrl, repository::branch, () -> dest);
+				logger.info("Cloning repository {} into {}", () -> repository, () -> dest);
 				executeCommand(
 					timeoutSeconds,
 					"git", "clone",
@@ -82,8 +79,7 @@ public class GitCloner implements Cloner {
 					repository.remoteUrl(),
 					dest.toAbsolutePath().toString()
 				);
-				logger.info("Cloning repository {} [{}] took {}ms",
-					repository::remoteUrl, repository::branch, () -> sw.elapsed().toMillis());
+				logger.info("Cloning repository {} took {}ms", () -> repository, () -> sw.elapsed().toMillis());
 			} catch (Exception e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
 				try {
