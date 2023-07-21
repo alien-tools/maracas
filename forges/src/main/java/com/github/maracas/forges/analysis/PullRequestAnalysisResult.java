@@ -4,7 +4,6 @@ import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.forges.PullRequest;
 
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +13,11 @@ import java.util.stream.Collectors;
 
 public record PullRequestAnalysisResult(
     PullRequest pr,
-    Map<String, PackageAnalysisResult> packageResults,
-    Path basePath
+    Map<String, PackageAnalysisResult> packageResults
 ) {
   public PullRequestAnalysisResult {
     Objects.requireNonNull(pr);
     Objects.requireNonNull(packageResults);
-    Objects.requireNonNull(basePath);
   }
 
   public List<BreakingChange> breakingChanges() {

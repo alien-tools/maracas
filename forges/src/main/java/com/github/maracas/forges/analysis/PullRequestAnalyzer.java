@@ -78,7 +78,7 @@ public class PullRequestAnalyzer {
 
 		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
-		return new PullRequestAnalysisResult(pr, results, builderV1.getClonePath());
+		return new PullRequestAnalysisResult(pr, results);
 	}
 
 	private PackageAnalysisResult analyzePackage(PullRequest pr, BuildModule pkg, BreakbotConfig.Build buildConfig, MaracasOptions options) {
@@ -94,7 +94,7 @@ public class PullRequestAnalyzer {
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
 			if (delta.getBreakingChanges().isEmpty())
-				return PackageAnalysisResult.success(pkg.name(), delta, Collections.emptyMap());
+				return PackageAnalysisResult.success(pkg.name(), delta, Collections.emptyMap(), builderV1.getClonePath());
 
 			// If we find some, we fetch the appropriate clients and analyze the impact
 			logger.info("Fetching clients for package {}", pkg.name());
@@ -115,7 +115,8 @@ public class PullRequestAnalyzer {
 				builders.keySet().stream().collect(Collectors.toMap(
 					Commit::repository,
 					c -> result.deltaImpacts().get(builders.get(c).getClonePath())
-				))
+				)),
+				builderV1.getClonePath()
 			);
 		} catch (Exception e) {
 			return PackageAnalysisResult.failure(pkg.name(), e.getMessage());

@@ -16,7 +16,7 @@ public record MaracasReport(
 				.map(pkg -> new PackageReport(
 					pkg.pkdId(),
 					pkg.error(),
-					DeltaDto.of(pkg.delta(), result.pr(), result.basePath()),
+					DeltaDto.of(pkg.delta(), result.pr(), pkg.basePath()),
 					pkg.clientResults().entrySet()
 						.stream()
 						.map(r -> {

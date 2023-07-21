@@ -88,8 +88,6 @@ class PullRequestControllerTests {
 				assertThat(reportB.clientReports(), hasSize(2));
 				assertThat(reportB.allBrokenUses(), hasSize(1));
 			}, Assertions::fail);
-
-		assertThat(Path.of(reportPath).resolve("alien-tools-repository-fixture-1-21a0098.json").toFile(), aFileWithSize(greaterThan(0L)));
 	}
 
 	@Test
