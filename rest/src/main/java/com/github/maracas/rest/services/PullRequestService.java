@@ -133,6 +133,6 @@ public class PullRequestService {
 	}
 
 	private File reportFile(PullRequest pr) {
-		return reportPath.resolve(pr.uid()).toFile();
+		return reportPath.resolve(pr.uid() + ".json").toFile();
 	}
 }

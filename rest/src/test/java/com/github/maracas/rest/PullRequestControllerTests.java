@@ -21,19 +21,27 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.io.FileMatchers.aFileWithSize;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -80,6 +88,8 @@ class PullRequestControllerTests {
 				assertThat(reportB.clientReports(), hasSize(2));
 				assertThat(reportB.allBrokenUses(), hasSize(1));
 			}, Assertions::fail);
+
+		assertThat(Path.of(reportPath).resolve("alien-tools-repository-fixture-1-21a0098.json").toFile(), aFileWithSize(greaterThan(0L)));
 	}
 
 	@Test
@@ -107,6 +117,8 @@ class PullRequestControllerTests {
 				assertThat(reportB.clientReports(), hasSize(2));
 				assertThat(reportB.allBrokenUses(), hasSize(1));
 			}, Assertions::fail);
+
+		assertThat(Path.of(reportPath).resolve("alien-tools-repository-fixture-1-21a0098.json").toFile(), aFileWithSize(greaterThan(0L)));
 	}
 
 	@Test
@@ -134,6 +146,8 @@ class PullRequestControllerTests {
 				assertThat(reportB.clientReports(), hasSize(2));
 				assertThat(reportB.allBrokenUses(), hasSize(1));
 			}, Assertions::fail);
+
+		assertThat(Path.of(reportPath).resolve("alien-tools-repository-fixture-1-21a0098.json").toFile(), aFileWithSize(greaterThan(0L)));
 	}
 
 	@Test
