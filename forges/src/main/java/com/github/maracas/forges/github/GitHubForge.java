@@ -216,7 +216,7 @@ public class GitHubForge implements Forge {
 		try (InputStream configIn = gh.getRepository(repository.fullName()).getFileContent(BREAKBOT_FILE).read()) {
 			return BreakbotConfig.fromYaml(configIn);
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("Couldn't read .breakbot.yml from {}", repository.fullName());
 			return BreakbotConfig.defaultConfig();
 		}
 	}
