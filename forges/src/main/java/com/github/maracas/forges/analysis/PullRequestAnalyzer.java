@@ -108,7 +108,7 @@ public class PullRequestAnalyzer {
 			Map<Commit, CommitBuilder> builders = new HashMap<>();
 			clients.forEach(c -> builders.put(c, makeBuilderForClient(pr, pkg, c)));
 
-			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options);
+			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options, pkg.name());
 			return PackageAnalysisResult.success(
 				pkg.name(),
 				delta,
@@ -125,7 +125,7 @@ public class PullRequestAnalyzer {
 
 	public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builder, MaracasOptions options) {
 		builder.cloneCommit(options.getCloneTimeoutSeconds());
-		List<BuildModule> modules = builder.getBuilder().locateModules();
+		List<BuildModule> modules = builder.getBuilder().listModules();
 
 		return pr.changedFiles()
 			.stream()

@@ -105,7 +105,12 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public List<BuildModule> locateModules() {
+	public List<BuildModule> listModules() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	@Override
+	public List<BuildModule> listDependentModules(String coordinates) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 

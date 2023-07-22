@@ -11,7 +11,8 @@ import java.util.Optional;
 public interface Builder {
   void build(int timeoutSeconds) throws BuildException;
   Optional<Path> locateJar();
-  List<BuildModule> locateModules();
+  List<BuildModule> listModules();
+  List<BuildModule> listDependentModules(String coordinates);
 
   default void build() throws BuildException {
     build(Integer.MAX_VALUE);

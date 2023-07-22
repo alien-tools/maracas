@@ -115,7 +115,7 @@ class MavenBuilderTest {
 	@Test
 	void locate_modules_valid() {
 		Builder builder = new MavenBuilder(validProject);
-		List<BuildModule> modules = builder.locateModules();
+		List<BuildModule> modules = builder.listModules();
 
 		assertThat(modules, contains(new BuildModule("test:maven-project", Path.of(""))));
 	}
@@ -123,7 +123,7 @@ class MavenBuilderTest {
 	@Test
 	void locate_modules_multi() {
 		Builder builder = new MavenBuilder(multiProject);
-		List<BuildModule> modules = builder.locateModules();
+		List<BuildModule> modules = builder.listModules();
 
 		assertThat(modules, containsInAnyOrder(
 				new BuildModule("sample:parent-module", Path.of("")),

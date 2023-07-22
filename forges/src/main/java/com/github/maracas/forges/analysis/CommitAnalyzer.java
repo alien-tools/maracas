@@ -5,9 +5,11 @@ import com.github.maracas.LibraryJar;
 import com.github.maracas.Maracas;
 import com.github.maracas.MaracasOptions;
 import com.github.maracas.SourcesDirectory;
+import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.build.BuildException;
+import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import org.apache.logging.log4j.LogManager;
@@ -19,11 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class CommitAnalyzer {
 	private final Maracas maracas;
@@ -98,7 +102,30 @@ public class CommitAnalyzer {
 		Map<Path, DeltaImpact> impacts = new ConcurrentHashMap<>();
 		List<CompletableFuture<Void>> clientFutures =
 			clients.stream()
-				.map(c -> cloneAndAnalyzeClient(delta, c, options).thenAccept(impact -> impacts.put(c.getModulePath(), impact)))
+				.map(c -> cloneAndAnalyzeClient(delta, c, options, null).thenAccept(impact -> impacts.put(c.getModulePath(), impact)))
+				.toList();
+
+		CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
+		return AnalysisResult.success(delta, impacts);
+	}
+
+	public AnalysisResult computeImpact(Delta delta, Collection<CommitBuilder> clients, MaracasOptions options, String pkg) {
+		Objects.requireNonNull(delta);
+		Objects.requireNonNull(clients);
+		Objects.requireNonNull(options);
+
+		// If there are no BCs, there's no impact
+		if (delta.getBreakingChanges().isEmpty()) {
+			return AnalysisResult.noImpact(
+				delta,
+				clients.stream().map(c -> SourcesDirectory.of(c.getClonePath())).toList()
+			);
+		}
+
+		Map<Path, DeltaImpact> impacts = new ConcurrentHashMap<>();
+		List<CompletableFuture<Void>> clientFutures =
+			clients.stream()
+				.map(c -> cloneAndAnalyzeClient(delta, c, options, pkg).thenAccept(impact -> impacts.put(c.getModulePath(), impact)))
 				.toList();
 
 		CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
@@ -115,11 +142,27 @@ public class CommitAnalyzer {
 		);
 	}
 
-	private CompletableFuture<DeltaImpact> cloneAndAnalyzeClient(Delta delta, CommitBuilder builder, MaracasOptions options) {
+	private CompletableFuture<DeltaImpact> cloneAndAnalyzeClient(Delta delta, CommitBuilder builder, MaracasOptions options, String pkg) {
 		return CompletableFuture.supplyAsync(
 			() -> {
 				builder.cloneCommit(options.getCloneTimeoutSeconds());
-				return maracas.computeDeltaImpact(SourcesDirectory.of(builder.getModulePath()), delta, options);
+
+				List<BuildModule> dependentModules = builder.getBuilder().listDependentModules(pkg);
+
+				List<DeltaImpact> impacts =
+					dependentModules.stream()
+						.map(m -> maracas.computeDeltaImpact(SourcesDirectory.of(m.path()), delta, options))
+						.toList();
+
+				Set<BrokenUse> allBUs =
+					impacts.stream()
+						.map(DeltaImpact::brokenUses)
+						.flatMap(Collection::stream)
+						.collect(Collectors.toSet());
+
+				return DeltaImpact.success(SourcesDirectory.of(builder.getClonePath()), delta, allBUs);
+
+				//return maracas.computeDeltaImpact(SourcesDirectory.of(builder.getModulePath()), delta, options);
 			},
 			executorService
 		).exceptionally(e -> {

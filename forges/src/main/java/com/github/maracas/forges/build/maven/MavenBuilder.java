@@ -27,8 +27,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -104,7 +104,7 @@ public class MavenBuilder implements Builder {
 			request.setPomFile(pomFile);
 			request.setGoals(goals);
 			request.setProperties(properties);
-			request.setProjects(Collections.singletonList(config.getModule().toString()));
+			request.setProjects(List.of(config.getModule().toString()));
 			request.setAlsoMake(true);
 			request.setBatchMode(true);
 			request.setQuiet(true);
@@ -171,7 +171,7 @@ public class MavenBuilder implements Builder {
 	}
 
 	@Override
-	public List<BuildModule> locateModules() {
+	public List<BuildModule> listModules() {
 		List<BuildModule> modules = new ArrayList<>();
 
 		try (Stream<Path> paths = Files.walk(basePath)) {
@@ -195,5 +195,62 @@ public class MavenBuilder implements Builder {
 		}
 
 		return modules;
+	}
+
+	@Override
+	public List<BuildModule> listDependentModules(String coordinates) {
+		File pomFile = basePath.resolve(BUILD_FILE).toFile();
+		if (!pomFile.exists())
+			throw new BuildException("Couldn't find pom.xml in %s".formatted(basePath));
+
+		Properties props = new Properties();
+		props.putAll(Map.of(
+			"includeScope", "compile",
+			"mdep.outputScope", "false",
+			"outputFile", "maracas-dependencies.txt",
+			"maven.main.skip", "true",
+			"maven.test.skip", "true"
+		));
+		InvocationRequest request = new DefaultInvocationRequest();
+		request.setPomFile(pomFile);
+		request.setGoals(List.of("test-compile", "dependency:list"));
+		request.setProperties(props);
+		request.setBatchMode(true);
+		request.setQuiet(true);
+
+		try {
+			logger.info("Inferring dependencies of {}", pomFile);
+			Invoker invoker = new DefaultInvoker();
+			InvocationResult result = invoker.execute(request);
+
+			if (result.getExecutionException() != null)
+				throw new BuildException("mvn dependency:list failed: %s".formatted(
+					result.getExecutionException().getCause() != null
+						? result.getExecutionException().getCause().getMessage()
+						: result.getExecutionException().getMessage()));
+			if (result.getExitCode() != 0)
+				throw new BuildException("mvn dependency:list failed (%d)".formatted(result.getExitCode()));
+
+			return listModules()
+				.stream()
+				.filter(module -> {
+					Path dependenciesPath = module.path().resolve("maracas-dependencies.txt");
+
+					if (Files.exists(dependenciesPath)) {
+						try {
+							List<String> lines = Files.readAllLines(dependenciesPath);
+							Files.delete(dependenciesPath);
+							return lines.stream().anyMatch(l -> l.trim().startsWith(coordinates + ":"));
+						} catch (IOException e) {
+							// skip
+						}
+					}
+
+					return false;
+				})
+				.toList();
+		} catch (MavenInvocationException e) {
+			throw new BuildException("Error invoking Maven", e);
+		}
 	}
 }
