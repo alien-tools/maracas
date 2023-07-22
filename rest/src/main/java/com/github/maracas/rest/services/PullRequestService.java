@@ -34,6 +34,7 @@ public class PullRequestService {
 	private final int cloneTimeout;
 	private final int buildTimeout;
 	private final int clientsPerPackage;
+	private final int maxClassLines;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
@@ -48,6 +49,7 @@ public class PullRequestService {
 		this.buildTimeout = env.getProperty("maracas.build-timeout", Integer.class, 600);
 		this.cloneTimeout = env.getProperty("maracas.clone-timeout", Integer.class, 600);
 		this.clientsPerPackage = env.getProperty("maracas.clients-per-package", Integer.class, 10);
+		this.maxClassLines = env.getProperty("maracas.max-class-lines", Integer.class, 20_000);
 
 		if ((!clonePath.toFile().exists() && !clonePath.toFile().mkdirs()) ||
 			(!this.reportPath.toFile().exists() && !this.reportPath.toFile().mkdirs()))
@@ -105,6 +107,8 @@ public class PullRequestService {
 		options.setCloneTimeoutSeconds(cloneTimeout);
 		options.setBuildTimeoutSeconds(buildTimeout);
 		options.setClientsPerPackage(clientsPerPackage);
+		options.setMaxClassLines(maxClassLines);
+
 		return options;
 	}
 

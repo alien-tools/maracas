@@ -21,4 +21,4 @@ USER spring:spring
 ARG JAR_FILE=target/maracas-rest-*-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
-ENTRYPOINT ["java", "-Dmaven.home=/usr/share/maven", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-Dmaven.home=/usr/share/maven", "-jar", "/app.jar", "--spring.profiles.active=deploy"]
