@@ -59,7 +59,7 @@ class MaracasReportTests {
 			List.of(PackageReport.success(
 				"/",
 				DeltaDto.of(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
-				List.of(ClientReport.success("alien-tools/comp-changes-client",
+				List.of(ClientReport.success("alien-tools/comp-changes-client", "https://github.com/alien-tools/comp-changes-client",
 					result.allBrokenUses()
 						.stream()
 						.map(d -> BrokenUseDto.of(d, clientRepo, "main", c1.getLocation()))
@@ -116,7 +116,7 @@ class MaracasReportTests {
 	@Test
 	void github_clients_are_present() {
 		assertThat(report.reports().get(0).clientReports().size(), is(1));
-		assertThat(report.reports().get(0).clientReports().get(0).url(), is("alien-tools/comp-changes-client"));
+		assertThat(report.reports().get(0).clientReports().get(0).fullName(), is("alien-tools/comp-changes-client"));
 		assertThat(report.reports().get(0).clientReports().get(0).brokenUses().size(), is(greaterThan(1)));
 	}
 }

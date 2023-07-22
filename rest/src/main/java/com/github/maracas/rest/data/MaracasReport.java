@@ -24,6 +24,7 @@ public record MaracasReport(
 							DeltaImpact impact = r.getValue();
 
 							return ClientReport.success(
+								client.fullName(),
 								client.githubWebUrl(),
 								impact.brokenUses()
 									.stream()
