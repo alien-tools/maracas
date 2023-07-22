@@ -182,7 +182,7 @@ class PullRequestControllerTests {
 		String repository = "this-does-not-exist";
 		int prId = 9999;
 
-		int mockPort = 8080;
+		int mockPort = 8181;
 		int installationId = 123456789;
 		String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
 
@@ -215,7 +215,7 @@ class PullRequestControllerTests {
 
 	protected MvcResult analyzePRPush(String owner, String repository, int prId) {
 		try {
-			int mockPort = 8080;
+			int mockPort = 8181;
 			int installationId = 123456789;
 			String callback = "http://localhost:%d/breakbot/pr/%s/%s/%d".formatted(mockPort, owner, repository, prId);
 
