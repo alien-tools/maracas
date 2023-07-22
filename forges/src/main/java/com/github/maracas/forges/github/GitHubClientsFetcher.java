@@ -67,25 +67,33 @@ public class GitHubClientsFetcher {
 		}
 	}
 
-	public List<GitHubClient> fetchClients() {
+	public List<GitHubClient> fetchClients(int limit) {
 		return fetchPackages()
 			.stream()
-			.map(pkg -> fetchClients(pkg, pkg.url()))
+			.map(pkg -> fetchClients(pkg, pkg.url(), limit))
 			.flatMap(Collection::stream)
 			.toList();
 	}
 
-	public List<GitHubClient> fetchClients(String pkg) {
+	public List<GitHubClient> fetchClients() {
+		return fetchClients(Integer.MAX_VALUE);
+	}
+
+	public List<GitHubClient> fetchClients(String pkg, int limit) {
 		return !StringUtils.isEmpty(pkg)
 			? fetchPackages().stream()
 					.filter(p -> p.id().equals(pkg))
 					.findFirst()
-					.map(p -> fetchClients(p, p.url()))
+					.map(p -> fetchClients(p, p.url(), limit))
 					.orElse(Collections.emptyList())
 			: Collections.emptyList();
 	}
 
-	private List<GitHubClient> fetchClients(GitHubPackage pkg, String url) {
+	public List<GitHubClient> fetchClients(String pkg) {
+		return fetchClients(pkg, Integer.MAX_VALUE);
+	}
+
+	private List<GitHubClient> fetchClients(GitHubPackage pkg, String url, int limit) {
 		List<GitHubClient> clients = new ArrayList<>();
 		Document pkgPage = fetchPage(url);
 
@@ -105,18 +113,22 @@ public class GitHubClientsFetcher {
 				} else logger.error("Couldn't parse row {}", row);
 			});
 
-			// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
-			Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
-			if (pagination.size() == 2) {
-				Element nextBtn = pagination.get(1);
-				String nextUrl = nextBtn.attr("abs:href");
+			int remaining = limit - clients.size();
 
-				if (!nextUrl.isEmpty())
-					clients.addAll(fetchClients(pkg, nextUrl));
+			if (remaining > 0) {
+				// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
+				Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
+				if (pagination.size() == 2) {
+					Element nextBtn = pagination.get(1);
+					String nextUrl = nextBtn.attr("abs:href");
+
+					if (!nextUrl.isEmpty())
+						clients.addAll(fetchClients(pkg, nextUrl, remaining));
+				}
 			}
 		}
 
-		return clients;
+		return clients.subList(0, Math.min(Math.max(0, limit), clients.size()));
 	}
 
 	private Document fetchPage(String url) {

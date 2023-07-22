@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.hasSize;
 class GitHubClientsFetcherTest {
 	final Repository drill = new Repository("apache", "drill", "", ""); // several packages
 	final Repository ews = new Repository("OfficeDev", "ews-java-api", "", ""); // no package
+	final Repository guava = new Repository("google", "guava", "", ""); // way too big
 
 	@Test
 	void fetch_packages_drill() {
@@ -55,5 +56,11 @@ class GitHubClientsFetcherTest {
 	void fetch_clients_ews() {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(ews);
 		assertThat(fetcher.fetchClients(), hasSize(greaterThan(100)));
+	}
+
+	@Test
+	void fetch_clients_guava_limit() {
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(guava);
+		assertThat(fetcher.fetchClients("com.google.guava:guava", 1000), hasSize(1000));
 	}
 }

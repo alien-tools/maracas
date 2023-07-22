@@ -158,7 +158,7 @@ public class GitHubForge implements Forge {
 			logger.error(e);
 		}
 
-		List<GitHubClient> clients = fetchClients(actualRepository, pkgId);
+		List<GitHubClient> clients = fetchClients(actualRepository, pkgId, limit);
 		return clients
 			.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
@@ -221,7 +221,7 @@ public class GitHubForge implements Forge {
 		}
 	}
 
-	private List<GitHubClient> fetchClients(Repository repository, String pkgId) {
+	private List<GitHubClient> fetchClients(Repository repository, String pkgId, int limit) {
 		Path cacheFile = clientsCacheFile(repository, pkgId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
@@ -238,7 +238,9 @@ public class GitHubForge implements Forge {
 
 		Stopwatch sw = Stopwatch.createStarted();
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubClient> clients = fetcher.fetchClients(pkgId);
+		// FIXME: dirty, but we don't know how many "raw" clients we should get
+		// to reach our objectives in terms of "usable" clients with required stars
+		List<GitHubClient> clients = fetcher.fetchClients(pkgId, 1000);
 		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
 				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
 
