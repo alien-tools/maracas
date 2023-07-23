@@ -163,7 +163,7 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchAllClients_cache() {
+  void fetchAllClients_cache() throws IOException {
     Repository repo = github.fetchRepository("alien-tools", "repository-fixture");
     Path cacheDir = Files.createTempDirectory("test-clients-cache");
     File expectedCacheFile = cacheDir.resolve("alien-tools/repository-fixture/module-a-clients.json").toFile();
