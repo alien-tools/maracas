@@ -19,6 +19,10 @@ public class CommitBuilder {
 		this.clonePath = Objects.requireNonNull(clonePath);
 	}
 
+	public CommitBuilder(Commit commit, BuildConfig buildConfig) {
+		this(commit, buildConfig, Path.of("clones").resolve(commit.uid()));
+	}
+
 	public CommitBuilder(Commit commit) {
 		this(commit, BuildConfig.newDefault(), Path.of("clones").resolve(commit.uid()));
 	}

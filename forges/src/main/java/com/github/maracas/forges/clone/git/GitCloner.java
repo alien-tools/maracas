@@ -44,12 +44,7 @@ public class GitCloner implements Cloner {
 				logger.info("Cloning commit {} took {}ms", () -> commit, () -> sw.elapsed().toMillis());
 			} catch (CloneException e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
-				try {
-					FileUtils.deleteDirectory(dest.toFile());
-				} catch (IOException ee) {
-					logger.error(ee);
-				}
-
+				FileUtils.deleteQuietly(dest.toFile());
 				throw e;
 			}
 		} else {
@@ -82,12 +77,7 @@ public class GitCloner implements Cloner {
 				logger.info("Cloning repository {} took {}ms", () -> repository, () -> sw.elapsed().toMillis());
 			} catch (Exception e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
-				try {
-					FileUtils.deleteDirectory(dest.toFile());
-				} catch (IOException ee) {
-					logger.error(ee);
-				}
-
+				FileUtils.deleteQuietly(dest.toFile());
 				throw e;
 			}
 		} else {

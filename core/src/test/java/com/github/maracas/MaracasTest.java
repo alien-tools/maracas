@@ -66,8 +66,8 @@ class MaracasTest {
 
 		assertThat(res.delta(), is(notNullValue()));
 		assertThat(res.deltaImpacts().keySet(), hasSize(2));
-		assertThat(res.deltaImpacts(), hasKey(client.getLocation()));
-		assertThat(res.deltaImpacts(), hasKey(client2.getLocation()));
+		assertThat(res.deltaImpacts(), hasKey(client));
+		assertThat(res.deltaImpacts(), hasKey(client2));
 	}
 
 	@Test

@@ -169,10 +169,10 @@ class CommitAnalyzerTest {
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact notBrokenImpact = res.deltaImpacts().get(notBrokenModule);
+		DeltaImpact notBrokenImpact = res.deltaImpacts().get(notBrokenSources);
 		assertThat(notBrokenImpact.brokenUses(), is(empty()));
 		assertThat(notBrokenImpact.throwable(), is(nullValue()));
-		DeltaImpact brokenImpact = res.deltaImpacts().get(brokenModule);
+		DeltaImpact brokenImpact = res.deltaImpacts().get(brokenSources);
 		assertThat(brokenImpact.brokenUses(), hasSize(1));
 		assertThat(brokenImpact.throwable(), is(nullValue()));
 
@@ -207,11 +207,11 @@ class CommitAnalyzerTest {
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact failedImpact = res.deltaImpacts().get(failedModule);
+		DeltaImpact failedImpact = res.deltaImpacts().get(failedSources);
 		assertThat(failedImpact.brokenUses(), is(empty()));
 		assertThat(failedImpact.throwable(), is(not(nullValue())));
 		assertThat(failedImpact.throwable().getMessage(), is(equalTo("nope")));
-		DeltaImpact successImpact = res.deltaImpacts().get(successModule);
+		DeltaImpact successImpact = res.deltaImpacts().get(successSources);
 		assertThat(successImpact.brokenUses(), hasSize(1));
 		assertThat(successImpact.throwable(), is(nullValue()));
 
@@ -228,6 +228,7 @@ class CommitAnalyzerTest {
 
 		Path timeoutModule = Path.of("client-timeout/module");
 		Path successModule = Path.of("client/module");
+		SourcesDirectory timeoutSources = SourcesDirectory.of(timeoutModule);
 		SourcesDirectory successSources = SourcesDirectory.of(successModule);
 		CommitBuilder timeoutClient = mock();
 		CommitBuilder successClient = mock();
@@ -241,11 +242,11 @@ class CommitAnalyzerTest {
 
 		assertThat(res.delta().getBreakingChanges(), hasSize(1));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(2)));
-		DeltaImpact timeoutImpact = res.deltaImpacts().get(timeoutModule);
+		DeltaImpact timeoutImpact = res.deltaImpacts().get(timeoutSources);
 		assertThat(timeoutImpact.brokenUses(), is(empty()));
 		assertThat(timeoutImpact.throwable(), is(not(nullValue())));
 		assertThat(timeoutImpact.throwable().getMessage(), is(equalTo("nope")));
-		DeltaImpact successImpact = res.deltaImpacts().get(successModule);
+		DeltaImpact successImpact = res.deltaImpacts().get(successSources);
 		assertThat(successImpact.brokenUses(), hasSize(1));
 		assertThat(successImpact.throwable(), is(nullValue()));
 

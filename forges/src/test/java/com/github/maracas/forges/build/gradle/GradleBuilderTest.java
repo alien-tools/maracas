@@ -22,11 +22,11 @@ class GradleBuilderTest {
 	final Path errorTarget = errorProject.resolve("build/");
 
 	@BeforeEach
-	void setUp() throws IOException {
-		FileUtils.deleteDirectory(validTarget.toFile());
-		FileUtils.deleteDirectory(errorTarget.toFile());
-		FileUtils.deleteDirectory(multiProject.resolve("core/build").toFile());
-		FileUtils.deleteDirectory(multiProject.resolve("extra/build").toFile());
+	void setUp() {
+		FileUtils.deleteQuietly(validTarget.toFile());
+		FileUtils.deleteQuietly(errorTarget.toFile());
+		FileUtils.deleteQuietly(multiProject.resolve("core/build").toFile());
+		FileUtils.deleteQuietly(multiProject.resolve("extra/build").toFile());
 	}
 
 	@Test

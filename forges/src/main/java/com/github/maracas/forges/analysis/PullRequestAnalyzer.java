@@ -2,6 +2,7 @@ package com.github.maracas.forges.analysis;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.MaracasOptions;
+import com.github.maracas.SourcesDirectory;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
@@ -10,6 +11,7 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.BreakbotConfig;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,6 +80,7 @@ public class PullRequestAnalyzer {
 
 		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
+		cleanUp(pr);
 		return new PullRequestAnalysisResult(pr, results);
 	}
 
@@ -114,7 +117,7 @@ public class PullRequestAnalyzer {
 				delta,
 				builders.keySet().stream().collect(Collectors.toMap(
 					Commit::repository,
-					c -> result.deltaImpacts().get(builders.get(c).getClonePath())
+					c -> result.deltaImpacts().get(SourcesDirectory.of(builders.get(c).getClonePath()))
 				)),
 				builderV1.getClonePath()
 			);
@@ -161,10 +164,17 @@ public class PullRequestAnalyzer {
 	}
 
   public Path makeClonePath(PullRequest pr, BuildModule module, Commit c) {
-    return workingDirectory
-	    .resolve(pr.uid())
+    return workingDirectory(pr)
 	    .resolve(module.name().replace(":", "-"))
       .resolve(c.uid())
       .toAbsolutePath();
   }
+
+	private Path workingDirectory(PullRequest pr) {
+		return workingDirectory.resolve(pr.uid());
+	}
+
+	private void cleanUp(PullRequest pr) {
+		FileUtils.deleteQuietly(workingDirectory(pr).toFile());
+	}
 }

@@ -5,8 +5,8 @@ import com.github.maracas.rest.data.PackageReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -57,10 +56,10 @@ class PullRequestControllerTests {
 	@Value("${maracas.report-path}")
 	protected String reportPath;
 
-	@AfterEach
-	public void cleanData() throws IOException {
-		FileUtils.deleteDirectory(new File(clonePath));
-		FileUtils.deleteDirectory(new File(reportPath));
+	@BeforeEach
+	public void cleanData() {
+		FileUtils.deleteQuietly(new File(clonePath));
+		FileUtils.deleteQuietly(new File(reportPath));
 	}
 
 	@Test

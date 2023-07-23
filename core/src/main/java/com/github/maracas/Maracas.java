@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -48,7 +49,7 @@ public class Maracas {
 		return AnalysisResult.success(
 			delta,
 			query.getClients().parallelStream().collect(toMap(
-				SourcesDirectory::getLocation,
+				Function.identity(),
 				c -> computeDeltaImpact(c, delta, query.getMaracasOptions()))
 			)
 		);

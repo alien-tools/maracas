@@ -9,10 +9,11 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<!-- Plugins -->
-		<maven.surefire.version>2.22.0</maven.surefire.version>
-		<maven.deploy.version>2.8.2</maven.deploy.version>
-		<maven.source.version>3.2.1</maven.source.version>
-		<maven.javadoc.version>3.3.1</maven.javadoc.version>
+		<maven.surefire.version>3.1.2</maven.surefire.version>
+		<maven.failsafe.version>3.1.2</maven.failsafe.version>
+		<maven.deploy.version>3.1.1</maven.deploy.version>
+		<maven.source.version>3.3.0</maven.source.version>
+		<maven.javadoc.version>3.5.0</maven.javadoc.version>
 		<jacoco.version>0.8.10</jacoco.version>
 		<!-- Dependencies -->
 		<junit.version>5.9.3</junit.version>
@@ -50,7 +51,15 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>${maven.surefire.version}</version>
+				<version>${maven.failsafe.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Coverage -->
 			<plugin>

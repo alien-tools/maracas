@@ -8,11 +8,11 @@ import com.github.maracas.delta.Delta;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
@@ -29,13 +29,13 @@ public record AnalysisResult(
 	/*
 	  The delta impact model per analyzed client
 	 */
-	Map<Path, DeltaImpact> deltaImpacts,
+	Map<SourcesDirectory, DeltaImpact> deltaImpacts,
 	/*
 		The error we may have got along the way
 	 */
 	String error
 ) {
-	public static AnalysisResult success(Delta delta, Map<Path, DeltaImpact> deltaImpacts) {
+	public static AnalysisResult success(Delta delta, Map<SourcesDirectory, DeltaImpact> deltaImpacts) {
 		return new AnalysisResult(
 			Objects.requireNonNull(delta),
 			Objects.requireNonNull(deltaImpacts),
@@ -64,7 +64,7 @@ public record AnalysisResult(
 			Objects.requireNonNull(clients)
 				.stream()
 				.collect(toMap(
-					SourcesDirectory::getLocation,
+					Function.identity(),
 					c -> DeltaImpact.success(c, delta, emptySet()))
 				)
 		);
@@ -91,16 +91,6 @@ public record AnalysisResult(
 			.stream()
 			.filter(i -> !i.brokenUses().isEmpty())
 			.collect(toSet());
-	}
-
-	/**
-	 * Returns the {@link DeltaImpact} model for a given client
-	 *
-	 * @param client client owning the expected {@link DeltaImpact} model
-	 * @return {@link DeltaImpact} model of the given client, or null if it doesn't exist
-	 */
-	public DeltaImpact deltaImpactForClient(SourcesDirectory client) {
-		return deltaImpacts.get(client.getLocation());
 	}
 
 	public String toJson() throws JsonProcessingException {

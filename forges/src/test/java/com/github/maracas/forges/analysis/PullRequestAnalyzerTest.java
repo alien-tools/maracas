@@ -13,8 +13,6 @@ import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
 import japicmp.model.JApiCompatibilityChange;
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -50,11 +48,6 @@ class PullRequestAnalyzerTest {
     forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
     CommitAnalyzer commitAnalyzer = new CommitAnalyzer(new Maracas(), executor);
     analyzer = new PullRequestAnalyzer(forge, commitAnalyzer, workingDirectory, executor);
-  }
-
-  @AfterEach
-  void tearDown() throws IOException {
-    FileUtils.deleteDirectory(workingDirectory.toFile());
   }
 
   @Test

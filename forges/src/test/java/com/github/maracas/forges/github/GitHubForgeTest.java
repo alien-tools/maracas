@@ -163,7 +163,7 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchAllClients_cache() throws IOException {
+  void fetchAllClients_cache() {
     Repository repo = github.fetchRepository("alien-tools", "repository-fixture");
     Path cacheDir = Files.createTempDirectory("test-clients-cache");
     File expectedCacheFile = cacheDir.resolve("alien-tools/repository-fixture/module-a-clients.json").toFile();
@@ -186,7 +186,7 @@ class GitHubForgeTest {
       new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas.git", "main")
     ));
 
-    FileUtils.deleteDirectory(cacheDir.toFile());
+    FileUtils.deleteQuietly(cacheDir.toFile());
   }
 
   @Test

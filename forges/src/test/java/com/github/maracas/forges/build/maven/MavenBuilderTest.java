@@ -27,11 +27,11 @@ class MavenBuilderTest {
 	final Path invalidProject = Path.of("src/test/resources/gradle-project");
 
 	@BeforeEach
-	void setUp() throws IOException {
-		FileUtils.deleteDirectory(validTarget.toFile());
-		FileUtils.deleteDirectory(errorTarget.toFile());
-		FileUtils.deleteDirectory(multiProject.resolve("core-module/target").toFile());
-		FileUtils.deleteDirectory(multiProject.resolve("extra-module/target").toFile());
+	void setUp() {
+		FileUtils.deleteQuietly(validTarget.toFile());
+		FileUtils.deleteQuietly(errorTarget.toFile());
+		FileUtils.deleteQuietly(multiProject.resolve("core-module/target").toFile());
+		FileUtils.deleteQuietly(multiProject.resolve("extra-module/target").toFile());
 	}
 
 	@Test

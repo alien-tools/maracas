@@ -95,10 +95,10 @@ public class CommitAnalyzer {
 			);
 		}
 
-		Map<Path, DeltaImpact> impacts = new ConcurrentHashMap<>();
+		Map<SourcesDirectory, DeltaImpact> impacts = new ConcurrentHashMap<>();
 		List<CompletableFuture<Void>> clientFutures =
 			clients.stream()
-				.map(c -> cloneAndAnalyzeClient(delta, c, options).thenAccept(impact -> impacts.put(c.getModulePath(), impact)))
+				.map(c -> cloneAndAnalyzeClient(delta, c, options).thenAccept(impact -> impacts.put(SourcesDirectory.of(c.getModulePath()), impact)))
 				.toList();
 
 		CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();

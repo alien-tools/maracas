@@ -17,16 +17,15 @@ import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.github.GitHubForge;
 import japicmp.model.JApiCompatibilityChange;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
@@ -42,15 +41,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FixtureAnalysisIT {
-	@TempDir
-	Path workingDirectory;
 	Forge forge;
 	CommitAnalyzer analyzer;
 
 	@BeforeEach
 	void setUp() throws IOException {
 		forge = new GitHubForge(GitHubBuilder.fromEnvironment().build());
-		analyzer = new CommitAnalyzer(new Maracas(), Executors.newFixedThreadPool(4));
+		analyzer = new CommitAnalyzer(new Maracas());
+		FileUtils.deleteQuietly(Path.of("clones").toFile());
 	}
 
 	@Test
@@ -61,8 +59,8 @@ class FixtureAnalysisIT {
 		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "d0718e");
 
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, new BuildConfig(Path.of("module-a")), workingDirectory.resolve("v1")),
-			new CommitBuilder(v2, new BuildConfig(Path.of("module-a")), workingDirectory.resolve("v2")),
+			new CommitBuilder(v1, new BuildConfig(Path.of("module-a"))),
+			new CommitBuilder(v2, new BuildConfig(Path.of("module-a"))),
 			List.of(
 				new CommitBuilder(client1),
 				new CommitBuilder(client2)
@@ -80,14 +78,22 @@ class FixtureAnalysisIT {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
+		DeltaImpact i1 = result.deltaImpacts().keySet().stream()
+				.filter(c -> c.getLocation().toString().contains("client-fixture-a"))
+				.findFirst()
+				.map(result.deltaImpacts()::get)
+				.get();
 		assertThat(i1.throwable(), is(nullValue()));
 		assertThat(i1.brokenUses(), hasSize(1));
 		BrokenUse bu = i1.brokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("a.a()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
+		DeltaImpact i2 = result.deltaImpacts().keySet().stream()
+			.filter(c -> c.getLocation().toString().contains("client-fixture-b"))
+			.findFirst()
+			.map(result.deltaImpacts()::get)
+			.get();
 		assertThat(i2.throwable(), is(nullValue()));
 		assertThat(i2.brokenUses(), is(empty()));
 	}
@@ -100,8 +106,8 @@ class FixtureAnalysisIT {
 		Commit client2 = forge.fetchCommit("alien-tools", "client-fixture-b", "d0718e");
 
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, new BuildConfig(Path.of("module-c/nested-b")), workingDirectory.resolve("v1")),
-			new CommitBuilder(v2, new BuildConfig(Path.of("module-c/nested-b")), workingDirectory.resolve("v2")),
+			new CommitBuilder(v1, new BuildConfig(Path.of("module-c/nested-b"))),
+			new CommitBuilder(v2, new BuildConfig(Path.of("module-c/nested-b"))),
 			List.of(
 				new CommitBuilder(client1),
 				new CommitBuilder(client2)
@@ -119,14 +125,22 @@ class FixtureAnalysisIT {
 
 		assertThat(result.deltaImpacts(), is(aMapWithSize(2)));
 
-		DeltaImpact i1 = result.deltaImpacts().get(workingDirectory.resolve("cb"));
+		DeltaImpact i1 = result.deltaImpacts().keySet().stream()
+			.filter(c -> c.getLocation().toString().contains("client-fixture-b"))
+			.findFirst()
+			.map(result.deltaImpacts()::get)
+			.get();
 		assertThat(i1.throwable(), is(nullValue()));
 		assertThat(i1.brokenUses(), hasSize(1));
 		BrokenUse bu = i1.brokenUses().iterator().next();
 		assertThat(bu.use(), is(APIUse.METHOD_INVOCATION));
 		assertThat(bu.element().toString(), is("nestedB.nestedB()"));
 
-		DeltaImpact i2 = result.deltaImpacts().get(workingDirectory.resolve("ca"));
+		DeltaImpact i2 = result.deltaImpacts().keySet().stream()
+			.filter(c -> c.getLocation().toString().contains("client-fixture-a"))
+			.findFirst()
+			.map(result.deltaImpacts()::get)
+			.get();
 		assertThat(i2.throwable(), is(nullValue()));
 		assertThat(i2.brokenUses(), is(empty()));
 	}
@@ -138,8 +152,8 @@ class FixtureAnalysisIT {
 		Commit client = forge.fetchCommit("SpoonLabs", "gumtree-spoon-ast-diff", "6533706");
 
 		AnalysisResult result = analyzer.analyzeCommits(
-			new CommitBuilder(v1, new BuildConfig(Path.of("core")), workingDirectory.resolve("v1")),
-			new CommitBuilder(v2, new BuildConfig(Path.of("core")), workingDirectory.resolve("v2")),
+			new CommitBuilder(v1, new BuildConfig(Path.of("core"))),
+			new CommitBuilder(v2, new BuildConfig(Path.of("core"))),
 			Collections.singletonList(new CommitBuilder(client)),
 			MaracasOptions.newDefault()
 		);
@@ -152,8 +166,8 @@ class FixtureAnalysisIT {
 	void computeDelta_maracas_withBuildTimeout() {
 		Commit v1 = forge.fetchCommit("alien-tools", "maracas", "b7e1cd");
 		Commit v2 = forge.fetchCommit("alien-tools", "maracas", "69a666");
-		CommitBuilder cb1 = new CommitBuilder(v1, new BuildConfig(Path.of("core")), workingDirectory.resolve("v1"));
-		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")), workingDirectory.resolve("v2"));
+		CommitBuilder cb1 = new CommitBuilder(v1, new BuildConfig(Path.of("core")));
+		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		opts.setBuildTimeoutSeconds(1);
@@ -165,8 +179,8 @@ class FixtureAnalysisIT {
 	void computeDelta_maracas_withCloneTimeout() {
 		Commit v1 = forge.fetchCommit("alien-tools", "maracas", "b7e1cd");
 		Commit v2 = forge.fetchCommit("alien-tools", "maracas", "69a666");
-		CommitBuilder cb1 = new CommitBuilder(v1, new BuildConfig(Path.of("core")), workingDirectory.resolve("v1"));
-		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")), workingDirectory.resolve("v2"));
+		CommitBuilder cb1 = new CommitBuilder(v1, new BuildConfig(Path.of("core")));
+		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		opts.setCloneTimeoutSeconds(1);
@@ -184,8 +198,8 @@ class FixtureAnalysisIT {
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		Delta delta = analyzer.computeDelta(
-			new CommitBuilder(v1, new BuildConfig(Path.of("module-a")), workingDirectory.resolve("v1")),
-			new CommitBuilder(v2, new BuildConfig(Path.of("module-a")), workingDirectory.resolve("v2")),
+			new CommitBuilder(v1, new BuildConfig(Path.of("module-a"))),
+			new CommitBuilder(v2, new BuildConfig(Path.of("module-a"))),
 			opts
 		);
 
