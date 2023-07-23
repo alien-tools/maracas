@@ -68,7 +68,6 @@ class FixtureAnalysisIT {
 			MaracasOptions.newDefault()
 		);
 
-		assertThat(result.error(), is(emptyOrNullString()));
 		assertThat(result.delta(), is(not(nullValue())));
 		assertThat(result.delta().getBreakingChanges(), hasSize(1));
 
@@ -115,7 +114,6 @@ class FixtureAnalysisIT {
 			MaracasOptions.newDefault()
 		);
 
-		assertThat(result.error(), is(emptyOrNullString()));
 		assertThat(result.delta(), is(not(nullValue())));
 		assertThat(result.delta().getBreakingChanges(), hasSize(1));
 

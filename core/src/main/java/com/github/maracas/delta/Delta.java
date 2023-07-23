@@ -139,6 +139,13 @@ public class Delta {
 	}
 
 	/**
+	 * Returns whether the delta model is empty (i.e., no breaking change)
+	 */
+	public boolean isEmpty() {
+		return breakingChanges.isEmpty();
+	}
+
+	/**
 	 * Returns the old {@link LibraryJar}
 	 */
 	public LibraryJar getOldVersion() {

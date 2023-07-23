@@ -42,7 +42,7 @@ public class Maracas {
 		Delta delta = computeDelta(query.getOldVersion(), query.getNewVersion(), query.getMaracasOptions());
 
 		// If no breaking change, we can skip the rest and just return that
-		if (delta.getBreakingChanges().isEmpty())
+		if (delta.isEmpty())
 			return AnalysisResult.noImpact(delta, query.getClients());
 
 		// Compute the impact for each client and return the result

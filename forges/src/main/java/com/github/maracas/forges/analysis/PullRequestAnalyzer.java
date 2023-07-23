@@ -96,7 +96,7 @@ public class PullRequestAnalyzer {
 			CommitBuilder builderV2 = makeBuilderForLibrary(pr, pkg, v2, buildConfig);
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
-			if (delta.getBreakingChanges().isEmpty())
+			if (delta.isEmpty())
 				return PackageAnalysisResult.success(pkg.name(), delta, Collections.emptyMap(), builderV1.getClonePath());
 
 			// If we find some, we fetch the appropriate clients and analyze the impact

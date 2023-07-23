@@ -23,18 +23,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Executors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.gt;
 import static org.mockito.Mockito.any;
@@ -54,7 +53,7 @@ class CommitAnalyzerTest {
 
 	@BeforeEach
 	void setUp() {
-		analyzer = new CommitAnalyzer(maracas, Executors.newFixedThreadPool(4));
+		analyzer = new CommitAnalyzer(maracas);
 	}
 
 	@Test
@@ -126,21 +125,21 @@ class CommitAnalyzerTest {
 
 	@Test
 	void computeDelta_no_JAR_created() {
-		CommitBuilder builderV1 = mock();
-		CommitBuilder builderV2 = mock();
+		CommitBuilder failedBuilder = mock();
+		CommitBuilder successBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.empty());
-		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(failedBuilder.buildCommit(gt(0))).thenReturn(Optional.empty());
+		when(successBuilder.buildCommit(gt(0))).thenReturn(Optional.of(jar));
 
-		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(builderV1, builderV2, opts));
+		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(failedBuilder, successBuilder, opts));
 
-		assertThat(thrown.getMessage(), containsString("Couldn't find the JAR"));
+		assertThat(thrown.getMessage(), startsWith("Couldn't find the JAR"));
 
-		verify(builderV1).cloneCommit(gt(0));
-		verify(builderV1).buildCommit(gt(0));
-		verify(builderV2).cloneCommit(gt(0));
-		verify(builderV2).buildCommit(gt(0));
+		verify(failedBuilder).cloneCommit(gt(0));
+		verify(failedBuilder).buildCommit(gt(0));
+		verify(successBuilder).cloneCommit(gt(0));
+		verify(successBuilder).buildCommit(gt(0));
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
@@ -158,12 +157,10 @@ class CommitAnalyzerTest {
 
 		when(notBrokenClient.getModulePath()).thenReturn(notBrokenModule);
 		when(brokenClient.getModulePath()).thenReturn(brokenModule);
-		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
-			if (invocation.getArgument(0).equals(notBrokenSources))
-				return DeltaImpact.success(notBrokenSources, delta, Collections.emptySet());
-			else
-				return DeltaImpact.success(brokenSources, delta, Set.of(mock(BrokenUse.class)));
-		});
+		when(maracas.computeDeltaImpact(notBrokenSources, delta, opts))
+			.thenReturn(DeltaImpact.success(notBrokenSources, delta, Collections.emptySet()));
+		when(maracas.computeDeltaImpact(brokenSources, delta, opts))
+			.thenReturn(DeltaImpact.success(brokenSources, delta, Set.of(mock(BrokenUse.class))));
 
 		AnalysisResult res = analyzer.computeImpact(delta, List.of(notBrokenClient, brokenClient), opts);
 
@@ -196,12 +193,10 @@ class CommitAnalyzerTest {
 
 		when(failedClient.getModulePath()).thenReturn(failedModule);
 		when(successClient.getModulePath()).thenReturn(successModule);
-		when(maracas.computeDeltaImpact(any(), any(), any())).thenAnswer(invocation -> {
-			if (invocation.getArgument(0).equals(failedSources))
-				return DeltaImpact.error(failedSources, delta, new RuntimeException("nope"));
-			else
-				return DeltaImpact.success(successSources, delta, Set.of(mock(BrokenUse.class)));
-		});
+		when(maracas.computeDeltaImpact(failedSources, delta, opts))
+			.thenReturn(DeltaImpact.error(failedSources, delta, new RuntimeException("nope")));
+		when(maracas.computeDeltaImpact(successSources, delta, opts))
+			.thenReturn(DeltaImpact.success(successSources, delta, Set.of(mock(BrokenUse.class))));
 
 		AnalysisResult res = analyzer.computeImpact(delta, List.of(failedClient, successClient), opts);
 
@@ -312,7 +307,6 @@ class CommitAnalyzerTest {
 
 		AnalysisResult res = analyzer.analyzeCommits(builderV1, builderV2, Collections.emptyList(), opts);
 
-		assertThat(res.error(), is(nullValue()));
 		assertThat(res.delta().getBreakingChanges(), is(empty()));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(0)));
 

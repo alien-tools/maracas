@@ -15,15 +15,16 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public class CommitAnalyzer {
 	private final Maracas maracas;
@@ -88,21 +89,23 @@ public class CommitAnalyzer {
 		Objects.requireNonNull(options);
 
 		// If there are no BCs, there's no impact
-		if (delta.getBreakingChanges().isEmpty()) {
+		if (delta.isEmpty()) {
 			return AnalysisResult.noImpact(
 				delta,
-				clients.stream().map(c -> SourcesDirectory.of(c.getClonePath())).toList()
+				clients.stream().map(CommitBuilder::getClonePath).map(SourcesDirectory::of).toList()
 			);
 		}
 
-		Map<SourcesDirectory, DeltaImpact> impacts = new ConcurrentHashMap<>();
-		List<CompletableFuture<Void>> clientFutures =
+		Map<SourcesDirectory, DeltaImpact> clientsImpact =
 			clients.stream()
-				.map(c -> cloneAndAnalyzeClient(delta, c, options).thenAccept(impact -> impacts.put(SourcesDirectory.of(c.getModulePath()), impact)))
-				.toList();
+				.map(client -> cloneAndAnalyzeClient(delta, client, options))
+				.map(CompletableFuture::join)
+				.collect(toUnmodifiableMap(
+					DeltaImpact::client,
+					Function.identity()
+				));
 
-		CompletableFuture.allOf(clientFutures.toArray(CompletableFuture[]::new)).join();
-		return AnalysisResult.success(delta, impacts);
+		return AnalysisResult.success(delta, clientsImpact);
 	}
 
 	private CompletableFuture<Optional<Path>> cloneAndBuildLibrary(CommitBuilder builder, MaracasOptions options) {
