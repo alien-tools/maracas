@@ -9,6 +9,7 @@ import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.RepositoryModule;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.GitHubForge;
@@ -58,8 +59,8 @@ class PullRequestAnalyzerTest {
     PullRequestAnalysisResult results = analyzer.analyzePullRequest(pr, MaracasOptions.newDefault());
     assertThat(results.moduleResults(), aMapWithSize(2));
 
-    ModuleAnalysisResult resultA = results.moduleResults().get("com.github.alien-tools:module-a");
-    ModuleAnalysisResult resultB = results.moduleResults().get("com.github.alien-tools:nested-b");
+    ModuleAnalysisResult resultA = results.moduleResults().get(new RepositoryModule(pr.repository(), "com.github.alien-tools:module-a", ""));
+    ModuleAnalysisResult resultB = results.moduleResults().get(new RepositoryModule(pr.repository(), "com.github.alien-tools:nested-b", ""));
     assertThat(resultA, is(not(nullValue())));
     assertThat(resultB, is(not(nullValue())));
 

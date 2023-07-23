@@ -86,7 +86,7 @@ public class PullRequestAnalyzer {
 	}
 
 	private ModuleAnalysisResult analyzeModule(PullRequest pr, BuildModule mavenModule, BreakbotConfig.Build buildConfig, MaracasOptions options) {
-		RepositoryModule repositoryModule = getRepositoryModule(pr.repository(), mavenModule.name());
+		RepositoryModule repositoryModule = getRepositoryModule(pr.repository(), mavenModule);
 
 		try {
 			logger.info("[{}] Now analyzing module {}", pr, mavenModule.name());
@@ -154,12 +154,12 @@ public class PullRequestAnalyzer {
 			.toList();
 	}
 
-	private RepositoryModule getRepositoryModule(Repository repository, String moduleId) {
+	private RepositoryModule getRepositoryModule(Repository repository, BuildModule module) {
 		return forge.fetchModules(repository)
 			.stream()
-			.filter(m -> m.id().equals(moduleId))
+			.filter(m -> m.id().equals(module.name()))
 			.findFirst()
-			.orElse(new RepositoryModule(repository, "unknown", "unknown"));
+			.orElse(new RepositoryModule(repository, module.name(), ""));
 	}
 
 	private CommitBuilder makeBuilderForLibrary(PullRequest pr, BuildModule module, Commit c, BreakbotConfig.Build build) {
