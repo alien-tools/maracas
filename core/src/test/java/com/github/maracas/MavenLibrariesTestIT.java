@@ -3,12 +3,10 @@ package com.github.maracas;
 import japicmp.model.AccessModifier;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import spoon.reflect.cu.position.NoSourcePosition;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,7 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 
@@ -27,8 +27,7 @@ import static org.hamcrest.Matchers.emptyString;
  * Run the Maracas analysis on some popular libraries from Maven Central
  * and run some basic checks on the resulting models.
  */
-@Tag("slow")
-class MavenLibrariesTest {
+class MavenLibrariesTestIT {
 	@TempDir
 	Path workingDirectory;
 
