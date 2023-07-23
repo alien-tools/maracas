@@ -78,18 +78,18 @@ public class AnalyzePRs {
 					opts.setCloneTimeoutSeconds(5 * 60);
 					opts.setBuildTimeoutSeconds(10 * 60);
 					opts.setMaxClassLines(20_000);
-					opts.setClientsPerPackage(100);
+					opts.setClientsPerModule(100);
 					opts.setMinStarsPerClient(5);
 					var pr = forge.fetchPullRequest(c.owner, c.name, c.number);
-					var result = analyzer.analyze(pr, opts);
+					var result = analyzer.analyzePullRequest(pr, opts);
 					var j = 0;
 
 					c.base = pr.baseBranch();
 					c.head = pr.headBranch();
 					c.changedFiles = pr.changedFiles().size();
-					c.impactedPackages = result.packageResults().size();
+					c.impactedPackages = result.moduleResults().size();
 
-					for (var r : result.packageResults().values()) {
+					for (var r : result.moduleResults().values()) {
 						if (r.delta() != null) {
 							c.deprecations = (int) r.delta().getBreakingChanges().stream().filter(bc -> bc.getChange().equals(JApiCompatibilityChange.ANNOTATION_DEPRECATED_ADDED)).count();
 							c.breakingChanges += r.delta().getBreakingChanges().size() - c.deprecations;

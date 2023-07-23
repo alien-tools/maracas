@@ -15,10 +15,20 @@ public class MaracasOptions {
 	private final Options jApiOptions;
 	private final Set<JApiCompatibilityChange> excludedBreakingChanges = new HashSet<>();
 	private int maxClassLines = Integer.MAX_VALUE;
-	private int clientsPerPackage = Integer.MAX_VALUE;
+	private int clientsPerModule = Integer.MAX_VALUE;
 	private int minStarsPerClient = 0;
 	private int cloneTimeoutSeconds = Integer.MAX_VALUE;
 	private int buildTimeoutSeconds = Integer.MAX_VALUE;
+
+	public MaracasOptions(MaracasOptions opts) {
+		this(opts.jApiOptions);
+		this.excludedBreakingChanges.addAll(opts.excludedBreakingChanges);
+		this.maxClassLines = opts.maxClassLines;
+		this.clientsPerModule = opts.clientsPerModule;
+		this.minStarsPerClient = opts.minStarsPerClient;
+		this.cloneTimeoutSeconds = opts.cloneTimeoutSeconds;
+		this.buildTimeoutSeconds = opts.buildTimeoutSeconds;
+	}
 
 	private MaracasOptions(Options jApiOptions) {
 		this.jApiOptions = jApiOptions != null ? jApiOptions : defaultJApiOptions();
@@ -88,10 +98,10 @@ public class MaracasOptions {
 		this.maxClassLines = maxClassLines;
 	}
 
-	public void setClientsPerPackage(int clientsPerPackage) {
-		if (clientsPerPackage < 0)
-			throw new IllegalArgumentException("clientsPerPackage < 0");
-		this.clientsPerPackage = clientsPerPackage;
+	public void setClientsPerModule(int clientsPerModule) {
+		if (clientsPerModule < 0)
+			throw new IllegalArgumentException("clientsPerModule < 0");
+		this.clientsPerModule = clientsPerModule;
 	}
 
 
@@ -117,8 +127,8 @@ public class MaracasOptions {
 		return maxClassLines;
 	}
 
-	public int getClientsPerPackage() {
-		return clientsPerPackage;
+	public int getClientsPerModule() {
+		return clientsPerModule;
 	}
 
 	public int getMinStarsPerClient() {

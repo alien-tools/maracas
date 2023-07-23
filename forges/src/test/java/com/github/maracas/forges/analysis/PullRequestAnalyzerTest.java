@@ -55,11 +55,11 @@ class PullRequestAnalyzerTest {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 1);
     Repository clientA = forge.fetchRepository("alien-tools", "client-fixture-a");
     Repository clientB = forge.fetchRepository("alien-tools", "client-fixture-b");
-    PullRequestAnalysisResult results = analyzer.analyze(pr, MaracasOptions.newDefault());
-    assertThat(results.packageResults(), aMapWithSize(2));
+    PullRequestAnalysisResult results = analyzer.analyzePullRequest(pr, MaracasOptions.newDefault());
+    assertThat(results.moduleResults(), aMapWithSize(2));
 
-    PackageAnalysisResult resultA = results.packageResults().get("com.github.alien-tools:module-a");
-    PackageAnalysisResult resultB = results.packageResults().get("com.github.alien-tools:nested-b");
+    ModuleAnalysisResult resultA = results.moduleResults().get("com.github.alien-tools:module-a");
+    ModuleAnalysisResult resultB = results.moduleResults().get("com.github.alien-tools:nested-b");
     assertThat(resultA, is(not(nullValue())));
     assertThat(resultB, is(not(nullValue())));
 
@@ -109,10 +109,11 @@ class PullRequestAnalyzerTest {
   }
 
   @Test
-  void inferImpactedPackages_fixture_two_impacted_modules() {
+  void inferImpactedModules_fixture_two_impacted_modules() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 1);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
+    baseBuilder.cloneCommit(10);
+    List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, containsInAnyOrder(
         new BuildModule("com.github.alien-tools:module-a", Path.of("module-a")),
@@ -121,19 +122,21 @@ class PullRequestAnalyzerTest {
   }
 
   @Test
-  void inferImpactedPackages_fixture_no_impacted_module() {
+  void inferImpactedModules_fixture_no_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 2);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
+    baseBuilder.cloneCommit(10);
+    List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, is(empty()));
   }
 
   @Test
-  void inferImpactedPackages_fixture_one_impacted_module() {
+  void inferImpactedModules_fixture_one_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 4);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    List<BuildModule> impacted = analyzer.inferImpactedPackages(pr, baseBuilder, MaracasOptions.newDefault());
+    baseBuilder.cloneCommit(10);
+    List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, contains(new BuildModule("com.github.alien-tools:module-a", Path.of("module-a"))));
   }

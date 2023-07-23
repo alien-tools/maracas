@@ -53,29 +53,36 @@ public class PullRequestAnalyzer {
 		this(forge, new CommitAnalyzer());
 	}
 
-	public PullRequestAnalysisResult analyze(PullRequest pr, MaracasOptions options) {
+	public PullRequestAnalysisResult analyzePullRequest(PullRequest pr, MaracasOptions opts) {
 		Objects.requireNonNull(pr);
-		Objects.requireNonNull(options);
+		Objects.requireNonNull(opts);
 
-		// Configuring Maracas according to BreakBot
+		// Configuring the analysis according to BreakBot config file, if any
+		MaracasOptions options = new MaracasOptions(opts);
 		BreakbotConfig config = forge.fetchBreakbotConfig(pr.repository());
 		config.excludes().forEach(excl -> options.getJApiOptions().addExcludeFromArgument(japicmp.util.Optional.of(excl), false));
 
-		// For every package in mergeBase that may be impacted by the PR
-		Commit v1 = pr.mergeBase();
-		CommitBuilder builderV1 = makeBuilderForLibrary(pr, new BuildModule("", Path.of("")), v1, config.build());
-		List<BuildModule> impactedPackages = inferImpactedPackages(pr, builderV1, options);
-		logger.info("{} impacts {} packages: {}", pr, impactedPackages.size(), impactedPackages);
+		return analyzePullRequest(pr, config, options);
+	}
 
-		// We need to run the whole analysis for each impacted package in the PR
-		Map<String, PackageAnalysisResult> results = new ConcurrentHashMap<>();
+	private PullRequestAnalysisResult analyzePullRequest(PullRequest pr, BreakbotConfig config, MaracasOptions options) {
+		// First, we need to clone mergeBase
+		CommitBuilder builderV1 = makeBuilderForLibrary(pr, new BuildModule("", Path.of("")), pr.mergeBase(), config.build());
+		builderV1.cloneCommit(options.getCloneTimeoutSeconds());
+
+		// Then, for every module in mergeBase that may be impacted by the PR
+		List<BuildModule> impactedModules = inferImpactedModules(pr, builderV1);
+		logger.info("{} impacts {} modules: {}", pr, impactedModules.size(), impactedModules);
+
+		// We need to run the whole analysis for each impacted module in the PR
+		Map<String, ModuleAnalysisResult> results = new ConcurrentHashMap<>();
 		List<CompletableFuture<Void>> futures =
-			impactedPackages.stream()
-				.map(pkg ->
+			impactedModules.stream()
+				.map(module ->
 					CompletableFuture.supplyAsync(
-						() -> analyzePackage(pr, pkg, config.build(), options),
+						() -> analyzeModule(pr, module, config.build(), options),
 						executorService
-					).thenAccept(res -> results.put(pkg.name(), res)))
+					).thenAccept(res -> results.put(module.name(), res)))
 				.toList();
 
 		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
@@ -84,36 +91,36 @@ public class PullRequestAnalyzer {
 		return new PullRequestAnalysisResult(pr, results);
 	}
 
-	private PackageAnalysisResult analyzePackage(PullRequest pr, BuildModule pkg, BreakbotConfig.Build buildConfig, MaracasOptions options) {
+	private ModuleAnalysisResult analyzeModule(PullRequest pr, BuildModule module, BreakbotConfig.Build buildConfig, MaracasOptions options) {
 		try {
-			logger.info("[{}] Now analyzing package {}", pr, pkg.name());
+			logger.info("[{}] Now analyzing module {}", pr, module.name());
 
 			Commit v1 = pr.mergeBase();
 			Commit v2 = pr.head();
 
 			// First, we compute the delta model to look for BCs
-			CommitBuilder builderV1 = makeBuilderForLibrary(pr, pkg, v1, buildConfig);
-			CommitBuilder builderV2 = makeBuilderForLibrary(pr, pkg, v2, buildConfig);
+			CommitBuilder builderV1 = makeBuilderForLibrary(pr, module, v1, buildConfig);
+			CommitBuilder builderV2 = makeBuilderForLibrary(pr, module, v2, buildConfig);
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
 			if (delta.isEmpty())
-				return PackageAnalysisResult.success(pkg.name(), delta, Collections.emptyMap(), builderV1.getClonePath());
+				return ModuleAnalysisResult.success(module.name(), delta, Collections.emptyMap(), builderV1.getClonePath());
 
 			// If we find some, we fetch the appropriate clients and analyze the impact
-			logger.info("Fetching clients for package {}", pkg.name());
+			logger.info("Fetching clients for module {}", module.name());
 			Collection<Commit> clients =
-				forge.fetchAllClients(pr.repository(), pkg.name(), options.getClientsPerPackage(), options.getMinStarsPerClient())
+				forge.fetchAllClients(pr.repository(), module.name(), options.getClientsPerModule(), options.getMinStarsPerClient())
 					.stream()
 					.map(repository -> forge.fetchCommit(repository, "HEAD"))
 					.toList();
-			logger.info("Found {} clients to analyze for {}", clients.size(), pkg.name());
+			logger.info("Found {} clients to analyze for {}", clients.size(), module.name());
 
 			Map<Commit, CommitBuilder> builders = new HashMap<>();
-			clients.forEach(c -> builders.put(c, makeBuilderForClient(pr, pkg, c)));
+			clients.forEach(c -> builders.put(c, makeBuilderForClient(pr, module, c)));
 
 			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options);
-			return PackageAnalysisResult.success(
-				pkg.name(),
+			return ModuleAnalysisResult.success(
+				module.name(),
 				delta,
 				builders.keySet().stream().collect(Collectors.toMap(
 					Commit::repository,
@@ -122,12 +129,11 @@ public class PullRequestAnalyzer {
 				builderV1.getClonePath()
 			);
 		} catch (Exception e) {
-			return PackageAnalysisResult.failure(pkg.name(), e.getMessage());
+			return ModuleAnalysisResult.failure(module.name(), e.getMessage());
 		}
 	}
 
-	public List<BuildModule> inferImpactedPackages(PullRequest pr, CommitBuilder builder, MaracasOptions options) {
-		builder.cloneCommit(options.getCloneTimeoutSeconds());
+	public List<BuildModule> inferImpactedModules(PullRequest pr, CommitBuilder builder) {
 		List<BuildModule> modules = builder.getBuilder().locateModules();
 
 		return pr.changedFiles()
@@ -142,7 +148,7 @@ public class PullRequestAnalyzer {
 						.max(Comparator.comparingInt(m -> m.path().toString().length()));
 
 				if (matchingModule.isEmpty())
-					logger.warn("Couldn't infer the impacted package for {}", f);
+					logger.warn("Couldn't infer the impacted module for {}", f);
 
 				return matchingModule;
 			})

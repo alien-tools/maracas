@@ -143,9 +143,9 @@ public class GitHubForge implements Forge {
 	}
 
 	@Override
-	public List<Repository> fetchTopStarredClients(Repository repository, String pkgId, int limit, int minStars) {
+	public List<Repository> fetchTopStarredClients(Repository repository, String moduleId, int limit, int minStars) {
 		Objects.requireNonNull(repository);
-		Objects.requireNonNull(pkgId);
+		Objects.requireNonNull(moduleId);
 
 		// Beware: if 'repository' is a fork, we retrieve the clients from the original repository
 		Repository actualRepository = repository;
@@ -158,25 +158,15 @@ public class GitHubForge implements Forge {
 			logger.error(e);
 		}
 
-		List<GitHubClient> clients = fetchClients(actualRepository, pkgId, limit);
+		List<GitHubClient> clients = fetchClients(actualRepository, moduleId, limit);
 		return clients
 			.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
-			.filter(client -> {
-				// Kinda harsh, but there are too many "unofficial" forks
-				if (client.name().equals(repository.name()))
-					return false;
-
-				if (client.stars() < minStars)
-					return false;
-
-				try {
-					GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
-					return !candidate.isFork() && !candidate.isArchived() && !candidate.isDisabled();
-				} catch (IOException e) {
-					return false;
-				}
-			})
+			.filter(client ->
+				!client.name().equals(repository.name()) && // Kinda harsh, but there are too many "unofficial" forks
+				client.stars() < minStars &&
+				isValidClient(client) // No fork, archived, or disabled repository
+			)
 			.limit(limit > 0 ? limit : clients.size())
 			.map(client -> fetchRepository(client.owner(), client.name()))
 			.toList();
@@ -202,10 +192,10 @@ public class GitHubForge implements Forge {
 	}
 
 	@Override
-	public List<Repository> fetchAllClients(Repository repository, String pkgId, int limit, int minStars) {
+	public List<Repository> fetchAllClients(Repository repository, String moduleId, int limit, int minStars) {
 		return Stream.concat(
 			fetchCustomClients(repository).stream(),
-			fetchTopStarredClients(repository, pkgId, limit, minStars).stream()
+			fetchTopStarredClients(repository, moduleId, limit, minStars).stream()
 		).toList();
 	}
 
@@ -221,15 +211,15 @@ public class GitHubForge implements Forge {
 		}
 	}
 
-	private List<GitHubClient> fetchClients(Repository repository, String pkgId, int limit) {
-		Path cacheFile = clientsCacheFile(repository, pkgId);
+	private List<GitHubClient> fetchClients(Repository repository, String moduleId, int limit) {
+		Path cacheFile = clientsCacheFile(repository, moduleId);
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		if (clientsCacheIsValid(cacheFile)) {
 			try {
 				List<GitHubClient> clients = objectMapper.readValue(cacheFile.toFile(), new TypeReference<>(){});
-				logger.info("Fetched {} total clients for {} [package: {}] from {}",
-						clients.size(), repository, pkgId, cacheFile);
+				logger.info("Fetched {} total clients for {} [module: {}] from {}",
+						clients.size(), repository, moduleId, cacheFile);
 				return clients;
 			} catch (IOException e) {
 				logger.error(e);
@@ -240,14 +230,14 @@ public class GitHubForge implements Forge {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
 		// FIXME: dirty, but we don't know how many "raw" clients we should get
 		// to reach our objectives in terms of "usable" clients with required stars
-		List<GitHubClient> clients = fetcher.fetchClients(pkgId, 1000);
-		logger.info("Fetched {} total clients for {} [package: {}] in {}s",
-				clients.size(), repository, pkgId, sw.elapsed().toSeconds());
+		List<GitHubClient> clients = fetcher.fetchClients(moduleId, Math.max(1000, limit));
+		logger.info("Fetched {} total clients for {} [module: {}] in {}s",
+				clients.size(), repository, moduleId, sw.elapsed().toSeconds());
 
 		try {
 			Files.createDirectories(cacheFile.getParent());
 			objectMapper.writeValue(cacheFile.toFile(), clients);
-			logger.info("Serialized clients for {} [package: {}] in {}", repository, pkgId, cacheFile);
+			logger.info("Serialized clients for {} [module: {}] in {}", repository, moduleId, cacheFile);
 		} catch (IOException e) {
 			logger.error(e);
 		}
@@ -280,11 +270,20 @@ public class GitHubForge implements Forge {
 		return false;
 	}
 
-	private Path clientsCacheFile(Repository repository, String packageId) {
+	private boolean isValidClient(GitHubClient client) {
+		try {
+			GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
+			return !candidate.isFork() && !candidate.isArchived() && !candidate.isDisabled();
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	private Path clientsCacheFile(Repository repository, String moduleId) {
 		return clientsCacheDirectory
 			.resolve(repository.owner())
 			.resolve(repository.name())
-			.resolve(packageId + "-clients.json")
+			.resolve(moduleId + "-clients.json")
 			.toAbsolutePath();
 	}
 }

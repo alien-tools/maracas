@@ -1,7 +1,7 @@
 package com.github.maracas.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.maracas.rest.data.PackageReport;
+import com.github.maracas.rest.data.ModuleReport;
 import com.github.maracas.rest.data.PullRequestResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
@@ -69,7 +69,7 @@ class PullRequestControllerTests {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		List<PackageReport> reports = res.report().reports();
+		List<ModuleReport> reports = res.report().reports();
 		reports.stream()
 			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
 			.findFirst()
@@ -96,7 +96,7 @@ class PullRequestControllerTests {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		List<PackageReport> reports = res.report().reports();
+		List<ModuleReport> reports = res.report().reports();
 		reports.stream()
 			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
 			.findFirst()
@@ -125,7 +125,7 @@ class PullRequestControllerTests {
 		assertThat(res.report(), is(notNullValue()));
 		assertThat(res.report().reports(), hasSize(2));
 
-		List<PackageReport> reports = res.report().reports();
+		List<ModuleReport> reports = res.report().reports();
 		reports.stream()
 			.filter(r -> r.id().equals("com.github.alien-tools:module-a"))
 			.findFirst()

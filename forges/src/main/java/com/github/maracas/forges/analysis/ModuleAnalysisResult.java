@@ -11,19 +11,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public record PackageAnalysisResult(
-    String pkdId,
+public record ModuleAnalysisResult(
+    String moduleId,
     Delta delta,
     Map<Repository, DeltaImpact> clientResults,
     Path basePath,
     String error
 ) {
-  public static PackageAnalysisResult success(String pkgId, Delta delta, Map<Repository, DeltaImpact> clientResults, Path basePath) {
-    return new PackageAnalysisResult(pkgId, delta, clientResults, basePath, null);
+  public static ModuleAnalysisResult success(String moduleId, Delta delta, Map<Repository, DeltaImpact> clientResults, Path basePath) {
+    return new ModuleAnalysisResult(moduleId, delta, clientResults, basePath, null);
   }
 
-  public static PackageAnalysisResult failure(String pkgId, String error) {
-    return new PackageAnalysisResult(pkgId, null, Collections.emptyMap(), null, error);
+  public static ModuleAnalysisResult failure(String moduleId, String error) {
+    return new ModuleAnalysisResult(moduleId, null, Collections.emptyMap(), null, error);
   }
 
   public List<BrokenUse> allBrokenUses() {

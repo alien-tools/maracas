@@ -218,7 +218,7 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchClients_unknown_package() {
+  void fetchClients_unknown_module() {
     Repository drill = github.fetchRepository("apache", "drill");
     List<Repository> clients = github.fetchTopStarredClients(drill, "unknown", 10, -1);
     assertThat(clients, is(empty()));
@@ -232,9 +232,9 @@ class GitHubForgeTest {
   }
 
   @Test
-  void fetchAllClients_no_package() {
+  void fetchAllClients_no_module() {
     Repository ews = github.fetchRepository("OfficeDev", "ews-java-api");
-    List<Repository> clients = github.fetchAllClients(ews, "default_package", 10, -1);
+    List<Repository> clients = github.fetchAllClients(ews, "default_module", 10, -1);
     assertThat(clients, hasSize(10));
   }
 

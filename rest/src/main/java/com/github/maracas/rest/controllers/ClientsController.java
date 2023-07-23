@@ -6,7 +6,7 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubClient;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
-import com.github.maracas.forges.github.GitHubPackage;
+import com.github.maracas.forges.github.GitHubModule;
 import com.github.maracas.rest.data.ClientsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,22 +41,22 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubPackage> packages = fetcher.fetchPackages();
+		List<GitHubModule> modules = fetcher.fetchModules();
 		List<GitHubClient> clients = fetcher.fetchClients();
 
-		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, clients));
+		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, clients));
 	}
 
-	@GetMapping("/packages/{owner}/{name}")
-	public ResponseEntity<ClientsResponse> fetchPackages(
+	@GetMapping("/modules/{owner}/{name}")
+	public ResponseEntity<ClientsResponse> fetchModules(
 		@PathVariable String owner,
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubPackage> packages = fetcher.fetchPackages();
+		List<GitHubModule> modules = fetcher.fetchModules();
 
-		return ResponseEntity.ok(new ClientsResponse(owner, name, packages, Collections.emptyList()));
+		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, Collections.emptyList()));
 	}
 
 	@ExceptionHandler({ForgeException.class})

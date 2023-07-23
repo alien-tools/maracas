@@ -5,7 +5,7 @@ public record GitHubClient(
   String name,
   int stars,
   int forks,
-  GitHubPackage dependency
+  GitHubModule dependency
 ) {
 
 }

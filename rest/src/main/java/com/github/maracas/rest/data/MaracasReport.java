@@ -7,17 +7,17 @@ import com.github.maracas.forges.analysis.PullRequestAnalysisResult;
 import java.util.List;
 
 public record MaracasReport(
-	List<PackageReport> reports
+	List<ModuleReport> reports
 ) {
 	public static MaracasReport of(PullRequestAnalysisResult result) {
 		return new MaracasReport(
-			result.packageResults().values()
+			result.moduleResults().values()
 				.stream()
-				.map(pkg -> new PackageReport(
-					pkg.pkdId(),
-					pkg.error(),
-					pkg.delta() != null ? DeltaDto.of(pkg.delta(), result.pr(), pkg.basePath()) : null,
-					pkg.clientResults().entrySet()
+				.map(module -> new ModuleReport(
+					module.moduleId(),
+					module.error(),
+					module.delta() != null ? DeltaDto.of(module.delta(), result.pr(), module.basePath()) : null,
+					module.clientResults().entrySet()
 						.stream()
 						.map(r -> {
 							Repository client = r.getKey();

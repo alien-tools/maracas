@@ -25,7 +25,7 @@ class Usage {
 		PullRequestAnalyzer analyzer = new PullRequestAnalyzer(forge);
 		PullRequest pr = forge.fetchPullRequest("owner", "library", 42);
 
-		PullRequestAnalysisResult result = analyzer.analyze(pr, MaracasOptions.newDefault());
+		PullRequestAnalysisResult result = analyzer.analyzePullRequest(pr, MaracasOptions.newDefault());
 		List<BreakingChange> breakingChanges = result.breakingChanges();
 		Set<BrokenUse> brokenUses = result.brokenUses();
 	}

@@ -12,7 +12,7 @@ import com.github.maracas.rest.data.BrokenUseDto;
 import com.github.maracas.rest.data.ClientReport;
 import com.github.maracas.rest.data.DeltaDto;
 import com.github.maracas.rest.data.MaracasReport;
-import com.github.maracas.rest.data.PackageReport;
+import com.github.maracas.rest.data.ModuleReport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GitHub;
@@ -56,7 +56,7 @@ class MaracasReportTests {
 		Repository clientRepo = forge.fetchRepository("alien-tools", "comp-changes-client");
 
 		report = new MaracasReport(
-			List.of(PackageReport.success(
+			List.of(ModuleReport.success(
 				"/",
 				DeltaDto.of(result.delta(), pr, Path.of("../test-data/comp-changes/old/")),
 				List.of(ClientReport.success("alien-tools/comp-changes-client", "https://github.com/alien-tools/comp-changes-client",

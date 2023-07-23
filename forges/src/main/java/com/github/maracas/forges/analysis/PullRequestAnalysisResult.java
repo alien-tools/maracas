@@ -13,23 +13,23 @@ import java.util.stream.Collectors;
 
 public record PullRequestAnalysisResult(
     PullRequest pr,
-    Map<String, PackageAnalysisResult> packageResults
+    Map<String, ModuleAnalysisResult> moduleResults
 ) {
   public PullRequestAnalysisResult {
     Objects.requireNonNull(pr);
-    Objects.requireNonNull(packageResults);
+    Objects.requireNonNull(moduleResults);
   }
 
   public List<BreakingChange> breakingChanges() {
-    return packageResults().values().stream()
-      .map(pkg -> pkg.delta().getBreakingChanges())
+    return moduleResults().values().stream()
+      .map(module -> module.delta().getBreakingChanges())
       .flatMap(Collection::stream)
       .toList();
   }
 
   public Set<BrokenUse> brokenUses() {
-    return packageResults().values().stream()
-      .map(PackageAnalysisResult::allBrokenUses)
+    return moduleResults().values().stream()
+      .map(ModuleAnalysisResult::allBrokenUses)
       .flatMap(Collection::stream)
       .collect(Collectors.toSet());
   }

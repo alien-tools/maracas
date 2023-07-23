@@ -22,7 +22,7 @@ import java.util.Objects;
  * Unfortunately, information about dependents isn't available through their REST nor GraphQL APIs,
  * so we have to scrap the 'github.com/org/repo/network/dependents' webpage.
  * <br>
- * Note that repositories typically expose several "packages" (e.g., Maven modules) to which dependencies
+ * Note that repositories typically expose several modules ("packages" in GitHub's terminology) to which dependencies
  * are pointing.
  *
  * @see <a href="https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph">About the dependency graph</a>
@@ -31,7 +31,7 @@ import java.util.Objects;
 public class GitHubClientsFetcher {
 	private final Repository repository;
 
-	private static final String PACKAGES_URL = "https://github.com/%s/%s/network/dependents";
+	private static final String MODULES_URL = "https://github.com/%s/%s/network/dependents";
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 	private static final String REFERRER = "https://www.google.com";
 	private static final int HTTP_OK = 200;
@@ -44,23 +44,23 @@ public class GitHubClientsFetcher {
 		this.repository = Objects.requireNonNull(repository);
 	}
 
-	public List<GitHubPackage> fetchPackages() {
-		String pkgsPageUrl = PACKAGES_URL.formatted(repository.owner(), repository.name());
-		Document pkgsPage = fetchPage(pkgsPageUrl);
+	public List<GitHubModule> fetchModules() {
+		String modulesPageUrl = MODULES_URL.formatted(repository.owner(), repository.name());
+		Document modulesPage = fetchPage(modulesPageUrl);
 
-		if (pkgsPage != null) {
-			Elements pkgs = pkgsPage.select("#dependents .select-menu-item");
+		if (modulesPage != null) {
+			Elements modules = modulesPage.select("#dependents .select-menu-item");
 
-			if (!pkgs.isEmpty()) { // This repository has >= 1 packages
+			if (!modules.isEmpty()) { // This repository has >= 1 modules
 				return
-					pkgs.stream()
+					modules.stream()
 						.map(link -> {
 							String name = link.select(".select-menu-item-text").text().trim();
 							String url = "https://github.com" + link.attr("href");
-							return new GitHubPackage(repository, name, url);
+							return new GitHubModule(repository, name, url);
 						}).toList();
-			} else { // This repository does not have any package
-				return List.of(new GitHubPackage(repository, "default_package", pkgsPageUrl));
+			} else { // This repository does not have any module
+				return List.of(new GitHubModule(repository, "default_module", modulesPageUrl));
 			}
 		} else {
 			return Collections.emptyList();
@@ -68,9 +68,9 @@ public class GitHubClientsFetcher {
 	}
 
 	public List<GitHubClient> fetchClients(int limit) {
-		return fetchPackages()
+		return fetchModules()
 			.stream()
-			.map(pkg -> fetchClients(pkg, pkg.url(), limit))
+			.map(module -> fetchClients(module, module.url(), limit))
 			.flatMap(Collection::stream)
 			.toList();
 	}
@@ -79,26 +79,26 @@ public class GitHubClientsFetcher {
 		return fetchClients(Integer.MAX_VALUE);
 	}
 
-	public List<GitHubClient> fetchClients(String pkg, int limit) {
-		return !StringUtils.isEmpty(pkg)
-			? fetchPackages().stream()
-					.filter(p -> p.id().equals(pkg))
+	public List<GitHubClient> fetchClients(String module, int limit) {
+		return !StringUtils.isEmpty(module)
+			? fetchModules().stream()
+					.filter(m -> m.id().equals(module))
 					.findFirst()
-					.map(p -> fetchClients(p, p.url(), limit))
+					.map(m -> fetchClients(m, m.url(), limit))
 					.orElse(Collections.emptyList())
 			: Collections.emptyList();
 	}
 
-	public List<GitHubClient> fetchClients(String pkg) {
-		return fetchClients(pkg, Integer.MAX_VALUE);
+	public List<GitHubClient> fetchClients(String module) {
+		return fetchClients(module, Integer.MAX_VALUE);
 	}
 
-	private List<GitHubClient> fetchClients(GitHubPackage pkg, String url, int limit) {
+	private List<GitHubClient> fetchClients(GitHubModule module, String url, int limit) {
 		List<GitHubClient> clients = new ArrayList<>();
-		Document pkgPage = fetchPage(url);
+		Document modulePage = fetchPage(url);
 
-		if (pkgPage != null) {
-			List<String> clientRows = pkgPage.select("#dependents .Box-row").eachText();
+		if (modulePage != null) {
+			List<String> clientRows = modulePage.select("#dependents .Box-row").eachText();
 
 			// row should be of the form "org / user stars forks"
 			clientRows.forEach(row -> {
@@ -109,7 +109,7 @@ public class GitHubClientsFetcher {
 						fields[2].trim(),
 						Integer.parseInt(fields[3].trim().replaceAll("\\D", "")),
 						Integer.parseInt(fields[4].trim().replaceAll("\\D", "")),
-						pkg));
+						module));
 				} else logger.error("Couldn't parse row {}", row);
 			});
 
@@ -117,13 +117,13 @@ public class GitHubClientsFetcher {
 
 			if (remaining > 0) {
 				// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
-				Elements pagination = pkgPage.select("#dependents .paginate-container .BtnGroup-item");
+				Elements pagination = modulePage.select("#dependents .paginate-container .BtnGroup-item");
 				if (pagination.size() == 2) {
 					Element nextBtn = pagination.get(1);
 					String nextUrl = nextBtn.attr("abs:href");
 
 					if (!nextUrl.isEmpty())
-						clients.addAll(fetchClients(pkg, nextUrl, remaining));
+						clients.addAll(fetchClients(module, nextUrl, remaining));
 				}
 			}
 		}

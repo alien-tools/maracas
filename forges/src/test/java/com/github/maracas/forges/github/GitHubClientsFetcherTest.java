@@ -10,14 +10,14 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 
 class GitHubClientsFetcherTest {
-	final Repository drill = new Repository("apache", "drill", "", ""); // several packages
-	final Repository ews = new Repository("OfficeDev", "ews-java-api", "", ""); // no package
+	final Repository drill = new Repository("apache", "drill", "", ""); // several modules
+	final Repository ews = new Repository("OfficeDev", "ews-java-api", "", ""); // no module
 	final Repository guava = new Repository("google", "guava", "", ""); // way too big
 
 	@Test
-	void fetch_packages_drill() {
+	void fetch_modules_drill() {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(drill);
-		assertThat(fetcher.fetchPackages(), hasSize(11));
+		assertThat(fetcher.fetchModules(), hasSize(11));
 	}
 
 	@Test
@@ -27,29 +27,29 @@ class GitHubClientsFetcherTest {
 	}
 
 	@Test
-	void fetch_packages_unknown() {
+	void fetch_modules_unknown() {
 		Repository unknown = new Repository("alien-tools", "unknown", "", "");
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(unknown);
-		assertThat(fetcher.fetchPackages(), is(empty()));
+		assertThat(fetcher.fetchModules(), is(empty()));
 		assertThat(fetcher.fetchClients(), is(empty()));
 	}
 
 	@Test
-	void fetch_one_package_drill() {
+	void fetch_one_module_drill() {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(drill);
 		assertThat(fetcher.fetchClients("org.apache.drill:drill-common"), hasSize(greaterThan(50)));
 	}
 
 	@Test
-	void fetch_unknown_package_drill() {
+	void fetch_unknown_module_drill() {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(drill);
-		assertThat(fetcher.fetchClients("unknown:package"), is(empty()));
+		assertThat(fetcher.fetchClients("unknown:module"), is(empty()));
 	}
 
 	@Test
-	void fetch_packages_ews() {
+	void fetch_modules_ews() {
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(ews);
-		assertThat(fetcher.fetchPackages(), hasSize(1));
+		assertThat(fetcher.fetchModules(), hasSize(1));
 	}
 
 	@Test

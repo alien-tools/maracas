@@ -33,7 +33,7 @@ public class PullRequestService {
 	private final Path reportPath;
 	private final int cloneTimeout;
 	private final int buildTimeout;
-	private final int clientsPerPackage;
+	private final int clientsPerModule;
 	private final int maxClassLines;
 
 	private final Map<String, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public class PullRequestService {
 		this.reportPath = Path.of(env.getProperty("maracas.report-path", "./reports"));
 		this.buildTimeout = env.getProperty("maracas.build-timeout", Integer.class, 600);
 		this.cloneTimeout = env.getProperty("maracas.clone-timeout", Integer.class, 600);
-		this.clientsPerPackage = env.getProperty("maracas.clients-per-package", Integer.class, 10);
+		this.clientsPerModule = env.getProperty("maracas.clients-per-module", Integer.class, 10);
 		this.maxClassLines = env.getProperty("maracas.max-class-lines", Integer.class, 20_000);
 
 		if ((!clonePath.toFile().exists() && !clonePath.toFile().mkdirs()) ||
@@ -99,14 +99,14 @@ public class PullRequestService {
 
 	private MaracasReport buildMaracasReport(PullRequest pr) {
 		logger.info("[{}] Starting the analysis", pr.uid());
-		return MaracasReport.of(analyzer.analyze(pr, makeMaracasOptions()));
+		return MaracasReport.of(analyzer.analyzePullRequest(pr, makeMaracasOptions()));
 	}
 
 	private MaracasOptions makeMaracasOptions() {
 		MaracasOptions options = MaracasOptions.newDefault();
 		options.setCloneTimeoutSeconds(cloneTimeout);
 		options.setBuildTimeoutSeconds(buildTimeout);
-		options.setClientsPerPackage(clientsPerPackage);
+		options.setClientsPerModule(clientsPerModule);
 		options.setMaxClassLines(maxClassLines);
 
 		return options;
