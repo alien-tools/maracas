@@ -1,6 +1,7 @@
 package com.github.maracas.forges;
 
 import com.github.maracas.forges.github.BreakbotConfig;
+import com.github.maracas.forges.github.GitHubModule;
 
 import java.util.List;
 
@@ -26,6 +27,8 @@ public interface Forge {
   List<Repository> fetchCustomClients(Repository repository) throws ForgeException;
 
   List<Repository> fetchAllClients(Repository repository, String moduleId, int limit, int minStars) throws ForgeException;
+
+  List<GitHubModule> fetchModules(Repository repository);
 
   BreakbotConfig fetchBreakbotConfig(Repository repository) throws ForgeException;
 }

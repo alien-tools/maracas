@@ -7,14 +7,15 @@ import com.github.maracas.brokenuse.DeltaImpact;
 import com.github.maracas.delta.Delta;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 /**
  * The result of analyzing an {@link AnalysisQuery} with Maracas.
@@ -29,10 +30,15 @@ public record AnalysisResult(
 	 */
 	Map<SourcesDirectory, DeltaImpact> deltaImpacts
 ) {
-	public static AnalysisResult success(Delta delta, Map<SourcesDirectory, DeltaImpact> deltaImpacts) {
+	public static AnalysisResult success(Delta delta, List<DeltaImpact> deltaImpacts) {
 		return new AnalysisResult(
 			Objects.requireNonNull(delta),
 			Objects.requireNonNull(deltaImpacts)
+				.stream()
+				.collect(toUnmodifiableMap(
+					DeltaImpact::client,
+					Function.identity()
+				))
 		);
 	}
 
@@ -48,10 +54,8 @@ public record AnalysisResult(
 			Objects.requireNonNull(delta),
 			Objects.requireNonNull(clients)
 				.stream()
-				.collect(toMap(
-					Function.identity(),
-					c -> DeltaImpact.success(c, delta, emptySet()))
-				)
+				.map(client -> DeltaImpact.success(client, delta, emptySet()))
+				.toList()
 		);
 	}
 

@@ -20,9 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toMap;
 
 public class Maracas {
 	private static final Logger logger = LogManager.getLogger(Maracas.class);
@@ -48,10 +45,10 @@ public class Maracas {
 		// Compute the impact for each client and return the result
 		return AnalysisResult.success(
 			delta,
-			query.getClients().parallelStream().collect(toMap(
-				Function.identity(),
-				c -> computeDeltaImpact(c, delta, query.getMaracasOptions()))
-			)
+			query.getClients()
+				.parallelStream()
+				.map(c -> computeDeltaImpact(c, delta, query.getMaracasOptions()))
+				.toList()
 		);
 	}
 

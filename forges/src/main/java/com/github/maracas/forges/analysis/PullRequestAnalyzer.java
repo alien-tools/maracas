@@ -11,6 +11,7 @@ import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.BreakbotConfig;
+import com.github.maracas.forges.github.GitHubModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -62,10 +62,6 @@ public class PullRequestAnalyzer {
 		BreakbotConfig config = forge.fetchBreakbotConfig(pr.repository());
 		config.excludes().forEach(excl -> options.getJApiOptions().addExcludeFromArgument(japicmp.util.Optional.of(excl), false));
 
-		return analyzePullRequest(pr, config, options);
-	}
-
-	private PullRequestAnalysisResult analyzePullRequest(PullRequest pr, BreakbotConfig config, MaracasOptions options) {
 		// First, we need to clone mergeBase
 		CommitBuilder builderV1 = makeBuilderForLibrary(pr, new BuildModule("", Path.of("")), pr.mergeBase(), config.build());
 		builderV1.cloneCommit(options.getCloneTimeoutSeconds());
@@ -75,36 +71,38 @@ public class PullRequestAnalyzer {
 		logger.info("{} impacts {} modules: {}", pr, impactedModules.size(), impactedModules);
 
 		// We need to run the whole analysis for each impacted module in the PR
-		Map<String, ModuleAnalysisResult> results = new ConcurrentHashMap<>();
-		List<CompletableFuture<Void>> futures =
-			impactedModules.stream()
-				.map(module ->
-					CompletableFuture.supplyAsync(
-						() -> analyzeModule(pr, module, config.build(), options),
-						executorService
-					).thenAccept(res -> results.put(module.name(), res)))
+		List<ModuleAnalysisResult> results =
+			impactedModules
+				.stream()
+				.map(module -> CompletableFuture.supplyAsync(() -> analyzeModule(pr, module, config.build(), options), executorService))
+				.map(CompletableFuture::join)
 				.toList();
-
-		CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
 		cleanUp(pr);
 		return new PullRequestAnalysisResult(pr, results);
 	}
 
 	private ModuleAnalysisResult analyzeModule(PullRequest pr, BuildModule module, BreakbotConfig.Build buildConfig, MaracasOptions options) {
+		List<GitHubModule> repositoryModules = forge.fetchModules(pr.repository());
+		GitHubModule repositoryModule =
+			repositoryModules
+				.stream()
+				.filter(m -> m.id().equals(module.name()))
+				.findFirst()
+				.orElse(new GitHubModule(pr.repository(), "unknown", "unknown"));
+
 		try {
 			logger.info("[{}] Now analyzing module {}", pr, module.name());
 
+			// First, we compute the delta model to look for BCs
 			Commit v1 = pr.mergeBase();
 			Commit v2 = pr.head();
-
-			// First, we compute the delta model to look for BCs
 			CommitBuilder builderV1 = makeBuilderForLibrary(pr, module, v1, buildConfig);
 			CommitBuilder builderV2 = makeBuilderForLibrary(pr, module, v2, buildConfig);
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
 			if (delta.isEmpty())
-				return ModuleAnalysisResult.success(module.name(), delta, Collections.emptyMap(), builderV1.getClonePath());
+				return ModuleAnalysisResult.success(repositoryModule, delta, Collections.emptyMap(), builderV1.getClonePath());
 
 			// If we find some, we fetch the appropriate clients and analyze the impact
 			logger.info("Fetching clients for module {}", module.name());
@@ -120,7 +118,7 @@ public class PullRequestAnalyzer {
 
 			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options);
 			return ModuleAnalysisResult.success(
-				module.name(),
+				repositoryModule,
 				delta,
 				builders.keySet().stream().collect(Collectors.toMap(
 					Commit::repository,
@@ -129,7 +127,7 @@ public class PullRequestAnalyzer {
 				builderV1.getClonePath()
 			);
 		} catch (Exception e) {
-			return ModuleAnalysisResult.failure(module.name(), e.getMessage());
+			return ModuleAnalysisResult.failure(repositoryModule, e.getMessage());
 		}
 	}
 

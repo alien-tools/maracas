@@ -15,16 +15,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public class CommitAnalyzer {
 	private final Maracas maracas;
@@ -96,14 +93,11 @@ public class CommitAnalyzer {
 			);
 		}
 
-		Map<SourcesDirectory, DeltaImpact> clientsImpact =
+		List<DeltaImpact> clientsImpact =
 			clients.stream()
 				.map(client -> cloneAndAnalyzeClient(delta, client, options))
 				.map(CompletableFuture::join)
-				.collect(toUnmodifiableMap(
-					DeltaImpact::client,
-					Function.identity()
-				));
+				.toList();
 
 		return AnalysisResult.success(delta, clientsImpact);
 	}

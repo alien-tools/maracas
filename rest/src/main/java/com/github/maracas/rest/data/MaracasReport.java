@@ -14,7 +14,7 @@ public record MaracasReport(
 			result.moduleResults().values()
 				.stream()
 				.map(module -> new ModuleReport(
-					module.moduleId(),
+					module.module().id(),
 					module.error(),
 					module.delta() != null ? DeltaDto.of(module.delta(), result.pr(), module.basePath()) : null,
 					module.clientResults().entrySet()

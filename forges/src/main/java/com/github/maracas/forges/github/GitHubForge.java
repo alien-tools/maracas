@@ -164,7 +164,7 @@ public class GitHubForge implements Forge {
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
 			.filter(client ->
 				!client.name().equals(repository.name()) && // Kinda harsh, but there are too many "unofficial" forks
-				client.stars() < minStars &&
+				client.stars() >= minStars &&
 				isValidClient(client) // No fork, archived, or disabled repository
 			)
 			.limit(limit > 0 ? limit : clients.size())
@@ -197,6 +197,12 @@ public class GitHubForge implements Forge {
 			fetchCustomClients(repository).stream(),
 			fetchTopStarredClients(repository, moduleId, limit, minStars).stream()
 		).toList();
+	}
+
+	@Override
+	public List<GitHubModule> fetchModules(Repository repository) {
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
+		return fetcher.fetchModules();
 	}
 
 	@Override
