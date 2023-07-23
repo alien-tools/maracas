@@ -1,6 +1,7 @@
 package com.github.maracas.forges.github;
 
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.RepositoryModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
@@ -44,7 +45,7 @@ public class GitHubClientsFetcher {
 		this.repository = Objects.requireNonNull(repository);
 	}
 
-	public List<GitHubModule> fetchModules() {
+	public List<RepositoryModule> fetchModules() {
 		String modulesPageUrl = MODULES_URL.formatted(repository.owner(), repository.name());
 		Document modulesPage = fetchPage(modulesPageUrl);
 
@@ -57,10 +58,10 @@ public class GitHubClientsFetcher {
 						.map(link -> {
 							String name = link.select(".select-menu-item-text").text().trim();
 							String url = "https://github.com" + link.attr("href");
-							return new GitHubModule(repository, name, url);
+							return new RepositoryModule(repository, name, url);
 						}).toList();
 			} else { // This repository does not have any module
-				return List.of(new GitHubModule(repository, "default_module", modulesPageUrl));
+				return List.of(new RepositoryModule(repository, "default_module", modulesPageUrl));
 			}
 		} else {
 			return Collections.emptyList();
@@ -93,7 +94,7 @@ public class GitHubClientsFetcher {
 		return fetchClients(module, Integer.MAX_VALUE);
 	}
 
-	private List<GitHubClient> fetchClients(GitHubModule module, String url, int limit) {
+	private List<GitHubClient> fetchClients(RepositoryModule module, String url, int limit) {
 		List<GitHubClient> clients = new ArrayList<>();
 		Document modulePage = fetchPage(url);
 

@@ -7,11 +7,12 @@ import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
+import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildModule;
 import com.github.maracas.forges.build.CommitBuilder;
 import com.github.maracas.forges.github.BreakbotConfig;
-import com.github.maracas.forges.github.GitHubModule;
+import com.github.maracas.forges.RepositoryModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +21,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +28,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public class PullRequestAnalyzer {
 	private final Forge forge;
@@ -82,41 +85,37 @@ public class PullRequestAnalyzer {
 		return new PullRequestAnalysisResult(pr, results);
 	}
 
-	private ModuleAnalysisResult analyzeModule(PullRequest pr, BuildModule module, BreakbotConfig.Build buildConfig, MaracasOptions options) {
-		List<GitHubModule> repositoryModules = forge.fetchModules(pr.repository());
-		GitHubModule repositoryModule =
-			repositoryModules
-				.stream()
-				.filter(m -> m.id().equals(module.name()))
-				.findFirst()
-				.orElse(new GitHubModule(pr.repository(), "unknown", "unknown"));
+	private ModuleAnalysisResult analyzeModule(PullRequest pr, BuildModule mavenModule, BreakbotConfig.Build buildConfig, MaracasOptions options) {
+		RepositoryModule repositoryModule = getRepositoryModule(pr.repository(), mavenModule.name());
 
 		try {
-			logger.info("[{}] Now analyzing module {}", pr, module.name());
+			logger.info("[{}] Now analyzing module {}", pr, mavenModule.name());
 
 			// First, we compute the delta model to look for BCs
 			Commit v1 = pr.mergeBase();
 			Commit v2 = pr.head();
-			CommitBuilder builderV1 = makeBuilderForLibrary(pr, module, v1, buildConfig);
-			CommitBuilder builderV2 = makeBuilderForLibrary(pr, module, v2, buildConfig);
+			CommitBuilder builderV1 = makeBuilderForLibrary(pr, mavenModule, v1, buildConfig);
+			CommitBuilder builderV2 = makeBuilderForLibrary(pr, mavenModule, v2, buildConfig);
 			Delta delta = commitAnalyzer.computeDelta(builderV1, builderV2, options);
 
 			if (delta.isEmpty())
 				return ModuleAnalysisResult.success(repositoryModule, delta, Collections.emptyMap(), builderV1.getClonePath());
 
 			// If we find some, we fetch the appropriate clients and analyze the impact
-			logger.info("Fetching clients for module {}", module.name());
-			Collection<Commit> clients =
-				forge.fetchAllClients(pr.repository(), module.name(), options.getClientsPerModule(), options.getMinStarsPerClient())
-					.stream()
-					.map(repository -> forge.fetchCommit(repository, "HEAD"))
-					.toList();
-			logger.info("Found {} clients to analyze for {}", clients.size(), module.name());
+			logger.info("Fetching clients for module {}", mavenModule);
+			Collection<Repository> clients = forge.fetchAllClients(repositoryModule, options.getClientsPerModule(), options.getMinStarsPerClient());
+			logger.info("Found {} clients to analyze for {}", clients.size(), mavenModule);
 
-			Map<Commit, CommitBuilder> builders = new HashMap<>();
-			clients.forEach(c -> builders.put(c, makeBuilderForClient(pr, module, c)));
+			Map<Commit, CommitBuilder> builders =
+				clients.stream()
+					.map(clientRepository -> forge.fetchCommit(clientRepository, "HEAD"))
+					.collect(toUnmodifiableMap(
+						Function.identity(),
+						c -> makeBuilderForClient(pr, mavenModule, c)
+					));
 
 			AnalysisResult result = commitAnalyzer.computeImpact(delta, builders.values(), options);
+
 			return ModuleAnalysisResult.success(
 				repositoryModule,
 				delta,
@@ -153,6 +152,14 @@ public class PullRequestAnalyzer {
 			.flatMap(Optional::stream)
 			.distinct()
 			.toList();
+	}
+
+	private RepositoryModule getRepositoryModule(Repository repository, String moduleId) {
+		return forge.fetchModules(repository)
+			.stream()
+			.filter(m -> m.id().equals(moduleId))
+			.findFirst()
+			.orElse(new RepositoryModule(repository, "unknown", "unknown"));
 	}
 
 	private CommitBuilder makeBuilderForLibrary(PullRequest pr, BuildModule module, Commit c, BreakbotConfig.Build build) {

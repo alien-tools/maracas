@@ -6,7 +6,7 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.github.GitHubClient;
 import com.github.maracas.forges.github.GitHubClientsFetcher;
 import com.github.maracas.forges.github.GitHubForge;
-import com.github.maracas.forges.github.GitHubModule;
+import com.github.maracas.forges.RepositoryModule;
 import com.github.maracas.rest.data.ClientsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +41,7 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubModule> modules = fetcher.fetchModules();
+		List<RepositoryModule> modules = fetcher.fetchModules();
 		List<GitHubClient> clients = fetcher.fetchClients();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, clients));
@@ -54,7 +54,7 @@ public class ClientsController {
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
 		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<GitHubModule> modules = fetcher.fetchModules();
+		List<RepositoryModule> modules = fetcher.fetchModules();
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, Collections.emptyList()));
 	}

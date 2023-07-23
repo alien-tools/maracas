@@ -3,7 +3,7 @@ package com.github.maracas.forges.analysis;
 import com.github.maracas.brokenuse.BrokenUse;
 import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.forges.PullRequest;
-import com.github.maracas.forges.github.GitHubModule;
+import com.github.maracas.forges.RepositoryModule;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +17,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public record PullRequestAnalysisResult(
   PullRequest pr,
-  Map<GitHubModule, ModuleAnalysisResult> moduleResults
+  Map<RepositoryModule, ModuleAnalysisResult> moduleResults
 ) {
   public PullRequestAnalysisResult {
     Objects.requireNonNull(pr);

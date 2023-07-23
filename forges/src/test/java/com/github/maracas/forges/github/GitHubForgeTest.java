@@ -4,6 +4,7 @@ import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
+import com.github.maracas.forges.RepositoryModule;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,7 +159,7 @@ class GitHubForgeTest {
   @Test
   void fetchTopClients_drill() {
     Repository drill = github.fetchRepository("apache", "drill");
-    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 5, -1);
+    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 5, -1);
     assertThat(clients, hasSize(5));
   }
 
@@ -172,13 +173,13 @@ class GitHubForgeTest {
 
     assertThat(expectedCacheFile.exists(), is(false));
 
-    List<Repository> clients = github.fetchAllClients(repo, "module-a", -1, -1);
+    List<Repository> clients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), -1, -1);
     assertThat(clients, hasSize(2));
     assertThat(expectedCacheFile.exists(), is(true));
 
     Files.writeString(expectedCacheFile.toPath(), """
       [{ "owner": "alien-tools", "name": "maracas", "stars": 2, "forks": 3 }]""");
-    List<Repository> overwrittenClients = github.fetchAllClients(repo, "module-a", 10, -1);
+    List<Repository> overwrittenClients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), 10, -1);
     assertThat(overwrittenClients, hasSize(3));
     assertThat(overwrittenClients, containsInAnyOrder(
       new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),
@@ -192,7 +193,7 @@ class GitHubForgeTest {
   @Test
   void fetchStarredClients_drill() {
     Repository drill = github.fetchRepository("apache", "drill");
-    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", -1, 10);
+    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), -1, 10);
     assertThat(clients, is(not(empty())));
     clients.forEach(client -> {
       try {
@@ -206,7 +207,7 @@ class GitHubForgeTest {
   @Test
   void fetchTopStarredClients_drill() {
     Repository drill = github.fetchRepository("apache", "drill");
-    List<Repository> clients = github.fetchTopStarredClients(drill, "org.apache.drill.exec:drill-rpc", 10, 10);
+    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 10, 10);
     assertThat(clients, hasSize(lessThan(10)));
     clients.forEach(client -> {
       try {
@@ -220,21 +221,21 @@ class GitHubForgeTest {
   @Test
   void fetchClients_unknown_module() {
     Repository drill = github.fetchRepository("apache", "drill");
-    List<Repository> clients = github.fetchTopStarredClients(drill, "unknown", 10, -1);
+    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "unknown", ""), 10, -1);
     assertThat(clients, is(empty()));
   }
 
   @Test
   void fetchAllClients_from_fork() {
     Repository drillFork = github.fetchRepository("break-bot", "drill-fork-for-tests");
-    List<Repository> clients = github.fetchAllClients(drillFork, "org.apache.drill.exec:drill-rpc", 10, -1);
+    List<Repository> clients = github.fetchAllClients(new RepositoryModule(drillFork, "org.apache.drill.exec:drill-rpc", ""), 10, -1);
     assertThat(clients, hasSize(10));
   }
 
   @Test
   void fetchAllClients_no_module() {
     Repository ews = github.fetchRepository("OfficeDev", "ews-java-api");
-    List<Repository> clients = github.fetchAllClients(ews, "default_module", 10, -1);
+    List<Repository> clients = github.fetchAllClients(new RepositoryModule(ews, "default_module", ""), 10, -1);
     assertThat(clients, hasSize(10));
   }
 
