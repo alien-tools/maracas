@@ -44,6 +44,6 @@ jobs:
           fail-on-error: true
       - name: Publish SNAPSHOT
         if: ${{ success() && github.event_name == 'push' }}
-        run: mvn --batch-mode -DskipTests deploy
+        run: mvn --batch-mode -DskipTests -DdeployAtEnd deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

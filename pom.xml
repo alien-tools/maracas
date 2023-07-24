@@ -100,10 +100,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>${maven.deploy.version}</version>
-				<configuration>
-					<!-- Skip by default; enable module-per-module -->
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 			<!-- Documentation -->
 			<plugin>
