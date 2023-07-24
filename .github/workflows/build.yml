@@ -15,6 +15,9 @@ jobs:
   build:
     runs-on: self-hosted
     timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -42,3 +45,8 @@ jobs:
           path: '**/target/surefire-reports/*.xml'
           reporter: java-junit
           fail-on-error: true
+      - name: Publish SNAPSHOT
+        if: ${{ success && github.event_name == 'push' }}
+        run: mvn --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
