@@ -14,8 +14,6 @@
 	<packaging>jar</packaging>
 	<name>Maracas accuracy validator</name>
 
-	<properties></properties>
-
 	<build>
 		<plugins>
 			<plugin>
