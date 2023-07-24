@@ -46,7 +46,7 @@ jobs:
           reporter: java-junit
           fail-on-error: true
       - name: Publish SNAPSHOT
-        if: ${{ success && github.event_name == 'push' }}
+        if: ${{ success() && github.event_name == 'push' }}
         run: mvn --batch-mode deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
