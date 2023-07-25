@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -35,14 +36,16 @@ import java.util.stream.Stream;
 
 public class GitHubForge implements Forge {
 	private final GitHub gh;
+	private final GitHubClientsFetcher clientsFetcher;
 	private Path clientsCacheDirectory;
 	private int clientsCacheExpirationDays = 1;
 	private static final String BREAKBOT_FILE = ".github/breakbot.yml";
 
 	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
 
-	public GitHubForge(GitHub gh) {
+	public GitHubForge(GitHub gh, GitHubClientsFetcher clientsFetcher) {
 		this.gh = Objects.requireNonNull(gh);
+		this.clientsFetcher = Objects.requireNonNull(clientsFetcher);
 
 		if (gh.isAnonymous())
 			logger.warn("Unauthenticated access to GitHub APIs; likely to hit rate limit soon");
@@ -54,6 +57,10 @@ public class GitHubForge implements Forge {
 			dir = Path.of("./clients");
 		}
 		this.clientsCacheDirectory = dir;
+	}
+
+	public GitHubForge(GitHub gh) {
+		this(gh, new GitHubClientsFetcher());
 	}
 
 	@Override
@@ -100,6 +107,8 @@ public class GitHubForge implements Forge {
 	@Override
 	public PullRequest fetchPullRequest(Repository repository, int number) {
 		Objects.requireNonNull(repository);
+		if (number < 0)
+			throw new IllegalArgumentException("number < 0");
 
 		try {
 			GHRepository repo = gh.getRepository(repository.fullName());
@@ -147,44 +156,35 @@ public class GitHubForge implements Forge {
 	public List<Repository> fetchTopStarredClients(RepositoryModule module, int limit, int minStars) {
 		Objects.requireNonNull(module);
 
-		// Beware: if 'repository' is a fork, we retrieve the clients from the original repository
-		RepositoryModule actualModule = module;
-		try {
-			GHRepository repo = gh.getRepository(String.format("%s/%s", module.repository().owner(), module.repository().name()));
-			if (repo != null && repo.getParent() != null) {
-				Repository actualRepository = fetchRepository(repo.getParent().getOwnerName(), repo.getParent().getName());
-				actualModule = new RepositoryModule(actualRepository, module.id(), module.url());
-			}
-		} catch (IOException e) {
-			logger.error(e);
-		}
+		// If 'repository' is a fork, we retrieve the clients from the original repository
+		Repository sourceRepository = getSourceRepository(module.repository());
+		RepositoryModule sourceModule = new RepositoryModule(sourceRepository, module.id(), module.url());
 
-		List<GitHubClient> clients = fetchClients(actualModule, limit);
-		return clients
-			.stream()
+		List<GitHubClient> clients = fetchClients(sourceModule, limit);
+		return clients.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
 			.filter(client ->
-				!client.name().equals(module.repository().name()) && // Kinda harsh, but there are too many "unofficial" forks
+				// Kinda harsh, but there are too many "unofficial" forks
+				!client.name().equals(module.repository().name()) &&
 				client.stars() >= minStars &&
-				isValidClient(client) // No fork, archived, or disabled repository
+				isValidClient(client)
 			)
-			.limit(limit > 0 ? limit : clients.size())
 			.map(client -> fetchRepository(client.owner(), client.name()))
+			.limit(limit > 0 ? limit : clients.size())
 			.toList();
 	}
 
 	@Override
 	public List<Repository> fetchAllClients(RepositoryModule module, int limit, int minStars) {
 		return Stream.concat(
-			fetchCustomClients(module.repository()).stream(),
+			fetchCustomClients(module).stream(),
 			fetchTopStarredClients(module, limit, minStars).stream()
 		).toList();
 	}
 
 	@Override
 	public List<RepositoryModule> fetchModules(Repository repository) {
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		return fetcher.fetchModules();
+		return clientsFetcher.fetchModules(repository);
 	}
 
 	@Override
@@ -199,10 +199,10 @@ public class GitHubForge implements Forge {
 		}
 	}
 
-	public List<Repository> fetchCustomClients(Repository repository) {
-		Objects.requireNonNull(repository);
+	public List<Repository> fetchCustomClients(RepositoryModule module) {
+		Objects.requireNonNull(module);
 
-		return fetchBreakbotConfig(repository).clients().repositories()
+		return fetchBreakbotConfig(module.repository()).clients().repositories()
 			.stream()
 			.map(c -> {
 				List<String> fields = Splitter.on("/").splitToList(c.repository());
@@ -218,36 +218,20 @@ public class GitHubForge implements Forge {
 	}
 
 	private List<GitHubClient> fetchClients(RepositoryModule module, int limit) {
-		Path cacheFile = clientsCacheFile(module);
-		ObjectMapper objectMapper = new ObjectMapper();
-
-		if (clientsCacheIsValid(cacheFile)) {
-			try {
-				List<GitHubClient> clients = objectMapper.readValue(cacheFile.toFile(), new TypeReference<>(){});
-				logger.info("Fetched {} total clients for {} from {}",
-						clients.size(), module, cacheFile);
-				return clients;
-			} catch (IOException e) {
-				logger.error(e);
-			}
+		if (hasClientsCache(module)) {
+			return readClientsCache(module);
 		}
 
 		Stopwatch sw = Stopwatch.createStarted();
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(module.repository());
+
 		// FIXME: dirty, but we don't know how many "raw" clients we should get
 		// to reach our objectives in terms of "usable" clients with required stars
-		List<GitHubClient> clients = fetcher.fetchClients(module.id(), Math.max(1000, limit));
+		int rawClientsToFetch = Math.max(1000, limit);
+		List<GitHubClient> clients = clientsFetcher.fetchClients(module, rawClientsToFetch);
 		logger.info("Fetched {} total clients for {} in {}s",
 				clients.size(), module, sw.elapsed().toSeconds());
 
-		try {
-			Files.createDirectories(cacheFile.getParent());
-			objectMapper.writeValue(cacheFile.toFile(), clients);
-			logger.info("Serialized clients for {} in {}", module, cacheFile);
-		} catch (IOException e) {
-			logger.error(e);
-		}
-
+		writeClientsCache(module, clients);
 		return clients;
 	}
 
@@ -264,7 +248,8 @@ public class GitHubForge implements Forge {
 		this.clientsCacheDirectory = dir;
 	}
 
-	private boolean clientsCacheIsValid(Path cacheFile) {
+	private boolean hasClientsCache(RepositoryModule module) {
+		Path cacheFile = clientsCacheFile(module);
 		if (Files.exists(cacheFile)) {
 			Date modified = new Date(cacheFile.toFile().lastModified());
 			Date now = Date.from(Instant.now());
@@ -276,6 +261,28 @@ public class GitHubForge implements Forge {
 		return false;
 	}
 
+	private List<GitHubClient> readClientsCache(RepositoryModule module) {
+		try {
+			Path cacheFile = clientsCacheFile(module);
+			List<GitHubClient> clients = new ObjectMapper().readValue(cacheFile.toFile(), new TypeReference<>(){});
+			logger.info("Retrieved {} total clients from {}", clients.size(), cacheFile);
+			return clients;
+		} catch (IOException e) {
+			return Collections.emptyList();
+		}
+	}
+
+	private void writeClientsCache(RepositoryModule module, List<GitHubClient> clients) {
+		try {
+			Path cacheFile = clientsCacheFile(module);
+			Files.createDirectories(cacheFile.getParent());
+			new ObjectMapper().writeValue(cacheFile.toFile(), clients);
+			logger.info("Serialized clients for {} in {}", module, cacheFile);
+		} catch (IOException e) {
+			logger.error("Couldn't save clients cache for %s".formatted(module), e);
+		}
+	}
+
 	private boolean isValidClient(GitHubClient client) {
 		try {
 			GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
@@ -283,6 +290,19 @@ public class GitHubForge implements Forge {
 		} catch (IOException e) {
 			return false;
 		}
+	}
+
+	private Repository getSourceRepository(Repository repository) {
+		try {
+			GHRepository repo = gh.getRepository(String.format("%s/%s", repository.owner(), repository.name()));
+			if (repo != null && repo.getSource() != null) {
+				return fetchRepository(repo.getSource().getOwnerName(), repo.getSource().getName());
+			}
+		} catch (IOException e) {
+			// doesn't matter, swallow
+		}
+
+		return repository;
 	}
 
 	private Path clientsCacheFile(RepositoryModule module) {

@@ -4,7 +4,6 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.RepositoryModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.plexus.util.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -30,8 +28,6 @@ import java.util.Objects;
  * @see <a href="https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies">GitHub Acceptable Use Policies</a>
  */
 public class GitHubClientsFetcher {
-	private final Repository repository;
-
 	private static final String MODULES_URL = "https://github.com/%s/%s/network/dependents";
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 	private static final String REFERRER = "https://www.google.com";
@@ -41,11 +37,7 @@ public class GitHubClientsFetcher {
 
 	private static final Logger logger = LogManager.getLogger(GitHubClientsFetcher.class);
 
-	public GitHubClientsFetcher(Repository repository) {
-		this.repository = Objects.requireNonNull(repository);
-	}
-
-	public List<RepositoryModule> fetchModules() {
+	public List<RepositoryModule> fetchModules(Repository repository) {
 		String modulesPageUrl = MODULES_URL.formatted(repository.owner(), repository.name());
 		Document modulesPage = fetchPage(modulesPageUrl);
 
@@ -68,29 +60,29 @@ public class GitHubClientsFetcher {
 		}
 	}
 
-	public List<GitHubClient> fetchClients(int limit) {
-		return fetchModules()
+	public List<GitHubClient> fetchClients(Repository repository, int limit) {
+		return fetchModules(repository)
 			.stream()
 			.map(module -> fetchClients(module, module.url(), limit))
 			.flatMap(Collection::stream)
 			.toList();
 	}
 
-	public List<GitHubClient> fetchClients() {
-		return fetchClients(Integer.MAX_VALUE);
+	public List<GitHubClient> fetchClients(Repository repository) {
+		return fetchClients(repository, Integer.MAX_VALUE);
 	}
 
-	public List<GitHubClient> fetchClients(String module, int limit) {
-		return !StringUtils.isEmpty(module)
-			? fetchModules().stream()
-					.filter(m -> m.id().equals(module))
+	public List<GitHubClient> fetchClients(RepositoryModule module, int limit) {
+		return module != null && module.id() != null
+			? fetchModules(module.repository()).stream()
+					.filter(m -> m.id().equals(module.id()))
 					.findFirst()
 					.map(m -> fetchClients(m, m.url(), limit))
 					.orElse(Collections.emptyList())
 			: Collections.emptyList();
 	}
 
-	public List<GitHubClient> fetchClients(String module) {
+	public List<GitHubClient> fetchClients(RepositoryModule module) {
 		return fetchClients(module, Integer.MAX_VALUE);
 	}
 

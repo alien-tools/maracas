@@ -197,7 +197,7 @@ class GitHubForgeIT {
   @Test
   void fetchStarredClients_drill() {
     Repository drill = github.fetchRepository("apache", "drill");
-    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), -1, 10);
+    List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 10, 10);
     assertThat(clients, is(not(empty())));
     clients.forEach(client -> {
       try {
@@ -246,7 +246,7 @@ class GitHubForgeIT {
   @Test
   void fetchCustomClients_fixture() {
     Repository repo = new Repository("alien-tools", "repository-fixture", "", "");
-    List<Repository> clients = github.fetchCustomClients(repo);
+    List<Repository> clients = github.fetchCustomClients(new RepositoryModule(repo, "module-a", ""));
     assertThat(clients, hasSize(2));
     assertThat(clients, containsInAnyOrder(
       new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),

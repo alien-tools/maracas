@@ -40,9 +40,9 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<RepositoryModule> modules = fetcher.fetchModules();
-		List<GitHubClient> clients = fetcher.fetchClients();
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher();
+		List<RepositoryModule> modules = fetcher.fetchModules(repository);
+		List<GitHubClient> clients = fetcher.fetchClients(repository);
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, clients));
 	}
@@ -53,8 +53,8 @@ public class ClientsController {
 		@PathVariable String name
 	) {
 		Repository repository = forge.fetchRepository(owner, name);
-		GitHubClientsFetcher fetcher = new GitHubClientsFetcher(repository);
-		List<RepositoryModule> modules = fetcher.fetchModules();
+		GitHubClientsFetcher fetcher = new GitHubClientsFetcher();
+		List<RepositoryModule> modules = fetcher.fetchModules(repository);
 
 		return ResponseEntity.ok(new ClientsResponse(owner, name, modules, Collections.emptyList()));
 	}
