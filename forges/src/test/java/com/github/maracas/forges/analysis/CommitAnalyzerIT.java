@@ -1,4 +1,4 @@
-package com.github.maracas.forges.integration;
+package com.github.maracas.forges.analysis;
 
 import com.github.maracas.AnalysisResult;
 import com.github.maracas.Maracas;
@@ -10,7 +10,6 @@ import com.github.maracas.delta.BreakingChange;
 import com.github.maracas.delta.Delta;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
-import com.github.maracas.forges.analysis.CommitAnalyzer;
 import com.github.maracas.forges.build.BuildConfig;
 import com.github.maracas.forges.build.BuildException;
 import com.github.maracas.forges.build.CommitBuilder;
@@ -31,7 +30,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -40,7 +38,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FixtureAnalysisIT {
+class CommitAnalyzerIT {
 	Forge forge;
 	CommitAnalyzer analyzer;
 
