@@ -105,8 +105,8 @@ public class GitCloner implements Cloner {
 				proc.destroy();
 				// Waiting a bit for the process to actually terminate, if necessary
 				proc.waitFor(5, TimeUnit.SECONDS);
-				logger.error("{} timed out [> {}s]", readableCommand, timeout);
-				throw new CloneException("%s timed out [> %ds]".formatted(readableCommand, timeout));
+				logger.error("{} timed out [> {}]", readableCommand, timeout);
+				throw new CloneException("%s timed out [> %s]".formatted(readableCommand, timeout));
 			}
 		} catch (IOException e) {
 			throw new CloneException(e);
