@@ -32,6 +32,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * {@link GitHub} is an absolute nightmare to mock as
+ * everything's resolved lazily through method chaining.
+ */
 @ExtendWith(MockitoExtension.class)
 class GitHubForgeTest {
   @Mock

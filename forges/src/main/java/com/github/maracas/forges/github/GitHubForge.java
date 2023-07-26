@@ -1,7 +1,5 @@
 package com.github.maracas.forges.github;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.forges.Commit;
 import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.ForgeException;
@@ -9,7 +7,6 @@ import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.RepositoryModule;
 import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,22 +20,17 @@ import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.util.Collections;
+import java.time.Duration;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class GitHubForge implements Forge {
 	private final GitHub gh;
 	private final GitHubClientsFetcher clientsFetcher;
-	private Path clientsCacheDirectory;
-	private int clientsCacheExpirationDays = 1;
+
 	private static final String BREAKBOT_FILE = ".github/breakbot.yml";
 
 	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
@@ -49,18 +41,10 @@ public class GitHubForge implements Forge {
 
 		if (gh.isAnonymous())
 			logger.warn("Unauthenticated access to GitHub APIs; likely to hit rate limit soon");
-
-		Path dir;
-		try {
-			dir = Files.createTempDirectory("clients").toAbsolutePath();
-		} catch (IOException e) {
-			dir = Path.of("./clients");
-		}
-		this.clientsCacheDirectory = dir;
 	}
 
 	public GitHubForge(GitHub gh) {
-		this(gh, new GitHubClientsFetcher());
+		this(gh, new GitHubClientsScraper(Duration.ofDays(7)));
 	}
 
 	@Override
@@ -160,17 +144,16 @@ public class GitHubForge implements Forge {
 		Repository sourceRepository = getSourceRepository(module.repository());
 		RepositoryModule sourceModule = new RepositoryModule(sourceRepository, module.id(), module.url());
 
-		List<GitHubClient> clients = fetchClients(sourceModule, limit);
+		GitHubClientsFetcher.ClientFilter filter = client ->
+			// Kinda harsh, but there are too many "unofficial" forks
+			!client.name().equals(module.repository().name()) &&
+			client.stars() >= minStars &&
+			isValidClient(client);
+
+		List<GitHubClient> clients = clientsFetcher.fetchClients(sourceModule, filter, limit);
 		return clients.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
-			.filter(client ->
-				// Kinda harsh, but there are too many "unofficial" forks
-				!client.name().equals(module.repository().name()) &&
-				client.stars() >= minStars &&
-				isValidClient(client)
-			)
 			.map(client -> fetchRepository(client.owner(), client.name()))
-			.limit(limit > 0 ? limit : clients.size())
 			.toList();
 	}
 
@@ -199,7 +182,7 @@ public class GitHubForge implements Forge {
 		}
 	}
 
-	public List<Repository> fetchCustomClients(RepositoryModule module) {
+	private List<Repository> fetchCustomClients(RepositoryModule module) {
 		Objects.requireNonNull(module);
 
 		return fetchBreakbotConfig(module.repository()).clients().repositories()
@@ -217,82 +200,15 @@ public class GitHubForge implements Forge {
 			.toList();
 	}
 
-	private List<GitHubClient> fetchClients(RepositoryModule module, int limit) {
-		// FIXME: dirty, but we don't know how many "raw" clients we should get
-		// to reach our objectives in terms of "usable" clients with required stars
-		int rawClientsToFetch = 10 * limit;
-
-		if (hasClientsCache(module)) {
-			List<GitHubClient> clients = readClientsCache(module);
-
-			if (clients.size() >= rawClientsToFetch)
-				return clients;
-		}
-
-		Stopwatch sw = Stopwatch.createStarted();
-
-		List<GitHubClient> clients = clientsFetcher.fetchClients(module, rawClientsToFetch);
-		logger.info("Fetched {} total clients for {} in {}s",
-			clients::size, () -> module, () -> sw.elapsed().toSeconds());
-
-		writeClientsCache(module, clients);
-		return clients;
-	}
-
-	public void setClientsCacheExpirationDays(int clientsCacheExpirationDays) {
-		if (clientsCacheExpirationDays < 0)
-			throw new IllegalArgumentException("clientsCacheExpirationDays < 0");
-		this.clientsCacheExpirationDays = clientsCacheExpirationDays;
-	}
-
-	public void setClientsCacheDirectory(Path dir) {
-		if (dir == null || !Files.exists(dir))
-			throw new IllegalArgumentException("dir does not exist");
-
-		this.clientsCacheDirectory = dir;
-	}
-
-	private boolean hasClientsCache(RepositoryModule module) {
-		Path cacheFile = clientsCacheFile(module);
-		if (Files.exists(cacheFile)) {
-			Date modified = new Date(cacheFile.toFile().lastModified());
-			Date now = Date.from(Instant.now());
-
-			long daysDiff = TimeUnit.DAYS.convert(Math.abs(now.getTime() - modified.getTime()), TimeUnit.MILLISECONDS);
-			return daysDiff <= clientsCacheExpirationDays;
-		}
-
-		return false;
-	}
-
-	private List<GitHubClient> readClientsCache(RepositoryModule module) {
-		try {
-			Path cacheFile = clientsCacheFile(module);
-			List<GitHubClient> clients = new ObjectMapper().readValue(cacheFile.toFile(), new TypeReference<>(){});
-			logger.info("Retrieved {} total clients from {}", clients::size, () -> cacheFile);
-			return clients;
-		} catch (IOException e) {
-			return Collections.emptyList();
-		}
-	}
-
-	private void writeClientsCache(RepositoryModule module, List<GitHubClient> clients) {
-		try {
-			Path cacheFile = clientsCacheFile(module);
-			Path parent = cacheFile.getParent();
-			if (parent != null)
-				Files.createDirectories(parent);
-			new ObjectMapper().writeValue(cacheFile.toFile(), clients);
-			logger.info("Serialized clients for {} in {}", module, cacheFile);
-		} catch (IOException e) {
-			logger.error("Couldn't save clients cache for {}", module, e);
-		}
-	}
-
 	private boolean isValidClient(GitHubClient client) {
 		try {
 			GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
-			return !candidate.isFork() && !candidate.isArchived() && !candidate.isDisabled();
+			return
+				!candidate.isFork() &&
+				!candidate.isArchived() &&
+				!candidate.isDisabled() &&
+				!candidate.isPrivate() &&
+				!candidate.isTemplate();
 		} catch (IOException e) {
 			return false;
 		}
@@ -309,13 +225,5 @@ public class GitHubForge implements Forge {
 		}
 
 		return repository;
-	}
-
-	private Path clientsCacheFile(RepositoryModule module) {
-		return clientsCacheDirectory
-			.resolve(module.repository().owner())
-			.resolve(module.repository().name())
-			.resolve(module.id() + "-clients.json")
-			.toAbsolutePath();
 	}
 }

@@ -168,33 +168,6 @@ class GitHubForgeIT {
   }
 
   @Test
-  void fetchAllClients_cache() throws IOException {
-    Repository repo = github.fetchRepository("alien-tools", "repository-fixture");
-    Path cacheDir = Files.createTempDirectory("test-clients-cache");
-    File expectedCacheFile = cacheDir.resolve("alien-tools/repository-fixture/module-a-clients.json").toFile();
-    github.setClientsCacheDirectory(cacheDir);
-    github.setClientsCacheExpirationDays(1);
-
-    assertThat(expectedCacheFile.exists(), is(false));
-
-    List<Repository> clients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), -1, -1);
-    assertThat(clients, hasSize(2));
-    assertThat(expectedCacheFile.exists(), is(true));
-
-    Files.writeString(expectedCacheFile.toPath(), """
-      [{ "owner": "alien-tools", "name": "maracas", "stars": 2, "forks": 3 }]""");
-    List<Repository> overwrittenClients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), -1, -1);
-    assertThat(overwrittenClients, hasSize(3));
-    assertThat(overwrittenClients, containsInAnyOrder(
-      new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),
-      new Repository("alien-tools", "client-fixture-b", "https://github.com/alien-tools/client-fixture-b.git", "main"),
-      new Repository("alien-tools", "maracas", "https://github.com/alien-tools/maracas.git", "main")
-    ));
-
-    FileUtils.deleteQuietly(cacheDir.toFile());
-  }
-
-  @Test
   void fetchStarredClients_drill() {
     Repository drill = github.fetchRepository("apache", "drill");
     List<Repository> clients = github.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 10, 10);
@@ -244,9 +217,9 @@ class GitHubForgeIT {
   }
 
   @Test
-  void fetchCustomClients_fixture() {
+  void fetchAllClients_fixture() {
     Repository repo = new Repository("alien-tools", "repository-fixture", "", "");
-    List<Repository> clients = github.fetchCustomClients(new RepositoryModule(repo, "module-a", ""));
+    List<Repository> clients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), -1, -1);
     assertThat(clients, hasSize(2));
     assertThat(clients, containsInAnyOrder(
       new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),
