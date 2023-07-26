@@ -156,7 +156,7 @@ public class GitHubForge implements Forge {
 	public List<Repository> fetchTopStarredClients(RepositoryModule module, int limit, int minStars) {
 		Objects.requireNonNull(module);
 
-		// If 'repository' is a fork, we retrieve the clients from the original repository
+		// If we're on a fork, we retrieve the clients from the original repository
 		Repository sourceRepository = getSourceRepository(module.repository());
 		RepositoryModule sourceModule = new RepositoryModule(sourceRepository, module.id(), module.url());
 
@@ -194,7 +194,7 @@ public class GitHubForge implements Forge {
 		try (InputStream configIn = gh.getRepository(repository.fullName()).getFileContent(BREAKBOT_FILE).read()) {
 			return BreakbotConfig.fromYaml(configIn);
 		} catch (IOException e) {
-			logger.error("Couldn't read .breakbot.yml from {}", repository.fullName());
+			logger.error("Couldn't read .breakbot.yml from {}", repository::fullName);
 			return BreakbotConfig.defaultConfig();
 		}
 	}
@@ -218,18 +218,22 @@ public class GitHubForge implements Forge {
 	}
 
 	private List<GitHubClient> fetchClients(RepositoryModule module, int limit) {
+		// FIXME: dirty, but we don't know how many "raw" clients we should get
+		// to reach our objectives in terms of "usable" clients with required stars
+		int rawClientsToFetch = Math.max(1000, limit);
+
 		if (hasClientsCache(module)) {
-			return readClientsCache(module);
+			List<GitHubClient> clients = readClientsCache(module);
+
+			if (clients.size() >= rawClientsToFetch)
+				return clients;
 		}
 
 		Stopwatch sw = Stopwatch.createStarted();
 
-		// FIXME: dirty, but we don't know how many "raw" clients we should get
-		// to reach our objectives in terms of "usable" clients with required stars
-		int rawClientsToFetch = Math.max(1000, limit);
 		List<GitHubClient> clients = clientsFetcher.fetchClients(module, rawClientsToFetch);
 		logger.info("Fetched {} total clients for {} in {}s",
-				clients.size(), module, sw.elapsed().toSeconds());
+			clients::size, () -> module, () -> sw.elapsed().toSeconds());
 
 		writeClientsCache(module, clients);
 		return clients;
@@ -265,7 +269,7 @@ public class GitHubForge implements Forge {
 		try {
 			Path cacheFile = clientsCacheFile(module);
 			List<GitHubClient> clients = new ObjectMapper().readValue(cacheFile.toFile(), new TypeReference<>(){});
-			logger.info("Retrieved {} total clients from {}", clients.size(), cacheFile);
+			logger.info("Retrieved {} total clients from {}", clients::size, () -> cacheFile);
 			return clients;
 		} catch (IOException e) {
 			return Collections.emptyList();
@@ -275,11 +279,13 @@ public class GitHubForge implements Forge {
 	private void writeClientsCache(RepositoryModule module, List<GitHubClient> clients) {
 		try {
 			Path cacheFile = clientsCacheFile(module);
-			Files.createDirectories(cacheFile.getParent());
+			Path parent = cacheFile.getParent();
+			if (parent != null)
+				Files.createDirectories(parent);
 			new ObjectMapper().writeValue(cacheFile.toFile(), clients);
 			logger.info("Serialized clients for {} in {}", module, cacheFile);
 		} catch (IOException e) {
-			logger.error("Couldn't save clients cache for %s".formatted(module), e);
+			logger.error("Couldn't save clients cache for {}", module, e);
 		}
 	}
 
