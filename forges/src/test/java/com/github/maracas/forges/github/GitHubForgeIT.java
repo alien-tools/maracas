@@ -183,7 +183,7 @@ class GitHubForgeIT {
 
     Files.writeString(expectedCacheFile.toPath(), """
       [{ "owner": "alien-tools", "name": "maracas", "stars": 2, "forks": 3 }]""");
-    List<Repository> overwrittenClients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), 10, -1);
+    List<Repository> overwrittenClients = github.fetchAllClients(new RepositoryModule(repo, "module-a", ""), -1, -1);
     assertThat(overwrittenClients, hasSize(3));
     assertThat(overwrittenClients, containsInAnyOrder(
       new Repository("alien-tools", "client-fixture-a", "https://github.com/alien-tools/client-fixture-a.git", "main"),

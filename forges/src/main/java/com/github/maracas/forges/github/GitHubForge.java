@@ -220,7 +220,7 @@ public class GitHubForge implements Forge {
 	private List<GitHubClient> fetchClients(RepositoryModule module, int limit) {
 		// FIXME: dirty, but we don't know how many "raw" clients we should get
 		// to reach our objectives in terms of "usable" clients with required stars
-		int rawClientsToFetch = Math.max(1000, limit);
+		int rawClientsToFetch = 10 * limit;
 
 		if (hasClientsCache(module)) {
 			List<GitHubClient> clients = readClientsCache(module);
