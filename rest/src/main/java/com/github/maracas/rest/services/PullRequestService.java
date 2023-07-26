@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,8 +105,8 @@ public class PullRequestService {
 
 	private MaracasOptions makeMaracasOptions() {
 		MaracasOptions options = MaracasOptions.newDefault();
-		options.setCloneTimeoutSeconds(cloneTimeout);
-		options.setBuildTimeoutSeconds(buildTimeout);
+		options.setCloneTimeout(Duration.ofSeconds(cloneTimeout));
+		options.setBuildTimeout(Duration.ofSeconds(buildTimeout));
 		options.setClientsPerModule(clientsPerModule);
 		options.setMaxClassLines(maxClassLines);
 

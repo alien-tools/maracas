@@ -21,6 +21,7 @@ import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -113,7 +114,7 @@ class PullRequestAnalyzerTest {
   void inferImpactedModules_fixture_two_impacted_modules() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 1);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    baseBuilder.cloneCommit(10);
+    baseBuilder.cloneCommit(Duration.ofSeconds(10));
     List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, containsInAnyOrder(
@@ -126,7 +127,7 @@ class PullRequestAnalyzerTest {
   void inferImpactedModules_fixture_no_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 2);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    baseBuilder.cloneCommit(10);
+    baseBuilder.cloneCommit(Duration.ofSeconds(10));
     List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, is(empty()));
@@ -136,7 +137,7 @@ class PullRequestAnalyzerTest {
   void inferImpactedModules_fixture_one_impacted_module() {
     PullRequest pr = forge.fetchPullRequest("alien-tools", "repository-fixture", 4);
     CommitBuilder baseBuilder = new CommitBuilder(pr.mergeBase());
-    baseBuilder.cloneCommit(10);
+    baseBuilder.cloneCommit(Duration.ofSeconds(10));
     List<BuildModule> impacted = analyzer.inferImpactedModules(pr, baseBuilder);
 
     assertThat(impacted, contains(new BuildModule("com.github.alien-tools:module-a", Path.of("module-a"))));

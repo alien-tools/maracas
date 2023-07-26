@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class GradleBuilder implements Builder {
 	}
 
 	@Override
-	public void build(int timeoutSeconds) {
+	public void build(Duration timeout) {
 		logger.warn("GradleBuilder doesn't honor timeouts yet");
 
 		Optional<Path> jar = locateJar();

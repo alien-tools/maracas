@@ -67,8 +67,8 @@ class CommitAnalyzerTest {
 		MaracasOptions opts = MaracasOptions.newDefault();
 
 		when(builderV1.getModulePath()).thenReturn(module);
-		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.of(jar));
-		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(builderV1.buildCommit(any())).thenReturn(Optional.of(jar));
+		when(builderV2.buildCommit(any())).thenReturn(Optional.of(jar));
 		when(maracas.computeDelta(v1, v2, opts)).thenReturn(emptyDelta);
 
 		Delta res = analyzer.computeDelta(builderV1, builderV2, opts);
@@ -77,10 +77,10 @@ class CommitAnalyzerTest {
 		assertThat(res.getNewVersion(), is(equalTo(v2)));
 		assertThat(res.getBreakingChanges(), is(empty()));
 
-		verify(builderV1).cloneCommit(gt(0));
-		verify(builderV1).buildCommit(gt(0));
-		verify(builderV2).cloneCommit(gt(0));
-		verify(builderV2).buildCommit(gt(0));
+		verify(builderV1).cloneCommit(any());
+		verify(builderV1).buildCommit(any());
+		verify(builderV2).cloneCommit(any());
+		verify(builderV2).buildCommit(any());
 		verify(maracas).computeDelta(v1, v2, opts);
 	}
 
@@ -90,16 +90,16 @@ class CommitAnalyzerTest {
 		CommitBuilder successBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		doThrow(new CloneException("nope")).when(failedBuilder).cloneCommit(gt(0));
+		doThrow(new CloneException("nope")).when(failedBuilder).cloneCommit(any());
 
 		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(failedBuilder, successBuilder, opts));
 
 		assertThat(thrown.getMessage(), is(equalTo("nope")));
 
-		verify(failedBuilder).cloneCommit(gt(0));
-		verify(failedBuilder, never()).buildCommit(gt(0));
-		verify(successBuilder, atMostOnce()).cloneCommit(gt(0));
-		verify(successBuilder, atMostOnce()).buildCommit(gt(0));
+		verify(failedBuilder).cloneCommit(any());
+		verify(failedBuilder, never()).buildCommit(any());
+		verify(successBuilder, atMostOnce()).cloneCommit(any());
+		verify(successBuilder, atMostOnce()).buildCommit(any());
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
@@ -109,17 +109,17 @@ class CommitAnalyzerTest {
 		CommitBuilder failedBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		when(successBuilder.buildCommit(gt(0))).thenReturn(Optional.of(jar));
-		when(failedBuilder.buildCommit(gt(0))).thenThrow(new BuildException("nope"));
+		when(successBuilder.buildCommit(any())).thenReturn(Optional.of(jar));
+		when(failedBuilder.buildCommit(any())).thenThrow(new BuildException("nope"));
 
 		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(successBuilder, failedBuilder, opts));
 
 		assertThat(thrown.getMessage(), is(equalTo("nope")));
 
-		verify(successBuilder, atMostOnce()).cloneCommit(gt(0));
-		verify(successBuilder, atMostOnce()).buildCommit(gt(0));
-		verify(failedBuilder).cloneCommit(gt(0));
-		verify(failedBuilder).buildCommit(gt(0));
+		verify(successBuilder, atMostOnce()).cloneCommit(any());
+		verify(successBuilder, atMostOnce()).buildCommit(any());
+		verify(failedBuilder).cloneCommit(any());
+		verify(failedBuilder).buildCommit(any());
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
@@ -129,17 +129,17 @@ class CommitAnalyzerTest {
 		CommitBuilder successBuilder = mock();
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		when(failedBuilder.buildCommit(gt(0))).thenReturn(Optional.empty());
-		when(successBuilder.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(failedBuilder.buildCommit(any())).thenReturn(Optional.empty());
+		when(successBuilder.buildCommit(any())).thenReturn(Optional.of(jar));
 
 		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(failedBuilder, successBuilder, opts));
 
 		assertThat(thrown.getMessage(), startsWith("Couldn't find the JAR"));
 
-		verify(failedBuilder).cloneCommit(gt(0));
-		verify(failedBuilder).buildCommit(gt(0));
-		verify(successBuilder).cloneCommit(gt(0));
-		verify(successBuilder).buildCommit(gt(0));
+		verify(failedBuilder).cloneCommit(any());
+		verify(failedBuilder).buildCommit(any());
+		verify(successBuilder).cloneCommit(any());
+		verify(successBuilder).buildCommit(any());
 		verify(maracas, never()).computeDelta(any(), any(), any());
 	}
 
@@ -173,8 +173,8 @@ class CommitAnalyzerTest {
 		assertThat(brokenImpact.brokenUses(), hasSize(1));
 		assertThat(brokenImpact.throwable(), is(nullValue()));
 
-		verify(notBrokenClient).cloneCommit(gt(0));
-		verify(brokenClient).cloneCommit(gt(0));
+		verify(notBrokenClient).cloneCommit(any());
+		verify(brokenClient).cloneCommit(any());
 		verify(maracas).computeDeltaImpact(notBrokenSources, delta, opts);
 		verify(maracas).computeDeltaImpact(brokenSources, delta, opts);
 	}
@@ -210,8 +210,8 @@ class CommitAnalyzerTest {
 		assertThat(successImpact.brokenUses(), hasSize(1));
 		assertThat(successImpact.throwable(), is(nullValue()));
 
-		verify(failedClient).cloneCommit(gt(0));
-		verify(successClient).cloneCommit(gt(0));
+		verify(failedClient).cloneCommit(any());
+		verify(successClient).cloneCommit(any());
 		verify(maracas).computeDeltaImpact(failedSources, delta, opts);
 		verify(maracas).computeDeltaImpact(successSources, delta, opts);
 	}
@@ -230,7 +230,7 @@ class CommitAnalyzerTest {
 
 		when(timeoutClient.getModulePath()).thenReturn(timeoutModule);
 		when(successClient.getModulePath()).thenReturn(successModule);
-		doThrow(new CloneException("nope")).when(timeoutClient).cloneCommit(gt(0));
+		doThrow(new CloneException("nope")).when(timeoutClient).cloneCommit(any());
 		when(maracas.computeDeltaImpact(any(), any(), any())).thenReturn(DeltaImpact.success(successSources, delta, Set.of(mock(BrokenUse.class))));
 
 		AnalysisResult res = analyzer.computeImpact(delta, List.of(timeoutClient, successClient), opts);
@@ -245,8 +245,8 @@ class CommitAnalyzerTest {
 		assertThat(successImpact.brokenUses(), hasSize(1));
 		assertThat(successImpact.throwable(), is(nullValue()));
 
-		verify(timeoutClient).cloneCommit(gt(0));
-		verify(successClient).cloneCommit(gt(0));
+		verify(timeoutClient).cloneCommit(any());
+		verify(successClient).cloneCommit(any());
 		verify(maracas).computeDeltaImpact(successSources, delta, opts);
 	}
 
@@ -301,8 +301,8 @@ class CommitAnalyzerTest {
 		CommitBuilder builderV2 = mock();
 
 		when(builderV1.getModulePath()).thenReturn(module);
-		when(builderV1.buildCommit(gt(0))).thenReturn(Optional.of(jar));
-		when(builderV2.buildCommit(gt(0))).thenReturn(Optional.of(jar));
+		when(builderV1.buildCommit(any())).thenReturn(Optional.of(jar));
+		when(builderV2.buildCommit(any())).thenReturn(Optional.of(jar));
 		when(maracas.computeDelta(v1, v2, opts)).thenReturn(emptyDelta);
 
 		AnalysisResult res = analyzer.analyzeCommits(builderV1, builderV2, Collections.emptyList(), opts);
@@ -310,10 +310,10 @@ class CommitAnalyzerTest {
 		assertThat(res.delta().getBreakingChanges(), is(empty()));
 		assertThat(res.deltaImpacts(), is(aMapWithSize(0)));
 
-		verify(builderV1).cloneCommit(gt(0));
-		verify(builderV1).buildCommit(gt(0));
-		verify(builderV2).cloneCommit(gt(0));
-		verify(builderV2).buildCommit(gt(0));
+		verify(builderV1).cloneCommit(any());
+		verify(builderV1).buildCommit(any());
+		verify(builderV2).cloneCommit(any());
+		verify(builderV2).buildCommit(any());
 		verify(maracas).computeDelta(v1, v2, opts);
 	}
 }

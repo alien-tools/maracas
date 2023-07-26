@@ -10,8 +10,11 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -51,7 +54,7 @@ class GitClonerTest {
 	void clone_repository_timeout() {
 		Path clone = cloneDir.resolve("tmp");
 		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
-		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(linux, clone, 1));
+		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(linux, clone, Duration.ofSeconds(1)));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 		assertThat(clone.toFile().exists(), is(false));
 	}
@@ -93,7 +96,7 @@ class GitClonerTest {
 	void clone_repository_timeout_invalid() {
 		Path clone = cloneDir.resolve("tmp");
 		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
-		assertThrows(IllegalArgumentException.class, () -> cloner.clone(linux, clone, -1));
+		assertThrows(IllegalArgumentException.class, () -> cloner.clone(linux, clone, Duration.ZERO));
 	}
 
 	@Test
@@ -131,7 +134,7 @@ class GitClonerTest {
 		Path clone = cloneDir.resolve("tmp");
 		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
 		Commit commit = new Commit(linux, "6b872a5ecece462ba02c8cad1c0203583631db2b");
-		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(commit, clone, 1));
+		Exception thrown = assertThrows(CloneException.class, () -> cloner.clone(commit, clone, Duration.ofSeconds(1)));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 		assertThat(clone.toFile().exists(), is(false));
 	}
@@ -161,6 +164,6 @@ class GitClonerTest {
 		Path clone = cloneDir.resolve("tmp");
 		Repository linux = new Repository("torvalds", "linux", "https://github.com/torvalds/linux", "master");
 		Commit commit = new Commit(linux, "6b872a5ecece462ba02c8cad1c0203583631db2b");
-		assertThrows(IllegalArgumentException.class, () -> cloner.clone(commit, clone, -1));
+		assertThrows(IllegalArgumentException.class, () -> cloner.clone(commit, clone, Duration.ZERO));
 	}
 }

@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -24,11 +25,11 @@ public class GitCloner implements Cloner {
 	private static final Logger logger = LogManager.getLogger(GitCloner.class);
 
 	@Override
-	public void clone(Commit commit, Path dest, int timeoutSeconds) {
+	public void clone(Commit commit, Path dest, Duration timeout) {
 		Objects.requireNonNull(commit);
 		Objects.requireNonNull(dest);
-		if (timeoutSeconds < 1)
-			throw new IllegalArgumentException("timeoutSeconds < 1");
+		if (timeout.toSeconds() < 1)
+			throw new IllegalArgumentException("timeout < 1s");
 
 		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
@@ -37,10 +38,10 @@ public class GitCloner implements Cloner {
 				Stopwatch sw = Stopwatch.createStarted();
 				String workingDirectory = dest.toAbsolutePath().toString();
 				logger.info("Cloning commit {} into {}", () -> commit, () -> dest);
-				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "init");
-				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
-				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
-				executeCommand(timeoutSeconds, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
+				executeCommand(timeout, "git", "-C", workingDirectory, "init");
+				executeCommand(timeout, "git", "-C", workingDirectory, "remote", "add", "origin", commit.repository().remoteUrl());
+				executeCommand(timeout, "git", "-C", workingDirectory, "fetch", "--depth", "1", "origin", commit.sha());
+				executeCommand(timeout, "git", "-C", workingDirectory, "checkout", "FETCH_HEAD");
 				logger.info("Cloning commit {} took {}ms", () -> commit, () -> sw.elapsed().toMillis());
 			} catch (CloneException e) {
 				// If anything went wrong we need to clean up our dirty state and rethrow
@@ -53,11 +54,11 @@ public class GitCloner implements Cloner {
 	}
 
 	@Override
-	public void clone(Repository repository, Path dest, int timeoutSeconds) {
+	public void clone(Repository repository, Path dest, Duration timeout) {
 		Objects.requireNonNull(repository);
 		Objects.requireNonNull(dest);
-		if (timeoutSeconds < 1)
-			throw new IllegalArgumentException("timeoutSeconds < 1");
+		if (timeout.toSeconds() < 1)
+			throw new IllegalArgumentException("timeout < 1s");
 
 		if (dest.toFile().exists()) {
 			logger.info("{} exists; skipping", dest);
@@ -66,7 +67,7 @@ public class GitCloner implements Cloner {
 				Stopwatch sw = Stopwatch.createStarted();
 				logger.info("Cloning repository {} into {}", () -> repository, () -> dest);
 				executeCommand(
-					timeoutSeconds,
+					timeout,
 					"git", "clone",
 					"--depth", "1",
 					"--branch", repository.branch(),
@@ -85,14 +86,14 @@ public class GitCloner implements Cloner {
 		}
 	}
 
-	private void executeCommand(int timeout, String... command) throws CloneException {
+	private void executeCommand(Duration timeout, String... command) throws CloneException {
 		try {
 			String readableCommand = String.join(" ", command);
 			ProcessBuilder pb = new ProcessBuilder(command);
 			pb.environment().put("GIT_TERMINAL_PROMPT", "0"); // Don't ask me for my password
 
 			Process proc = pb.start();
-			boolean completed = proc.waitFor(timeout, TimeUnit.SECONDS);
+			boolean completed = proc.waitFor(timeout.toSeconds(), TimeUnit.SECONDS);
 
 			if (completed && proc.exitValue() != 0) {
 				String errors = IOUtils.toString(proc.getErrorStream(), Charset.defaultCharset());

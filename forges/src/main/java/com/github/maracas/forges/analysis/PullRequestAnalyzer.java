@@ -67,7 +67,7 @@ public class PullRequestAnalyzer {
 
 		// First, we need to clone mergeBase
 		CommitBuilder builderV1 = makeBuilderForLibrary(pr, new BuildModule("", Path.of("")), pr.mergeBase(), config.build());
-		builderV1.cloneCommit(options.getCloneTimeoutSeconds());
+		builderV1.cloneCommit(options.getCloneTimeout());
 
 		// Then, for every module in mergeBase that may be impacted by the PR
 		List<BuildModule> impactedModules = inferImpactedModules(pr, builderV1);

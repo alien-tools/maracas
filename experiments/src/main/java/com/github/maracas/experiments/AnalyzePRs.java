@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -75,8 +76,8 @@ public class AnalyzePRs {
 
 				try {
 					var opts = MaracasOptions.newDefault();
-					opts.setCloneTimeoutSeconds(5 * 60);
-					opts.setBuildTimeoutSeconds(10 * 60);
+					opts.setCloneTimeout(Duration.ofMinutes(5));
+					opts.setBuildTimeout(Duration.ofMinutes(10));
 					opts.setMaxClassLines(20_000);
 					opts.setClientsPerModule(100);
 					opts.setMinStarsPerClient(5);

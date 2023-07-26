@@ -5,6 +5,7 @@ import com.github.maracas.forges.clone.CloneException;
 import com.github.maracas.forges.clone.Cloner;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,13 +28,13 @@ public class CommitBuilder {
 		this(commit, BuildConfig.newDefault(), Path.of("clones").resolve(commit.uid()));
 	}
 
-	public void cloneCommit(int timeoutSeconds) throws CloneException {
-		getCloner().clone(commit, clonePath, timeoutSeconds);
+	public void cloneCommit(Duration timeout) throws CloneException {
+		getCloner().clone(commit, clonePath, timeout);
 	}
 
-	public Optional<Path> buildCommit(int timeoutSeconds) throws BuildException {
+	public Optional<Path> buildCommit(Duration timeout) throws BuildException {
 		Builder builder = getBuilder();
-		builder.build(timeoutSeconds);
+		builder.build(timeout);
 		return builder.locateJar();
 	}
 

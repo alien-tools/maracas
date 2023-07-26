@@ -24,6 +24,7 @@ import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,7 +32,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -168,7 +168,7 @@ class FixtureAnalysisIT {
 		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		opts.setBuildTimeoutSeconds(1);
+		opts.setBuildTimeout(Duration.ofSeconds(1));
 		Exception thrown = assertThrows(BuildException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 	}
@@ -181,7 +181,7 @@ class FixtureAnalysisIT {
 		CommitBuilder cb2 = new CommitBuilder(v2, new BuildConfig(Path.of("core")));
 		MaracasOptions opts = MaracasOptions.newDefault();
 
-		opts.setCloneTimeoutSeconds(1);
+		opts.setCloneTimeout(Duration.ofSeconds(1));
 		Exception thrown = assertThrows(CloneException.class, () -> analyzer.computeDelta(cb1, cb2, opts));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 	}
@@ -201,7 +201,7 @@ class FixtureAnalysisIT {
 			opts
 		);
 
-		opts.setCloneTimeoutSeconds(2);
+		opts.setCloneTimeout(Duration.ofSeconds(2));
 		AnalysisResult result = analyzer.computeImpact(
 			delta,
 			List.of(

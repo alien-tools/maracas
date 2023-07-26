@@ -8,15 +8,17 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MavenBuilderTest {
 	final Path validProject = Path.of("src/test/resources/maven-project/");
@@ -108,7 +110,7 @@ class MavenBuilderTest {
 	@Test
 	void build_maracas_timeout() {
 		Builder builder = new MavenBuilder(Path.of("../"));
-		Exception thrown = assertThrows(BuildException.class, () -> builder.build(1));
+		Exception thrown = assertThrows(BuildException.class, () -> builder.build(Duration.ofSeconds(1)));
 		assertThat(thrown.getMessage(), containsString("timed out"));
 	}
 

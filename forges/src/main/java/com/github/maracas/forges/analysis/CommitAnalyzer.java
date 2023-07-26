@@ -105,8 +105,8 @@ public class CommitAnalyzer {
 	private CompletableFuture<Optional<Path>> cloneAndBuildLibrary(CommitBuilder builder, MaracasOptions options) {
 		return CompletableFuture.supplyAsync(
 			() -> {
-				builder.cloneCommit(options.getCloneTimeoutSeconds());
-				return builder.buildCommit(options.getBuildTimeoutSeconds());
+				builder.cloneCommit(options.getCloneTimeout());
+				return builder.buildCommit(options.getBuildTimeout());
 			},
 			executorService
 		);
@@ -115,7 +115,7 @@ public class CommitAnalyzer {
 	private CompletableFuture<DeltaImpact> cloneAndAnalyzeClient(Delta delta, CommitBuilder builder, MaracasOptions options) {
 		return CompletableFuture.supplyAsync(
 			() -> {
-				builder.cloneCommit(options.getCloneTimeoutSeconds());
+				builder.cloneCommit(options.getCloneTimeout());
 				return maracas.computeDeltaImpact(SourcesDirectory.of(builder.getModulePath()), delta, options);
 			},
 			executorService

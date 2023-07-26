@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,9 +77,9 @@ public class MavenBuilder implements Builder {
 	}
 
 	@Override
-	public void build(int timeoutSeconds) {
-		if (timeoutSeconds <= 0)
-			throw new IllegalArgumentException("timeoutSeconds should be > 0");
+	public void build(Duration timeout) {
+		if (timeout.toSeconds() < 1)
+			throw new IllegalArgumentException("timeout < 1s");
 
 		File pomFile = basePath.resolve(BUILD_FILE).toFile();
 		if (!pomFile.exists())
@@ -108,7 +109,7 @@ public class MavenBuilder implements Builder {
 			request.setAlsoMake(true);
 			request.setBatchMode(true);
 			request.setQuiet(true);
-			request.setTimeoutInSeconds(timeoutSeconds);
+			request.setTimeoutInSeconds(Math.toIntExact(timeout.toSeconds()));
 			// For some reason, every handler but setOutputHandler is ignored
 			// Here, invoked only with errors because quiet == true
 			request.setOutputHandler(line -> {

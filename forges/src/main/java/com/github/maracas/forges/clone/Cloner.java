@@ -5,18 +5,19 @@ import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.clone.git.GitCloner;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Objects;
 
 public interface Cloner {
-  void clone(Commit commit, Path dest, int timeoutSeconds) throws CloneException;
-  void clone(Repository repository, Path dest, int timeoutSeconds) throws CloneException;
+  void clone(Commit commit, Path dest, Duration timeout) throws CloneException;
+  void clone(Repository repository, Path dest, Duration timeout) throws CloneException;
 
   default void clone(Commit commit, Path dest) throws CloneException {
-    clone(commit, dest, Integer.MAX_VALUE);
+    clone(commit, dest, Duration.ofSeconds(Integer.MAX_VALUE));
   }
 
   default void clone(Repository repository, Path dest) throws CloneException {
-    clone(repository, dest, Integer.MAX_VALUE);
+    clone(repository, dest, Duration.ofSeconds(Integer.MAX_VALUE));
   }
 
   static Cloner of(Repository repository) {

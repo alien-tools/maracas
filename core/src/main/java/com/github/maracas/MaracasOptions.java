@@ -4,6 +4,7 @@ import japicmp.config.Options;
 import japicmp.model.AccessModifier;
 import japicmp.model.JApiCompatibilityChange;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,8 +18,8 @@ public class MaracasOptions {
 	private int maxClassLines = Integer.MAX_VALUE;
 	private int clientsPerModule = Integer.MAX_VALUE;
 	private int minStarsPerClient = 0;
-	private int cloneTimeoutSeconds = Integer.MAX_VALUE;
-	private int buildTimeoutSeconds = Integer.MAX_VALUE;
+	private Duration cloneTimeout = Duration.ofSeconds(Integer.MAX_VALUE);
+	private Duration buildTimeout = Duration.ofSeconds(Integer.MAX_VALUE);
 
 	public MaracasOptions(MaracasOptions opts) {
 		this(opts.jApiOptions);
@@ -26,8 +27,8 @@ public class MaracasOptions {
 		this.maxClassLines = opts.maxClassLines;
 		this.clientsPerModule = opts.clientsPerModule;
 		this.minStarsPerClient = opts.minStarsPerClient;
-		this.cloneTimeoutSeconds = opts.cloneTimeoutSeconds;
-		this.buildTimeoutSeconds = opts.buildTimeoutSeconds;
+		this.cloneTimeout = opts.cloneTimeout;
+		this.buildTimeout = opts.buildTimeout;
 	}
 
 	private MaracasOptions(Options jApiOptions) {
@@ -111,16 +112,16 @@ public class MaracasOptions {
 		this.minStarsPerClient = minStarsPerClient;
 	}
 
-	public void setCloneTimeoutSeconds(int cloneTimeoutSeconds) {
-		if (cloneTimeoutSeconds < 0)
-			throw new IllegalArgumentException("cloneTimeoutSeconds < 0");
-		this.cloneTimeoutSeconds = cloneTimeoutSeconds;
+	public void setCloneTimeout(Duration cloneTimeout) {
+		if (cloneTimeout.toSeconds() < 1)
+			throw new IllegalArgumentException("cloneTimeout < 1s");
+		this.cloneTimeout = cloneTimeout;
 	}
 
-	public void setBuildTimeoutSeconds(int buildTimeoutSeconds) {
-		if (buildTimeoutSeconds < 0)
-			throw new IllegalArgumentException("buildTimeoutSeconds < 0");
-		this.buildTimeoutSeconds = buildTimeoutSeconds;
+	public void setBuildTimeout(Duration buildTimeout) {
+		if (buildTimeout.toSeconds() < 1)
+			throw new IllegalArgumentException("buildTimeout < 1s");
+		this.buildTimeout = buildTimeout;
 	}
 
 	public int getMaxClassLines() {
@@ -135,12 +136,12 @@ public class MaracasOptions {
 		return minStarsPerClient;
 	}
 
-	public int getCloneTimeoutSeconds() {
-		return cloneTimeoutSeconds;
+	public Duration getCloneTimeout() {
+		return cloneTimeout;
 	}
 
-	public int getBuildTimeoutSeconds() {
-		return buildTimeoutSeconds;
+	public Duration getBuildTimeout() {
+		return buildTimeout;
 	}
 
 	public Options getJApiOptions() {
