@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.RepositoryModule;
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -49,7 +50,8 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 	private static final Logger logger = LogManager.getLogger(GitHubClientsScraper.class);
 
 	public GitHubClientsScraper(Duration cacheExpirationPeriod) {
-		this.cacheExpirationPeriod = cacheExpirationPeriod;
+		if (cacheExpirationPeriod.toSeconds() < 1)
+			throw new IllegalArgumentException("cacheExpirationPeriod < 1s");
 
 		Path dir; // Can't safely double-assign the final field without a temporary variable :(
 		try {
@@ -58,10 +60,13 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 			dir = Paths.get("maracas-clients");
 		}
 		this.cacheDirectory = dir;
+		this.cacheExpirationPeriod = cacheExpirationPeriod;
 	}
 
 	@Override
 	public List<RepositoryModule> fetchModules(Repository repository) {
+		Objects.requireNonNull(repository);
+
 		String modulesPageUrl = MODULES_URL.formatted(repository.owner(), repository.name());
 		Document modulesPage = fetchPage(modulesPageUrl);
 
@@ -86,14 +91,22 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 
 	@Override
 	public List<GitHubClient> fetchClients(RepositoryModule module, ClientFilter filter, int limit) {
+		Objects.requireNonNull(module);
+		Objects.requireNonNull(filter);
+		if (limit < 1)
+			throw new IllegalArgumentException("limit < 1");
+
 		if (hasClientsCache(module)) {
 			List<GitHubClient> cachedClients = readClientsCache(module);
-			if (cachedClients.size() >= limit)
-				return cachedClients;
+			List<GitHubClient> matchingClients =
+				cachedClients.stream()
+					.filter(filter::evaluate)
+					.toList();
+			if (matchingClients.size() >= limit)
+				return matchingClients.subList(0, limit);
 		}
 
-		Stopwatch sw = Stopwatch.createStarted();
-		String moduleUrl = !Strings.isNullOrEmpty(module.url())
+		String moduleUrl = !StringUtils.isEmpty(module.url())
 			? module.url()
 			: fetchModules(module.repository())
 					.stream()
@@ -103,21 +116,26 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 					.orElse("");
 
 		if (!moduleUrl.isEmpty()) {
-			List<GitHubClient> clients = fetchClientsRec(module, moduleUrl, filter, limit);
+			Stopwatch sw = Stopwatch.createStarted();
+			List<GitHubClient> allClients = fetchClientsRec(module, moduleUrl, filter, limit);
 			logger.info("Fetched {} total clients for {} in {}s",
-				clients::size, () -> module, () -> sw.elapsed().toSeconds());
-
-			writeClientsCache(module, clients);
-			return clients;
+				allClients::size, () -> module, () -> sw.elapsed().toSeconds());
+			writeClientsCache(module, allClients);
+			return allClients
+				.stream()
+				.filter(filter::evaluate)
+				.limit(limit)
+				.toList();
 		} else {
 			return Collections.emptyList();
 		}
 	}
 
 	private List<GitHubClient> fetchClientsRec(RepositoryModule module, String url, ClientFilter filter, int limit) {
-		List<GitHubClient> clients = new ArrayList<>();
-		Document modulePage = fetchPage(url);
+		List<GitHubClient> allClients = new ArrayList<>();
+		List<GitHubClient> matchingClients = new ArrayList<>();
 
+		Document modulePage = fetchPage(url);
 		if (modulePage != null) {
 			List<String> clientRows = modulePage.select("#dependents .Box-row").eachText();
 
@@ -134,11 +152,12 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 					);
 
 					if (filter.evaluate(client))
-						clients.add(client);
+						matchingClients.add(client);
+					allClients.add(client);
 				} else logger.error("Couldn't parse row {}", row);
 			});
 
-			int remaining = limit - clients.size();
+			int remaining = limit - matchingClients.size();
 			if (remaining > 0) {
 				// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
 				Elements pagination = modulePage.select("#dependents .paginate-container .BtnGroup-item");
@@ -147,12 +166,12 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 					String nextUrl = nextBtn.attr("abs:href");
 
 					if (!nextUrl.isEmpty())
-						clients.addAll(fetchClientsRec(module, nextUrl, filter, remaining));
+						allClients.addAll(fetchClientsRec(module, nextUrl, filter, remaining));
 				}
 			}
 		}
 
-		return clients.subList(0, Math.min(Math.max(0, limit), clients.size()));
+		return allClients;
 	}
 
 	private Document fetchPage(String url) {
@@ -192,7 +211,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 				Instant lastModified = Files.getLastModifiedTime(cacheFile).toInstant();
 				Duration sinceLastModified = Duration.between(lastModified, Instant.now());
 
-				return cacheExpirationPeriod.minus(sinceLastModified).isNegative();
+				return sinceLastModified.minus(cacheExpirationPeriod).isNegative();
 			} catch (IOException e) {
 				// we can safely swallow this one
 			}
@@ -219,7 +238,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 			if (parent != null)
 				Files.createDirectories(parent);
 			new ObjectMapper().writeValue(cacheFile.toFile(), clients);
-			logger.info("Serialized clients for {} in {}", module, cacheFile);
+			logger.info("Serialized {} clients for {} in {}", clients.size(), module, cacheFile);
 		} catch (IOException e) {
 			logger.error("Couldn't save clients cache for {}", module, e);
 		}
@@ -229,7 +248,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 		return cacheDirectory
 			.resolve(module.repository().owner())
 			.resolve(module.repository().name())
-			.resolve(module.id() + "-clients.json")
+			.resolve(module.id().replace(":", "_") + "-clients.json")
 			.toAbsolutePath();
 	}
 }

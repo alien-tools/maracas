@@ -21,11 +21,11 @@ public interface Forge {
     return fetchCommit(fetchRepository(owner, name), sha);
   }
 
-  List<Repository> fetchTopStarredClients(RepositoryModule module, int limit, int minStars) throws ForgeException;
+  List<Repository> fetchTopStarredClients(RepositoryModule module, int limit, int minStars);
 
-  List<Repository> fetchAllClients(RepositoryModule module, int limit, int minStars) throws ForgeException;
+  List<Repository> fetchAllClients(RepositoryModule module, int limit, int minStars);
 
   List<RepositoryModule> fetchModules(Repository repository);
 
-  BreakbotConfig fetchBreakbotConfig(Repository repository) throws ForgeException;
+  BreakbotConfig fetchBreakbotConfig(Repository repository);
 }

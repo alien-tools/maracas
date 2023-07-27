@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class GitHubForge implements Forge {
@@ -139,6 +140,8 @@ public class GitHubForge implements Forge {
 	@Override
 	public List<Repository> fetchTopStarredClients(RepositoryModule module, int limit, int minStars) {
 		Objects.requireNonNull(module);
+		if (limit < 1)
+			throw new IllegalArgumentException("limit < 1");
 
 		// If we're on a fork, we retrieve the clients from the original repository
 		Repository sourceRepository = getSourceRepository(module.repository());
@@ -153,7 +156,14 @@ public class GitHubForge implements Forge {
 		List<GitHubClient> clients = clientsFetcher.fetchClients(sourceModule, filter, limit);
 		return clients.stream()
 			.sorted(Comparator.comparingInt(GitHubClient::stars).reversed())
-			.map(client -> fetchRepository(client.owner(), client.name()))
+			.map(client -> {
+				try {
+					return Optional.of(fetchRepository(client.owner(), client.name()));
+				} catch (ForgeException e) {
+					return Optional.<Repository>empty();
+				}
+			})
+			.flatMap(Optional::stream)
 			.toList();
 	}
 
@@ -187,17 +197,29 @@ public class GitHubForge implements Forge {
 
 		return fetchBreakbotConfig(module.repository()).clients().repositories()
 			.stream()
-			.map(c -> {
-				List<String> fields = Splitter.on("/").splitToList(c.repository());
-				String clientOwner = fields.get(0);
-				String clientName = fields.get(1);
-
-				return
-					StringUtils.isEmpty(c.branch())
-						? fetchRepository(clientOwner, clientName)
-						: fetchRepository(clientOwner, clientName, c.branch());
-			})
+			.map(this::getRepositoryFromBreakbot)
+			.flatMap(Optional::stream)
 			.toList();
+	}
+
+	private Optional<Repository> getRepositoryFromBreakbot(BreakbotConfig.GitHubRepository repo) {
+		List<String> fields = Splitter.on("/").splitToList(repo.repository());
+
+		if (fields.size() == 2) {
+			String clientOwner = fields.get(0);
+			String clientName = fields.get(1);
+
+			try {
+				return Optional.of(StringUtils.isEmpty(repo.branch())
+					? fetchRepository(clientOwner, clientName)
+					: fetchRepository(clientOwner, clientName, repo.branch())
+				);
+			} catch (ForgeException e) {
+				// swallow this one
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	private boolean isValidClient(GitHubClient client) {
@@ -207,8 +229,7 @@ public class GitHubForge implements Forge {
 				!candidate.isFork() &&
 				!candidate.isArchived() &&
 				!candidate.isDisabled() &&
-				!candidate.isPrivate() &&
-				!candidate.isTemplate();
+				!candidate.isPrivate();
 		} catch (IOException e) {
 			return false;
 		}
@@ -227,3 +248,4 @@ public class GitHubForge implements Forge {
 		return repository;
 	}
 }
+
