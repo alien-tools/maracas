@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * GitHub's dependency graph holds information about a repository's dependencies/dependents.
@@ -68,10 +69,10 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 		Objects.requireNonNull(repository);
 
 		String modulesPageUrl = MODULES_URL.formatted(repository.owner(), repository.name());
-		Document modulesPage = fetchPage(modulesPageUrl);
+		Optional<Document> modulesPage = fetchPage(modulesPageUrl);
 
-		if (modulesPage != null) {
-			Elements modules = modulesPage.select("#dependents .select-menu-item");
+		if (modulesPage.isPresent()) {
+			Elements modules = modulesPage.get().select("#dependents .select-menu-item");
 
 			if (!modules.isEmpty()) { // This repository has >= 1 modules
 				return
@@ -135,9 +136,9 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 		List<GitHubClient> allClients = new ArrayList<>();
 		List<GitHubClient> matchingClients = new ArrayList<>();
 
-		Document modulePage = fetchPage(url);
-		if (modulePage != null) {
-			List<String> clientRows = modulePage.select("#dependents .Box-row").eachText();
+		Optional<Document> modulePage = fetchPage(url);
+		if (modulePage.isPresent()) {
+			List<String> clientRows = modulePage.get().select("#dependents .Box-row").eachText();
 
 			// row should be of the form "org / user stars forks"
 			clientRows.forEach(row -> {
@@ -160,7 +161,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 			int remaining = limit - matchingClients.size();
 			if (remaining > 0) {
 				// Pagination should always be two Previous/Next button, one of them hidden in the first/last page
-				Elements pagination = modulePage.select("#dependents .paginate-container .BtnGroup-item");
+				Elements pagination = modulePage.get().select("#dependents .paginate-container .BtnGroup-item");
 				if (pagination.size() == 2) {
 					Element nextBtn = pagination.get(1);
 					String nextUrl = nextBtn.attr("abs:href");
@@ -174,7 +175,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 		return allClients;
 	}
 
-	private Document fetchPage(String url) {
+	private Optional<Document> fetchPage(String url) {
 		try {
 			Connection.Response res =
 				Jsoup.connect(url)
@@ -184,7 +185,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 					.execute();
 
 			if (res.statusCode() == HTTP_OK) {
-				return res.parse();
+				return Optional.of(res.parse());
 			} else if (res.statusCode() == HTTP_TOO_MANY_REQUESTS) {
 				String retryAfter = res.header("Retry-After");
 				int waitTime = retryAfter != null ? Integer.parseInt(retryAfter) : FETCH_WAIT_TIME;
@@ -201,7 +202,7 @@ public class GitHubClientsScraper implements GitHubClientsFetcher {
 			Thread.currentThread().interrupt();
 		}
 
-		return null;
+		return Optional.empty();
 	}
 
 	private boolean hasClientsCache(RepositoryModule module) {

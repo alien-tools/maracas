@@ -6,8 +6,9 @@ import com.github.maracas.forges.ForgeException;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.RepositoryModule;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
@@ -27,14 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GitHubForgeIT {
   GitHub gh;
   Forge forge;
-  GitHubClientsFetcher fetcher = new GitHubClientsScraper(Duration.ofDays(1));
+  GitHubClientsFetcher fetcher;
 
-  @BeforeEach
+  @BeforeAll
   void setUp() throws IOException {
     gh = GitHubBuilder.fromEnvironment().build();
+    fetcher = new GitHubClientsScraper(Duration.ofDays(1));
     forge = new GitHubForge(gh, fetcher);
   }
 

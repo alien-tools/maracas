@@ -7,6 +7,9 @@ import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.Repository;
 import com.github.maracas.forges.RepositoryModule;
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +21,7 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -26,19 +30,28 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 public class GitHubForge implements Forge {
-	private final GitHub gh;
 	private final GitHubClientsFetcher clientsFetcher;
+	private final LoadingCache<String, GHRepository> repositoryCache;
 
 	private static final String BREAKBOT_FILE = ".github/breakbot.yml";
 
 	private static final Logger logger = LogManager.getLogger(GitHubForge.class);
 
 	public GitHubForge(GitHub gh, GitHubClientsFetcher clientsFetcher) {
-		this.gh = Objects.requireNonNull(gh);
 		this.clientsFetcher = Objects.requireNonNull(clientsFetcher);
+		this.repositoryCache = CacheBuilder.newBuilder()
+			.maximumSize(1000)
+			.expireAfterWrite(Duration.ofHours(1))
+			.build(new CacheLoader<>() {
+				@Override
+				public @Nonnull GHRepository load(@Nonnull String fullName) throws IOException {
+					return gh.getRepository(fullName);
+				}
+			});
 
 		if (gh.isAnonymous())
 			logger.warn("Unauthenticated access to GitHub APIs; likely to hit rate limit soon");
@@ -52,19 +65,14 @@ public class GitHubForge implements Forge {
 	public Repository fetchRepository(String owner, String name) {
 		Objects.requireNonNull(owner);
 		Objects.requireNonNull(name);
-		String fullName = owner + "/" + name;
 
-		try {
-			GHRepository repo = gh.getRepository(fullName);
-			return new Repository(
-				repo.getOwnerName(),
-				repo.getName(),
-				repo.getHttpTransportUrl(),
-				repo.getDefaultBranch()
-			);
-		} catch (IOException e) {
-			throw new ForgeException("Couldn't fetch repository " + fullName, e);
-		}
+		GHRepository repo = fetchAndCacheRepository(owner, name);
+		return new Repository(
+			repo.getOwnerName(),
+			repo.getName(),
+			repo.getHttpTransportUrl(),
+			repo.getDefaultBranch()
+		);
 	}
 
 	@Override
@@ -75,7 +83,7 @@ public class GitHubForge implements Forge {
 		String fullName = owner + "/" + name;
 
 		try {
-			GHRepository repo = gh.getRepository(fullName);
+			GHRepository repo = fetchAndCacheRepository(owner, name);
 			GHBranch b = repo.getBranch(branch);
 
 			return new Repository(
@@ -96,7 +104,7 @@ public class GitHubForge implements Forge {
 			throw new IllegalArgumentException("number < 0");
 
 		try {
-			GHRepository repo = gh.getRepository(repository.fullName());
+			GHRepository repo = fetchAndCacheRepository(repository.owner(), repository.name());
 			GHPullRequest pr = repo.getPullRequest(number);
 			GHCompare compare = repo.getCompare(pr.getBase().getCommit(), pr.getHead().getCommit());
 
@@ -126,7 +134,8 @@ public class GitHubForge implements Forge {
 		Objects.requireNonNull(sha);
 
 		try {
-			GHCommit commit = gh.getRepository(repository.fullName()).getCommit(sha);
+			GHRepository repo = fetchAndCacheRepository(repository.owner(), repository.name());
+			GHCommit commit = repo.getCommit(sha);
 
 			return new Commit(
 				repository,
@@ -184,11 +193,19 @@ public class GitHubForge implements Forge {
 	public BreakbotConfig fetchBreakbotConfig(Repository repository) {
 		Objects.requireNonNull(repository);
 
-		try (InputStream configIn = gh.getRepository(repository.fullName()).getFileContent(BREAKBOT_FILE).read()) {
+		try (InputStream configIn = fetchAndCacheRepository(repository.owner(), repository.name()).getFileContent(BREAKBOT_FILE).read()) {
 			return BreakbotConfig.fromYaml(configIn);
 		} catch (IOException e) {
 			logger.error("Couldn't read .breakbot.yml from {}", repository::fullName);
 			return BreakbotConfig.defaultConfig();
+		}
+	}
+
+	private GHRepository fetchAndCacheRepository(String owner, String name) {
+		try {
+			return repositoryCache.get(owner + "/" + name);
+		} catch (ExecutionException e) {
+			throw new ForgeException("Couldn't fetch repository %s/%s".formatted(owner, name), e.getCause());
 		}
 	}
 
@@ -224,24 +241,24 @@ public class GitHubForge implements Forge {
 
 	private boolean isValidClient(GitHubClient client) {
 		try {
-			GHRepository candidate = gh.getRepository(String.format("%s/%s", client.owner(), client.name()));
+			GHRepository candidate = fetchAndCacheRepository(client.owner(), client.name());
 			return
 				!candidate.isFork() &&
 				!candidate.isArchived() &&
 				!candidate.isDisabled() &&
 				!candidate.isPrivate();
-		} catch (IOException e) {
+		} catch (ForgeException e) {
 			return false;
 		}
 	}
 
 	private Repository getSourceRepository(Repository repository) {
 		try {
-			GHRepository repo = gh.getRepository(String.format("%s/%s", repository.owner(), repository.name()));
-			if (repo != null && repo.getSource() != null) {
+			GHRepository repo = fetchAndCacheRepository(repository.owner(), repository.name());
+			if (repo.getSource() != null) {
 				return fetchRepository(repo.getSource().getOwnerName(), repo.getSource().getName());
 			}
-		} catch (IOException e) {
+		} catch (IOException | ForgeException e) {
 			// doesn't matter, swallow
 		}
 

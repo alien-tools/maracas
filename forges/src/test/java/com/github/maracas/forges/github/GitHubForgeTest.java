@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -130,6 +131,8 @@ class GitHubForgeTest {
     assertThat(pr.headBranch(), is(equalTo("head-ref")));
     assertThat(pr.changedFiles(), hasSize(1));
     assertThat(pr.changedFiles().get(0).endsWith("pr-file"), is(true));
+    verify(gh).getRepository("anOwner/aName");
+    verify(repoFixture).getPullRequest(1);
   }
 
   @Test
@@ -142,6 +145,8 @@ class GitHubForgeTest {
 
     assertThat(thrown.getMessage(), is(equalTo("Couldn't fetch PR 1 from repository anOwner/aName")));
     assertThat(thrown.getCause().getMessage(), is(equalTo("nope")));
+    verify(gh).getRepository("anOwner/aName");
+    verify(repoFixture).getPullRequest(1);
   }
 
   @Test
@@ -156,6 +161,9 @@ class GitHubForgeTest {
 
     assertThat(commit, is(notNullValue()));
     assertThat(commit.sha(), is(equalTo("aSha")));
+    verify(gh).getRepository("anOwner/aName");
+    verify(repoFixture).getCommit("aSha");
+    verify(commitFixture).getSHA1();
   }
 
   @Test
@@ -168,18 +176,23 @@ class GitHubForgeTest {
 
     assertThat(thrown.getMessage(), is(equalTo("Couldn't fetch commit aSha from repository anOwner/aName")));
     assertThat(thrown.getCause().getMessage(), is(equalTo("nope")));
+    verify(gh).getRepository("anOwner/aName");
+    verify(repoFixture).getCommit("aSha");
   }
 
   @Test
   void fetchTopStarredClients_shouldOrder_Clients() throws IOException {
     Repository repo = new Repository("anOwner", "aName", "", "");
     RepositoryModule module = new RepositoryModule(repo, "module:id", "");
+    GHRepository repoFixture = mock();
     GitHubClient c1 = new GitHubClient("o1", "n1", 3, 0, module);
     GitHubClient c2 = new GitHubClient("o2", "n2", 5, 0, module);
     GitHubClient c3 = new GitHubClient("o3", "n3", 1, 0, module);
 
+    when(repoFixture.getSource()).thenReturn(null);
     when(gh.getRepository(anyString())).thenAnswer(input ->
       switch (input.getArgument(0, String.class)) {
+        case "anOwner/aName" -> repoFixture;
         case "o1/n1" -> repositoryFixture("o1", "n1", "", "");
         case "o2/n2" -> repositoryFixture("o2", "n2", "", "");
         case "o3/n3" -> repositoryFixture("o3", "n3", "", "");
@@ -194,6 +207,36 @@ class GitHubForgeTest {
       equalTo(new Repository("o1", "n1", "", "")),
       equalTo(new Repository("o3", "n3", "", ""))
     ));
+    verify(gh).getRepository("anOwner/aName");
+    verify(gh).getRepository("o1/n1");
+    verify(gh).getRepository("o2/n2");
+    verify(gh).getRepository("o3/n3");
+  }
+
+  @Test
+  void fetchTopStarredClients_shouldRetrieve_SourceClients() throws IOException {
+    Repository repo = new Repository("anOwner", "aName", "", "");
+    RepositoryModule module = new RepositoryModule(repo, "module:id", "");
+    Repository source = new Repository("source", "source", "", "");
+    GHRepository repoFixture = mock();
+    GHRepository sourceFixture = repositoryFixture("source", "source", "", "");
+    GitHubClient client = new GitHubClient("c", "c", 0, 0, module);
+    RepositoryModule sourceModule = new RepositoryModule(source, "module:id", "");
+    GHRepository clientFixture = repositoryFixture("c", "c", "", "");
+
+    when(gh.getRepository("anOwner/aName")).thenReturn(repoFixture);
+    when(gh.getRepository("source/source")).thenReturn(sourceFixture);
+    when(gh.getRepository("c/c")).thenReturn(clientFixture);
+    when(repoFixture.getSource()).thenReturn(sourceFixture);
+    when(scraper.fetchClients(eq(sourceModule), any(), eq(1))).thenReturn(List.of(client));
+
+    List<Repository> clients = forge.fetchTopStarredClients(module, 1, 0);
+
+    assertThat(clients, contains(equalTo(new Repository("c", "c", "", ""))));
+    verify(scraper).fetchClients(eq(sourceModule), any(), eq(1));
+    verify(gh).getRepository("anOwner/aName");
+    verify(gh).getRepository("source/source");
+    verify(gh).getRepository("c/c");
   }
 
   @Test
