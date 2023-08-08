@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-class BreakbotConfigTests {
+class BreakbotConfigTest {
 	@Test
 	void default_configuration() {
 		BreakbotConfig c = BreakbotConfig.defaultConfig();

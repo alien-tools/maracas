@@ -6,6 +6,7 @@ import com.github.maracas.forges.Forge;
 import com.github.maracas.forges.PullRequest;
 import com.github.maracas.forges.analysis.CommitAnalyzer;
 import com.github.maracas.forges.analysis.PullRequestAnalyzer;
+import com.github.maracas.forges.github.GitHubClientsScraper;
 import com.github.maracas.forges.github.GitHubForge;
 import com.github.maracas.rest.data.MaracasReport;
 import com.github.maracas.rest.data.PullRequestResponse;
@@ -41,16 +42,17 @@ public class PullRequestService {
 	private static final Logger logger = LogManager.getLogger(PullRequestService.class);
 
 	public PullRequestService(Environment env, BreakbotService breakbotService, GitHub github) {
-		this.breakbotService = breakbotService;
-		this.forge = new GitHubForge(github);
-
 		int analysisWorkers = env.getProperty("maracas.analysis-workers", Integer.class, -1);
+		int clientsCacheExpiration = env.getProperty("maracas.clients-cache-expiration", Integer.class, 7);
 		Path clonePath = Path.of(env.getProperty("maracas.clone-path", "./clones"));
 		this.reportPath = Path.of(env.getProperty("maracas.report-path", "./reports"));
 		this.buildTimeout = env.getProperty("maracas.build-timeout", Integer.class, 600);
 		this.cloneTimeout = env.getProperty("maracas.clone-timeout", Integer.class, 600);
 		this.clientsPerModule = env.getProperty("maracas.clients-per-module", Integer.class, 10);
 		this.maxClassLines = env.getProperty("maracas.max-class-lines", Integer.class, 20_000);
+
+		this.breakbotService = breakbotService;
+		this.forge = new GitHubForge(github, new GitHubClientsScraper(Duration.ofDays(clientsCacheExpiration)));
 
 		if ((!clonePath.toFile().exists() && !clonePath.toFile().mkdirs()) ||
 			(!this.reportPath.toFile().exists() && !this.reportPath.toFile().mkdirs()))
