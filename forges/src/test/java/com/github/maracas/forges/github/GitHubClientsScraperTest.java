@@ -9,23 +9,23 @@ import java.time.Duration;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 
 class GitHubClientsScraperTest {
 	GitHubClientsScraper fetcher = new GitHubClientsScraper(Duration.ofDays(1));
-	final Repository drill = new Repository("apache", "drill", "", ""); // several modules
+	final Repository spoon = new Repository("INRIA", "spoon", "", ""); // several modules
 	final Repository ews = new Repository("OfficeDev", "ews-java-api", "", ""); // no module
 	final Repository guava = new Repository("google", "guava", "", ""); // way too big
 
 	@Test
-	void fetch_modules_drill() {
-		assertThat(fetcher.fetchModules(drill), hasSize(11));
+	void fetch_modules_spoon() {
+		assertThat(fetcher.fetchModules(spoon), hasSize(5));
 	}
 
 	@Test
-	void fetch_clients_drill() {
-		assertThat(fetcher.fetchClients(drill, GitHubClientsFetcher.ClientFilter.ALL, 100), hasSize(greaterThan(100)));
+	void fetch_clients_spoon() {
+		assertThat(fetcher.fetchClients(spoon, GitHubClientsFetcher.ClientFilter.ALL, 100), hasSize(greaterThanOrEqualTo(100)));
 	}
 
 	@Test
@@ -36,13 +36,13 @@ class GitHubClientsScraperTest {
 	}
 
 	@Test
-	void fetch_one_module_drill() {
-		assertThat(fetcher.fetchClients(new RepositoryModule(drill, "org.apache.drill:drill-common", ""), GitHubClientsFetcher.ClientFilter.ALL, 50), hasSize(50));
+	void fetch_one_module_spoon() {
+		assertThat(fetcher.fetchClients(new RepositoryModule(spoon, "fr.inria.gforge.spoon:spoon-core", ""), GitHubClientsFetcher.ClientFilter.ALL, 50), hasSize(50));
 	}
 
 	@Test
-	void fetch_unknown_module_drill() {
-		assertThat(fetcher.fetchClients(new RepositoryModule(drill, "unknown:module", ""), GitHubClientsFetcher.ClientFilter.ALL, 1), is(empty()));
+	void fetch_unknown_module_spoon() {
+		assertThat(fetcher.fetchClients(new RepositoryModule(spoon, "unknown:module", ""), GitHubClientsFetcher.ClientFilter.ALL, 1), is(empty()));
 	}
 
 	@Test

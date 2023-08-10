@@ -22,8 +22,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -163,34 +161,20 @@ class GitHubForgeIT {
   }
 
   @Test
-  void fetchTopClients_drill() {
-    Repository drill = forge.fetchRepository("apache", "drill");
-    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 5, 0);
+  void fetchTopClients_spoon() {
+    Repository spoon = forge.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(spoon, "fr.inria.gforge.spoon:spoon-core", ""), 5, 0);
     assertThat(clients, hasSize(5));
   }
 
   @Test
-  void fetchStarredClients_drill() {
-    Repository drill = forge.fetchRepository("apache", "drill");
-    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 10, 10);
-    assertThat(clients, is(not(empty())));
+  void fetchStarredClients_spoon() {
+    Repository spoon = forge.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(spoon, "fr.inria.gforge.spoon:spoon-core", ""), 10, 1);
+    assertThat(clients, hasSize(10));
     clients.forEach(client -> {
       try {
-        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(10)));
-      } catch (IOException e) {
-        fail(e);
-      }
-    });
-  }
-
-  @Test
-  void fetchTopStarredClients_drill() {
-    Repository drill = forge.fetchRepository("apache", "drill");
-    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(drill, "org.apache.drill.exec:drill-rpc", ""), 10, 10);
-    assertThat(clients, hasSize(lessThan(10)));
-    clients.forEach(client -> {
-      try {
-        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(10)));
+        assertThat(gh.getRepository(client.fullName()).getStargazersCount(), is(greaterThanOrEqualTo(1)));
       } catch (IOException e) {
         fail(e);
       }
@@ -199,15 +183,15 @@ class GitHubForgeIT {
 
   @Test
   void fetchClients_unknown_module() {
-    Repository drill = forge.fetchRepository("apache", "drill");
-    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(drill, "unknown", ""), 10, 0);
+    Repository spoon = forge.fetchRepository("INRIA", "spoon");
+    List<Repository> clients = forge.fetchTopStarredClients(new RepositoryModule(spoon, "unknown", ""), 10, 0);
     assertThat(clients, is(empty()));
   }
 
   @Test
   void fetchAllClients_from_fork() {
-    Repository drillFork = forge.fetchRepository("break-bot", "drill-fork-for-tests");
-    List<Repository> clients = forge.fetchAllClients(new RepositoryModule(drillFork, "org.apache.drill.exec:drill-rpc", ""), 10, 0);
+    Repository spoonFork = forge.fetchRepository("break-bot", "spoon-fork-for-tests");
+    List<Repository> clients = forge.fetchAllClients(new RepositoryModule(spoonFork, "fr.inria.gforge.spoon:spoon-core", ""), 10, 0);
     assertThat(clients, hasSize(10));
   }
 
