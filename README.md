@@ -1,5 +1,7 @@
 ![Build & Test](https://github.com/alien-tools/maracas/actions/workflows/build.yml/badge.svg?branch=main) ![CodeQL](https://github.com/alien-tools/maracas/actions/workflows/codeql-analysis.yml/badge.svg?branch=main) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**_You might want to check out [Roseau](https://github.com/alien-tools/roseau) for our latest work on breaking changes!_**
+
 # Maracas
 
 Maracas is a source code and bytecode analysis framework—written in Java with the help of [Spoon](https://github.com/INRIA/Spoon)—that tracks how Java libraries evolve and how their evolution impacts their clients. In a nutshell, Maracas makes it easy to:
